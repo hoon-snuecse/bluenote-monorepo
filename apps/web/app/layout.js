@@ -71,7 +71,7 @@ export const viewport = {
 export default function RootLayout({ children }) {
   return (
     <html lang="ko">
-      <body>
+      <body suppressHydrationWarning={true}>
         <Providers>
           <div className="relative z-10">
             <Navigation />
