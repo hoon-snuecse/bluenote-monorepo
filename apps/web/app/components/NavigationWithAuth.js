@@ -126,13 +126,13 @@ export default function NavigationWithAuth() {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 whitespace-nowrap ${
                     isActive(item.href)
                       ? 'bg-blue-100 text-blue-700'
                       : 'text-slate-600 hover:bg-slate-100 hover:text-slate-800'
                   }`}
                 >
-                  <IconComponent className="w-4 h-4" />
+                  <IconComponent className="w-4 h-4 flex-shrink-0" />
                   <span>{item.label}</span>
                 </Link>
               );
@@ -142,10 +142,10 @@ export default function NavigationWithAuth() {
             {session && (
               <Link
                 href="/ai/chat"
-                className={`flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                className={`flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 whitespace-nowrap ${
                   isActive('/ai/chat')
-                    ? 'bg-blue-700 text-white'
-                    : 'bg-blue-600 text-white hover:bg-blue-700'
+                    ? 'bg-blue-700/80 text-white'
+                    : 'bg-blue-600/80 text-white hover:bg-blue-700/80'
                 }`}
               >
                 <span>.AI.</span>
@@ -156,12 +156,13 @@ export default function NavigationWithAuth() {
             {session?.user?.isAdmin && (
               <Link
                 href="/admin/dashboard"
-                className={`flex items-center px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 whitespace-nowrap ${
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 whitespace-nowrap ${
                   isActive('/admin')
-                    ? 'bg-gray-900 text-white'
-                    : 'bg-black text-white hover:bg-gray-900'
+                    ? 'bg-gray-900/80 text-white'
+                    : 'bg-black/80 text-white hover:bg-gray-900/80'
                 }`}
               >
+                <Shield className="w-4 h-4 flex-shrink-0" />
                 <span>관리자</span>
               </Link>
             )}
@@ -220,13 +221,13 @@ export default function NavigationWithAuth() {
                   key={item.href}
                   href={item.href}
                   onClick={() => setIsMenuOpen(false)}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-lg text-base font-medium transition-colors ${
+                  className={`flex items-center gap-3 px-4 py-3 rounded-lg text-base font-medium transition-colors whitespace-nowrap ${
                     isActive(item.href)
                       ? 'bg-blue-100 text-blue-700'
                       : 'text-slate-600 hover:bg-slate-50'
                   }`}
                 >
-                  <IconComponent className="w-5 h-5" />
+                  <IconComponent className="w-5 h-5 flex-shrink-0" />
                   <span>{item.label}</span>
                 </Link>
               );
@@ -237,10 +238,10 @@ export default function NavigationWithAuth() {
               <Link
                 href="/ai/chat"
                 onClick={() => setIsMenuOpen(false)}
-                className={`flex items-center px-4 py-3 rounded-lg text-base font-medium transition-colors ${
+                className={`flex items-center px-4 py-3 rounded-lg text-base font-medium transition-colors whitespace-nowrap ${
                   isActive('/ai/chat')
-                    ? 'bg-blue-700 text-white'
-                    : 'bg-blue-600 text-white hover:bg-blue-700'
+                    ? 'bg-blue-700/80 text-white'
+                    : 'bg-blue-600/80 text-white hover:bg-blue-700/80'
                 }`}
               >
                 <span>.AI.</span>
@@ -252,12 +253,13 @@ export default function NavigationWithAuth() {
               <Link
                 href="/admin/dashboard"
                 onClick={() => setIsMenuOpen(false)}
-                className={`flex items-center px-4 py-3 rounded-lg text-base font-medium transition-colors whitespace-nowrap ${
+                className={`flex items-center gap-3 px-4 py-3 rounded-lg text-base font-medium transition-colors whitespace-nowrap ${
                   isActive('/admin')
-                    ? 'bg-gray-900 text-white'
-                    : 'bg-black text-white hover:bg-gray-900'
+                    ? 'bg-gray-900/80 text-white'
+                    : 'bg-black/80 text-white hover:bg-gray-900/80'
                 }`}
               >
+                <Shield className="w-5 h-5 flex-shrink-0" />
                 <span>관리자</span>
               </Link>
             )}
