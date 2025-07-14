@@ -20,16 +20,12 @@ export async function POST(request) {
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
-    const dateStr = `${year}${month}${day}`;
+    const hour = String(date.getHours()).padStart(2, '0');
+    const minute = String(date.getMinutes()).padStart(2, '0');
+    const dateStr = `${year}${month}${day}_${hour}${minute}`;
     
-    // Clean username for filename
-    const username = session.user?.name || session.user?.email || 'unknown';
-    const cleanUsername = username.replace(/[^a-zA-Z0-9가-힣]/g, '');
-    
-    // Clean topic for filename
-    const cleanTopic = (topic || 'Claude와의대화').replace(/[^a-zA-Z0-9가-힣]/g, '');
-    
-    const filename = `${dateStr}-${cleanTopic}-${cleanUsername}.md`;
+    // Create ASCII-safe filename
+    const filename = `claude_chat_${dateStr}.md`;
     
     // Generate markdown content
     const mdContent = generateMarkdown(messages, session.user, topic, date);
