@@ -1,24 +1,23 @@
 'use client';
 
-import { Suspense } from 'react';
-import dynamic from 'next/dynamic';
+import { useState, useEffect } from 'react';
+import Navigation from './Navigation';
 
-const Navigation = dynamic(() => import('./Navigation'), {
-  ssr: false,
-  loading: () => (
-    <div className="h-16 bg-white shadow-sm">
-      {/* Navigation placeholder during loading */}
-    </div>
-  ),
-});
+export default function NavigationWrapper() {
+  const [mounted, setMounted] = useState(false);
 
-// Error boundary wrapper
-function NavigationWithErrorBoundary() {
-  return (
-    <Suspense fallback={<div className="h-16 bg-white shadow-sm" />}>
-      <Navigation />
-    </Suspense>
-  );
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Only render Navigation after client-side mount to avoid hydration issues
+  if (!mounted) {
+    return (
+      <div className="h-16 bg-white shadow-sm">
+        {/* Navigation placeholder during SSR/hydration */}
+      </div>
+    );
+  }
+
+  return <Navigation />;
 }
-
-export default NavigationWithErrorBoundary;

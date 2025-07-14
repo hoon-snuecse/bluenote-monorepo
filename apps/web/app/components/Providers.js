@@ -1,6 +1,6 @@
 'use client';
 
-import { SessionProvider } from 'next-auth/react';
+import { SessionProvider } from '@bluenote/auth';
 
 export default function Providers({ children }) {
   return (
