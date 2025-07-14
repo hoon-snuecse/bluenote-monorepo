@@ -1,5 +1,5 @@
 {
-  "buildCommand": "pnpm run build",
-  "installCommand": "corepack enable && pnpm install --no-frozen-lockfile",
+  "buildCommand": "turbo run build --filter=@bluenote/web",
+  "installCommand": "npm install -g pnpm@8.15.9 && pnpm install",
   "framework": null
 }
