@@ -107,14 +107,13 @@ export default function NavigationWithAuth() {
       <div className="container-custom">
         <div className="flex justify-between items-center h-16">
           {/* 로고/브랜드 */}
-          <Link href="/" className="flex items-center gap-3 group">
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center text-white font-bold text-xl shadow-md group-hover:shadow-lg transition-shadow">
+          <Link 
+            href="/" 
+            className="group"
+            title="BlueNote Atelier"
+          >
+            <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center text-white font-bold text-xl shadow-md group-hover:shadow-lg transition-all duration-200 group-hover:scale-105">
               ♭
-            </div>
-            <div className="hidden sm:block">
-              <h1 className="text-xl font-space-grotesk font-semibold text-slate-900">
-                BlueNote Atelier
-              </h1>
             </div>
           </Link>
 
