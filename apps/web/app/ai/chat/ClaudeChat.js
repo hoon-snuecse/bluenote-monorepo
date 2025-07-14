@@ -3,7 +3,6 @@
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { Send, Bot, User, ArrowLeft, Loader2, AlertCircle } from 'lucide-react';
-import SimpleNav from '../../components/SimpleNav';
 
 export default function ClaudeChat() {
   const [session, setSession] = useState(null);
@@ -88,9 +87,7 @@ export default function ClaudeChat() {
   }
 
   return (
-    <>
-      <SimpleNav />
-      <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className="min-h-screen bg-gray-50 flex flex-col">
         <div className="bg-white shadow-sm border-b">
         <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center space-x-3">
@@ -202,6 +199,5 @@ export default function ClaudeChat() {
         </div>
       </div>
     </div>
-    </>
   );
 }

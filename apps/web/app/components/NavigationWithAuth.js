@@ -32,18 +32,12 @@ export default function NavigationWithAuth() {
     fetch('/api/auth/session-check')
       .then(res => res.json())
       .then(data => {
-        console.log('Session check response:', data); // 디버깅용
-        console.log('Is admin?', data.session?.user?.isAdmin); // 관리자 확인
-        console.log('User email:', data.session?.user?.email); // 이메일 확인
         if (data.authenticated && data.session) {
           setSession(data.session);
         }
         setLoading(false);
       })
-      .catch((err) => {
-        console.error('Session check error:', err);
-        setLoading(false);
-      });
+      .catch(() => setLoading(false));
   }, []);
 
   // 스크롤 감지
@@ -56,17 +50,6 @@ export default function NavigationWithAuth() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // 세션 정보 디버깅
-  useEffect(() => {
-    if (session) {
-      console.log('NavigationWithAuth - Session loaded:', {
-        hasSession: !!session,
-        isAdmin: session?.user?.isAdmin,
-        email: session?.user?.email,
-        name: session?.user?.name
-      });
-    }
-  }, [session]);
 
   const menuItems = [
     { 

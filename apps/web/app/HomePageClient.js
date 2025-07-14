@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react';
 import TypingAnimation from './components/TypingAnimation';
 import FloatingElements from './components/FloatingElements';
-import SimpleNav from './components/SimpleNav';
 
 export default function HomePageClient() {
   const [fadeIn, setFadeIn] = useState({
@@ -50,9 +49,7 @@ export default function HomePageClient() {
   }, []);
 
   return (
-    <>
-      <SimpleNav />
-      <div className="relative bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-100">
+    <div className="relative bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-100">
         {/* Floating Elements Background */}
         <FloatingElements />
         
@@ -135,6 +132,5 @@ export default function HomePageClient() {
         </section>
       </div>
     </div>
-    </>
   );
 }
