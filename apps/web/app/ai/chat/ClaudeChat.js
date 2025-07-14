@@ -36,24 +36,72 @@ export default function ClaudeChat() {
     if (!input.trim() || sending) return;
 
     const userMessage = { role: 'user', content: input };
+    const userInput = input; // Save input before clearing
     setMessages(prev => [...prev, userMessage]);
     setInput('');
     setSending(true);
 
     try {
-      const response = await fetch('/api/ai/chat', {
+      // Try streaming first
+      const response = await fetch('/api/ai/chat-stream', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: input })
+        body: JSON.stringify({ message: userInput })
       });
 
       if (!response.ok) {
-        throw new Error('Chat request failed');
-      }
+        // Fallback to non-streaming
+        const fallbackResponse = await fetch('/api/ai/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: userInput })
+        });
 
-      const data = await response.json();
-      setMessages(prev => [...prev, { role: 'assistant', content: data.response }]);
+        if (!fallbackResponse.ok) {
+          throw new Error('Chat request failed');
+        }
+
+        const data = await fallbackResponse.json();
+        setMessages(prev => [...prev, { role: 'assistant', content: data.response }]);
+      } else {
+        // Handle streaming response
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let assistantMessage = { role: 'assistant', content: '' };
+        
+        setMessages(prev => [...prev, assistantMessage]);
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          const chunk = decoder.decode(value);
+          const lines = chunk.split('\n');
+          
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              const data = line.slice(6);
+              if (data === '[DONE]') break;
+              
+              try {
+                const parsed = JSON.parse(data);
+                if (parsed.text) {
+                  assistantMessage.content += parsed.text;
+                  setMessages(prev => {
+                    const newMessages = [...prev];
+                    newMessages[newMessages.length - 1] = { ...assistantMessage };
+                    return newMessages;
+                  });
+                }
+              } catch (e) {
+                // Ignore parse errors
+              }
+            }
+          }
+        }
+      }
     } catch (error) {
+      console.error('Chat error:', error);
       setMessages(prev => [...prev, { 
         role: 'system', 
         content: 'Sorry, an error occurred. Please try again.' 
