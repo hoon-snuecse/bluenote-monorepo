@@ -94,7 +94,7 @@ export default function NavigationWithAuth() {
   };
 
   const handleLogout = () => {
-    window.location.href = '/api/auth/signout';
+    window.location.href = '/api/auth/signout?callbackUrl=/';
   };
 
   return (

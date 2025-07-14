@@ -86,7 +86,7 @@ export default function AuthStatusClient() {
             )}
             {(sessionData?.authenticated && !loading) && (
               <button
-                onClick={() => window.location.href = '/api/auth/signout'}
+                onClick={() => window.location.href = '/api/auth/signout?callbackUrl=/'}
                 className="flex-1 text-center py-2 px-4 bg-red-600 text-white rounded-md text-sm font-medium hover:bg-red-700"
               >
                 로그아웃

@@ -1,10 +1,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { signIn } from 'next-auth/react';
+import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { LogIn } from 'lucide-react';
 
 export default function LoginPageClient() {
+  const searchParams = useSearchParams();
   const [envStatus, setEnvStatus] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -22,8 +25,9 @@ export default function LoginPageClient() {
   }, []);
 
   const handleGoogleLogin = () => {
-    // 직접 OAuth URL로 리다이렉트
-    window.location.href = '/api/auth/signin/google';
+    // NextAuth signIn 함수 사용
+    const callbackUrl = searchParams.get('callbackUrl') || '/';
+    signIn('google', { callbackUrl });
   };
 
   return (
