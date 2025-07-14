@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import TypingAnimation from './components/TypingAnimation';
 import FloatingElements from './components/FloatingElements';
+import Navigation from './components/NavigationWrapper';
 
 export default function HomePageClient() {
   const [fadeIn, setFadeIn] = useState({
@@ -49,12 +50,14 @@ export default function HomePageClient() {
   }, []);
 
   return (
-    <div className="relative bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-100">
-      {/* Floating Elements Background */}
-      <FloatingElements />
-      
-      {/* Main Content */}
-      <div className="relative z-10 min-h-screen">
+    <>
+      <Navigation />
+      <div className="relative bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-100">
+        {/* Floating Elements Background */}
+        <FloatingElements />
+        
+        {/* Main Content */}
+        <div className="relative z-10 min-h-screen">
         {/* Hero Section */}
         <section className="min-h-screen flex items-center justify-center px-4 py-20">
           <div className="container-custom text-center">
@@ -132,5 +135,6 @@ export default function HomePageClient() {
         </section>
       </div>
     </div>
+    </>
   );
 }

@@ -1,5 +1,5 @@
 import './globals.css'
-import Navigation from './components/NavigationWrapper'
+// import Navigation from './components/NavigationWrapper'
 import Footer from './components/Footer'
 import Providers from './components/Providers'
 
@@ -71,28 +71,15 @@ export const viewport = {
 export default function RootLayout({ children }) {
   return (
     <html lang="ko">
-      <head>
-        <link rel="icon" href="/favicon.ico" />
-        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-        <meta name="theme-color" content="#1e3a8a" />
-      </head>
       <body className="font-inter antialiased">
         <Providers>
           <div className="relative z-10">
-            {/* 네비게이션 */}
-            <Navigation />
-            
-            {/* 메인 콘텐츠 */}
+            {/* <Navigation /> */}
             <main>
               {children}
             </main>
-            
-            {/* 푸터 */}
             <Footer />
           </div>
-          
-          {/* 스크립트 (Google Analytics 등) */}
-          <GoogleAnalytics />
         </Providers>
       </body>
     </html>
