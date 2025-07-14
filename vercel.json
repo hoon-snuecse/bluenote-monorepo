@@ -1,6 +1,5 @@
 {
-  "buildCommand": "cd apps/bluenote && npm install && npm run build",
-  "outputDirectory": "apps/bluenote/.next",
-  "installCommand": "cd apps/bluenote && npm install",
-  "framework": "nextjs"
+  "buildCommand": "pnpm install && pnpm run build",
+  "installCommand": "pnpm install",
+  "framework": null
 }
