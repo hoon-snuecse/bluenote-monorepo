@@ -15,11 +15,14 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { message } = await request.json();
+    const { message, model } = await request.json();
 
     if (!message || typeof message !== 'string') {
       return NextResponse.json({ error: 'Invalid message' }, { status: 400 });
     }
+
+    // Use provided model or default
+    const selectedModel = model || 'claude-3-5-sonnet-20241022';
 
     // Check if API key is configured
     if (!process.env.ANTHROPIC_API_KEY) {
@@ -32,7 +35,7 @@ export async function POST(request) {
     try {
       // Call Claude API
       const completion = await anthropic.messages.create({
-        model: 'claude-3-5-sonnet-20241022',
+        model: selectedModel,
         max_tokens: 1024,
         messages: [
           {
