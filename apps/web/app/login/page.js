@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { signIn } from 'next-auth/react';
 import { LogIn } from 'lucide-react';
 
 export default function LoginPage() {
@@ -20,9 +21,12 @@ export default function LoginPage() {
       });
   }, []);
 
-  const handleGoogleLogin = () => {
-    // NextAuth signIn 대신 직접 구현
-    window.location.href = '/api/auth/signin';
+  const handleGoogleLogin = async () => {
+    try {
+      await signIn('google', { callbackUrl: '/' });
+    } catch (error) {
+      console.error('Login error:', error);
+    }
   };
 
   return (
