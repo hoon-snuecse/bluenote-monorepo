@@ -10,15 +10,16 @@ export default function ClaudeChat() {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [sending, setSending] = useState(false);
-  const [selectedModel, setSelectedModel] = useState('claude-3-5-sonnet-20241022');
+  const [selectedModel, setSelectedModel] = useState('claude-sonnet-4-20250514');
   const [showModelSelect, setShowModelSelect] = useState(false);
   const messagesEndRef = useRef(null);
   const textareaRef = useRef(null);
 
   const models = [
-    { id: 'claude-3-5-sonnet-20241022', name: 'Claude 3.5 Sonnet', description: '가장 균형잡힌 모델' },
+    { id: 'claude-sonnet-4-20250514', name: 'Claude Sonnet 4', description: '최신 모델, 최고의 성능' },
+    { id: 'claude-3-5-sonnet-20241022', name: 'Claude 3.5 Sonnet', description: '균형잡힌 모델' },
     { id: 'claude-3-5-haiku-20241022', name: 'Claude 3.5 Haiku', description: '빠른 응답' },
-    { id: 'claude-3-opus-20240229', name: 'Claude 3 Opus', description: '가장 강력한 성능' },
+    { id: 'claude-3-opus-20240229', name: 'Claude 3 Opus', description: '강력한 성능' },
   ];
 
   useEffect(() => {

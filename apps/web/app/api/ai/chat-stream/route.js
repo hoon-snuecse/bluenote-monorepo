@@ -17,7 +17,7 @@ export async function POST(request) {
     }
 
     // Use provided model or default
-    const selectedModel = model || 'claude-3-5-sonnet-20241022';
+    const selectedModel = model || 'claude-sonnet-4-20250514';
 
     // Check if API key is configured
     if (!process.env.ANTHROPIC_API_KEY) {
