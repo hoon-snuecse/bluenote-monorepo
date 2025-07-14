@@ -1,7 +1,7 @@
 'use client';
 
-import NavigationSimple from './NavigationSimple';
+import NavigationFixed from './NavigationFixed';
 
 export default function NavigationWrapper() {
-  return <NavigationSimple />;
+  return <NavigationFixed />;
 }
