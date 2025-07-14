@@ -17,7 +17,8 @@ import {
   MessageCircle,
   Shield,
   Laptop,
-  User
+  User,
+  History
 } from 'lucide-react';
 
 export default function NavigationWithAuth() {
@@ -139,16 +140,29 @@ export default function NavigationWithAuth() {
             
             {/* Claude AI 채팅 버튼 (로그인한 경우만) */}
             {session && (
-              <Link
-                href="/ai/chat"
-                className={`flex items-center px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 whitespace-nowrap ${
-                  isActive('/ai/chat')
-                    ? 'bg-blue-100 text-blue-700'
-                    : 'text-blue-600 hover:bg-blue-50 hover:text-blue-700'
-                }`}
-              >
-                <span>.AI.</span>
-              </Link>
+              <>
+                <Link
+                  href="/ai/chat"
+                  className={`flex items-center px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 whitespace-nowrap ${
+                    isActive('/ai/chat')
+                      ? 'bg-blue-100 text-blue-700'
+                      : 'text-blue-600 hover:bg-blue-50 hover:text-blue-700'
+                  }`}
+                >
+                  <span>.AI.</span>
+                </Link>
+                <Link
+                  href="/ai/chat-history"
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 whitespace-nowrap ${
+                    isActive('/ai/chat-history')
+                      ? 'bg-blue-100 text-blue-700'
+                      : 'text-slate-600 hover:bg-slate-100 hover:text-slate-800'
+                  }`}
+                  title="대화 기록"
+                >
+                  <History className="w-4 h-4" />
+                </Link>
+              </>
             )}
             
             {/* 관리자 대시보드 버튼 (관리자만) */}

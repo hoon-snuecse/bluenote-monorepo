@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { Send, Bot, User, ArrowLeft, Loader2, AlertCircle, ChevronDown } from 'lucide-react';
+import { Send, Bot, User, ArrowLeft, Loader2, AlertCircle, ChevronDown, Save, CheckCircle } from 'lucide-react';
 
 export default function ClaudeChat() {
   const [session, setSession] = useState(null);
@@ -12,6 +12,9 @@ export default function ClaudeChat() {
   const [sending, setSending] = useState(false);
   const [selectedModel, setSelectedModel] = useState('claude-sonnet-4-20250514');
   const [showModelSelect, setShowModelSelect] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [chatTopic, setChatTopic] = useState('');
   const messagesEndRef = useRef(null);
   const textareaRef = useRef(null);
 
@@ -48,6 +51,41 @@ export default function ClaudeChat() {
       textareaRef.current.style.height = textareaRef.current.scrollHeight + 'px';
     }
   }, [input]);
+
+  const handleSaveChat = async () => {
+    if (messages.length === 0 || saving) return;
+
+    setSaving(true);
+    try {
+      // 자동 주제 생성 (첫 번째 사용자 메시지 기반)
+      const firstUserMessage = messages.find(m => m.role === 'user');
+      const autoTopic = chatTopic || (firstUserMessage ? 
+        firstUserMessage.content.slice(0, 30).replace(/[^a-zA-Z0-9가-힣\s]/g, '').trim() : 
+        'Claude와의대화'
+      );
+
+      const response = await fetch('/api/ai/chat-history/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          messages, 
+          topic: autoTopic 
+        })
+      });
+
+      if (response.ok) {
+        setSaved(true);
+        setTimeout(() => setSaved(false), 3000);
+      } else {
+        throw new Error('Failed to save');
+      }
+    } catch (error) {
+      console.error('Save error:', error);
+      alert('대화 저장에 실패했습니다.');
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const handleSend = async () => {
     if (!input.trim() || sending) return;
@@ -207,6 +245,35 @@ export default function ClaudeChat() {
               </div>
             )}
           </div>
+          
+          {/* Save and History Buttons */}
+          {messages.length > 0 && (
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleSaveChat}
+                disabled={saving}
+                className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                  saved 
+                    ? 'bg-green-100 text-green-700' 
+                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-800'
+                }`}
+              >
+                {saving ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : saved ? (
+                  <>
+                    <CheckCircle className="w-4 h-4" />
+                    <span>저장됨</span>
+                  </>
+                ) : (
+                  <>
+                    <Save className="w-4 h-4" />
+                    <span>저장</span>
+                  </>
+                )}
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
