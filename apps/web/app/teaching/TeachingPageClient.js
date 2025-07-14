@@ -3,10 +3,8 @@
 import { useEffect, useState } from 'react';
 import { BookOpen, Users, Lightbulb, Plus, PenTool, ChevronRight, Tag } from 'lucide-react';
 import Link from 'next/link';
-import { useSession } from 'next-auth/react';
 
 export default function TeachingPageClient() {
-  const { data: session } = useSession();
   const [fadeIn, setFadeIn] = useState({
     hero: false,
     content: false,
@@ -116,7 +114,7 @@ export default function TeachingPageClient() {
               })}
             </div>
             
-            {session?.user?.isAdmin && (
+            {false && (
               <Link
                 href="/teaching/write"
                 className="flex items-center gap-2 px-4 py-2 bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-lg hover:shadow-lg transition-all"
@@ -201,7 +199,7 @@ export default function TeachingPageClient() {
                       ? '아직 작성된 교육 포스트가 없습니다.'
                       : `${categories.find(c => c.id === selectedCategory)?.name} 카테고리에 포스트가 없습니다.`}
                   </p>
-                  {session?.user?.isAdmin && (
+                  {false && (
                     <Link
                       href="/teaching/write"
                       className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 transition-colors"

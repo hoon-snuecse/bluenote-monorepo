@@ -4,7 +4,6 @@ import { use, useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { ChevronLeft, Calendar, Tag, Edit, Trash2, BookOpen, Users, Lightbulb, Plus, FileText, Download, Music, Video, Eye } from 'lucide-react';
 import Link from 'next/link';
-import { useSession } from 'next-auth/react';
 
 const iconMap = {
   citizenship: Users,
@@ -16,7 +15,6 @@ const iconMap = {
 export default function TeachingPostClient({ params }) {
   const { id } = use(params);
   const router = useRouter();
-  const { data: session } = useSession();
   const [post, setPost] = useState(null);
   const [loading, setLoading] = useState(true);
   const [fadeIn, setFadeIn] = useState(false);
@@ -183,7 +181,7 @@ export default function TeachingPostClient({ params }) {
           )}
 
           {/* Admin Controls */}
-          {session?.user?.isAdmin && (
+          {false && (
             <div className="flex items-center gap-2">
               <Link
                 href={`/teaching/write?edit=${post.id}`}

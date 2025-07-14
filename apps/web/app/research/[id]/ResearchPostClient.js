@@ -4,7 +4,6 @@ import { use, useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { ChevronLeft, Calendar, Tag, Edit, Trash2, GraduationCap, BarChart2, Network, Plus, FileText, Download, Music, Video, Eye } from 'lucide-react';
 import Link from 'next/link';
-import { useSession } from '@bluenote/auth';
 
 const iconMap = {
   evaluation: GraduationCap,
@@ -16,7 +15,6 @@ const iconMap = {
 export default function ResearchPostClient({ params }) {
   const { id } = use(params);
   const router = useRouter();
-  const { data: session } = useSession();
   const [post, setPost] = useState(null);
   const [loading, setLoading] = useState(true);
   const [fadeIn, setFadeIn] = useState(false);
@@ -112,7 +110,7 @@ export default function ResearchPostClient({ params }) {
                   <div className="w-12 h-12 bg-gradient-to-br from-blue-500/20 to-blue-600/20 backdrop-blur-sm border border-blue-200 rounded-lg flex items-center justify-center">
                     <Icon className="w-6 h-6 text-blue-600" />
                   </div>
-                  {session?.user?.isAdmin && (
+                  {false && (
                     <div className="flex gap-2">
                       <Link
                         href={`/research/edit/${id}`}
