@@ -145,13 +145,13 @@ export default function NavigationFixed() {
             
             {/* 로그인/로그아웃 버튼 - 임시로 로그인만 표시 */}
             <div className="ml-4">
-              <button
-                onClick={() => alert('로그인 기능은 현재 준비 중입니다.')}
+              <Link
+                href="/login"
                 className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-300 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors"
               >
                 <LogIn className="w-4 h-4" />
                 <span>로그인</span>
-              </button>
+              </Link>
             </div>
           </div>
 
@@ -190,16 +190,14 @@ export default function NavigationFixed() {
             
             {/* 모바일 로그인 버튼 */}
             <div className="mt-4 pt-4 border-t border-slate-200">
-              <button
-                onClick={() => {
-                  alert('로그인 기능은 현재 준비 중입니다.');
-                  setIsMenuOpen(false);
-                }}
+              <Link
+                href="/login"
+                onClick={() => setIsMenuOpen(false)}
                 className="flex items-center gap-3 w-full px-4 py-3 bg-white border border-slate-300 rounded-lg text-slate-700 hover:bg-slate-50"
               >
                 <LogIn className="w-5 h-5" />
                 <span>Google로 로그인</span>
-              </button>
+              </Link>
             </div>
           </div>
         </div>
