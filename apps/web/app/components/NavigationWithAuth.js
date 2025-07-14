@@ -56,6 +56,18 @@ export default function NavigationWithAuth() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // 세션 정보 디버깅
+  useEffect(() => {
+    if (session) {
+      console.log('NavigationWithAuth - Session loaded:', {
+        hasSession: !!session,
+        isAdmin: session?.user?.isAdmin,
+        email: session?.user?.email,
+        name: session?.user?.name
+      });
+    }
+  }, [session]);
+
   const menuItems = [
     { 
       href: '/', 
@@ -124,7 +136,7 @@ export default function NavigationWithAuth() {
           </Link>
 
           {/* 데스크톱 메뉴 */}
-          <div className="flex items-center gap-2">
+          <div className="hidden md:flex items-center gap-2">
             {menuItems.map((item) => {
               const IconComponent = item.icon;
               return (
@@ -145,30 +157,24 @@ export default function NavigationWithAuth() {
             
             {/* Claude AI 채팅 버튼 (로그인한 경우만) */}
             {session && (
-              <>
-                {console.log('Rendering Claude chat button, session:', session)}
-                <Link
-                  href="/ai/chat"
-                  className="ml-2 flex items-center gap-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:from-purple-700 hover:to-blue-700 transition-all duration-200 shadow-md hover:shadow-lg"
-                >
-                  <MessageCircle className="w-4 h-4" />
-                  <span>Claude 채팅</span>
-                </Link>
-              </>
+              <Link
+                href="/ai/chat"
+                className="ml-2 flex items-center gap-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:from-purple-700 hover:to-blue-700 transition-all duration-200 shadow-md hover:shadow-lg"
+              >
+                <MessageCircle className="w-4 h-4" />
+                <span>Claude 채팅</span>
+              </Link>
             )}
             
             {/* 관리자 대시보드 버튼 (관리자만) */}
             {session?.user?.isAdmin && (
-              <>
-                {console.log('Rendering admin button, isAdmin:', session.user.isAdmin)}
-                <Link
-                  href="/admin/dashboard"
-                  className="ml-2 flex items-center gap-2 bg-slate-800 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-slate-900 transition-all duration-200"
-                >
-                  <Shield className="w-4 h-4" />
-                  <span>관리자</span>
-                </Link>
-              </>
+              <Link
+                href="/admin/dashboard"
+                className="ml-2 flex items-center gap-2 bg-slate-800 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-slate-900 transition-all duration-200"
+              >
+                <Shield className="w-4 h-4" />
+                <span>관리자</span>
+              </Link>
             )}
             
             {/* 로그인/로그아웃 버튼 */}
@@ -207,7 +213,7 @@ export default function NavigationWithAuth() {
           {/* 모바일 메뉴 버튼 */}
           <button
             onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="lg:hidden flex items-center px-3 py-2 border border-slate-300 rounded-md text-slate-600 hover:text-slate-800 hover:border-slate-400 transition-colors"
+            className="md:hidden flex items-center px-3 py-2 border border-slate-300 rounded-md text-slate-600 hover:text-slate-800 hover:border-slate-400 transition-colors"
           >
             {isMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
@@ -216,7 +222,7 @@ export default function NavigationWithAuth() {
 
       {/* 모바일 메뉴 */}
       {isMenuOpen && (
-        <div className="lg:hidden border-t border-slate-200 bg-white/95 backdrop-blur-sm">
+        <div className="md:hidden border-t border-slate-200 bg-white/95 backdrop-blur-sm">
           <div className="container-custom py-4">
             {menuItems.map((item) => {
               const IconComponent = item.icon;
