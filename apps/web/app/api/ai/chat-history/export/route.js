@@ -1,7 +1,5 @@
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth-options';
-import { promises as fs } from 'fs';
-import path from 'path';
 
 export async function POST(request) {
   try {
@@ -33,26 +31,19 @@ export async function POST(request) {
     
     const filename = `${dateStr}-${cleanTopic}-${cleanUsername}.md`;
     
-    // Create directory structure
-    const baseDir = path.join(process.cwd(), 'chat-history', year.toString(), month);
-    await fs.mkdir(baseDir, { recursive: true });
-    
     // Generate markdown content
     const mdContent = generateMarkdown(messages, session.user, topic, date);
     
-    // Save file
-    const filePath = path.join(baseDir, filename);
-    await fs.writeFile(filePath, mdContent, 'utf-8');
-    
-    // Return success with file info
-    return Response.json({ 
-      success: true, 
-      filename,
-      path: `/chat-history/${year}/${month}/${filename}`
+    // Return markdown as downloadable file
+    return new Response(mdContent, {
+      headers: {
+        'Content-Type': 'text/markdown; charset=utf-8',
+        'Content-Disposition': `attachment; filename="${filename}"`,
+      },
     });
     
   } catch (error) {
-    console.error('Chat history save error:', error);
+    console.error('Chat export error:', error);
     return new Response(JSON.stringify({ 
       error: 'Internal server error', 
       details: error.message 

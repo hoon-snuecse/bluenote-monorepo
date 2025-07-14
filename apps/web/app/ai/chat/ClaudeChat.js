@@ -64,7 +64,7 @@ export default function ClaudeChat() {
         'Claude와의대화'
       );
 
-      const response = await fetch('/api/ai/chat-history/save', {
+      const response = await fetch('/api/ai/chat-history/export', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
@@ -74,14 +74,32 @@ export default function ClaudeChat() {
       });
 
       if (response.ok) {
+        // Download the file
+        const blob = await response.blob();
+        const contentDisposition = response.headers.get('content-disposition');
+        const filenameMatch = contentDisposition?.match(/filename="(.+)"/);
+        const filename = filenameMatch ? filenameMatch[1] : 'chat-history.md';
+        
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+        
         setSaved(true);
         setTimeout(() => setSaved(false), 3000);
       } else {
-        throw new Error('Failed to save');
+        const errorData = await response.json();
+        console.error('Save failed:', errorData);
+        throw new Error(errorData.details || errorData.error || 'Failed to save');
       }
     } catch (error) {
       console.error('Save error:', error);
-      alert('대화 저장에 실패했습니다.');
+      alert(`대화 저장에 실패했습니다.\n\n${error.message}`);
     } finally {
       setSaving(false);
     }
