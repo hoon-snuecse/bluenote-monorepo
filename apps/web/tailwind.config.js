@@ -14,6 +14,11 @@ module.exports = {
     ...baseConfig.theme,
     extend: {
       ...baseConfig.theme.extend,
+      fontFamily: {
+        caveat: ['Caveat', 'cursive'],
+        'dancing-script': ['Dancing Script', 'cursive'],
+        pacifico: ['Pacifico', 'cursive'],
+      },
       colors: {
         ...baseConfig.theme.extend.colors,
         // web 앱 전용 색상
