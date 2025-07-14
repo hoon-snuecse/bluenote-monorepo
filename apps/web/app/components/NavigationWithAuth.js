@@ -32,12 +32,16 @@ export default function NavigationWithAuth() {
     fetch('/api/auth/session-check')
       .then(res => res.json())
       .then(data => {
-        if (data.authenticated) {
+        console.log('Session check response:', data); // 디버깅용
+        if (data.authenticated && data.session) {
           setSession(data.session);
         }
         setLoading(false);
       })
-      .catch(() => setLoading(false));
+      .catch((err) => {
+        console.error('Session check error:', err);
+        setLoading(false);
+      });
   }, []);
 
   // 스크롤 감지
