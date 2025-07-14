@@ -1,9 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 
 export default function TestSessionPage() {
+  const { data: session, status } = useSession();
   const [sessionData, setSessionData] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -29,10 +31,18 @@ export default function TestSessionPage() {
       ) : (
         <div className="space-y-4">
           <div className="p-4 bg-gray-100 rounded">
-            <h2 className="font-bold mb-2">Raw Session Data:</h2>
+            <h2 className="font-bold mb-2">Raw Session Data from API:</h2>
             <pre className="text-sm overflow-auto">
               {JSON.stringify(sessionData, null, 2)}
             </pre>
+          </div>
+
+          <div className="p-4 bg-green-100 rounded">
+            <h2 className="font-bold mb-2">Session from useSession hook:</h2>
+            <pre className="text-sm overflow-auto">
+              {JSON.stringify(session, null, 2)}
+            </pre>
+            <p className="mt-2">Status: {status}</p>
           </div>
 
           {sessionData?.authenticated && (
