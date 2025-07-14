@@ -71,7 +71,7 @@ export const viewport = {
 export default function RootLayout({ children }) {
   return (
     <html lang="ko">
-      <body className="font-inter antialiased">
+      <body>
         <Providers>
           <div className="relative z-10">
             {/* <Navigation /> */}
