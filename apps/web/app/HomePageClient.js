@@ -59,7 +59,7 @@ export default function HomePageClient() {
         <section className="min-h-screen flex items-center justify-center px-4 py-20">
           <div className="container-custom text-center">
             {/* Main Title with Typing Animation */}
-            <h1 className={`text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-space-grotesk font-bold mb-6 transition-all duration-1000 ${
+            <h1 className={`text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-space-grotesk font-bold italic mb-6 transition-all duration-1000 ${
               fadeIn.hero ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
             }`}>
               <span className="bg-gradient-to-br from-slate-900 to-blue-600 bg-clip-text text-transparent">
