@@ -142,14 +142,13 @@ export default function NavigationWithAuth() {
             {session && (
               <Link
                 href="/ai/chat"
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                className={`flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
                   isActive('/ai/chat')
-                    ? 'bg-blue-100 text-blue-700'
-                    : 'text-blue-600 hover:bg-blue-50 hover:text-blue-700'
+                    ? 'bg-blue-700 text-white'
+                    : 'bg-blue-600 text-white hover:bg-blue-700'
                 }`}
               >
-                <MessageCircle className="w-4 h-4" />
-                <span>Claude 채팅</span>
+                <span>.AI.</span>
               </Link>
             )}
             
@@ -159,8 +158,8 @@ export default function NavigationWithAuth() {
                 href="/admin/dashboard"
                 className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
                   isActive('/admin')
-                    ? 'bg-slate-200 text-slate-900'
-                    : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'
+                    ? 'bg-gray-900 text-white'
+                    : 'bg-black text-white hover:bg-gray-900'
                 }`}
               >
                 <Shield className="w-4 h-4" />
@@ -239,14 +238,13 @@ export default function NavigationWithAuth() {
               <Link
                 href="/ai/chat"
                 onClick={() => setIsMenuOpen(false)}
-                className={`flex items-center gap-3 px-4 py-3 rounded-lg text-base font-medium transition-colors ${
+                className={`flex items-center px-4 py-3 rounded-lg text-base font-medium transition-colors ${
                   isActive('/ai/chat')
-                    ? 'bg-blue-100 text-blue-700'
-                    : 'text-blue-600 hover:bg-blue-50'
+                    ? 'bg-blue-700 text-white'
+                    : 'bg-blue-600 text-white hover:bg-blue-700'
                 }`}
               >
-                <MessageCircle className="w-5 h-5" />
-                <span>Claude 채팅</span>
+                <span>.AI.</span>
               </Link>
             )}
             
@@ -257,8 +255,8 @@ export default function NavigationWithAuth() {
                 onClick={() => setIsMenuOpen(false)}
                 className={`flex items-center gap-3 px-4 py-3 rounded-lg text-base font-medium transition-colors ${
                   isActive('/admin')
-                    ? 'bg-slate-200 text-slate-900'
-                    : 'text-slate-700 hover:bg-slate-100'
+                    ? 'bg-gray-900 text-white'
+                    : 'bg-black text-white hover:bg-gray-900'
                 }`}
               >
                 <Shield className="w-5 h-5" />
