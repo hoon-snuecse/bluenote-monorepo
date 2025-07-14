@@ -5,6 +5,7 @@ import { signIn } from 'next-auth/react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { LogIn } from 'lucide-react';
+import SimpleNav from '../components/SimpleNav';
 
 export default function LoginPageClient() {
   const searchParams = useSearchParams();
@@ -31,7 +32,9 @@ export default function LoginPageClient() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <>
+      <SimpleNav />
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
@@ -86,5 +89,6 @@ export default function LoginPageClient() {
         </div>
       </div>
     </div>
+    </>
   );
 }
