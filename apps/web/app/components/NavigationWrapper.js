@@ -1,7 +1,7 @@
 'use client';
 
-import NavigationFixed from './NavigationFixed';
+import NavigationWithAuth from './NavigationWithAuth';
 
 export default function NavigationWrapper() {
-  return <NavigationFixed />;
+  return <NavigationWithAuth />;
 }
