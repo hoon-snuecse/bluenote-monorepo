@@ -1,5 +1,5 @@
 import './globals.css'
-import Navigation from './components/Navigation'
+// import Navigation from './components/Navigation'
 import Footer from './components/Footer'
 import Providers from './components/Providers'
 
@@ -79,8 +79,8 @@ export default function RootLayout({ children }) {
       <body className="font-inter antialiased">
         <Providers>
           <div className="relative z-10">
-            {/* 네비게이션 */}
-            <Navigation />
+            {/* 네비게이션 - 임시로 주석 처리 */}
+            {/* <Navigation /> */}
             
             {/* 메인 콘텐츠 */}
             <main>
