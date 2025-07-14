@@ -18,6 +18,7 @@ module.exports = {
         caveat: ['Caveat', 'cursive'],
         'dancing-script': ['Dancing Script', 'cursive'],
         pacifico: ['Pacifico', 'cursive'],
+        'nanum-pen': ['Nanum Pen Script', 'cursive'],
       },
       colors: {
         ...baseConfig.theme.extend.colors,

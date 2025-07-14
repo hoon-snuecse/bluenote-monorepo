@@ -68,21 +68,25 @@ export default function HomePageClient() {
             </h1>
             
             {/* Subtitle */}
-            <p className={`text-xl sm:text-2xl md:text-3xl text-slate-600 mb-12 font-medium transition-all duration-1000 ${
+            <p className={`text-2xl sm:text-3xl md:text-4xl font-caveat mb-8 transition-all duration-1000 ${
               fadeIn.subtitle ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
             }`}>
-              <TypingAnimation 
-                text="Where Ideas Come to Life" 
-                delay={600}
-                speed={100}
-              />
+              <span className="bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                <TypingAnimation 
+                  text="Where Ideas Come to Life" 
+                  delay={600}
+                  speed={100}
+                />
+              </span>
             </p>
             
             {/* Description */}
-            <p className={`text-lg md:text-xl text-slate-500 max-w-3xl mx-auto leading-relaxed transition-all duration-1000 ${
+            <p className={`text-xl md:text-2xl font-nanum-pen max-w-3xl mx-auto leading-relaxed transition-all duration-1000 ${
               fadeIn.description ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
             }`}>
-              미완성된 생각들이 살아 숨쉬는 공간. 교육연구와 일상의 창조적 작업이 만나는 곳.
+              <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
+                미완성된 생각들이 살아 숨쉬는 공간. 교육연구와 일상의 창조적 작업이 만나는 곳.
+              </span>
             </p>
           </div>
         </section>
