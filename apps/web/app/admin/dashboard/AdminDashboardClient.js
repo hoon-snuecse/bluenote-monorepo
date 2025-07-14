@@ -1,208 +1,146 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { 
-  Users, 
-  MessageSquare, 
-  FileText, 
-  Edit, 
-  Trash2,
-  Activity,
-  TrendingUp,
-  Calendar,
-  ChevronRight,
-  RefreshCw
-} from 'lucide-react';
+import { Shield, Users, FileText, Settings, BarChart3, ArrowLeft } from 'lucide-react';
 
 export default function AdminDashboardClient() {
-  const { data: session, status } = useSession();
-  const router = useRouter();
-  const [stats, setStats] = useState(null);
+  const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
-    if (status === 'loading') return;
-    
-    if (!session || !session.user.isAdmin) {
-      router.push('/');
-      return;
-    }
+    fetch('/api/auth/session-check')
+      .then(res => res.json())
+      .then(data => {
+        if (data.authenticated && data.session?.user?.isAdmin) {
+          setSession(data.session);
+        }
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, []);
 
-    fetchStats();
-  }, [session, status, router]);
-
-  const fetchStats = async () => {
-    try {
-      setRefreshing(true);
-      const res = await fetch('/api/admin/stats');
-      if (res.ok) {
-        const data = await res.json();
-        setStats(data);
-      }
-    } catch (error) {
-      console.error('Failed to fetch stats:', error);
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  };
-
-  if (loading || status === 'loading') {
+  if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-slate-700"></div>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-gray-500">로딩 중...</div>
       </div>
     );
   }
 
-  if (!session || !session.user.isAdmin) {
-    return null;
+  if (!session?.user?.isAdmin) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <Shield className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">접근 권한 없음</h1>
+          <p className="text-gray-600 mb-4">관리자만 이 페이지에 접근할 수 있습니다.</p>
+          <Link href="/" className="text-blue-600 hover:text-blue-800">
+            홈으로 돌아가기
+          </Link>
+        </div>
+      </div>
+    );
   }
 
-  return (
-    <div className="space-y-8">
-      {/* Navigation Cards */}
-      <div className="grid md:grid-cols-2 gap-6">
-        <Link href="/admin/users" className="quote-sheet hover:shadow-lg transition-all group">
-          <div className="relative">
-            <div className="absolute inset-4 border border-dashed border-blue-200 rounded-lg opacity-30"></div>
-            <div className="relative z-10 p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-xl font-semibold text-slate-800 mb-2">사용자 관리</h2>
-                  <p className="text-slate-600">사용자 권한 설정 및 관리</p>
-                </div>
-                <div className="p-3 bg-blue-100 rounded-lg group-hover:bg-blue-200 transition-colors">
-                  <Users className="w-6 h-6 text-blue-600" />
-                </div>
-              </div>
-              <div className="mt-4 flex items-center text-blue-600 font-medium">
-                <span>관리하기</span>
-                <ChevronRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
-              </div>
-            </div>
-          </div>
-        </Link>
+  const adminFeatures = [
+    {
+      title: '사용자 관리',
+      description: '등록된 사용자 목록 및 권한 관리',
+      icon: Users,
+      href: '/admin/users',
+      color: 'bg-blue-500'
+    },
+    {
+      title: '콘텐츠 관리',
+      description: '블로그 포스트 및 페이지 관리',
+      icon: FileText,
+      href: '/admin/content',
+      color: 'bg-green-500'
+    },
+    {
+      title: '통계 및 분석',
+      description: '사이트 사용 통계 및 분석 데이터',
+      icon: BarChart3,
+      href: '/admin/analytics',
+      color: 'bg-purple-500'
+    },
+    {
+      title: '시스템 설정',
+      description: '사이트 설정 및 환경 구성',
+      icon: Settings,
+      href: '/admin/settings',
+      color: 'bg-gray-500'
+    }
+  ];
 
-        <div className="quote-sheet">
-          <div className="relative">
-            <div className="absolute inset-4 border border-dashed border-green-200 rounded-lg opacity-30"></div>
-            <div className="relative z-10 p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-semibold text-slate-800">실시간 통계</h2>
-                <button
-                  onClick={fetchStats}
-                  className={`p-2 text-slate-600 hover:text-slate-800 transition-colors ${refreshing ? 'animate-spin' : ''}`}
-                  disabled={refreshing}
-                >
-                  <RefreshCw className="w-5 h-5" />
-                </button>
-              </div>
-              
-              {stats && (
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-slate-600">전체 사용자</span>
-                    <span className="font-semibold text-slate-800">{stats.totalUsers || 0}명</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-slate-600">오늘 Claude 사용</span>
-                    <span className="font-semibold text-slate-800">{stats.summary?.claudeChats || 0}회</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-slate-600">오늘 작성된 글</span>
-                    <span className="font-semibold text-slate-800">{stats.summary?.postsWritten || 0}개</span>
-                  </div>
-                </div>
-              )}
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <div className="bg-white shadow">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center py-6">
+            <div className="flex items-center">
+              <Shield className="w-8 h-8 text-gray-800 mr-3" />
+              <h1 className="text-2xl font-bold text-gray-900">관리자 대시보드</h1>
             </div>
+            <Link
+              href="/"
+              className="flex items-center text-gray-600 hover:text-gray-900"
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              홈으로
+            </Link>
           </div>
         </div>
       </div>
 
-      {/* Usage Summary */}
-      {stats && stats.summary && (
-        <div className="quote-sheet">
-          <div className="relative">
-            <div className="absolute inset-4 border border-dashed border-purple-200 rounded-lg opacity-30"></div>
-            <div className="relative z-10 p-6">
-              <h3 className="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
-                <Activity className="w-5 h-5" />
-                최근 7일 활동 요약
-              </h3>
-              
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="text-center p-4 bg-purple-50 rounded-lg">
-                  <MessageSquare className="w-8 h-8 text-purple-600 mx-auto mb-2" />
-                  <p className="text-2xl font-bold text-slate-800">{stats.summary.claudeChats}</p>
-                  <p className="text-sm text-slate-600">Claude 대화</p>
-                </div>
-                
-                <div className="text-center p-4 bg-blue-50 rounded-lg">
-                  <FileText className="w-8 h-8 text-blue-600 mx-auto mb-2" />
-                  <p className="text-2xl font-bold text-slate-800">{stats.summary.postsWritten}</p>
-                  <p className="text-sm text-slate-600">글 작성</p>
-                </div>
-                
-                <div className="text-center p-4 bg-green-50 rounded-lg">
-                  <Edit className="w-8 h-8 text-green-600 mx-auto mb-2" />
-                  <p className="text-2xl font-bold text-slate-800">{stats.summary.postsEdited}</p>
-                  <p className="text-sm text-slate-600">글 수정</p>
-                </div>
-                
-                <div className="text-center p-4 bg-red-50 rounded-lg">
-                  <Trash2 className="w-8 h-8 text-red-600 mx-auto mb-2" />
-                  <p className="text-2xl font-bold text-slate-800">{stats.summary.postsDeleted}</p>
-                  <p className="text-sm text-slate-600">글 삭제</p>
-                </div>
-              </div>
-            </div>
-          </div>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="mb-8">
+          <h2 className="text-lg font-medium text-gray-900 mb-2">환영합니다, {session.user.name}님</h2>
+          <p className="text-gray-600">BlueNote Atelier 관리자 대시보드입니다.</p>
         </div>
-      )}
 
-      {/* Daily Usage Chart (placeholder) */}
-      {stats && stats.dailyUsage && stats.dailyUsage.length > 0 && (
-        <div className="quote-sheet">
-          <div className="relative">
-            <div className="absolute inset-4 border border-dashed border-indigo-200 rounded-lg opacity-30"></div>
-            <div className="relative z-10 p-6">
-              <h3 className="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
-                <TrendingUp className="w-5 h-5" />
-                일별 사용량 추이
-              </h3>
-              
-              <div className="space-y-2">
-                {stats.dailyUsage.slice(0, 7).map((day, index) => {
-                  const date = new Date(day.usage_date);
-                  const dateStr = date.toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' });
-                  const maxCount = Math.max(...stats.dailyUsage.map(d => d.action_count));
-                  const percentage = maxCount > 0 ? (day.action_count / maxCount) * 100 : 0;
-                  
-                  return (
-                    <div key={index} className="flex items-center gap-3">
-                      <span className="text-sm text-slate-600 w-16">{dateStr}</span>
-                      <div className="flex-1 bg-slate-100 rounded-full h-6 relative overflow-hidden">
-                        <div 
-                          className="absolute inset-y-0 left-0 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full transition-all duration-500"
-                          style={{ width: `${percentage}%` }}
-                        />
-                        <span className="absolute inset-0 flex items-center justify-center text-xs font-medium text-slate-700">
-                          {day.action_count}회
-                        </span>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {adminFeatures.map((feature) => {
+            const Icon = feature.icon;
+            return (
+              <Link
+                key={feature.href}
+                href={feature.href}
+                className="bg-white rounded-lg shadow hover:shadow-lg transition-shadow p-6"
+              >
+                <div className={`w-12 h-12 ${feature.color} rounded-lg flex items-center justify-center mb-4`}>
+                  <Icon className="w-6 h-6 text-white" />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                  {feature.title}
+                </h3>
+                <p className="text-gray-600 text-sm">
+                  {feature.description}
+                </p>
+              </Link>
+            );
+          })}
+        </div>
+
+        <div className="mt-12 bg-white rounded-lg shadow p-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">빠른 상태</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="border rounded-lg p-4">
+              <p className="text-sm text-gray-600">총 사용자</p>
+              <p className="text-2xl font-bold text-gray-900">-</p>
+            </div>
+            <div className="border rounded-lg p-4">
+              <p className="text-sm text-gray-600">총 포스트</p>
+              <p className="text-2xl font-bold text-gray-900">-</p>
+            </div>
+            <div className="border rounded-lg p-4">
+              <p className="text-sm text-gray-600">오늘 방문자</p>
+              <p className="text-2xl font-bold text-gray-900">-</p>
             </div>
           </div>
         </div>
-      )}
+      </div>
     </div>
   );
 }
