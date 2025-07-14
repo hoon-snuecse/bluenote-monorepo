@@ -142,7 +142,11 @@ export default function NavigationWithAuth() {
             {session && (
               <Link
                 href="/ai/chat"
-                className="ml-2 flex items-center gap-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:from-purple-700 hover:to-blue-700 transition-all duration-200 shadow-md hover:shadow-lg"
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                  isActive('/ai/chat')
+                    ? 'bg-blue-100 text-blue-700'
+                    : 'text-blue-600 hover:bg-blue-50 hover:text-blue-700'
+                }`}
               >
                 <MessageCircle className="w-4 h-4" />
                 <span>Claude 채팅</span>
@@ -153,7 +157,11 @@ export default function NavigationWithAuth() {
             {session?.user?.isAdmin && (
               <Link
                 href="/admin/dashboard"
-                className="ml-2 flex items-center gap-2 bg-slate-800 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-slate-900 transition-all duration-200"
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                  isActive('/admin')
+                    ? 'bg-slate-200 text-slate-900'
+                    : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'
+                }`}
               >
                 <Shield className="w-4 h-4" />
                 <span>관리자</span>
@@ -231,10 +239,14 @@ export default function NavigationWithAuth() {
               <Link
                 href="/ai/chat"
                 onClick={() => setIsMenuOpen(false)}
-                className="flex items-center gap-3 px-4 py-3 mt-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg text-base font-medium"
+                className={`flex items-center gap-3 px-4 py-3 rounded-lg text-base font-medium transition-colors ${
+                  isActive('/ai/chat')
+                    ? 'bg-blue-100 text-blue-700'
+                    : 'text-blue-600 hover:bg-blue-50'
+                }`}
               >
                 <MessageCircle className="w-5 h-5" />
-                <span>Claude와 대화하기</span>
+                <span>Claude 채팅</span>
               </Link>
             )}
             
@@ -243,10 +255,14 @@ export default function NavigationWithAuth() {
               <Link
                 href="/admin/dashboard"
                 onClick={() => setIsMenuOpen(false)}
-                className="flex items-center gap-3 px-4 py-3 mt-2 bg-slate-800 text-white rounded-lg text-base font-medium"
+                className={`flex items-center gap-3 px-4 py-3 rounded-lg text-base font-medium transition-colors ${
+                  isActive('/admin')
+                    ? 'bg-slate-200 text-slate-900'
+                    : 'text-slate-700 hover:bg-slate-100'
+                }`}
               >
                 <Shield className="w-5 h-5" />
-                <span>관리자 대시보드</span>
+                <span>관리자</span>
               </Link>
             )}
             

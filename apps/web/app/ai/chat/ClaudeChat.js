@@ -279,8 +279,8 @@ export default function ClaudeChat() {
         </div>
       </div>
 
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t">
-        <div className="max-w-4xl mx-auto px-4 py-4">
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t shadow-lg">
+        <div className="max-w-4xl mx-auto px-4 py-4 bg-gradient-to-t from-white via-white to-gray-50/50">
           <form
             onSubmit={(e) => {
               e.preventDefault();
@@ -300,7 +300,7 @@ export default function ClaudeChat() {
                   }
                 }}
                 placeholder="메시지를 입력하세요... (Shift+Enter로 줄바꿈)"
-                className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none min-h-[80px] max-h-[200px]"
+                className="w-full px-4 py-3 pr-12 border-2 border-blue-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none min-h-[80px] max-h-[200px] bg-white shadow-sm"
                 disabled={sending}
                 rows="3"
               />
