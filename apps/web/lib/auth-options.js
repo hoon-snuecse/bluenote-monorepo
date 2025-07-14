@@ -25,6 +25,9 @@ export const authOptions = {
     async jwt({ token, user, account }) {
       if (user) {
         token.id = user.id;
+        // 관리자 이메일 확인 - JWT에도 저장
+        const adminEmails = process.env.ADMIN_EMAILS?.split(',').map(email => email.trim()) || [];
+        token.isAdmin = adminEmails.includes(user.email);
       }
       return token;
     },
