@@ -19,7 +19,6 @@ export default function ClaudeChat() {
     { id: 'claude-sonnet-4-20250514', name: 'Claude Sonnet 4', description: '최신 모델, 최고의 성능' },
     { id: 'claude-3-5-sonnet-20241022', name: 'Claude 3.5 Sonnet', description: '균형잡힌 모델' },
     { id: 'claude-3-5-haiku-20241022', name: 'Claude 3.5 Haiku', description: '빠른 응답' },
-    { id: 'claude-3-opus-20240229', name: 'Claude 3 Opus', description: '강력한 성능' },
   ];
 
   useEffect(() => {
