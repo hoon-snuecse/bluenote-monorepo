@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server';
-import { createServerSupabaseClient } from '@/lib/database/supabase';
+import { createClient } from '@/lib/supabase/server';
 
 export async function POST(request) {
   try {
     const data = await request.json();
-    const supabase = createServerSupabaseClient();
+    const supabase = await createClient();
     
     // Check if submission already exists for this student
     const { data: existing } = await supabase
@@ -95,7 +95,7 @@ export async function GET(request) {
       );
     }
 
-    const supabase = createServerSupabaseClient();
+    const supabase = await createClient();
 
     // Fetch submissions from database
     const { data: submissions, error } = await supabase

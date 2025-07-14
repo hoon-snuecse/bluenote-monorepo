@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
-import { createServerSupabaseClient } from '@/lib/database/supabase';
+import { createClient } from '@/lib/supabase/server';
 
 export async function POST(request) {
   try {
@@ -48,7 +48,7 @@ export async function POST(request) {
       }
 
       // Supabase에 저장
-      const supabase = createServerSupabaseClient();
+      const supabase = await createClient();
       const submissions = [];
       const errors = [];
 
