@@ -164,99 +164,63 @@ export default function ClaudeChat() {
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
       <div className="bg-white shadow-sm border-b">
-        <div className="max-w-4xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center space-x-3">
-              <Link href="/" className="text-gray-600 hover:text-gray-900">
-                <ArrowLeft className="w-5 h-5" />
-              </Link>
-              <h1 className="text-xl font-semibold flex items-center">
-                <Bot className="w-6 h-6 mr-2 text-purple-600" />
-                Chat with Claude
-              </h1>
-            </div>
-            
-            {/* Model Selector */}
-            <div className="relative">
-              <button
-                onClick={() => setShowModelSelect(!showModelSelect)}
-                className="flex items-center space-x-2 px-4 py-2 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
-              >
-                <span className="text-sm font-medium">
-                  {models.find(m => m.id === selectedModel)?.name || 'Select Model'}
-                </span>
-                <ChevronDown className={`w-4 h-4 transition-transform ${showModelSelect ? 'rotate-180' : ''}`} />
-              </button>
-              
-              {showModelSelect && (
-                <div className="absolute right-0 mt-2 w-72 bg-white rounded-lg shadow-lg border border-gray-200 z-10">
-                  {models.map((model) => (
-                    <button
-                      key={model.id}
-                      onClick={() => {
-                        setSelectedModel(model.id);
-                        setShowModelSelect(false);
-                      }}
-                      className={`w-full text-left px-4 py-3 hover:bg-gray-50 transition-colors ${
-                        selectedModel === model.id ? 'bg-blue-50' : ''
-                      }`}
-                    >
-                      <div className="font-medium text-sm">{model.name}</div>
-                      <div className="text-xs text-gray-500">{model.description}</div>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
+        <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
+          <div className="flex items-center space-x-3">
+            <Link href="/" className="text-gray-600 hover:text-gray-900">
+              <ArrowLeft className="w-5 h-5" />
+            </Link>
+            <h1 className="text-xl font-semibold flex items-center">
+              <Bot className="w-6 h-6 mr-2 text-purple-600" />
+              Chat with Claude
+            </h1>
           </div>
           
-          {/* Input Area */}
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              handleSend();
-            }}
-            className="space-y-3"
-          >
-            <div className="relative">
-              <textarea
-                ref={textareaRef}
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    handleSend();
-                  }
-                }}
-                placeholder="메시지를 입력하세요... (Shift+Enter로 줄바꿈)"
-                className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none min-h-[80px] max-h-[200px]"
-                disabled={sending}
-                rows="3"
-              />
-              <button
-                type="submit"
-                disabled={!input.trim() || sending}
-                className="absolute bottom-3 right-3 p-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
-              >
-                {sending ? (
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                ) : (
-                  <Send className="w-5 h-5" />
-                )}
-              </button>
-            </div>
-          </form>
+          {/* Model Selector */}
+          <div className="relative">
+            <button
+              onClick={() => setShowModelSelect(!showModelSelect)}
+              className="flex items-center space-x-2 px-4 py-2 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+            >
+              <span className="text-sm font-medium">
+                {models.find(m => m.id === selectedModel)?.name || 'Select Model'}
+              </span>
+              <ChevronDown className={`w-4 h-4 transition-transform ${showModelSelect ? 'rotate-180' : ''}`} />
+            </button>
+            
+            {showModelSelect && (
+              <div className="absolute right-0 mt-2 w-72 bg-white rounded-lg shadow-lg border border-gray-200 z-10">
+                {models.map((model) => (
+                  <button
+                    key={model.id}
+                    onClick={() => {
+                      setSelectedModel(model.id);
+                      setShowModelSelect(false);
+                    }}
+                    className={`w-full text-left px-4 py-3 hover:bg-gray-50 transition-colors ${
+                      selectedModel === model.id ? 'bg-blue-50' : ''
+                    }`}
+                  >
+                    <div className="font-medium text-sm">{model.name}</div>
+                    <div className="text-xs text-gray-500">{model.description}</div>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
       <div className="flex-1 overflow-y-auto">
-        <div className="max-w-4xl mx-auto px-4 py-6">
+        <div className="max-w-4xl mx-auto px-4 py-6 pb-[140px]">
           {messages.length === 0 ? (
-            <div className="text-center py-12">
-              <Bot className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-600">Claude와 대화를 시작해보세요!</p>
-              <p className="text-sm text-gray-500 mt-2">무엇이든 물어보세요.</p>
+            <div className="min-h-[120px] bg-gradient-to-r from-purple-50 to-blue-50 rounded-xl p-8 mb-6 flex items-center justify-center">
+              <div className="text-center">
+                <Bot className="w-10 h-10 text-purple-600 mx-auto mb-3 opacity-80" />
+                <p className="text-lg font-medium text-gray-800 mb-2">
+                  "인공지능의 목표는 인간의 지능을 대체하는 것이 아니라, 증강시키는 것이다"
+                </p>
+                <p className="text-sm text-gray-600">- 더글라스 엥겔바트</p>
+              </div>
             </div>
           ) : (
             <div className="space-y-4">
@@ -312,6 +276,47 @@ export default function ClaudeChat() {
               <div ref={messagesEndRef} />
             </div>
           )}
+        </div>
+      </div>
+
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t">
+        <div className="max-w-4xl mx-auto px-4 py-4">
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleSend();
+            }}
+            className="space-y-3"
+          >
+            <div className="relative">
+              <textarea
+                ref={textareaRef}
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSend();
+                  }
+                }}
+                placeholder="메시지를 입력하세요... (Shift+Enter로 줄바꿈)"
+                className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none min-h-[80px] max-h-[200px]"
+                disabled={sending}
+                rows="3"
+              />
+              <button
+                type="submit"
+                disabled={!input.trim() || sending}
+                className="absolute bottom-3 right-3 p-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+              >
+                {sending ? (
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                ) : (
+                  <Send className="w-5 h-5" />
+                )}
+              </button>
+            </div>
+          </form>
         </div>
       </div>
     </div>
