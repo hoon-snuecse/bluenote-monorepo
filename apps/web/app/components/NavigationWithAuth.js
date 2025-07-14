@@ -33,6 +33,8 @@ export default function NavigationWithAuth() {
       .then(res => res.json())
       .then(data => {
         console.log('Session check response:', data); // 디버깅용
+        console.log('Is admin?', data.session?.user?.isAdmin); // 관리자 확인
+        console.log('User email:', data.session?.user?.email); // 이메일 확인
         if (data.authenticated && data.session) {
           setSession(data.session);
         }
@@ -122,7 +124,7 @@ export default function NavigationWithAuth() {
           </Link>
 
           {/* 데스크톱 메뉴 */}
-          <div className="hidden lg:flex items-center gap-2">
+          <div className="flex items-center gap-2">
             {menuItems.map((item) => {
               const IconComponent = item.icon;
               return (
@@ -143,24 +145,30 @@ export default function NavigationWithAuth() {
             
             {/* Claude AI 채팅 버튼 (로그인한 경우만) */}
             {session && (
-              <Link
-                href="/ai/chat"
-                className="ml-2 flex items-center gap-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:from-purple-700 hover:to-blue-700 transition-all duration-200 shadow-md hover:shadow-lg"
-              >
-                <MessageCircle className="w-4 h-4" />
-                <span>Claude 채팅</span>
-              </Link>
+              <>
+                {console.log('Rendering Claude chat button, session:', session)}
+                <Link
+                  href="/ai/chat"
+                  className="ml-2 flex items-center gap-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:from-purple-700 hover:to-blue-700 transition-all duration-200 shadow-md hover:shadow-lg"
+                >
+                  <MessageCircle className="w-4 h-4" />
+                  <span>Claude 채팅</span>
+                </Link>
+              </>
             )}
             
             {/* 관리자 대시보드 버튼 (관리자만) */}
             {session?.user?.isAdmin && (
-              <Link
-                href="/admin/dashboard"
-                className="ml-2 flex items-center gap-2 bg-slate-800 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-slate-900 transition-all duration-200"
-              >
-                <Shield className="w-4 h-4" />
-                <span>관리자</span>
-              </Link>
+              <>
+                {console.log('Rendering admin button, isAdmin:', session.user.isAdmin)}
+                <Link
+                  href="/admin/dashboard"
+                  className="ml-2 flex items-center gap-2 bg-slate-800 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-slate-900 transition-all duration-200"
+                >
+                  <Shield className="w-4 h-4" />
+                  <span>관리자</span>
+                </Link>
+              </>
             )}
             
             {/* 로그인/로그아웃 버튼 */}
