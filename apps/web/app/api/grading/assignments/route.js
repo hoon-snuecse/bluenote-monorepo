@@ -16,9 +16,6 @@ export async function GET(request) {
 
     const supabase = await createClient();
     
-    // Get user from Supabase auth
-    const { data: { user } } = await supabase.auth.getUser();
-    
     // Fetch assignments from database
     const { data: assignments, error } = await supabase
       .from('assignments')
@@ -73,11 +70,14 @@ export async function POST(request) {
     }
 
     const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-
-    if (!user) {
+    
+    // NextAuth session을 사용하므로 user ID는 session에서 가져옴
+    // Supabase auth가 아닌 NextAuth를 사용 중
+    const userEmail = session.user?.email;
+    
+    if (!userEmail) {
       return NextResponse.json(
-        { success: false, error: '사용자 정보를 찾을 수 없습니다' },
+        { success: false, error: '사용자 이메일을 찾을 수 없습니다' },
         { status: 401 }
       );
     }
@@ -94,7 +94,7 @@ export async function POST(request) {
       evaluation_levels: data.evaluationLevels,
       level_count: data.levelCount,
       grading_criteria: data.gradingCriteria,
-      created_by: user.id
+      // created_by 필드를 임시로 제외 (테이블에서 nullable로 변경 필요)
     };
 
     // Insert into database
@@ -107,7 +107,12 @@ export async function POST(request) {
     if (error) {
       console.error('Error creating assignment:', error);
       return NextResponse.json(
-        { success: false, error: '과제 생성 중 오류가 발생했습니다' },
+        { 
+          success: false, 
+          error: '과제 생성 중 오류가 발생했습니다',
+          details: error.message,
+          hint: error.hint || 'Supabase 테이블이 생성되었는지 확인하세요'
+        },
         { status: 500 }
       );
     }

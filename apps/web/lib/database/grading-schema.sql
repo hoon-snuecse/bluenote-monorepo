@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS assignments (
   evaluation_levels JSONB NOT NULL,
   level_count TEXT NOT NULL,
   grading_criteria TEXT,
-  created_by UUID REFERENCES auth.users(id),
+  created_by UUID REFERENCES auth.users(id) DEFAULT NULL,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW()),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW())
 );
@@ -67,13 +67,13 @@ CREATE POLICY "Teachers can view all assignments" ON assignments
 CREATE POLICY "Teachers can create assignments" ON assignments
   FOR INSERT WITH CHECK (auth.uid() IS NOT NULL);
 
--- Teachers can update their own assignments
-CREATE POLICY "Teachers can update own assignments" ON assignments
-  FOR UPDATE USING (auth.uid() = created_by);
+-- Teachers can update assignments
+CREATE POLICY "Teachers can update assignments" ON assignments
+  FOR UPDATE USING (auth.uid() IS NOT NULL);
 
--- Teachers can delete their own assignments
-CREATE POLICY "Teachers can delete own assignments" ON assignments
-  FOR DELETE USING (auth.uid() = created_by);
+-- Teachers can delete assignments
+CREATE POLICY "Teachers can delete assignments" ON assignments
+  FOR DELETE USING (auth.uid() IS NOT NULL);
 
 -- Submissions policies
 -- Anyone can create submissions (no auth required for students)

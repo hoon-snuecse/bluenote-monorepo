@@ -66,7 +66,8 @@ export default function NewAssignmentPage() {
         // 성공 시 과제 목록 페이지로 이동
         router.push('/grading/assignments');
       } else {
-        alert('과제 생성 중 오류가 발생했습니다.');
+        console.error('Assignment creation error:', result);
+        alert(`과제 생성 중 오류가 발생했습니다.\n\n${result.error}\n${result.details || ''}\n${result.hint || ''}`);
       }
     } catch (error) {
       console.error('과제 생성 오류:', error);
