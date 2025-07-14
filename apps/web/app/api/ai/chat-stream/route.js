@@ -37,7 +37,7 @@ export async function POST(request) {
 
       // For now, let's use non-streaming API to verify it works
       const completion = await anthropic.messages.create({
-        model: 'claude-3-sonnet-20240229',
+        model: 'claude-3-5-sonnet-20241022',
         max_tokens: 1024,
         messages: [
           {
