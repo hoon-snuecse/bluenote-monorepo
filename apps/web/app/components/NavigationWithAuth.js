@@ -156,13 +156,12 @@ export default function NavigationWithAuth() {
             {session?.user?.isAdmin && (
               <Link
                 href="/admin/dashboard"
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                className={`flex items-center px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 whitespace-nowrap ${
                   isActive('/admin')
                     ? 'bg-gray-900 text-white'
                     : 'bg-black text-white hover:bg-gray-900'
                 }`}
               >
-                <Shield className="w-4 h-4" />
                 <span>관리자</span>
               </Link>
             )}
@@ -175,14 +174,14 @@ export default function NavigationWithAuth() {
                 <div className="flex items-center gap-3">
                   <Link
                     href="/auth/status"
-                    className="flex items-center gap-2 text-sm text-slate-600 hover:text-slate-800"
+                    className="flex items-center gap-2 text-sm text-slate-600 hover:text-slate-800 whitespace-nowrap"
                   >
                     <User className="w-4 h-4" />
-                    <span>{session.user?.name || session.user?.email}</span>
+                    <span className="max-w-[150px] truncate">{session.user?.name || session.user?.email}</span>
                   </Link>
                   <button
                     onClick={handleLogout}
-                    className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-800 transition-colors"
+                    className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-800 transition-colors whitespace-nowrap"
                   >
                     <LogOut className="w-4 h-4" />
                     <span>로그아웃</span>
@@ -253,13 +252,12 @@ export default function NavigationWithAuth() {
               <Link
                 href="/admin/dashboard"
                 onClick={() => setIsMenuOpen(false)}
-                className={`flex items-center gap-3 px-4 py-3 rounded-lg text-base font-medium transition-colors ${
+                className={`flex items-center px-4 py-3 rounded-lg text-base font-medium transition-colors whitespace-nowrap ${
                   isActive('/admin')
                     ? 'bg-gray-900 text-white'
                     : 'bg-black text-white hover:bg-gray-900'
                 }`}
               >
-                <Shield className="w-5 h-5" />
                 <span>관리자</span>
               </Link>
             )}
