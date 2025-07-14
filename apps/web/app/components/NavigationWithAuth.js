@@ -142,10 +142,10 @@ export default function NavigationWithAuth() {
             {session && (
               <Link
                 href="/ai/chat"
-                className={`flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 whitespace-nowrap ${
+                className={`flex items-center px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 whitespace-nowrap ${
                   isActive('/ai/chat')
-                    ? 'bg-blue-700/80 text-white'
-                    : 'bg-blue-600/80 text-white hover:bg-blue-700/80'
+                    ? 'bg-blue-100 text-blue-700'
+                    : 'text-blue-600 hover:bg-blue-50 hover:text-blue-700'
                 }`}
               >
                 <span>.AI.</span>
@@ -158,8 +158,8 @@ export default function NavigationWithAuth() {
                 href="/admin/dashboard"
                 className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 whitespace-nowrap ${
                   isActive('/admin')
-                    ? 'bg-gray-900/80 text-white'
-                    : 'bg-black/80 text-white hover:bg-gray-900/80'
+                    ? 'bg-slate-100 text-slate-900'
+                    : 'text-slate-900 hover:bg-slate-100 hover:text-black'
                 }`}
               >
                 <Shield className="w-4 h-4 flex-shrink-0" />
@@ -240,8 +240,8 @@ export default function NavigationWithAuth() {
                 onClick={() => setIsMenuOpen(false)}
                 className={`flex items-center px-4 py-3 rounded-lg text-base font-medium transition-colors whitespace-nowrap ${
                   isActive('/ai/chat')
-                    ? 'bg-blue-700/80 text-white'
-                    : 'bg-blue-600/80 text-white hover:bg-blue-700/80'
+                    ? 'bg-blue-100 text-blue-700'
+                    : 'text-blue-600 hover:bg-blue-50'
                 }`}
               >
                 <span>.AI.</span>
@@ -255,8 +255,8 @@ export default function NavigationWithAuth() {
                 onClick={() => setIsMenuOpen(false)}
                 className={`flex items-center gap-3 px-4 py-3 rounded-lg text-base font-medium transition-colors whitespace-nowrap ${
                   isActive('/admin')
-                    ? 'bg-gray-900/80 text-white'
-                    : 'bg-black/80 text-white hover:bg-gray-900/80'
+                    ? 'bg-slate-100 text-slate-900'
+                    : 'text-slate-900 hover:bg-slate-50'
                 }`}
               >
                 <Shield className="w-5 h-5 flex-shrink-0" />
