@@ -1,5 +1,6 @@
 'use client';
 
+import { Suspense } from 'react';
 import dynamic from 'next/dynamic';
 
 const Navigation = dynamic(() => import('./Navigation'), {
@@ -11,4 +12,13 @@ const Navigation = dynamic(() => import('./Navigation'), {
   ),
 });
 
-export default Navigation;
+// Error boundary wrapper
+function NavigationWithErrorBoundary() {
+  return (
+    <Suspense fallback={<div className="h-16 bg-white shadow-sm" />}>
+      <Navigation />
+    </Suspense>
+  );
+}
+
+export default NavigationWithErrorBoundary;
