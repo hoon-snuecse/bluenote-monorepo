@@ -1,34 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth-options';
-
-// Mock data for now
-const mockAssignments = [
-  {
-    id: '1',
-    title: '2024 1학기 논설문 쓰기',
-    schoolName: '서울초등학교',
-    gradeLevel: '6학년',
-    writingType: '논설문',
-    evaluationDomains: ['주장의 명확성', '근거의 타당성', '논리적 구조', '설득력'],
-    evaluationLevels: ['매우 우수', '우수', '보통', '미흡'],
-    levelCount: '4',
-    gradingCriteria: '논설문 평가 기준',
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: '2',
-    title: '창의적 글쓰기 평가',
-    schoolName: '서울초등학교',
-    gradeLevel: '5학년',
-    writingType: '창작문',
-    evaluationDomains: ['창의성', '표현력', '구성력', '맞춤법'],
-    evaluationLevels: ['매우 우수', '우수', '보통', '미흡'],
-    levelCount: '4',
-    gradingCriteria: '창작문 평가 기준',
-    createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-  }
-];
+import { createClient } from '@/lib/supabase/server';
 
 export async function GET(request) {
   try {
@@ -41,10 +14,42 @@ export async function GET(request) {
       );
     }
 
-    // Return mock data for now
+    const supabase = await createClient();
+    
+    // Get user from Supabase auth
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    // Fetch assignments from database
+    const { data: assignments, error } = await supabase
+      .from('assignments')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching assignments:', error);
+      return NextResponse.json(
+        { success: false, error: '과제 목록을 불러오는 중 오류가 발생했습니다' },
+        { status: 500 }
+      );
+    }
+
+    // Transform data to match frontend format
+    const transformedAssignments = assignments?.map(assignment => ({
+      id: assignment.id,
+      title: assignment.title,
+      schoolName: assignment.school_name,
+      gradeLevel: assignment.grade_level,
+      writingType: assignment.writing_type,
+      evaluationDomains: assignment.evaluation_domains,
+      evaluationLevels: assignment.evaluation_levels,
+      levelCount: assignment.level_count,
+      gradingCriteria: assignment.grading_criteria,
+      createdAt: assignment.created_at
+    })) || [];
+
     return NextResponse.json({
       success: true,
-      assignments: mockAssignments
+      assignments: transformedAssignments
     });
     
   } catch (error) {
@@ -67,18 +72,63 @@ export async function POST(request) {
       );
     }
 
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+      return NextResponse.json(
+        { success: false, error: '사용자 정보를 찾을 수 없습니다' },
+        { status: 401 }
+      );
+    }
+
     const data = await request.json();
     
-    // Mock create - just return the data with an ID
-    const newAssignment = {
-      ...data,
-      id: String(Date.now()),
-      createdAt: new Date().toISOString()
+    // Prepare data for Supabase (snake_case)
+    const assignmentData = {
+      title: data.title,
+      school_name: data.schoolName,
+      grade_level: data.gradeLevel,
+      writing_type: data.writingType,
+      evaluation_domains: data.evaluationDomains,
+      evaluation_levels: data.evaluationLevels,
+      level_count: data.levelCount,
+      grading_criteria: data.gradingCriteria,
+      created_by: user.id
+    };
+
+    // Insert into database
+    const { data: newAssignment, error } = await supabase
+      .from('assignments')
+      .insert([assignmentData])
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error creating assignment:', error);
+      return NextResponse.json(
+        { success: false, error: '과제 생성 중 오류가 발생했습니다' },
+        { status: 500 }
+      );
+    }
+
+    // Transform response to match frontend format
+    const transformedAssignment = {
+      id: newAssignment.id,
+      title: newAssignment.title,
+      schoolName: newAssignment.school_name,
+      gradeLevel: newAssignment.grade_level,
+      writingType: newAssignment.writing_type,
+      evaluationDomains: newAssignment.evaluation_domains,
+      evaluationLevels: newAssignment.evaluation_levels,
+      levelCount: newAssignment.level_count,
+      gradingCriteria: newAssignment.grading_criteria,
+      createdAt: newAssignment.created_at
     };
 
     return NextResponse.json({
       success: true,
-      assignment: newAssignment
+      assignment: transformedAssignment
     });
     
   } catch (error) {
