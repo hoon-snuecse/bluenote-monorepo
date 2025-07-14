@@ -1,43 +1,77 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createServerSupabaseClient } from '@/lib/database/supabase';
 
 export async function POST(request) {
   try {
     const data = await request.json();
-    const supabase = await createClient();
+    const supabase = createServerSupabaseClient();
     
-    // Prepare submission data
-    const submissionData = {
-      assignment_id: data.assignmentId,
-      student_name: data.studentName,
-      student_number: data.studentNumber,
-      class_name: data.className,
-      content: data.content,
-      status: 'submitted'
-    };
-
-    // Insert into database
-    const { data: submission, error } = await supabase
+    // Check if submission already exists for this student
+    const { data: existing } = await supabase
       .from('submissions')
-      .insert([submissionData])
-      .select()
+      .select('id')
+      .eq('assignment_id', data.assignmentId)
+      .eq('student_name', data.studentName)
       .single();
-
-    if (error) {
-      console.error('Error creating submission:', error);
-      return NextResponse.json(
-        { success: false, error: '제출 중 오류가 발생했습니다' },
-        { status: 500 }
-      );
-    }
-
-    return NextResponse.json({
-      success: true,
-      submission: {
-        id: submission.id,
-        submittedAt: submission.submitted_at
+    
+    if (existing) {
+      // Update existing submission
+      const { data: submission, error } = await supabase
+        .from('submissions')
+        .update({
+          content: data.content,
+          submitted_at: new Date().toISOString()
+        })
+        .eq('id', existing.id)
+        .select()
+        .single();
+      
+      if (error) {
+        console.error('Error updating submission:', error);
+        return NextResponse.json(
+          { success: false, error: '제출 업데이트 중 오류가 발생했습니다' },
+          { status: 500 }
+        );
       }
-    });
+      
+      return NextResponse.json({
+        success: true,
+        submission: {
+          id: submission.id,
+          submittedAt: submission.submitted_at
+        }
+      });
+    } else {
+      // Create new submission
+      const submissionData = {
+        assignment_id: data.assignmentId,
+        student_name: data.studentName,
+        content: data.content,
+        submitted_at: new Date().toISOString()
+      };
+
+      const { data: submission, error } = await supabase
+        .from('submissions')
+        .insert([submissionData])
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error creating submission:', error);
+        return NextResponse.json(
+          { success: false, error: '제출 중 오류가 발생했습니다' },
+          { status: 500 }
+        );
+      }
+
+      return NextResponse.json({
+        success: true,
+        submission: {
+          id: submission.id,
+          submittedAt: submission.submitted_at
+        }
+      });
+    }
     
   } catch (error) {
     console.error('Error creating submission:', error);
@@ -61,7 +95,7 @@ export async function GET(request) {
       );
     }
 
-    const supabase = await createClient();
+    const supabase = createServerSupabaseClient();
 
     // Fetch submissions from database
     const { data: submissions, error } = await supabase
@@ -83,11 +117,10 @@ export async function GET(request) {
       id: submission.id,
       assignmentId: submission.assignment_id,
       studentName: submission.student_name,
-      studentNumber: submission.student_number,
-      className: submission.class_name,
       content: submission.content,
       submittedAt: submission.submitted_at,
-      status: submission.status
+      evaluationStatus: submission.evaluation_status || 'pending',
+      evaluationId: submission.evaluation_id
     })) || [];
 
     return NextResponse.json({

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Plus, Edit, Trash2, Users, Calendar, FileText, BookOpen, School, Link, BarChart3, PieChart } from 'lucide-react';
+import { Plus, Edit, Trash2, Users, Calendar, FileText, BookOpen, School, Link, BarChart3, PieChart, Upload } from 'lucide-react';
 
 export default function AssignmentsPage() {
   const router = useRouter();
@@ -161,20 +161,27 @@ export default function AssignmentsPage() {
 
                 <div className="grid grid-cols-2 gap-2 mb-2">
                   <button
+                    onClick={() => router.push(`/grading/assignments/${assignment.id}/collect`)}
+                    className="px-3 py-2 bg-green-500/20 text-slate-700 rounded-lg hover:bg-green-500/30 transition-colors flex items-center justify-center gap-2 border border-green-200/30 text-sm font-medium"
+                  >
+                    <Upload className="w-4 h-4" />
+                    글 수집
+                  </button>
+                  <button
                     onClick={() => handleViewSubmissions(assignment.id)}
                     className="px-3 py-2 bg-white/60 text-slate-700 rounded-lg hover:bg-white/80 transition-colors flex items-center justify-center gap-2 border border-slate-200/50 text-sm"
                   >
                     <Users className="w-4 h-4" />
                     제출 현황
                   </button>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
                   <button
                     onClick={() => handleRunEvaluation(assignment.id)}
                     className="px-3 py-2 bg-blue-500/20 text-slate-700 rounded-lg hover:bg-blue-500/30 transition-colors flex items-center justify-center gap-2 border border-blue-200/30 text-sm font-medium"
                   >
                     AI 평가
                   </button>
-                </div>
-                <div className="grid grid-cols-2 gap-2">
                   <button
                     onClick={() => handleViewDashboard(assignment.id)}
                     className="px-3 py-2 bg-purple-500/20 text-slate-700 rounded-lg hover:bg-purple-500/30 transition-colors flex items-center justify-center gap-2 border border-purple-200/30 text-sm font-medium"

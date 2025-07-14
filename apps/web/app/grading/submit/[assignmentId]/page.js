@@ -15,8 +15,6 @@ export default function SubmitPage() {
   
   const [formData, setFormData] = useState({
     studentName: '',
-    studentNumber: '',
-    className: '',
     content: ''
   });
 
@@ -26,18 +24,16 @@ export default function SubmitPage() {
 
   const fetchAssignment = async () => {
     try {
-      // Mock data for now
-      const mockAssignment = {
-        id: assignmentId,
-        title: '2024 1학기 논설문 쓰기',
-        schoolName: '서울초등학교',
-        gradeLevel: '6학년',
-        writingType: '논설문',
-        instructions: '주어진 주제에 대해 자신의 의견을 논리적으로 작성하세요.',
-        minLength: 300,
-        maxLength: 1000
-      };
-      setAssignment(mockAssignment);
+      const response = await fetch('/api/grading/assignments');
+      const data = await response.json();
+      if (data.success) {
+        const found = data.assignments.find(a => a.id === assignmentId);
+        if (found) {
+          setAssignment(found);
+        } else {
+          alert('과제를 찾을 수 없습니다.');
+        }
+      }
     } catch (error) {
       console.error('과제 정보 조회 실패:', error);
     } finally {
@@ -135,10 +131,7 @@ export default function SubmitPage() {
           </div>
           <div className="bg-blue-50 rounded-lg p-4 mt-4">
             <p className="text-blue-800 font-medium mb-2">과제 안내</p>
-            <p className="text-blue-700">{assignment.instructions}</p>
-            <p className="text-sm text-blue-600 mt-2">
-              * 글자 수: {assignment.minLength}자 이상 {assignment.maxLength}자 이하
-            </p>
+            <p className="text-blue-700">글의 종류: {assignment.writingType}</p>
           </div>
         </div>
 
@@ -149,51 +142,19 @@ export default function SubmitPage() {
             학생 정보
           </h2>
           
-          <div className="grid md:grid-cols-3 gap-4 mb-6">
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">
-                이름 <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                name="studentName"
-                value={formData.studentName}
-                onChange={handleChange}
-                required
-                placeholder="홍길동"
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">
-                학번 <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                name="studentNumber"
-                value={formData.studentNumber}
-                onChange={handleChange}
-                required
-                placeholder="20240101"
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">
-                반 <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                name="className"
-                value={formData.className}
-                onChange={handleChange}
-                required
-                placeholder="6학년 1반"
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
+          <div className="mb-6">
+            <label className="block text-sm font-medium text-slate-700 mb-2">
+              이름 <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              name="studentName"
+              value={formData.studentName}
+              onChange={handleChange}
+              required
+              placeholder="홍길동"
+              className="w-full max-w-xs px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
           </div>
 
           <div className="mb-6">
@@ -212,14 +173,7 @@ export default function SubmitPage() {
             />
             <div className="flex justify-between mt-2">
               <p className="text-sm text-slate-600">
-                현재 글자 수: <span className={`font-medium ${
-                  formData.content.length < assignment.minLength ? 'text-red-600' :
-                  formData.content.length > assignment.maxLength ? 'text-red-600' :
-                  'text-green-600'
-                }`}>{formData.content.length}자</span>
-              </p>
-              <p className="text-sm text-slate-500">
-                {assignment.minLength}-{assignment.maxLength}자
+                현재 글자 수: <span className="font-medium text-slate-700">{formData.content.length}자</span>
               </p>
             </div>
           </div>
@@ -234,7 +188,7 @@ export default function SubmitPage() {
             </button>
             <button
               type="submit"
-              disabled={submitting || formData.content.length < assignment.minLength || formData.content.length > assignment.maxLength}
+              disabled={submitting || formData.content.length === 0}
               className="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {submitting ? (
