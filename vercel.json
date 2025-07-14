@@ -1,30 +1,6 @@
 {
-  "buildCommand": "pnpm install && pnpm build",
-  "installCommand": "pnpm install",
-  "framework": null,
-  "outputDirectory": null,
-  "builds": [
-    {
-      "src": "apps/bluenote/package.json",
-      "use": "@vercel/next"
-    },
-    {
-      "src": "apps/grading/package.json",
-      "use": "@vercel/next"
-    }
-  ],
-  "rewrites": [
-    {
-      "source": "/grading/:path*",
-      "destination": "/apps/grading/:path*"
-    },
-    {
-      "source": "/grading",
-      "destination": "/apps/grading"
-    },
-    {
-      "source": "/:path*",
-      "destination": "/apps/bluenote/:path*"
-    }
-  ]
+  "buildCommand": "cd apps/bluenote && npm install && npm run build",
+  "outputDirectory": "apps/bluenote/.next",
+  "installCommand": "cd apps/bluenote && npm install",
+  "framework": "nextjs"
 }
