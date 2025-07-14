@@ -10,7 +10,7 @@ export default function GradingRedirectClient() {
     // 세션 정보를 쿠키로 전달하면서 리다이렉트
     if (session) {
       // grading 앱 페이지로 이동
-      window.location.href = '/grading';
+      window.location.href = '/grading/assignments';
     }
   }, [session]);
 

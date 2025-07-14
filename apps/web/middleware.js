@@ -18,7 +18,8 @@ export default withAuth(
     // 로그인만 필요한 경로 (모든 사용자)
     const authRequiredPaths = [
       '/ai/chat',
-      '/auth/status'
+      '/auth/status',
+      '/grading'  // submit 제외
     ];
     
     // 관리자 권한 체크
@@ -54,8 +55,11 @@ export const config = {
     // 로그인 필요 경로
     '/ai/chat/:path*',
     '/auth/status/:path*',
+    // grading 경로 (submit 제외)
+    '/grading/((?!submit).*)',
     // API 경로 보호
     '/api/ai/:path*',
-    '/api/admin/:path*'
+    '/api/admin/:path*',
+    '/api/grading/((?!submit).*)'
   ],
 };
