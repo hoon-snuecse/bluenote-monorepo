@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 
-export default function TypingAnimation({ text, className = '', delay = 0 }) {
+export default function TypingAnimation({ text, className = '', delay = 0, speed = 100 }) {
   const [displayText, setDisplayText] = useState('');
   const [currentIndex, setCurrentIndex] = useState(0);
 
@@ -19,18 +19,18 @@ export default function TypingAnimation({ text, className = '', delay = 0 }) {
       const timer = setTimeout(() => {
         setDisplayText(text.slice(0, currentIndex));
         setCurrentIndex(currentIndex + 1);
-      }, 100); // Typing speed
+      }, speed); // Typing speed
 
       return () => clearTimeout(timer);
     }
-  }, [currentIndex, text, delay]);
+  }, [currentIndex, text, delay, speed]);
 
   return (
-    <h1 className={`${className} bg-gradient-to-br from-slate-900 to-blue-600 bg-clip-text text-transparent`}>
+    <span className={className}>
       {displayText}
-      <span className={`inline-block w-[3px] h-[1.2em] ml-1 bg-blue-600 ${
+      <span className={`inline-block w-[3px] h-[1.2em] ml-1 bg-current ${
         currentIndex <= text.length ? 'animate-pulse' : 'opacity-0'
       }`} />
-    </h1>
+    </span>
   );
 }
