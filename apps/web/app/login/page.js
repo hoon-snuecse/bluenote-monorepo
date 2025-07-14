@@ -1,12 +1,22 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { signIn } from 'next-auth/react';
+import { signIn, useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 import { LogIn } from 'lucide-react';
 
 export default function LoginPage() {
+  const { data: session, status } = useSession();
+  const router = useRouter();
   const [envStatus, setEnvStatus] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // 이미 로그인된 경우 홈으로 리다이렉트
+    if (status === 'authenticated') {
+      router.push('/');
+    }
+  }, [status, router]);
 
   useEffect(() => {
     fetch('/api/env-check')

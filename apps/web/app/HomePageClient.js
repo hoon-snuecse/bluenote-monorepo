@@ -1,10 +1,12 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useSession } from 'next-auth/react';
 import TypingAnimation from './components/TypingAnimation';
 import FloatingElements from './components/FloatingElements';
 
 export default function HomePageClient() {
+  const { data: session, status } = useSession();
   const [fadeIn, setFadeIn] = useState({
     hero: false,
     subtitle: false,
@@ -84,6 +86,11 @@ export default function HomePageClient() {
             }`}>
               미완성된 생각들이 살아 숨쉬는 공간. 교육연구와 일상의 창조적 작업이 만나는 곳.
             </p>
+            
+            {/* 세션 상태 표시 (디버깅용) */}
+            <div className="mt-8 text-sm text-slate-600">
+              <p>로그인 상태: {status === 'loading' ? '확인 중...' : session ? `${session.user?.email}로 로그인됨` : '로그인되지 않음'}</p>
+            </div>
           </div>
         </section>
 
