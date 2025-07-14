@@ -1,7 +1,18 @@
 {
-  "buildCommand": "pnpm build",
+  "buildCommand": "pnpm install && pnpm build",
+  "installCommand": "pnpm install",
   "framework": null,
   "outputDirectory": null,
+  "builds": [
+    {
+      "src": "apps/bluenote/package.json",
+      "use": "@vercel/next"
+    },
+    {
+      "src": "apps/grading/package.json",
+      "use": "@vercel/next"
+    }
+  ],
   "rewrites": [
     {
       "source": "/grading/:path*",
@@ -15,13 +26,5 @@
       "source": "/:path*",
       "destination": "/apps/bluenote/:path*"
     }
-  ],
-  "functions": {
-    "apps/bluenote/api/**/*.{js,ts}": {
-      "maxDuration": 30
-    },
-    "apps/grading/api/**/*.{js,ts}": {
-      "maxDuration": 30
-    }
-  }
+  ]
 }
