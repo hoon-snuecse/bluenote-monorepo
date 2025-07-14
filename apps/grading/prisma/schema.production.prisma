@@ -1,0 +1,133 @@
+// Production schema for PostgreSQL
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Assignment {
+  id                String   @id @default(cuid())
+  title             String
+  schoolName        String
+  gradeLevel        String
+  writingType       String
+  evaluationDomains String[]
+  evaluationLevels  String[]
+  levelCount        Int
+  gradingCriteria   String   @db.Text
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  submissions       Submission[]
+  evaluations       Evaluation[]
+  
+  @@index([schoolName])
+  @@index([createdAt])
+}
+
+model Submission {
+  id           String       @id @default(cuid())
+  assignmentId String
+  studentName  String
+  studentId    String
+  content      String       @db.Text
+  submittedAt  DateTime     @default(now())
+  status       String       @default("submitted")
+  
+  assignment   Assignment   @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  evaluations  Evaluation[]
+  
+  @@index([assignmentId])
+  @@index([studentId])
+  @@index([submittedAt])
+}
+
+model Evaluation {
+  id                     String   @id @default(cuid())
+  submissionId           String
+  assignmentId           String
+  studentId              String
+  domainEvaluations      Json
+  overallLevel           String
+  overallFeedback        String   @db.Text
+  improvementSuggestions String[]
+  strengths              String[]
+  evaluatedAt            DateTime @default(now())
+  evaluatedBy            String   @default("AI")
+  
+  submission             Submission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  assignment             Assignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  accessTokens           AccessToken[]
+  
+  @@index([submissionId])
+  @@index([assignmentId])
+  @@index([studentId])
+  @@index([evaluatedAt])
+}
+
+model AccessToken {
+  id           String   @id @default(cuid())
+  token        String   @unique
+  evaluationId String
+  studentId    String
+  expiresAt    DateTime
+  used         Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  
+  evaluation   Evaluation @relation(fields: [evaluationId], references: [id], onDelete: Cascade)
+  
+  @@index([token])
+  @@index([expiresAt])
+}
+
+model EvaluationTemplate {
+  id                String   @id @default(cuid())
+  name              String
+  description       String?
+  writingType       String
+  evaluationDomains String[]
+  evaluationLevels  String[]
+  levelCount        Int
+  gradingCriteria   String   @db.Text
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  @@index([name])
+  @@index([writingType])
+}
+
+model SystemSettings {
+  id                 String   @id @default(cuid())
+  key                String   @unique
+  value              Json
+  encrypted          Boolean  @default(false)
+  updatedAt          DateTime @updatedAt
+  
+  @@index([key])
+}
+
+model User {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  password     String
+  name         String
+  role         UserRole  @default(TEACHER)
+  schoolName   String?
+  isActive     Boolean   @default(true)
+  lastLoginAt  DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  
+  @@index([email])
+  @@index([schoolName])
+}
+
+enum UserRole {
+  TEACHER
+  ADMIN
+  STUDENT
+}

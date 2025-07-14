@@ -1,0 +1,27 @@
+{
+  "buildCommand": "pnpm build",
+  "framework": null,
+  "outputDirectory": null,
+  "rewrites": [
+    {
+      "source": "/grading/:path*",
+      "destination": "/apps/grading/:path*"
+    },
+    {
+      "source": "/grading",
+      "destination": "/apps/grading"
+    },
+    {
+      "source": "/:path*",
+      "destination": "/apps/bluenote/:path*"
+    }
+  ],
+  "functions": {
+    "apps/bluenote/api/**/*.{js,ts}": {
+      "maxDuration": 30
+    },
+    "apps/grading/api/**/*.{js,ts}": {
+      "maxDuration": 30
+    }
+  }
+}

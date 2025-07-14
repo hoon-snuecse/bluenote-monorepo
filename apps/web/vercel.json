@@ -1,0 +1,10 @@
+{
+  "functions": {
+    "app/api/research/upload/route.js": {
+      "maxDuration": 60
+    },
+    "app/api/shed/upload/route.js": {
+      "maxDuration": 60
+    }
+  }
+}

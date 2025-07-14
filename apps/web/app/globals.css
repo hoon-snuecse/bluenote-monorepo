@@ -1,0 +1,322 @@
+/* Google Fonts - must be first */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* CSS Variables - Blueprint Design System */
+:root {
+  /* Blue Scale */
+  --blue-50: #eff6ff;
+  --blue-100: #dbeafe;
+  --blue-200: #bfdbfe;
+  --blue-300: #93c5fd;
+  --blue-400: #60a5fa;
+  --blue-500: #3b82f6;
+  --blue-600: #2563eb;
+  --blue-700: #1d4ed8;
+  --blue-800: #1e40af;
+  --blue-900: #1e3a8a;
+  
+  /* Slate Scale */
+  --slate-50: #f8fafc;
+  --slate-100: #f1f5f9;
+  --slate-200: #e2e8f0;
+  --slate-300: #cbd5e1;
+  --slate-400: #94a3b8;
+  --slate-500: #64748b;
+  --slate-600: #475569;
+  --slate-700: #334155;
+  --slate-800: #1e293b;
+  --slate-900: #0f172a;
+  
+  /* Amber Scale (Accent) */
+  --amber-400: #fbbf24;
+  --amber-500: #f59e0b;
+  
+  /* Semantic Colors */
+  --blueprint-primary: #1e3a8a;
+  --blueprint-secondary: #3b82f6;
+  --blueprint-accent: #fbbf24;
+  --blueprint-paper: #f8fafc;
+  --blueprint-lines: #e2e8f0;
+  
+  /* Typography */
+  --font-inter: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-space-grotesk: 'Space Grotesk', sans-serif;
+  
+  /* Shadows */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1);
+}
+
+/* 기본 스타일 초기화 */
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
+html,
+body {
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
+/* Base Styles */
+body {
+  font-family: var(--font-inter);
+  background: linear-gradient(135deg, var(--blue-50) 0%, var(--slate-50) 100%);
+  color: var(--slate-900);
+  line-height: 1.6;
+  min-height: 100vh;
+  position: relative;
+}
+
+/* Typography */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-space-grotesk);
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+/* Glass Effect */
+.glass {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Blueprint Grid Background */
+.blueprint-grid {
+  background-color: var(--blueprint-primary);
+  background-image: 
+    linear-gradient(rgba(255,255,255,.2) 2px, transparent 2px),
+    linear-gradient(90deg, rgba(255,255,255,.2) 2px, transparent 2px),
+    linear-gradient(rgba(255,255,255,.1) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.1) 1px, transparent 1px);
+  background-size: 100px 100px, 100px 100px, 20px 20px, 20px 20px;
+  background-position: -2px -2px, -2px -2px, -1px -1px, -1px -1px;
+}
+
+/* Animation Utilities */
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-20px); }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes float-blueprint {
+  0%, 100% { 
+    transform: translateY(0px) translateX(0px) rotate(0deg) scale(var(--scale, 1));
+    opacity: 0.08;
+  }
+  25% { 
+    transform: translateY(-40px) translateX(30px) rotate(3deg) scale(var(--scale, 1));
+    opacity: 0.12;
+  }
+  50% { 
+    transform: translateY(-30px) translateX(-20px) rotate(-2deg) scale(var(--scale, 1));
+    opacity: 0.06;
+  }
+  75% { 
+    transform: translateY(20px) translateX(25px) rotate(2deg) scale(var(--scale, 1));
+    opacity: 0.10;
+  }
+}
+
+@keyframes float-historic {
+  0%, 100% { 
+    transform: translateY(0px) translateX(0px) rotate(0deg);
+  }
+  20% { 
+    transform: translateY(-30px) translateX(20px) rotate(1deg);
+  }
+  40% { 
+    transform: translateY(-20px) translateX(-15px) rotate(-1deg);
+  }
+  60% { 
+    transform: translateY(15px) translateX(10px) rotate(0.5deg);
+  }
+  80% { 
+    transform: translateY(10px) translateX(-20px) rotate(-0.5deg);
+  }
+}
+
+/* Slide up animation for test-homepage-2 */
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Floating elements animations - 더 큰 움직임 */
+@keyframes float-1 {
+  0%, 100% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+  33% {
+    transform: translate(60px, -60px) rotate(180deg);
+  }
+  66% {
+    transform: translate(-40px, 40px) rotate(360deg);
+  }
+}
+
+@keyframes float-2 {
+  0%, 100% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+  33% {
+    transform: translate(-50px, 40px) rotate(-180deg);
+  }
+  66% {
+    transform: translate(40px, -50px) rotate(-360deg);
+  }
+}
+
+@keyframes float-3 {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    transform: translate(45px, -45px) scale(1.2);
+  }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.8s ease forwards;
+}
+
+/* 스크롤바 스타일링 */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--slate-100);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--slate-400);
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--slate-500);
+}
+
+/* Container */
+.container-custom {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 2rem;
+}
+
+/* 커스텀 유틸리티 클래스 */
+@layer components {
+  .card {
+    @apply bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-all duration-200;
+  }
+  
+  .card-hover {
+    @apply hover:shadow-lg hover:-translate-y-1 transform transition-all duration-300;
+  }
+  
+  .btn-primary {
+    @apply bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-lg font-medium hover:from-blue-700 hover:to-purple-700 transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg;
+  }
+  
+  .gradient-bg {
+    @apply bg-gradient-to-br from-slate-900 via-blue-900 to-purple-900;
+  }
+  
+  .section-padding {
+    @apply py-16 px-4;
+  }
+  
+  .ai-glow {
+    @apply bg-gradient-to-r from-purple-600/10 to-blue-600/10 backdrop-blur-sm border border-purple-200/50;
+  }
+  
+  /* Quote Sheet Component - 더 투명한 스타일 */
+  .quote-sheet {
+    @apply bg-white/35 backdrop-blur-md border border-slate-200/20 rounded-2xl p-8 relative transition-all duration-300;
+    transform: perspective(1000px) rotateX(2deg);
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.35) 0%, rgba(255, 255, 255, 0.25) 100%);
+    box-shadow: 
+      0 4px 20px rgba(0, 0, 0, 0.02),
+      0 0 0 1px rgba(255, 255, 255, 0.15) inset,
+      0 0 20px rgba(255, 255, 255, 0.3) inset;
+  }
+  
+  .quote-sheet:hover {
+    transform: perspective(1000px) rotateX(0deg) translateY(-4px);
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.45) 0%, rgba(255, 255, 255, 0.35) 100%);
+    box-shadow: 
+      0 20px 40px rgba(0, 0, 0, 0.04),
+      0 0 0 1px rgba(255, 255, 255, 0.25) inset,
+      0 0 30px rgba(255, 255, 255, 0.4) inset;
+  }
+}
+
+/* 포커스 표시 개선 */
+:focus {
+  outline: 2px solid var(--blue-600);
+  outline-offset: 2px;
+}
+
+/* 선택 텍스트 스타일 */
+::selection {
+  background-color: rgba(59, 130, 246, 0.2);
+  color: inherit;
+}
+
+/* 접근성 개선 */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* 반응형 */
+@media (max-width: 768px) {
+  .container-custom {
+    padding: 0 1rem;
+  }
+}
+
+/* 프린트 스타일 */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+}

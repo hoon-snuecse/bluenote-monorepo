@@ -1,0 +1,17 @@
+{
+  "name": "@bluenote/config",
+  "version": "0.0.1",
+  "private": true,
+  "files": [
+    "eslint",
+    "tailwind",
+    "typescript"
+  ],
+  "devDependencies": {
+    "@vercel/style-guide": "^6.0.0",
+    "eslint-config-turbo": "^2.3.3",
+    "eslint-config-next": "^15.3.5",
+    "eslint-plugin-react": "^7.34.0",
+    "eslint-plugin-only-warn": "^1.1.0"
+  }
+}

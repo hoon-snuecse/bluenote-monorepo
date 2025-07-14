@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BlueNote Atelier</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --blue-50: #eff6ff;
+            --blue-100: #dbeafe;
+            --blue-500: #3b82f6;
+            --blue-600: #2563eb;
+            --blue-700: #1d4ed8;
+            --blue-900: #1e3a8a;
+            --slate-50: #f8fafc;
+            --slate-100: #f1f5f9;
+            --slate-200: #e2e8f0;
+            --slate-400: #94a3b8;
+            --slate-500: #64748b;
+            --slate-600: #475569;
+            --slate-700: #334155;
+            --slate-800: #1e293b;
+            --slate-900: #0f172a;
+            --amber-400: #fbbf24;
+            --amber-500: #f59e0b;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, var(--blue-50) 0%, var(--slate-50) 100%);
+            color: var(--slate-900);
+            line-height: 1.6;
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* 건축 청사진 배경 요소들 */
+        .blueprint-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+            overflow: hidden;
+        }
+
+        .blueprint-element {
+            position: absolute;
+            opacity: 0.08;
+            stroke: rgba(30, 58, 138, 0.3);
+            fill: rgba(30, 58, 138, 0.05);
+            stroke-width: 0.8;
+            animation: float-blueprint 25s ease-in-out infinite;
+            filter: drop-shadow(0 0 2px rgba(30, 58, 138, 0.1));
+        }
+
+        .blueprint-element:nth-child(1) {
+            top: 10%;
+            left: 5%;
+            animation-delay: 0s;
+            transform: scale(0.8);
+        }
+
+        .blueprint-element:nth-child(2) {
+            top: 20%;
+            right: 10%;
+            animation-delay: 8s;
+            transform: scale(1.2);
+        }
+
+        .blueprint-element:nth-child(3) {
+            bottom: 20%;
+            left: 15%;
+            animation-delay: 16s;
+            transform: scale(0.9);
+        }
+
+        .blueprint-element:nth-child(4) {
+            bottom: 30%;
+            right: 5%;
+            animation-delay: 12s;
+            transform: scale(1.1);
+        }
+
+        .blueprint-element:nth-child(5) {
+            top: 60%;
+            left: 50%;
+            animation-delay: 4s;
+            transform: scale(0.7) translateX(-50%);
+        }
+
+        @keyframes float-blueprint {
+            0%, 100% { 
+                transform: translateY(0px) translateX(0px) rotate(0deg) scale(var(--scale, 1));
+                opacity: 0.08;
+            }
+            25% { 
+                transform: translateY(-40px) translateX(30px) rotate(3deg) scale(var(--scale, 1));
+                opacity: 0.12;
+            }
+            50% { 
+                transform: translateY(-30px) translateX(-20px) rotate(-2deg) scale(var(--scale, 1));
+                opacity: 0.06;
+            }
+            75% { 
+                transform: translateY(20px) translateX(25px) rotate(2deg) scale(var(--scale, 1));
+                opacity: 0.10;
+            }
+        }
+
+        /* 네비게이션 */
+        .nav {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--slate-200);
+            padding: 1rem 0;
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            text-decoration: none;
+            color: var(--slate-900);
+        }
+
+        .logo-icon {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, var(--blue-600), var(--blue-700));
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 18px;
+        }
+
+        .logo-text {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .nav-menu {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+        }
+
+        .nav-link {
+            color: var(--slate-600);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.2s ease;
+            font-size: 0.95rem;
+        }
+
+        .nav-link:hover {
+            color: var(--blue-600);
+        }
+
+        /* 메인 컨텐츠 */
+        .main {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        .hero {
+            padding: 6rem 0 8rem;
+            text-align: center;
+            position: relative;
+        }
+
+        .hero-title {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: clamp(2.5rem, 5vw, 4rem);
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(135deg, var(--slate-900), var(--blue-600));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            line-height: 1.1;
+        }
+
+        .hero-subtitle {
+            font-size: 1.25rem;
+            color: var(--slate-600);
+            margin-bottom: 2rem;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            font-weight: 400;
+        }
+
+        .hero-description {
+            font-size: 1.1rem;
+            color: var(--slate-500);
+            max-width: 700px;
+            margin: 0 auto 3rem;
+            line-height: 1.7;
+        }
+
+        /* 청사진 글귀 섹션 */
+        .quotes-blueprint {
+            position: relative;
+            margin: 6rem 0;
+        }
+
+        .quote-sheet {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--slate-200);
+            border-radius: 1rem;
+            padding: 3rem;
+            margin: 2rem 0;
+            position: relative;
+            transform: perspective(1000px) rotateX(2deg);
+            box-shadow: 
+                0 4px 20px rgba(0, 0, 0, 0.08),
+                0 0 0 1px rgba(255, 255, 255, 0.5) inset;
+            transition: all 0.3s ease;
+        }
+
+        .quote-sheet:hover {
+            transform: perspective(1000px) rotateX(0deg) translateY(-4px);
+            box-shadow: 
+                0 20px 40px rgba(0, 0, 0, 0.12),
+                0 0 0 1px rgba(255, 255, 255, 0.7) inset;
+        }
+
+        .quote-sheet::before {
+            content: '';
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            right: 10px;
+            bottom: 10px;
+            border: 1px dashed var(--blue-200);
+            border-radius: 0.5rem;
+            opacity: 0.3;
+        }
+
+        .quote-text {
+            font-style: italic;
+            font-size: 1.1rem;
+            color: var(--slate-700);
+            margin-bottom: 1rem;
+            line-height: 1.7;
+            position: relative;
+            z-index: 1;
+        }
+
+        .quote-translation {
+            font-size: 0.95rem;
+            color: var(--slate-500);
+            margin-bottom: 1.5rem;
+            line-height: 1.6;
+        }
+
+        .quote-author {
+            font-weight: 600;
+            color: var(--blue-600);
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .quote-author::before {
+            content: '';
+            width: 20px;
+            height: 1px;
+            background: var(--blue-300);
+        }
+
+        .quote-source {
+            font-size: 0.8rem;
+            color: var(--slate-400);
+            font-style: italic;
+        }
+
+        /* 연락처 */
+        .contact {
+            text-align: center;
+            padding: 4rem 0;
+            border-top: 1px solid var(--slate-200);
+            margin-top: 4rem;
+        }
+
+        .contact-text {
+            color: var(--slate-600);
+            margin-bottom: 1rem;
+        }
+
+        .contact-email {
+            color: var(--blue-600);
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.2s ease;
+        }
+
+        .contact-email:hover {
+            color: var(--blue-700);
+        }
+
+        /* 반응형 */
+        @media (max-width: 768px) {
+            .nav-container {
+                padding: 0 1rem;
+            }
+            
+            .nav-menu {
+                gap: 1rem;
+            }
+            
+            .main {
+                padding: 0 1rem;
+            }
+            
+            .hero {
+                padding: 4rem 0 6rem;
+            }
+            
+            .quote-sheet {
+                padding: 2rem;
+                transform: none;
+            }
+            
+            .quote-sheet:hover {
+                transform: translateY(-2px);
+            }
+        }
+
+        /* 스크롤 애니메이션 */
+        .fade-in {
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeInUp 0.8s ease forwards;
+        }
+
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .quote-sheet:nth-child(1) { animation-delay: 0.2s; }
+        .quote-sheet:nth-child(2) { animation-delay: 0.4s; }
+        .quote-sheet:nth-child(3) { animation-delay: 0.6s; }
+    </style>
+</head>
+<body>
+    <!-- 건축 청사진 배경 -->
+    <div class="blueprint-bg">
+        <!-- 건물 평면도 -->
+        <svg class="blueprint-element" width="250" height="180" viewBox="0 0 250 180">
+            <rect x="30" y="30" width="190" height="120" stroke-width="1.2"/>
+            <rect x="50" y="50" width="60" height="35" />
+            <rect x="130" y="50" width="60" height="35" />
+            <rect x="50" y="100" width="60" height="35" />
+            <rect x="130" y="100" width="60" height="35" />
+            <line x1="30" y1="87" x2="220" y2="87" stroke-dasharray="2,2"/>
+            <line x1="125" y1="30" x2="125" y2="150" stroke-dasharray="2,2"/>
+            <circle cx="80" cy="67" r="2" fill="rgba(30, 58, 138, 0.3)"/>
+            <circle cx="160" cy="67" r="2" fill="rgba(30, 58, 138, 0.3)"/>
+            <text x="35" y="25" font-size="8" fill="rgba(30, 58, 138, 0.4)">A</text>
+            <text x="215" y="25" font-size="8" fill="rgba(30, 58, 138, 0.4)">B</text>
+            <text x="15" y="95" font-size="8" fill="rgba(30, 58, 138, 0.4)">1</text>
+            <text x="15" y="155" font-size="8" fill="rgba(30, 58, 138, 0.4)">2</text>
+        </svg>
+
+        <!-- 건축 입면도 -->
+        <svg class="blueprint-element" width="220" height="140" viewBox="0 0 220 140">
+            <rect x="20" y="50" width="180" height="70" />
+            <rect x="40" y="60" width="25" height="30" />
+            <rect x="85" y="60" width="25" height="30" />
+            <rect x="130" y="60" width="25" height="30" />
+            <rect x="175" y="60" width="20" height="30" />
+            <polygon points="20,50 110,20 200,50" />
+            <line x1="20" y1="120" x2="200" y2="120" stroke-width="1.5"/>
+            <line x1="20" y1="125" x2="200" y2="125" stroke-dasharray="3,3"/>
+            <text x="110" y="35" font-size="7" text-anchor="middle" fill="rgba(30, 58, 138, 0.4)">ELEVATION</text>
+            <text x="25" y="135" font-size="6" fill="rgba(30, 58, 138, 0.4)">0.00</text>
+        </svg>
+
+        <!-- 구조 다이어그램 -->
+        <svg class="blueprint-element" width="170" height="200" viewBox="0 0 170 200">
+            <rect x="70" y="30" width="30" height="140" />
+            <rect x="30" y="70" width="110" height="10" />
+            <rect x="30" y="110" width="110" height="10" />
+            <rect x="30" y="150" width="110" height="10" />
+            <line x1="85" y1="30" x2="85" y2="15" stroke-width="1.2"/>
+            <line x1="80" y1="15" x2="90" y2="15" stroke-width="1.2"/>
+            <circle cx="45" cy="75" r="3" fill="none"/>
+            <circle cx="125" cy="75" r="3" fill="none"/>
+            <circle cx="45" cy="115" r="3" fill="none"/>
+            <circle cx="125" cy="115" r="3" fill="none"/>
+            <text x="45" y="190" font-size="7" text-anchor="middle" fill="rgba(30, 58, 138, 0.4)">SECTION A-A</text>
+            <line x1="30" y1="185" x2="140" y2="185" stroke-dasharray="2,2"/>
+        </svg>
+
+        <!-- 상세 도면 -->
+        <svg class="blueprint-element" width="180" height="180" viewBox="0 0 180 180">
+            <circle cx="90" cy="90" r="70" fill="none"/>
+            <circle cx="90" cy="90" r="50" fill="none"/>
+            <circle cx="90" cy="90" r="30" fill="none"/>
+            <line x1="20" y1="90" x2="160" y2="90" />
+            <line x1="90" y1="20" x2="90" y2="160" />
+            <line x1="40" y1="40" x2="140" y2="140" stroke-dasharray="1,1"/>
+            <line x1="140" y1="40" x2="40" y2="140" stroke-dasharray="1,1"/>
+            <text x="90" y="95" text-anchor="middle" font-size="9" fill="rgba(30, 58, 138, 0.4)">⌀140</text>
+            <text x="90" y="15" text-anchor="middle" font-size="7" fill="rgba(30, 58, 138, 0.4)">DETAIL</text>
+            <polygon points="25,90 30,87 30,93" fill="rgba(30, 58, 138, 0.3)"/>
+            <polygon points="155,90 150,87 150,93" fill="rgba(30, 58, 138, 0.3)"/>
+        </svg>
+
+        <!-- 배치도 -->
+        <svg class="blueprint-element" width="200" height="160" viewBox="0 0 200 160">
+            <rect x="60" y="40" width="80" height="60" />
+            <rect x="70" y="50" width="15" height="10" />
+            <rect x="115" y="50" width="15" height="10" />
+            <rect x="70" y="80" width="15" height="10" />
+            <rect x="115" y="80" width="15" height="10" />
+            <circle cx="40" cy="70" r="15" fill="none" stroke-dasharray="2,2"/>
+            <circle cx="160" cy="70" r="15" fill="none" stroke-dasharray="2,2"/>
+            <rect x="20" y="110" width="160" height="8" fill="rgba(30, 58, 138, 0.1)"/>
+            <text x="100" y="30" font-size="8" text-anchor="middle" fill="rgba(30, 58, 138, 0.4)">SITE PLAN</text>
+            <text x="100" y="125" font-size="6" text-anchor="middle" fill="rgba(30, 58, 138, 0.4)">ROAD</text>
+        </svg>
+    </div>
+
+    <nav class="nav">
+        <div class="nav-container">
+            <a href="#" class="logo">
+                <div class="logo-icon">♭</div>
+                <span class="logo-text">BlueNote Atelier</span>
+            </a>
+            <ul class="nav-menu">
+                <li><a href="#" class="nav-link">홈</a></li>
+                <li><a href="#" class="nav-link">연구</a></li>
+                <li><a href="#" class="nav-link">교육</a></li>
+                <li><a href="#" class="nav-link">분석</a></li>
+                <li><a href="#" class="nav-link">일상</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <main class="main">
+        <section class="hero">            
+            <h1 class="hero-title">BlueNote Atelier</h1>
+            
+            <p class="hero-subtitle">
+                미완성된 생각들이 살아 숨쉬는 공간
+            </p>
+            
+            <p class="hero-description">
+                우리는 완벽한 답 대신 <strong>더 나은 질문을 만들어갑니다</strong>. 
+                철학자들이 연구 노트에 불완전한 아이디어를 기록하듯, 건축가들이 청사진에 미래의 건물을 그려내듯, 
+                지향점을 가지고 미래를 그려나갑니다.
+            </p>
+        </section>
+
+        <section id="quotes" class="quotes-blueprint">
+            <div class="quote-sheet fade-in">
+                <p class="quote-text">
+                    "There is nothing so practical as a good theory."
+                </p>
+                <p class="quote-translation">
+                    좋은 이론만큼 실용적인 것은 없다.
+                </p>
+                <p class="quote-author">Kurt Lewin</p>
+                <p class="quote-source">Field Theory in Social Science: Selected Theoretical Papers (1951)</p>
+            </div>
+
+            <div class="quote-sheet fade-in">
+                <p class="quote-text">
+                    "Knowledge emerges only through invention and re-invention, through the restless, impatient, continuing, hopeful inquiry human beings pursue in the world, with the world, and with each other."
+                </p>
+                <p class="quote-translation">
+                    지식은 발명과 재발명을 통해, 인간이 세상에서, 세상과 함께, 서로와 함께 추구하는 끊임없고 조급하고 지속적이고 희망적인 탐구를 통해서만 생겨난다.
+                </p>
+                <p class="quote-author">Paulo Freire</p>
+                <p class="quote-source">Pedagogy of the Oppressed: 30th Anniversary Edition (2014)</p>
+            </div>
+
+            <div class="quote-sheet fade-in">
+                <p class="quote-text">
+                    "Education is the most powerful weapon which you can use to change the world."
+                </p>
+                <p class="quote-translation">
+                    교육은 세상을 바꾸는 데 사용할 수 있는 가장 강력한 무기이다.
+                </p>
+                <p class="quote-author">Nelson Mandela</p>
+                <p class="quote-source">Long Walk to Freedom (1994)</p>
+            </div>
+        </section>
+
+        <section class="contact">
+            <p class="contact-text">궁금한 점이나 의견이 있으시면 이메일로 연락주세요.</p>
+            <a href="mailto:hoon@snuecse.org" class="contact-email">📧 hoon@snuecse.org</a>
+        </section>
+    </main>
+
+    <script>
+        // 스크롤 애니메이션
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.fade-in').forEach(el => {
+            observer.observe(el);
+        });
+    </script>
+</body>
+</html>
