@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { PenTool, Calculator, BarChart2, Brain, Lock, Sparkles } from 'lucide-react';
-import { useSession } from '@bluenote/auth';
+import { useSession } from 'next-auth/react';
 
 export default function ProgramsPageClient() {
   const [fadeIn, setFadeIn] = useState({

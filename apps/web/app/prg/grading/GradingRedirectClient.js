@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useSession } from '@bluenote/auth';
+import { useSession } from 'next-auth/react';
 
 export default function GradingRedirectClient() {
   const { data: session } = useSession();
@@ -9,8 +9,8 @@ export default function GradingRedirectClient() {
   useEffect(() => {
     // 세션 정보를 쿠키로 전달하면서 리다이렉트
     if (session) {
-      // 실제 프로덕션에서는 더 안전한 방법 사용 필요
-      window.location.href = 'http://localhost:3001';
+      // grading 앱 페이지로 이동
+      window.location.href = '/grading';
     }
   }, [session]);
 
