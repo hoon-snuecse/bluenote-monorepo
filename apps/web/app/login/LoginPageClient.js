@@ -1,22 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { signIn, useSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
 import { LogIn } from 'lucide-react';
 
 export default function LoginPageClient() {
-  const { data: session, status } = useSession();
-  const router = useRouter();
   const [envStatus, setEnvStatus] = useState(null);
   const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    // 이미 로그인된 경우 홈으로 리다이렉트
-    if (status === 'authenticated') {
-      router.push('/');
-    }
-  }, [status, router]);
 
   useEffect(() => {
     fetch('/api/env-check')
@@ -31,12 +20,9 @@ export default function LoginPageClient() {
       });
   }, []);
 
-  const handleGoogleLogin = async () => {
-    try {
-      await signIn('google', { callbackUrl: '/' });
-    } catch (error) {
-      console.error('Login error:', error);
-    }
+  const handleGoogleLogin = () => {
+    // 직접 OAuth URL로 리다이렉트
+    window.location.href = '/api/auth/signin/google';
   };
 
   return (
@@ -87,6 +73,12 @@ export default function LoginPageClient() {
             )}
           </div>
         )}
+        
+        <div className="mt-4 text-center">
+          <a href="/" className="text-sm text-blue-600 hover:text-blue-500">
+            홈으로 돌아가기
+          </a>
+        </div>
       </div>
     </div>
   );
