@@ -56,7 +56,7 @@ export default function HomePageClient() {
         {/* Main Content */}
         <div className="relative z-10 min-h-screen">
         {/* Hero Section */}
-        <section className="min-h-screen flex items-center justify-center px-4 py-20">
+        <section className="min-h-[70vh] flex items-center justify-center px-4 py-16">
           <div className="container-custom text-center">
             {/* Main Title with Typing Animation */}
             <h1 className={`text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-caveat font-bold mb-6 transition-all duration-1000 ${
@@ -81,18 +81,16 @@ export default function HomePageClient() {
             </p>
             
             {/* Description */}
-            <p className={`text-xl md:text-2xl font-nanum-pen max-w-3xl mx-auto leading-relaxed transition-all duration-1000 ${
+            <p className={`text-lg md:text-xl text-slate-500 max-w-3xl mx-auto leading-relaxed transition-all duration-1000 ${
               fadeIn.description ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
             }`}>
-              <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
-                미완성된 생각들이 살아 숨쉬는 공간. 교육연구와 일상의 창조적 작업이 만나는 곳.
-              </span>
+              미완성된 생각들이 살아 숨쉬는 공간 교육연구와 일상의 창조적 작업이 만나는 곳
             </p>
           </div>
         </section>
 
         {/* Quotes Section */}
-        <section className="py-20 px-4">
+        <section className="py-12 px-4">
           <div className="container-custom max-w-7xl">
             <div className="grid md:grid-cols-3 gap-8">
               {quotes.map((quote, index) => (
