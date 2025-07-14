@@ -1,5 +1,5 @@
 import './globals.css'
-import Navigation from './components/Navigation'
+import Navigation from './components/NavigationWrapper'
 import Footer from './components/Footer'
 import Providers from './components/Providers'
 
