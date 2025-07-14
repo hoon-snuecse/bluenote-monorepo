@@ -85,12 +85,12 @@ export default function AuthStatusClient() {
               </Link>
             )}
             {(sessionData?.authenticated && !loading) && (
-              <a
-                href="/api/auth/signout"
+              <button
+                onClick={() => window.location.href = '/api/auth/signout'}
                 className="flex-1 text-center py-2 px-4 bg-red-600 text-white rounded-md text-sm font-medium hover:bg-red-700"
               >
                 로그아웃
-              </a>
+              </button>
             )}
           </div>
         </div>

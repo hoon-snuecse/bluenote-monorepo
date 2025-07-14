@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { LogIn } from 'lucide-react';
 
 export default function LoginPageClient() {
@@ -75,9 +76,9 @@ export default function LoginPageClient() {
         )}
         
         <div className="mt-4 text-center">
-          <a href="/" className="text-sm text-blue-600 hover:text-blue-500">
+          <Link href="/" className="text-sm text-blue-600 hover:text-blue-500">
             홈으로 돌아가기
-          </a>
+          </Link>
         </div>
       </div>
     </div>
