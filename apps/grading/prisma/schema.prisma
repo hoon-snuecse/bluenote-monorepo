@@ -37,12 +37,16 @@ model Assignment {
 
 // 제출물 모델
 model Submission {
-  id           String   @id @default(cuid())
+  id           String    @id @default(cuid())
   assignmentId String
   studentName  String
   studentId    String
-  content      String   @db.Text
-  submittedAt  DateTime @default(now())
+  content      String    @db.Text
+  submittedAt  DateTime  @default(now())
+  evaluatedAt  DateTime?
+  evaluation   Json?     // 평가 결과 JSON
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
   
   // Relations
   assignment   Assignment   @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
