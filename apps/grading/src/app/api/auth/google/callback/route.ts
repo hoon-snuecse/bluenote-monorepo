@@ -18,15 +18,19 @@ export async function GET(request: NextRequest) {
   const code = searchParams.get('code');
   const error = searchParams.get('error');
 
+  const baseUrl = process.env.NODE_ENV === 'production' 
+    ? 'https://grading.bluenote.site'
+    : 'http://localhost:3000';
+
   if (error) {
     return NextResponse.redirect(
-      `${process.env.NEXT_PUBLIC_BASE_URL}/import?error=${error}`
+      `${baseUrl}/import?error=${error}`
     );
   }
 
   if (!code) {
     return NextResponse.redirect(
-      `${process.env.NEXT_PUBLIC_BASE_URL}/import?error=no_code`
+      `${baseUrl}/import?error=no_code`
     );
   }
 
@@ -58,12 +62,12 @@ export async function GET(request: NextRequest) {
     }
 
     return NextResponse.redirect(
-      `${process.env.NEXT_PUBLIC_BASE_URL}/import?success=true`
+      `${baseUrl}/import?success=true`
     );
   } catch (error) {
     console.error('OAuth callback error:', error);
     return NextResponse.redirect(
-      `${process.env.NEXT_PUBLIC_BASE_URL}/import?error=auth_failed`
+      `${baseUrl}/import?error=auth_failed`
     );
   }
 }
