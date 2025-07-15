@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { AuthLayout } from '@/components/AuthLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
-import { Plus, Edit, Trash2, Users, Calendar, FileText, BookOpen, School, Link, BarChart3, PieChart, Settings } from 'lucide-react';
+import { Plus, Edit, Trash2, Users, Calendar, FileText, BookOpen, School, Link, BarChart3, PieChart, Settings, FileInput } from 'lucide-react';
 
 interface AssignmentData {
   id: string;
@@ -95,6 +95,10 @@ function AssignmentsContent() {
 
   const handleViewAnalytics = (assignmentId: string) => {
     router.push(`/grading/analytics/${assignmentId}`);
+  };
+
+  const handleCollectSubmissions = (assignmentId: string) => {
+    router.push(`/assignments/${assignmentId}/collect`);
   };
 
   if (loading) {
@@ -191,6 +195,14 @@ function AssignmentsContent() {
                     <span>{assignment.levelCount}단계 평가</span>
                   </div>
                 </div>
+
+                <button
+                  onClick={() => handleCollectSubmissions(assignment.id)}
+                  className="w-full px-3 py-2 mb-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 text-sm font-medium"
+                >
+                  <FileInput className="w-4 h-4" />
+                  학생 글 가져오기
+                </button>
 
                 <div className="grid grid-cols-2 gap-2 mb-2">
                   <button
