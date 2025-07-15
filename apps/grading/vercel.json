@@ -1,6 +1,3 @@
 {
-  "framework": "nextjs",
-  "regions": ["icn1"],
-  "installCommand": "cd ../.. && corepack enable && corepack prepare pnpm@9.13.2 --activate && pnpm install --frozen-lockfile",
-  "buildCommand": "cd ../.. && pnpm --filter=grading build"
+  "regions": ["icn1"]
 }
