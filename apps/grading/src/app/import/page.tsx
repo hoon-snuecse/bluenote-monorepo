@@ -26,6 +26,7 @@ function ImportPageContent() {
   const [navigationPath, setNavigationPath] = useState<DriveFile[]>([]);
   const [selectedDocuments, setSelectedDocuments] = useState<Set<string>>(new Set());
   const searchParams = useSearchParams();
+  const assignmentId = searchParams.get('assignmentId');
 
   useEffect(() => {
     const success = searchParams.get('success');
@@ -164,11 +165,17 @@ function ImportPageContent() {
         body: JSON.stringify({
           folderId: selectedFolder.id,
           documentIds: Array.from(selectedDocuments),
+          assignmentId: assignmentId, // 과제 ID 추가
         }),
       });
 
       if (response.ok) {
-        window.location.href = '/dashboard';
+        // assignmentId가 있으면 해당 과제의 제출 현황으로, 없으면 대시보드로
+        if (assignmentId) {
+          window.location.href = `/assignments/${assignmentId}/submissions`;
+        } else {
+          window.location.href = '/dashboard';
+        }
       }
     } catch (error) {
       console.error('Failed to import documents:', error);

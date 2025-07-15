@@ -24,8 +24,8 @@ export default function CollectSubmissionsPage() {
   }, [params.assignmentId]);
 
   const handleGoogleDriveSelect = () => {
-    // bluenote.site 구글 인증 확인 후 처리
-    alert('bluenote.site에 구글 계정으로 로그인이 필요합니다.');
+    // import 페이지로 이동하면서 assignmentId를 전달
+    router.push(`/import?assignmentId=${params.assignmentId}`);
   };
 
   return (

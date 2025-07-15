@@ -1,10 +1,11 @@
 import { google } from 'googleapis';
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
+import prisma from '@/lib/prisma';
 
 export async function POST(request: NextRequest) {
   try {
-    const { folderId, documentIds } = await request.json();
+    const { folderId, documentIds, assignmentId } = await request.json();
 
     if (!folderId || !documentIds || documentIds.length === 0) {
       return NextResponse.json(
@@ -89,23 +90,53 @@ export async function POST(request: NextRequest) {
       };
     });
 
-    // Store in session/cookie temporarily (in production, use database)
-    cookieStore.set('imported_documents', JSON.stringify(processedDocuments), {
-      httpOnly: true,
-      secure: false,
-      sameSite: 'lax',
-      maxAge: 60 * 60, // 1 hour
-      path: '/',
-    });
+    // If assignmentId is provided, save submissions directly
+    if (assignmentId) {
+      const submissions = [];
+      for (const doc of processedDocuments) {
+        try {
+          const submission = await prisma.submission.create({
+            data: {
+              assignmentId: assignmentId,
+              studentName: doc.studentName,
+              studentId: `google_${doc.googleDriveFileId}`, // Use Google Drive file ID as studentId
+              content: doc.content
+            }
+          });
+          submissions.push(submission);
+        } catch (error) {
+          console.error(`Failed to create submission for ${doc.studentName}:`, error);
+        }
+      }
 
-    return NextResponse.json({
-      success: true,
-      imported: processedDocuments.length,
-      documents: processedDocuments.map(doc => ({
-        studentName: doc.studentName,
-        fileName: doc.fileName,
-      })),
-    });
+      return NextResponse.json({
+        success: true,
+        imported: submissions.length,
+        assignmentId: assignmentId,
+        documents: submissions.map(sub => ({
+          studentName: sub.studentName,
+          submissionId: sub.id,
+        })),
+      });
+    } else {
+      // Store in session/cookie temporarily (in production, use database)
+      cookieStore.set('imported_documents', JSON.stringify(processedDocuments), {
+        httpOnly: true,
+        secure: false,
+        sameSite: 'lax',
+        maxAge: 60 * 60, // 1 hour
+        path: '/',
+      });
+
+      return NextResponse.json({
+        success: true,
+        imported: processedDocuments.length,
+        documents: processedDocuments.map(doc => ({
+          studentName: doc.studentName,
+          fileName: doc.fileName,
+        })),
+      });
+    }
   } catch (error) {
     console.error('Error importing documents:', error);
     return NextResponse.json(
