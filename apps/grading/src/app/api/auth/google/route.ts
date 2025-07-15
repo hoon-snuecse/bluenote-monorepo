@@ -18,11 +18,22 @@ export async function GET() {
     'https://www.googleapis.com/auth/drive.file',
   ];
 
+  // 디버깅을 위한 로그
+  console.log('OAuth Configuration:', {
+    clientId: process.env.GOOGLE_CLIENT_ID?.substring(0, 10) + '...',
+    hasClientSecret: !!process.env.GOOGLE_CLIENT_SECRET,
+    redirectUri: redirectUri,
+    envRedirectUri: process.env.GOOGLE_REDIRECT_URI,
+    nodeEnv: process.env.NODE_ENV
+  });
+
   const authUrl = oauth2Client.generateAuthUrl({
     access_type: 'offline',
     scope: scopes,
     prompt: 'consent',
   });
+
+  console.log('Generated auth URL:', authUrl);
 
   return NextResponse.redirect(authUrl);
 }
