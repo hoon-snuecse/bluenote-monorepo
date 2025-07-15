@@ -1,10 +1,4 @@
 {
-  "buildCommand": "prisma generate && pnpm build",
-  "installCommand": "pnpm install",
   "framework": "nextjs",
-  "regions": ["icn1"],
-  "env": {
-    "NEXT_PUBLIC_BASE_URL": "$VERCEL_URL",
-    "ENABLE_EXPERIMENTAL_COREPACK": "0"
-  }
+  "regions": ["icn1"]
 }
