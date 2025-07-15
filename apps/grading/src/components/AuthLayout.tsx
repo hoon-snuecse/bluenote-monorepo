@@ -1,6 +1,5 @@
 'use client';
 
-import { Navigation } from './Navigation';
 import { useUser } from '@/contexts/UserContext';
 import { ReactNode } from 'react';
 
@@ -20,7 +19,6 @@ export function AuthLayout({ children }: { children: ReactNode }) {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Navigation />
       <main className="py-6">
         {children}
       </main>
