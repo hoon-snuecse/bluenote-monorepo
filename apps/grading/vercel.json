@@ -1,6 +1,7 @@
 {
-  "buildCommand": "prisma generate && npm run build",
-  "installCommand": "npm install --legacy-peer-deps",
+  "buildCommand": "cd ../.. && pnpm run build --filter=grading",
+  "installCommand": "cd ../.. && pnpm install",
+  "outputDirectory": "apps/grading/.next",
   "framework": "nextjs",
   "regions": ["icn1"],
   "env": {
@@ -8,8 +9,8 @@
     "ENABLE_EXPERIMENTAL_COREPACK": "0"
   },
   "functions": {
-    "src/app/api/**/*.ts": {
-      "includeFiles": "prisma/**"
+    "apps/grading/src/app/api/**/*.ts": {
+      "includeFiles": "apps/grading/prisma/**"
     }
   }
 }
