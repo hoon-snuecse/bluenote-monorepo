@@ -1,16 +1,10 @@
 {
-  "buildCommand": "cd ../.. && pnpm run build --filter=grading",
-  "installCommand": "cd ../.. && pnpm install",
-  "outputDirectory": "apps/grading/.next",
+  "buildCommand": "prisma generate && pnpm build",
+  "installCommand": "pnpm install",
   "framework": "nextjs",
   "regions": ["icn1"],
   "env": {
     "NEXT_PUBLIC_BASE_URL": "$VERCEL_URL",
     "ENABLE_EXPERIMENTAL_COREPACK": "0"
-  },
-  "functions": {
-    "apps/grading/src/app/api/**/*.ts": {
-      "includeFiles": "apps/grading/prisma/**"
-    }
   }
 }

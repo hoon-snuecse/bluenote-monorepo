@@ -1,5 +1,11 @@
 {
-  "buildCommand": "cd apps/web && pnpm run build",
-  "installCommand": "npm install -g pnpm@8.15.9 && pnpm install",
-  "outputDirectory": "apps/web/.next"
+  "buildCommand": "pnpm turbo run build --filter=grading",
+  "installCommand": "pnpm install",
+  "outputDirectory": "apps/grading/.next",
+  "framework": "nextjs",
+  "regions": ["icn1"],
+  "env": {
+    "NEXT_PUBLIC_BASE_URL": "$VERCEL_URL",
+    "ENABLE_EXPERIMENTAL_COREPACK": "0"
+  }
 }
