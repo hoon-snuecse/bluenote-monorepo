@@ -25,6 +25,7 @@ export default function CollectPage() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('link'); // link, google
   const [googleDocsUrl, setGoogleDocsUrl] = useState('');
+  const [isMultipleMode, setIsMultipleMode] = useState(false);
   const [importing, setImporting] = useState(false);
   const [importResults, setImportResults] = useState(null);
   

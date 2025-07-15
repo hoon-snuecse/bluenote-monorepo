@@ -50,15 +50,27 @@ select option:checked {
 
 /* Print styles for clean printing */
 @media print {
+  @page {
+    size: A4;
+    margin: 20mm;
+  }
+
   /* Hide navigation and action buttons */
-  button,
-  input,
-  textarea {
+  button {
     display: none !important;
   }
 
+  /* Show inputs/textareas in read-only mode for print */
+  input:not([type="checkbox"]),
+  textarea {
+    border: none !important;
+    background: transparent !important;
+    resize: none !important;
+  }
+
   /* Remove shadows and adjust spacing for print */
-  .shadow-sm {
+  .shadow-sm,
+  .shadow-lg {
     box-shadow: none !important;
   }
 
@@ -79,7 +91,6 @@ select option:checked {
   div[class*="rounded"] {
     border: 1px solid #ddd !important;
     margin-bottom: 20px !important;
-    page-break-inside: avoid;
   }
 
   /* Ensure colors print properly */
@@ -92,6 +103,20 @@ select option:checked {
   .text-gray-600,
   .text-gray-500 {
     color: #374151 !important;
+  }
+
+  /* Print-specific utilities */
+  .print\:break-inside-avoid {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+
+  .print\:hidden {
+    display: none !important;
+  }
+
+  .print\:shadow-none {
+    box-shadow: none !important;
   }
 
   /* Adjust achievement level badges for print */

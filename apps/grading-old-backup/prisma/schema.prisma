@@ -1,0 +1,141 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// 과제 모델
+model Assignment {
+  id                String   @id @default(cuid())
+  title             String
+  schoolName        String
+  gradeLevel        String
+  writingType       String
+  evaluationDomains Json // PostgreSQL JSON 타입
+  evaluationLevels  Json // PostgreSQL JSON 타입
+  levelCount        Int
+  gradingCriteria   String   @db.Text
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  // Relations
+  submissions       Submission[]
+  
+  @@index([schoolName])
+  @@index([createdAt])
+}
+
+// 제출물 모델
+model Submission {
+  id           String   @id @default(cuid())
+  assignmentId String
+  studentName  String
+  studentId    String
+  content      String   @db.Text
+  submittedAt  DateTime @default(now())
+  
+  // Relations
+  assignment   Assignment   @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  evaluations  Evaluation[]
+  
+  @@index([assignmentId])
+  @@index([studentId])
+  @@index([submittedAt])
+}
+
+// 평가 결과 모델
+model Evaluation {
+  id                     String   @id @default(cuid())
+  submissionId          String
+  assignmentId          String
+  studentId             String
+  domainEvaluations     Json     // 영역별 평가 결과 JSON
+  overallLevel          String
+  overallFeedback       String   @db.Text
+  improvementSuggestions Json // PostgreSQL JSON 타입
+  strengths             Json // PostgreSQL JSON 타입
+  evaluatedAt           DateTime @default(now())
+  evaluatedBy           String?  // AI 모델 또는 교사 ID
+  
+  // Relations
+  submission            Submission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  
+  @@index([submissionId])
+  @@index([assignmentId])
+  @@index([studentId])
+  @@index([evaluatedAt])
+}
+
+// 접근 토큰 모델
+model AccessToken {
+  id           String   @id @default(cuid())
+  token        String   @unique
+  evaluationId String
+  studentId    String
+  expiresAt    DateTime
+  used         Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  
+  @@index([token])
+  @@index([expiresAt])
+}
+
+// 평가 템플릿 모델
+model EvaluationTemplate {
+  id                String   @id @default(cuid())
+  name              String
+  writingType       String
+  gradeLevel        String
+  evaluationDomains Json // PostgreSQL JSON 타입
+  evaluationLevels  Json // PostgreSQL JSON 타입
+  criteriaTemplate  String   @db.Text
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  @@index([writingType])
+  @@index([gradeLevel])
+}
+
+// 시스템 설정 모델
+model SystemSettings {
+  id                 String   @id @default(cuid())
+  key                String   @unique
+  value              Json
+  encrypted          Boolean  @default(false)
+  updatedAt          DateTime @updatedAt
+  
+  @@index([key])
+}
+
+// 사용자 모델
+model User {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  password     String
+  name         String
+  role         UserRole  @default(TEACHER)
+  schoolName   String?
+  isActive     Boolean   @default(true)
+  lastLoginAt  DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  
+  @@index([email])
+  @@index([schoolName])
+}
+
+enum UserRole {
+  TEACHER
+  ADMIN
+  STUDENT
+}

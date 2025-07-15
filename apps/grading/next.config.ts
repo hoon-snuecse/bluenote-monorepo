@@ -4,9 +4,6 @@ const nextConfig: NextConfig = {
   // Enable React strict mode for better development experience
   reactStrictMode: true,
   
-  // Base path for the grading app
-  basePath: '/grading',
-  
   // Enable standalone output for Docker
   output: 'standalone',
   
