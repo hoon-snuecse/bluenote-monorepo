@@ -1,13 +1,21 @@
-# Ignore everything except what we need
-*
-!src
-!public
-!package.json
-!package-lock.json
-!next.config.ts
-!tsconfig.json
-!tailwind.config.ts
-!postcss.config.js
-!prisma
-!.env.production
-!.env.local
+# Development files
+.env*.local
+.env.development
+
+# Test files
+**/*.test.*
+**/*.spec.*
+
+# Documentation
+*.md
+!README.md
+
+# Scripts that shouldn't be in production
+scripts/deploy.sh
+scripts/migrate-data.ts
+scripts/seed-admin.ts
+
+# Docker files (if deploying to Vercel)
+Dockerfile
+docker-compose.yml
+.dockerignore
