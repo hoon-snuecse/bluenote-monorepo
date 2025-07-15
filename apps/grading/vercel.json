@@ -1,8 +1,15 @@
 {
-  "buildCommand": "prisma generate && next build",
+  "buildCommand": "prisma generate && npm run build",
+  "installCommand": "npm install --legacy-peer-deps",
   "framework": "nextjs",
   "regions": ["icn1"],
   "env": {
-    "NEXT_PUBLIC_BASE_URL": "$VERCEL_URL"
+    "NEXT_PUBLIC_BASE_URL": "$VERCEL_URL",
+    "ENABLE_EXPERIMENTAL_COREPACK": "0"
+  },
+  "functions": {
+    "api/**/*": {
+      "includeFiles": "prisma/**"
+    }
   }
 }
