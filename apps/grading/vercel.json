@@ -1,8 +1,9 @@
 {
   "framework": "nextjs",
   "regions": ["icn1"],
-  "buildCommand": "prisma generate && next build",
-  "installCommand": "npm install --legacy-peer-deps",
+  "buildCommand": "cd ../.. && npm install --legacy-peer-deps && cd apps/grading && prisma generate && next build",
+  "outputDirectory": ".next",
+  "installCommand": "echo 'Install handled by buildCommand'",
   "env": {
     "NODE_VERSION": "20.x"
   }
