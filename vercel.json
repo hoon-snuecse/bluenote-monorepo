@@ -1,6 +1,0 @@
-{
-  "buildCommand": "cd apps/grading && pnpm build",
-  "outputDirectory": "apps/grading/.next",
-  "installCommand": "pnpm install --frozen-lockfile",
-  "framework": "nextjs"
-}
