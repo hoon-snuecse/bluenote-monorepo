@@ -31,6 +31,7 @@ export async function GET() {
     access_type: 'offline',
     scope: scopes,
     prompt: 'consent',
+    redirect_uri: redirectUri, // 명시적으로 redirect_uri 설정
   });
 
   console.log('Generated auth URL:', authUrl);
