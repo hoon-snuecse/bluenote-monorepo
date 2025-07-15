@@ -1,5 +1,9 @@
 {
   "framework": "nextjs",
   "regions": ["icn1"],
-  "buildCommand": "pnpm prisma generate && pnpm next build"
+  "functions": {
+    "src/app/api/**/*": {
+      "maxDuration": 30
+    }
+  }
 }
