@@ -8,7 +8,7 @@
     "ENABLE_EXPERIMENTAL_COREPACK": "0"
   },
   "functions": {
-    "api/**/*": {
+    "src/app/api/**/*.ts": {
       "includeFiles": "prisma/**"
     }
   }
