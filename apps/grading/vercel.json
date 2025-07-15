@@ -1,10 +1,4 @@
 {
   "framework": "nextjs",
-  "regions": ["icn1"],
-  "buildCommand": "npm install --legacy-peer-deps && prisma generate && next build",
-  "installCommand": "cd ../.. && npm install --legacy-peer-deps",
-  "outputDirectory": ".next",
-  "env": {
-    "NODE_VERSION": "20.x"
-  }
+  "regions": ["icn1"]
 }
