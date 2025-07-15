@@ -1,6 +1,8 @@
 {
   "framework": "nextjs",
   "regions": ["icn1"],
+  "installCommand": "corepack enable && corepack prepare pnpm@9.13.2 --activate && pnpm install",
+  "buildCommand": "pnpm run build",
   "functions": {
     "src/app/api/**/*": {
       "maxDuration": 30
