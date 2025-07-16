@@ -22,6 +22,7 @@ export default function SubmissionsPage() {
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedStatus, setSelectedStatus] = useState<'all' | 'submitted' | 'evaluated'>('all');
+  const [selectedSubmissions, setSelectedSubmissions] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     fetchSubmissions();
@@ -73,6 +74,37 @@ export default function SubmissionsPage() {
 
     // 평가 페이지로 이동
     router.push(`/assignments/${params.assignmentId}/evaluate?submissions=${submissionIds.join(',')}`);
+  };
+  
+  const handleEvaluateSelected = () => {
+    if (selectedSubmissions.size === 0) {
+      alert('평가할 학생을 선택해주세요.');
+      return;
+    }
+    
+    const submissionIds = Array.from(selectedSubmissions);
+    router.push(`/assignments/${params.assignmentId}/evaluate?submissions=${submissionIds.join(',')}`);
+  };
+  
+  const toggleSubmissionSelection = (submissionId: string) => {
+    const newSelection = new Set(selectedSubmissions);
+    if (newSelection.has(submissionId)) {
+      newSelection.delete(submissionId);
+    } else {
+      newSelection.add(submissionId);
+    }
+    setSelectedSubmissions(newSelection);
+  };
+  
+  const toggleAllSelection = () => {
+    if (selectedSubmissions.size === filteredSubmissions.filter(s => s.status === 'submitted').length) {
+      setSelectedSubmissions(new Set());
+    } else {
+      const allSubmittedIds = filteredSubmissions
+        .filter(s => s.status === 'submitted')
+        .map(s => s.id);
+      setSelectedSubmissions(new Set(allSubmittedIds));
+    }
   };
 
   const handleCollectMore = () => {
@@ -154,13 +186,25 @@ export default function SubmissionsPage() {
               </button>
             )}
             {stats.submitted > 0 && (
-              <button
-                onClick={handleEvaluateAll}
-                className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
-              >
-                <PlayCircle className="w-5 h-5" />
-                평가하기 ({stats.submitted}개)
-              </button>
+              <>
+                {selectedSubmissions.size > 0 ? (
+                  <button
+                    onClick={handleEvaluateSelected}
+                    className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+                  >
+                    <PlayCircle className="w-5 h-5" />
+                    선택한 학생 평가하기 ({selectedSubmissions.size}개)
+                  </button>
+                ) : (
+                  <button
+                    onClick={handleEvaluateAll}
+                    className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+                  >
+                    <PlayCircle className="w-5 h-5" />
+                    전체 평가하기 ({stats.submitted}개)
+                  </button>
+                )}
+              </>
             )}
           </div>
         </div>
@@ -215,6 +259,16 @@ export default function SubmissionsPage() {
               <table className="w-full">
                 <thead>
                   <tr className="border-b bg-gradient-to-r from-blue-50/10 to-indigo-50/10">
+                    <th className="text-center p-4 font-medium text-base w-12">
+                      {stats.submitted > 0 && (
+                        <input
+                          type="checkbox"
+                          checked={selectedSubmissions.size === filteredSubmissions.filter(s => s.status === 'submitted').length && filteredSubmissions.filter(s => s.status === 'submitted').length > 0}
+                          onChange={toggleAllSelection}
+                          className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                        />
+                      )}
+                    </th>
                     <th className="text-left p-4 font-medium text-base">학생 이름</th>
                     <th className="text-left p-4 font-medium text-base">학번</th>
                     <th className="text-left p-4 font-medium text-base">제출 일시</th>
@@ -242,6 +296,16 @@ export default function SubmissionsPage() {
                   ) : (
                     filteredSubmissions.map((submission) => (
                       <tr key={submission.id} className="border-b hover:bg-blue-50/10 transition-colors">
+                        <td className="text-center p-4">
+                          {submission.status === 'submitted' && (
+                            <input
+                              type="checkbox"
+                              checked={selectedSubmissions.has(submission.id)}
+                              onChange={() => toggleSubmissionSelection(submission.id)}
+                              className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                            />
+                          )}
+                        </td>
                         <td className="p-4">
                           <div className="flex items-center gap-2">
                             <User className="w-4 h-4 text-slate-400" />

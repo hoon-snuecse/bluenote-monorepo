@@ -25,7 +25,7 @@ export default function EvaluatePage() {
   const searchParams = useSearchParams();
   const [isEvaluating, setIsEvaluating] = useState(false);
   const [evaluationTasks, setEvaluationTasks] = useState<EvaluationTask[]>([]);
-  const [selectedModel, setSelectedModel] = useState('claude-opus-4-20250514');
+  const [selectedModel, setSelectedModel] = useState('claude-sonnet-4-20250514');
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [assignment, setAssignment] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -97,24 +97,35 @@ export default function EvaluatePage() {
   };
   
   const generateEvaluationPrompt = (assignment: any, submission: Submission) => {
-    return `
-다음 학생의 글을 평가해주세요.
+    // 실제 Claude API에 전달되는 프롬프트 형식
+    const systemPrompt = `당신은 한국 초등학교 ${assignment?.gradeLevel || '초등학교'} 담임교사입니다. 
+학생의 ${assignment?.writingType || '논설문'}을 평가하고 있습니다.
 
-학생 이름: ${submission.studentName}
-학번: ${submission.studentId}
+평가 영역: ${assignment?.evaluationDomains?.join(', ') || '평가 영역이 설정되지 않음'}
+평가 수준: ${assignment?.evaluationLevels?.join(', ') || '평가 수준이 설정되지 않음'}
 
-=== 글 내용 ===
-${submission.content?.substring(0, 200)}...
-
-=== 평가 기준 ===
 ${assignment?.gradingCriteria || '평가 기준이 설정되지 않음'}
 
-=== 평가 영역 ===
-${assignment?.evaluationDomains?.join(', ') || '평가 영역이 설정되지 않음'}
+다음 형식으로 JSON 응답을 제공해주세요:
+{
+  "overallScore": 점수 (0-100),
+  "overallGrade": "전체 평가 수준",
+  "domainScores": { "영역명": 점수, ... },
+  "domainGrades": { "영역명": "평가 수준", ... },
+  "strengths": ["강점1", "강점2", ...],
+  "improvements": ["개선점1", "개선점2", ...],
+  "detailedFeedback": "상세 피드백 (학생과 학부모가 이해하기 쉽게)"
+}`;
 
-=== 평가 수준 ===
-${assignment?.evaluationLevels?.join(', ') || '평가 수준이 설정되지 않음'}
-`;
+    const userPrompt = `학생 이름: ${submission.studentName}
+과제 제목: ${assignment?.title || '글쓰기 과제'}
+
+학생의 글:
+${submission.content?.substring(0, 300)}...
+
+위 글을 평가해주세요.`;
+
+    return `=== 시스템 프롬프트 ===\n${systemPrompt}\n\n=== 사용자 프롬프트 ===\n${userPrompt}`;
   };
 
   const handleStartEvaluation = async () => {
@@ -314,14 +325,8 @@ ${assignment?.evaluationLevels?.join(', ') || '평가 수준이 설정되지 않
                     onChange={(e) => setSelectedModel(e.target.value)}
                     className="w-full px-4 py-3 border border-slate-200/50 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/30 bg-white/70 backdrop-blur-sm text-base"
                   >
-                    <option value="claude-opus-4-20250514">Claude Opus 4 (가장 강력한 모델)</option>
                     <option value="claude-sonnet-4-20250514">Claude Sonnet 4 (권장 - 스마트하고 효율적)</option>
-                    <option value="claude-3.5-sonnet">Claude 3.5 Sonnet</option>
-                    <option value="claude-3-opus">Claude 3 Opus</option>
-                    <option value="claude-3-haiku">Claude 3 Haiku (빠른 속도)</option>
-                    <option value="gpt-4o">GPT-4o (최신)</option>
-                    <option value="gpt-4">GPT-4</option>
-                    <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+                    <option value="claude-opus-4-20250514">Claude Opus 4 (가장 강력한 모델)</option>
                   </select>
                 </div>
 
