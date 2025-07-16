@@ -1,36 +1,35 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 
-const EVALUATION_PROMPT = `당신은 고등학교 국어 교사입니다. 학생의 논설문을 다음 4가지 기준으로 평가해주세요:
+const createEvaluationPrompt = (assignment: any, content: string) => {
+  const domains = assignment.evaluationDomains as string[];
+  const levels = assignment.evaluationLevels as string[];
+  
+  return `당신은 ${assignment.gradeLevel} 국어 교사입니다. 학생의 ${assignment.writingType}을(를) 다음 ${domains.length}가지 기준으로 평가해주세요:
 
-1. 주장의 명확성 (25점): 글의 주제와 주장이 명확하게 드러나는가?
-2. 근거의 타당성 (25점): 주장을 뒷받침하는 근거가 타당하고 충분한가?
-3. 논리적 구조 (25점): 글의 구성이 논리적이고 체계적인가?
-4. 설득력 있는 표현 (25점): 어휘 선택과 문장 표현이 설득력 있는가?
+${domains.map((domain, index) => `${index + 1}. ${domain}: 이 영역에서 학생의 글쓰기 수준을 평가해주세요.`).join('\n')}
 
 각 항목을 100점 만점으로 평가하고, 구체적인 피드백을 제공해주세요.
+평가 수준은 다음 중 하나로 분류해주세요: ${levels.join(', ')}
 
-응답 형식:
+평가 기준:
+${assignment.gradingCriteria}
+
+응답 형식 (반드시 JSON 형식으로):
 {
   "scores": {
-    "clarity": 점수,
-    "evidence": 점수,
-    "structure": 점수,
-    "expression": 점수,
-    "overall": 종합점수
+    ${domains.map((domain, index) => `"domain${index + 1}": 점수`).join(',\n    ')}
   },
-  "grade": "매우 우수|우수|보통|미흡",
+  "grade": "${levels.join('|')} 중 하나",
   "feedback": {
-    "clarity": "구체적 피드백",
-    "evidence": "구체적 피드백",
-    "structure": "구체적 피드백",
-    "expression": "구체적 피드백",
+    ${domains.map((domain, index) => `"domain${index + 1}": "${domain}에 대한 구체적 피드백"`).join(',\n    ')},
     "overall": "종합 피드백"
   }
 }
 
-학생의 논설문:
-`;
+학생의 글:
+${content}`;
+};
 
 export async function POST(request: NextRequest) {
   try {
@@ -60,6 +59,15 @@ export async function POST(request: NextRequest) {
 
     const evaluationLevels = submission.assignment.evaluationLevels as string[];
 
+    // Check if API key is configured
+    if (!process.env.CLAUDE_API_KEY) {
+      console.error('CLAUDE_API_KEY is not configured');
+      return NextResponse.json(
+        { error: 'AI evaluation service is not configured' },
+        { status: 500 }
+      );
+    }
+
     try {
       // Call Claude API for evaluation
       const response = await fetch('https://api.anthropic.com/v1/messages', {
@@ -75,7 +83,7 @@ export async function POST(request: NextRequest) {
           messages: [
             {
               role: 'user',
-              content: EVALUATION_PROMPT + submission.content,
+              content: createEvaluationPrompt(submission.assignment, submission.content),
             },
           ],
         }),
@@ -94,23 +102,18 @@ export async function POST(request: NextRequest) {
       
       // Map AI evaluation to our domain structure
       const domainEvaluations: any = {};
-      const domainMapping: any = {
-        'clarity': '주장의 명확성',
-        'evidence': '근거의 타당성',
-        'structure': '논리적 구조',
-        'expression': '설득력 있는 표현'
-      };
+      const domains = submission.assignment.evaluationDomains as string[];
       
       // Assign evaluation levels based on scores
-      Object.entries(domainMapping).forEach(([key, domain]) => {
-        const score = (aiEvaluation.scores as any)[key];
+      domains.forEach((domain, index) => {
+        const score = (aiEvaluation.scores as any)[`domain${index + 1}`];
         let level;
         if (score >= 90) level = evaluationLevels[0] || '매우 우수';
         else if (score >= 80) level = evaluationLevels[1] || '우수';
         else if (score >= 70) level = evaluationLevels[2] || '보통';
         else level = evaluationLevels[3] || '미흡';
         
-        domainEvaluations[domain as string] = level;
+        domainEvaluations[domain] = level;
       });
 
       // Create evaluation record
@@ -122,12 +125,9 @@ export async function POST(request: NextRequest) {
           domainEvaluations,
           overallLevel: aiEvaluation.grade,
           overallFeedback: aiEvaluation.feedback.overall,
-          improvementSuggestions: [
-            aiEvaluation.feedback.clarity,
-            aiEvaluation.feedback.evidence,
-            aiEvaluation.feedback.structure,
-            aiEvaluation.feedback.expression
-          ].filter(Boolean),
+          improvementSuggestions: domains.map((domain, index) => 
+            aiEvaluation.feedback[`domain${index + 1}`]
+          ).filter(Boolean),
           strengths: [
             "글의 구조가 체계적입니다",
             "주제에 대한 이해도가 높습니다",
