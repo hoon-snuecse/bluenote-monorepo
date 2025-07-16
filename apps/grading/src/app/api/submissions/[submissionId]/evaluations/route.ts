@@ -1,0 +1,94 @@
+import { NextRequest, NextResponse } from 'next/server';
+import prisma from '@/lib/prisma';
+
+// 제출물의 모든 평가 정보 조회 (평가 이력)
+export async function GET(
+  request: NextRequest,
+  { params }: { params: { submissionId: string } }
+) {
+  try {
+    console.log('Fetching all evaluations for submissionId:', params.submissionId);
+    
+    // 모든 평가 정보 조회 (최신순)
+    const evaluations = await prisma.evaluation.findMany({
+      where: {
+        submissionId: params.submissionId,
+      },
+      orderBy: {
+        evaluatedAt: 'desc',
+      },
+    });
+
+    console.log('Found evaluations:', evaluations.length);
+
+    // JSON 필드 파싱
+    const parsedEvaluations = evaluations.map(evaluation => {
+      let parsedEvaluation = {
+        ...evaluation,
+        domainEvaluations: {},
+        strengths: [],
+        improvementSuggestions: []
+      };
+
+      // domainEvaluations 파싱
+      if (evaluation.domainEvaluations) {
+        try {
+          const rawEvaluations = typeof evaluation.domainEvaluations === 'string' 
+            ? JSON.parse(evaluation.domainEvaluations) 
+            : evaluation.domainEvaluations;
+          
+          // Convert object values to strings if they have a 'level' property
+          const processedEvaluations: Record<string, string> = {};
+          for (const [key, value] of Object.entries(rawEvaluations)) {
+            if (typeof value === 'object' && value !== null && 'level' in value) {
+              processedEvaluations[key] = (value as any).level;
+            } else {
+              processedEvaluations[key] = value as string;
+            }
+          }
+          parsedEvaluation.domainEvaluations = processedEvaluations;
+        } catch (e) {
+          console.error('Error parsing domainEvaluations:', e);
+          parsedEvaluation.domainEvaluations = {};
+        }
+      }
+
+      // strengths 파싱
+      if (evaluation.strengths) {
+        try {
+          parsedEvaluation.strengths = typeof evaluation.strengths === 'string' 
+            ? JSON.parse(evaluation.strengths) 
+            : evaluation.strengths;
+        } catch (e) {
+          console.error('Error parsing strengths:', e);
+          parsedEvaluation.strengths = [];
+        }
+      }
+
+      // improvementSuggestions 파싱
+      if (evaluation.improvementSuggestions) {
+        try {
+          parsedEvaluation.improvementSuggestions = typeof evaluation.improvementSuggestions === 'string' 
+            ? JSON.parse(evaluation.improvementSuggestions) 
+            : evaluation.improvementSuggestions;
+        } catch (e) {
+          console.error('Error parsing improvementSuggestions:', e);
+          parsedEvaluation.improvementSuggestions = [];
+        }
+      }
+
+      return parsedEvaluation;
+    });
+
+    return NextResponse.json({ 
+      success: true, 
+      evaluations: parsedEvaluations
+    });
+  } catch (error) {
+    console.error('평가 정보 조회 오류:', error);
+    return NextResponse.json(
+      { success: false, error: '평가 정보 조회 중 오류가 발생했습니다.' },
+      { status: 500 }
+    );
+  }
+}

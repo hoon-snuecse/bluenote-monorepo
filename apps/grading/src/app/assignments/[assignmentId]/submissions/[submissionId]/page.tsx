@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
-import { ArrowLeft, User, Calendar, FileText, Award, Target, BookOpen, Lightbulb, Edit, Save, X } from 'lucide-react';
+import { ArrowLeft, User, Calendar, FileText, Award, Target, BookOpen, Lightbulb, Edit, Save, X, History, ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface Submission {
   id: string;
@@ -22,6 +22,7 @@ interface Evaluation {
   overallFeedback: string;
   improvementSuggestions: string[];
   strengths: string[];
+  evaluatedAt: Date | string;
 }
 
 export default function SubmissionDetailPage() {
@@ -29,6 +30,8 @@ export default function SubmissionDetailPage() {
   const router = useRouter();
   const [submission, setSubmission] = useState<Submission | null>(null);
   const [evaluation, setEvaluation] = useState<Evaluation | null>(null);
+  const [evaluations, setEvaluations] = useState<Evaluation[]>([]);
+  const [currentEvaluationIndex, setCurrentEvaluationIndex] = useState(0);
   const [assignment, setAssignment] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
@@ -108,12 +111,14 @@ export default function SubmissionDetailPage() {
         setAssignment(assignmentData.assignment);
       }
 
-      // Fetch evaluation if exists
+      // Fetch all evaluations if exists
       if (submissionData.submission?.evaluatedAt) {
-        const evalRes = await fetch(`/api/submissions/${params.submissionId}/evaluation`);
+        const evalRes = await fetch(`/api/submissions/${params.submissionId}/evaluations`);
         const evalData = await evalRes.json();
-        if (evalData.success) {
-          setEvaluation(evalData.evaluation);
+        if (evalData.success && evalData.evaluations.length > 0) {
+          setEvaluations(evalData.evaluations);
+          setEvaluation(evalData.evaluations[0]); // 최신 평가를 기본으로 표시
+          setCurrentEvaluationIndex(0);
         }
       }
     } catch (error) {
@@ -274,9 +279,42 @@ export default function SubmissionDetailPage() {
                       }`}>
                         {evaluation.overallLevel}
                       </div>
-                      <p className="text-sm text-slate-600">
-                        평가일: {submission.evaluatedAt?.toLocaleString('ko-KR')}
+                      <p className="text-sm text-slate-600 mb-2">
+                        평가일: {new Date(evaluation.evaluatedAt).toLocaleString('ko-KR')}
                       </p>
+                      {evaluations.length > 1 && (
+                        <div className="flex items-center justify-center gap-2 mt-4">
+                          <button
+                            onClick={() => {
+                              const newIndex = currentEvaluationIndex + 1;
+                              if (newIndex < evaluations.length) {
+                                setCurrentEvaluationIndex(newIndex);
+                                setEvaluation(evaluations[newIndex]);
+                              }
+                            }}
+                            disabled={currentEvaluationIndex >= evaluations.length - 1}
+                            className="p-1 rounded hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            <ChevronLeft className="w-4 h-4" />
+                          </button>
+                          <span className="text-sm text-slate-600">
+                            {currentEvaluationIndex + 1} / {evaluations.length} 차 평가
+                          </span>
+                          <button
+                            onClick={() => {
+                              const newIndex = currentEvaluationIndex - 1;
+                              if (newIndex >= 0) {
+                                setCurrentEvaluationIndex(newIndex);
+                                setEvaluation(evaluations[newIndex]);
+                              }
+                            }}
+                            disabled={currentEvaluationIndex === 0}
+                            className="p-1 rounded hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            <ChevronRight className="w-4 h-4" />
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
@@ -370,6 +408,53 @@ export default function SubmissionDetailPage() {
                           </li>
                         ))}
                       </ul>
+                    </CardContent>
+                  </Card>
+                )}
+                
+                {/* 평가 히스토리 */}
+                {evaluations.length > 1 && (
+                  <Card className="bg-white/70 backdrop-blur-sm border border-slate-200/50">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <History className="w-5 h-5" />
+                        평가 히스토리
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-2">
+                        {evaluations.map((evalItem, index) => (
+                          <button
+                            key={evalItem.id}
+                            onClick={() => {
+                              setCurrentEvaluationIndex(index);
+                              setEvaluation(evalItem);
+                            }}
+                            className={`w-full text-left p-3 rounded-lg border transition-all ${
+                              index === currentEvaluationIndex
+                                ? 'border-blue-400 bg-blue-50/50'
+                                : 'border-slate-200 hover:bg-slate-50'
+                            }`}
+                          >
+                            <div className="flex justify-between items-center">
+                              <span className="text-sm font-medium">
+                                {index + 1}차 평가
+                              </span>
+                              <span className={`text-sm ${
+                                evalItem.overallLevel === '매우 우수' ? 'text-green-600' :
+                                evalItem.overallLevel === '우수' ? 'text-blue-600' :
+                                evalItem.overallLevel === '보통' ? 'text-yellow-600' :
+                                'text-red-600'
+                              }`}>
+                                {evalItem.overallLevel}
+                              </span>
+                            </div>
+                            <div className="text-xs text-slate-600 mt-1">
+                              {new Date(evalItem.evaluatedAt).toLocaleString('ko-KR')}
+                            </div>
+                          </button>
+                        ))}
+                      </div>
                     </CardContent>
                   </Card>
                 )}

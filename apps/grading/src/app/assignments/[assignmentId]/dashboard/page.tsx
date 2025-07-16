@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { ArrowLeft, Download, Filter, BarChart3, TrendingUp, AlertCircle } from 'lucide-react';
+import * as XLSX from 'xlsx';
 
 interface DomainScore {
   domain: string;
@@ -128,8 +129,92 @@ export default function DashboardPage() {
   };
 
   const handleExportExcel = async () => {
-    // TODO: Implement Excel export
-    console.log('Export to Excel');
+    try {
+      // 워크북 생성
+      const wb = XLSX.utils.book_new();
+      
+      // 데이터 준비
+      const excelData = [];
+      
+      // 헤더 행 추가
+      const headers = ['학생 이름', '학번'];
+      if (assignment?.evaluationDomains) {
+        headers.push(...assignment.evaluationDomains);
+      }
+      headers.push('종합 평가', '제출일시', '평가일시');
+      excelData.push(headers);
+      
+      // 학생 데이터 추가
+      students.forEach(student => {
+        const row = [student.name, student.studentId];
+        
+        // 각 평가 영역별 점수 추가
+        if (assignment?.evaluationDomains) {
+          assignment.evaluationDomains.forEach((domain: string) => {
+            const score = student.scores[domain];
+            const level = typeof score === 'object' && score !== null 
+              ? (score as any).level 
+              : score;
+            row.push(level || '-');
+          });
+        }
+        
+        // 종합 평가, 제출일시, 평가일시 추가
+        row.push(student.overallLevel);
+        row.push(student.submittedAt.toLocaleString('ko-KR'));
+        row.push(student.evaluatedAt ? student.evaluatedAt.toLocaleString('ko-KR') : '미평가');
+        
+        excelData.push(row);
+      });
+      
+      // 워크시트 생성
+      const ws = XLSX.utils.aoa_to_sheet(excelData);
+      
+      // 열 너비 설정
+      const colWidths = headers.map((header, index) => {
+        if (index === 0) return { wch: 15 }; // 이름
+        if (index === 1) return { wch: 12 }; // 학번
+        if (header.includes('일시')) return { wch: 20 }; // 일시
+        return { wch: 15 }; // 기본
+      });
+      ws['!cols'] = colWidths;
+      
+      // 워크북에 워크시트 추가
+      XLSX.utils.book_append_sheet(wb, ws, '평가 결과');
+      
+      // 통계 시트 추가
+      const statsData = [];
+      statsData.push(['평가 통계']);
+      statsData.push(['']);
+      statsData.push(['과제명', assignment?.title || '']);
+      statsData.push(['전체 학생 수', students.length]);
+      statsData.push(['평가 완료', students.filter(s => s.evaluatedAt).length]);
+      statsData.push(['미평가', students.filter(s => !s.evaluatedAt).length]);
+      statsData.push(['']);
+      statsData.push(['영역별 분포']);
+      
+      if (domainScores.length > 0) {
+        domainScores.forEach(domain => {
+          statsData.push(['']);
+          statsData.push([domain.domain]);
+          domain.distribution.forEach(dist => {
+            statsData.push([dist.level, dist.count]);
+          });
+        });
+      }
+      
+      const wsStats = XLSX.utils.aoa_to_sheet(statsData);
+      wsStats['!cols'] = [{ wch: 20 }, { wch: 15 }];
+      XLSX.utils.book_append_sheet(wb, wsStats, '통계');
+      
+      // 파일 다운로드
+      const fileName = `${assignment?.title || '평가결과'}_${new Date().toISOString().split('T')[0]}.xlsx`;
+      XLSX.writeFile(wb, fileName);
+      
+    } catch (error) {
+      console.error('Excel export error:', error);
+      alert('Excel 파일 생성 중 오류가 발생했습니다.');
+    }
   };
 
   const sortedStudents = [...students].sort((a, b) => {

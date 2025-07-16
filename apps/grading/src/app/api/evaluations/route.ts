@@ -76,7 +76,7 @@ export async function POST(request: NextRequest) {
       evaluationLevels
     );
     
-    // 평가 결과 저장
+    // 평가 결과 저장 (재평가인 경우 기존 평가는 유지하고 새로운 평가 추가)
     const evaluation = await prisma.evaluation.create({
       data: {
         submissionId,
