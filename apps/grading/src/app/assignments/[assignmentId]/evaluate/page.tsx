@@ -104,7 +104,9 @@ export default function EvaluatePage() {
         });
 
         if (!response.ok) {
-          throw new Error('Evaluation failed');
+          const errorText = await response.text();
+          console.error('Evaluation API error:', response.status, errorText);
+          throw new Error(`Evaluation failed: ${response.status}`);
         }
 
         const result = await response.json();
