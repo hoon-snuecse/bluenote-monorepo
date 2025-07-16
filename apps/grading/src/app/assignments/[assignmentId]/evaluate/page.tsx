@@ -110,9 +110,18 @@ export default function EvaluatePage() {
     const systemPrompt = `당신은 ${assignment?.schoolName || '한국초등학교'} ${assignment?.gradeLevel || '초등학교'} 담임교사입니다. 
 학생의 ${assignment?.writingType || '논설문'}을 평가하고 있습니다.
 
-평가 영역: ${assignment?.evaluationDomains?.join(', ') || '평가 영역이 설정되지 않음'}
-평가 수준: ${assignment?.evaluationLevels?.join(', ') || '평가 수준이 설정되지 않음'}
+[과제 정보]
+- 과제 제목: ${assignment?.title || '과제 제목 없음'}
+- 학교: ${assignment?.schoolName || '학교명 없음'}
+- 학년: ${assignment?.gradeLevel || '학년 정보 없음'}  
+- 글 유형: ${assignment?.writingType || '글 유형 없음'}
 
+[평가 설정]
+- 평가 영역: ${assignment?.evaluationDomains?.join(', ') || '평가 영역이 설정되지 않음'}
+- 평가 수준: ${assignment?.evaluationLevels?.join(', ') || '평가 수준이 설정되지 않음'}
+- 평가 수준 개수: ${assignment?.levelCount || 0}개
+
+[평가 기준]
 ${assignment?.gradingCriteria || '평가 기준이 설정되지 않음'}
 
 다음 형식으로 JSON 응답을 제공해주세요:
@@ -426,6 +435,19 @@ ${submission.content?.substring(0, 100)}...
                         <p className="mt-2 text-sm text-red-600 font-medium">
                           ⚠️ 경고: 평가 기준(gradingCriteria)이 설정되지 않았습니다. 과제 설정을 확인해주세요.
                         </p>
+                      )}
+                      {process.env.NODE_ENV === 'development' && (
+                        <div className="mt-4 p-3 bg-gray-100 rounded text-xs">
+                          <p className="font-bold mb-1">Debug Info (Assignment Data):</p>
+                          <p>Title: {assignment?.title || 'N/A'}</p>
+                          <p>School: {assignment?.schoolName || 'N/A'}</p>
+                          <p>Grade: {assignment?.gradeLevel || 'N/A'}</p>
+                          <p>Writing Type: {assignment?.writingType || 'N/A'}</p>
+                          <p>Level Count: {assignment?.levelCount || 'N/A'}</p>
+                          <p>Domains: {assignment?.evaluationDomains?.join(', ') || 'N/A'}</p>
+                          <p>Levels: {assignment?.evaluationLevels?.join(', ') || 'N/A'}</p>
+                          <p>Criteria Length: {assignment?.gradingCriteria?.length || 0} chars</p>
+                        </div>
                       )}
                     </div>
                   )}

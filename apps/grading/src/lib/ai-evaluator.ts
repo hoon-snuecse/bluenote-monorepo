@@ -44,6 +44,7 @@ export class ClaudeEvaluator implements AIEvaluator {
         writingType: this.assignmentData?.writingType || '논설문',
         evaluationDomains: domains,
         evaluationLevels: levels,
+        levelCount: levels.length,
         evaluationPrompt: criteria,
         studentText: content,
         studentName: this.assignmentData?.studentName || '학생'

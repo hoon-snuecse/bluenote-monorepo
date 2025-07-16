@@ -12,6 +12,7 @@ export interface EvaluationRequest {
   writingType: string;
   evaluationDomains: string[];
   evaluationLevels: string[];
+  levelCount: number;
   evaluationPrompt: string;
   studentText: string;
   studentName: string;
@@ -38,9 +39,18 @@ export async function evaluateWithClaude(request: EvaluationRequest): Promise<Ev
     const systemPrompt = `당신은 ${request.schoolName} ${request.grade} 담임교사입니다. 
 학생의 ${request.writingType}을 평가하고 있습니다.
 
-평가 영역: ${request.evaluationDomains.join(', ')}
-평가 수준: ${request.evaluationLevels.join(', ')}
+[과제 정보]
+- 과제 제목: ${request.assignmentTitle}
+- 학교: ${request.schoolName}
+- 학년: ${request.grade}
+- 글 유형: ${request.writingType}
 
+[평가 설정]
+- 평가 영역: ${request.evaluationDomains.join(', ')}
+- 평가 수준: ${request.evaluationLevels.join(', ')}
+- 평가 수준 개수: ${request.levelCount}개
+
+[평가 기준]
 ${request.evaluationPrompt}
 
 다음 형식으로 JSON 응답을 제공해주세요:
