@@ -64,10 +64,16 @@ export async function POST(request: NextRequest) {
     if (!process.env.CLAUDE_API_KEY) {
       console.error('CLAUDE_API_KEY is not configured');
       return NextResponse.json(
-        { error: 'AI evaluation service is not configured' },
+        { 
+          error: 'AI evaluation service is not configured',
+          details: 'CLAUDE_API_KEY environment variable is missing',
+          success: false
+        },
         { status: 500 }
       );
     }
+    
+    console.log('CLAUDE_API_KEY is configured:', process.env.CLAUDE_API_KEY?.substring(0, 10) + '...');
 
     try {
       // Call Claude API for evaluation
@@ -79,10 +85,12 @@ export async function POST(request: NextRequest) {
           'Content-Type': 'application/json',
           'x-api-key': process.env.CLAUDE_API_KEY || '',
           'anthropic-version': '2023-06-01',
+          'anthropic-beta': 'messages-2023-12-15',
         },
         body: JSON.stringify({
           model: model || 'claude-3-5-sonnet-20241022',
           max_tokens: 2000,
+          temperature: 0.7,
           messages: [
             {
               role: 'user',
@@ -105,8 +113,14 @@ export async function POST(request: NextRequest) {
       console.log('AI evaluation content:', content.substring(0, 200));
       
       // Parse the JSON response
-      const aiEvaluation = JSON.parse(content);
-      console.log('Parsed evaluation:', aiEvaluation);
+      let aiEvaluation;
+      try {
+        aiEvaluation = JSON.parse(content);
+        console.log('Parsed evaluation:', aiEvaluation);
+      } catch (parseError) {
+        console.error('Failed to parse AI response:', content);
+        throw new Error('Failed to parse AI evaluation response');
+      }
       
       // Map AI evaluation to our domain structure
       const domainEvaluations: any = {};

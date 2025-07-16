@@ -109,6 +109,10 @@ export default function EvaluatePage() {
 
         const result = await response.json();
         console.log('Evaluation result:', result);
+        
+        if (!result.success) {
+          throw new Error(result.details || result.error || 'Evaluation failed');
+        }
       } catch (error) {
         console.error('Evaluation error:', error);
         // Mark as failed
@@ -118,7 +122,7 @@ export default function EvaluatePage() {
               ? { 
                   ...task, 
                   status: 'failed',
-                  message: '평가 중 오류가 발생했습니다.'
+                  message: error instanceof Error ? error.message : '평가 중 오류가 발생했습니다.'
                 } 
               : task
           )
@@ -266,17 +270,22 @@ export default function EvaluatePage() {
                       )}
                       <span className="text-base text-slate-700">{task.studentName}</span>
                     </div>
-                    <span className={`text-sm ${
-                      task.status === 'completed' ? 'text-green-600' :
-                      task.status === 'processing' ? 'text-blue-600' :
-                      task.status === 'failed' ? 'text-red-600' :
-                      'text-slate-500'
-                    }`}>
-                      {task.status === 'pending' ? '대기 중' :
-                       task.status === 'processing' ? '평가 중...' :
-                       task.status === 'completed' ? '완료' :
-                       '실패'}
-                    </span>
+                    <div className="text-right">
+                      <span className={`text-sm ${
+                        task.status === 'completed' ? 'text-green-600' :
+                        task.status === 'processing' ? 'text-blue-600' :
+                        task.status === 'failed' ? 'text-red-600' :
+                        'text-slate-500'
+                      }`}>
+                        {task.status === 'pending' ? '대기 중' :
+                         task.status === 'processing' ? '평가 중...' :
+                         task.status === 'completed' ? '완료' :
+                         '실패'}
+                      </span>
+                      {task.status === 'failed' && task.message && (
+                        <p className="text-xs text-red-500 mt-1">{task.message}</p>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>
