@@ -18,7 +18,11 @@ export async function GET(
             id: true,
             evaluatedAt: true,
             overallLevel: true
-          }
+          },
+          orderBy: {
+            evaluatedAt: 'desc'
+          },
+          take: 1
         }
       }
     });
@@ -30,15 +34,17 @@ export async function GET(
       );
     }
 
-    // assignment의 JSON 필드 파싱
-    if (submission.assignment) {
-      submission.assignment.evaluationDomains = JSON.parse(submission.assignment.evaluationDomains);
-      submission.assignment.evaluationLevels = JSON.parse(submission.assignment.evaluationLevels);
-    }
+    // Prisma는 JSON 필드를 자동으로 파싱하므로 추가 처리 불필요
+
+    // 평가 정보 추가
+    const evaluatedAt = submission.evaluations?.[0]?.evaluatedAt || null;
 
     return NextResponse.json({ 
       success: true, 
-      submission 
+      submission: {
+        ...submission,
+        evaluatedAt
+      }
     });
   } catch (error) {
     console.error('제출물 조회 오류:', error);

@@ -7,6 +7,24 @@ export async function GET(request: NextRequest) {
     // 쿠키에서 토큰 가져오기
     const token = getTokenFromCookie(request.headers.get('cookie'));
     
+    // 개발 모드에서 dev-token 처리
+    if (process.env.NODE_ENV === 'development' && token === 'dev-token') {
+      const mockUser = {
+        id: 'dev-user-1',
+        email: 'teacher@bluenote.site',
+        name: '개발 선생님',
+        role: 'TEACHER',
+        schoolName: '블루노트초등학교',
+        isActive: true,
+        lastLoginAt: new Date()
+      };
+      
+      return NextResponse.json({
+        success: true,
+        user: mockUser
+      });
+    }
+    
     if (!token) {
       return NextResponse.json(
         { success: false, error: '인증이 필요합니다.' },

@@ -20,16 +20,10 @@ export async function GET(
       );
     }
 
-    // JSON 문자열을 배열로 변환
-    const formattedAssignment = {
-      ...assignment,
-      evaluationDomains: JSON.parse(assignment.evaluationDomains),
-      evaluationLevels: JSON.parse(assignment.evaluationLevels),
-    };
-
+    // Prisma는 JSON 필드를 자동으로 파싱하므로 그대로 반환
     return NextResponse.json({ 
       success: true, 
-      assignment: formattedAssignment 
+      assignment: assignment 
     });
   } catch (error) {
     console.error('과제 조회 오류:', error);
@@ -57,23 +51,17 @@ export async function PUT(
         schoolName: data.schoolName,
         gradeLevel: data.gradeLevel,
         writingType: data.writingType,
-        evaluationDomains: JSON.stringify(data.evaluationDomains),
-        evaluationLevels: JSON.stringify(data.evaluationLevels),
+        evaluationDomains: data.evaluationDomains,
+        evaluationLevels: data.evaluationLevels,
         levelCount: parseInt(data.levelCount),
         gradingCriteria: data.gradingCriteria
       }
     });
 
-    // JSON 문자열을 배열로 변환
-    const formattedAssignment = {
-      ...assignment,
-      evaluationDomains: JSON.parse(assignment.evaluationDomains),
-      evaluationLevels: JSON.parse(assignment.evaluationLevels),
-    };
-
+    // Prisma는 JSON 필드를 자동으로 파싱하므로 그대로 반확
     return NextResponse.json({ 
       success: true, 
-      assignment: formattedAssignment 
+      assignment: assignment 
     });
   } catch (error) {
     console.error('과제 수정 오류:', error);

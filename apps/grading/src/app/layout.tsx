@@ -5,6 +5,7 @@ import { UserProvider } from "@/contexts/UserContext";
 import { NotificationProvider } from "@/contexts/NotificationContext";
 import { NotificationContainer } from "@/components/NotificationContainer";
 import UnifiedNavigation from "@/components/UnifiedNavigation";
+import { DevAutoLogin } from "@/components/DevAutoLogin";
 
 const gowunDodum = Gowun_Dodum({
   weight: "400",
@@ -37,6 +38,7 @@ export default function RootLayout({
       >
         <UserProvider>
           <NotificationProvider>
+            <DevAutoLogin />
             <UnifiedNavigation />
             <NotificationContainer />
             {children}
