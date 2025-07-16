@@ -25,7 +25,7 @@ export default function EvaluatePage() {
   const searchParams = useSearchParams();
   const [isEvaluating, setIsEvaluating] = useState(false);
   const [evaluationTasks, setEvaluationTasks] = useState<EvaluationTask[]>([]);
-  const [selectedModel, setSelectedModel] = useState('gpt-4');
+  const [selectedModel, setSelectedModel] = useState('claude-opus-4-20250514');
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [assignment, setAssignment] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -89,8 +89,42 @@ export default function EvaluatePage() {
         )
       );
 
-      // AI 평가 시뮬레이션 (실제로는 API 호출)
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // AI 평가 API 호출
+      try {
+        const response = await fetch('/api/evaluate', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            submissionId: tasks[i].id,
+            assignmentId: params.assignmentId,
+            model: selectedModel
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error('Evaluation failed');
+        }
+
+        const result = await response.json();
+        console.log('Evaluation result:', result);
+      } catch (error) {
+        console.error('Evaluation error:', error);
+        // Mark as failed
+        setEvaluationTasks(prev => 
+          prev.map((task, index) => 
+            index === i 
+              ? { 
+                  ...task, 
+                  status: 'failed',
+                  message: '평가 중 오류가 발생했습니다.'
+                } 
+              : task
+          )
+        );
+        continue;
+      }
 
       // 완료 상태로 업데이트
       setEvaluationTasks(prev => 
@@ -160,9 +194,14 @@ export default function EvaluatePage() {
                     onChange={(e) => setSelectedModel(e.target.value)}
                     className="w-full px-4 py-3 border border-slate-200/50 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/30 bg-white/70 backdrop-blur-sm text-base"
                   >
-                    <option value="gpt-4">GPT-4 (권장)</option>
-                    <option value="gpt-3.5">GPT-3.5 Turbo</option>
-                    <option value="claude">Claude 3</option>
+                    <option value="claude-opus-4-20250514">Claude Opus 4 (가장 강력한 모델)</option>
+                    <option value="claude-sonnet-4-20250514">Claude Sonnet 4 (권장 - 스마트하고 효율적)</option>
+                    <option value="claude-3.5-sonnet">Claude 3.5 Sonnet</option>
+                    <option value="claude-3-opus">Claude 3 Opus</option>
+                    <option value="claude-3-haiku">Claude 3 Haiku (빠른 속도)</option>
+                    <option value="gpt-4o">GPT-4o (최신)</option>
+                    <option value="gpt-4">GPT-4</option>
+                    <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
                   </select>
                 </div>
 
