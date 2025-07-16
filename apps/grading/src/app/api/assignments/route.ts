@@ -59,12 +59,13 @@ export async function POST(request: NextRequest) {
   }
   
   try {
-    // 개발 환경에서는 인증 체크를 건너뛰고 기본 teacherId 사용
-    const isDevelopment = process.env.NODE_ENV === 'development';
+    // 임시: 프로덕션에서도 인증 체크를 건너뜀 (개발/테스트용)
+    // TODO: 실제 프로덕션에서는 인증 구현 필요
     const teacherId = 'default-teacher-id';
     
-    if (!isDevelopment) {
-      // 프로덕션에서는 쿠키에서 인증 토큰 확인
+    // 향후 인증 구현 시 활성화
+    /*
+    if (process.env.NODE_ENV === 'production') {
       const cookieStore = request.cookies;
       const authToken = cookieStore.get('auth-token');
       
@@ -76,6 +77,7 @@ export async function POST(request: NextRequest) {
       }
       // TODO: JWT 토큰에서 teacherId 추출
     }
+    */
     
     // 필수 필드 검증
     if (!data.title || !data.schoolName || !data.gradeLevel || !data.writingType) {
