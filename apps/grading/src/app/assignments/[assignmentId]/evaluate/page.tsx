@@ -38,10 +38,12 @@ export default function EvaluatePage() {
     try {
       // Get submission IDs from query params
       const submissionIds = searchParams.get('submissions')?.split(',') || [];
+      console.log('Evaluate page - submissionIds:', submissionIds);
       
       // Fetch assignment details
       const assignmentRes = await fetch(`/api/assignments/${params.assignmentId}`);
       const assignmentData = await assignmentRes.json();
+      console.log('Assignment data:', assignmentData);
       if (assignmentData.success) {
         setAssignment(assignmentData.assignment);
       }
@@ -50,15 +52,18 @@ export default function EvaluatePage() {
       if (submissionIds.length > 0) {
         const submissionsRes = await fetch(`/api/assignments/${params.assignmentId}/submissions`);
         const submissionsData = await submissionsRes.json();
+        console.log('Submissions data:', submissionsData);
         if (submissionsData.success) {
           const filteredSubmissions = submissionsData.submissions
-            .filter((sub: any) => submissionIds.includes(sub.id) && sub.status === 'submitted')
+            .filter((sub: any) => submissionIds.includes(sub.id))
             .map((sub: any) => ({
               id: sub.id,
               studentId: sub.studentId,
               studentName: sub.studentName,
-              content: sub.content
+              content: sub.content,
+              status: sub.status
             }));
+          console.log('Filtered submissions:', filteredSubmissions);
           setSubmissions(filteredSubmissions);
         }
       }
@@ -190,6 +195,19 @@ export default function EvaluatePage() {
               <CardTitle className="text-xl">평가 설정</CardTitle>
             </CardHeader>
             <CardContent>
+              {submissions.length === 0 ? (
+                <div className="text-center py-8">
+                  <AlertCircle className="w-12 h-12 text-yellow-500 mx-auto mb-4" />
+                  <p className="text-lg text-slate-700 mb-2">평가할 제출물이 없습니다.</p>
+                  <p className="text-sm text-slate-600 mb-4">평가하려는 제출물을 선택해주세요.</p>
+                  <button
+                    onClick={() => router.push(`/assignments/${params.assignmentId}/submissions`)}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  >
+                    제출 현황으로 돌아가기
+                  </button>
+                </div>
+              ) : (
               <div className="space-y-4">
                 <div>
                   <label className="block text-base font-medium text-gray-700 mb-2">
@@ -225,6 +243,7 @@ export default function EvaluatePage() {
                   </div>
                 </div>
               </div>
+              )}
             </CardContent>
           </Card>
         )}
@@ -297,7 +316,7 @@ export default function EvaluatePage() {
 
         {/* Action Buttons */}
         <div className="flex justify-center gap-4">
-          {!isEvaluating && evaluationTasks.length === 0 && (
+          {!isEvaluating && evaluationTasks.length === 0 && submissions.length > 0 && (
             <button
               onClick={handleStartEvaluation}
               className="px-8 py-3 bg-blue-500/20 text-slate-700 rounded-lg hover:bg-blue-500/30 transition-colors flex items-center gap-2 border border-blue-200/30 text-lg font-medium"
