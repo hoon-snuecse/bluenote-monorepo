@@ -92,9 +92,13 @@ export async function POST(request: NextRequest) {
 
     // If assignmentId is provided, save submissions directly
     if (assignmentId) {
+      console.log('Creating submissions with assignmentId:', assignmentId);
+      console.log('Documents to process:', processedDocuments.length);
+      
       const submissions = [];
       for (const doc of processedDocuments) {
         try {
+          console.log(`Creating submission for ${doc.studentName}`);
           const submission = await prisma.submission.create({
             data: {
               assignmentId: assignmentId,
@@ -103,6 +107,7 @@ export async function POST(request: NextRequest) {
               content: doc.content
             }
           });
+          console.log('Created submission:', submission.id);
           submissions.push(submission);
         } catch (error) {
           console.error(`Failed to create submission for ${doc.studentName}:`, error);

@@ -1,5 +1,5 @@
 import { google } from 'googleapis';
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 
 const redirectUri = process.env.GOOGLE_REDIRECT_URI || 
   (process.env.NODE_ENV === 'production' 
@@ -12,11 +12,17 @@ const oauth2Client = new google.auth.OAuth2(
   redirectUri
 );
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const searchParams = request.nextUrl.searchParams;
+  const assignmentId = searchParams.get('assignmentId');
+  
   const scopes = [
     'https://www.googleapis.com/auth/drive.readonly',
     'https://www.googleapis.com/auth/drive.file',
   ];
+
+  // state에 assignmentId 포함
+  const state = assignmentId ? JSON.stringify({ assignmentId }) : undefined;
 
   // 디버깅을 위한 로그
   console.log('OAuth Configuration:', {
@@ -24,7 +30,8 @@ export async function GET() {
     hasClientSecret: !!process.env.GOOGLE_CLIENT_SECRET,
     redirectUri: redirectUri,
     envRedirectUri: process.env.GOOGLE_REDIRECT_URI,
-    nodeEnv: process.env.NODE_ENV
+    nodeEnv: process.env.NODE_ENV,
+    assignmentId: assignmentId
   });
 
   const authUrl = oauth2Client.generateAuthUrl({
@@ -32,6 +39,7 @@ export async function GET() {
     scope: scopes,
     prompt: 'consent',
     redirect_uri: redirectUri, // 명시적으로 redirect_uri 설정
+    state: state
   });
 
   console.log('Generated auth URL:', authUrl);

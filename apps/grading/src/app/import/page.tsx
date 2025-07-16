@@ -31,6 +31,8 @@ function ImportPageContent() {
   useEffect(() => {
     const success = searchParams.get('success');
     const error = searchParams.get('error');
+    
+    console.log('Import page - assignmentId:', assignmentId);
 
     if (success === 'true') {
       setIsAuthenticated(true);
@@ -41,7 +43,7 @@ function ImportPageContent() {
       // Check if already authenticated
       checkAuthStatus();
     }
-  }, [searchParams]);
+  }, [searchParams, assignmentId]);
 
   const checkAuthStatus = async () => {
     try {
@@ -59,7 +61,10 @@ function ImportPageContent() {
   };
 
   const handleGoogleAuth = () => {
-    window.location.href = '/api/auth/google';
+    const authUrl = assignmentId 
+      ? `/api/auth/google?assignmentId=${assignmentId}`
+      : '/api/auth/google';
+    window.location.href = authUrl;
   };
 
   const loadDriveFolders = async () => {
@@ -155,6 +160,8 @@ function ImportPageContent() {
   const handleImportDocuments = async () => {
     if (!selectedFolder || selectedDocuments.size === 0) return;
 
+    console.log('Importing with assignmentId:', assignmentId);
+    
     setLoading(true);
     try {
       const response = await fetch('/api/import/google-drive', {
@@ -169,11 +176,16 @@ function ImportPageContent() {
         }),
       });
 
+      const data = await response.json();
+      console.log('Import response:', data);
+
       if (response.ok) {
         // assignmentId가 있으면 해당 과제의 제출 현황으로, 없으면 대시보드로
         if (assignmentId) {
+          console.log('Redirecting to submissions:', `/assignments/${assignmentId}/submissions`);
           window.location.href = `/assignments/${assignmentId}/submissions`;
         } else {
+          console.log('No assignmentId, redirecting to dashboard');
           window.location.href = '/dashboard';
         }
       }

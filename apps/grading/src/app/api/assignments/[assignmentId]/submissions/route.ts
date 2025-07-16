@@ -6,6 +6,8 @@ export async function GET(
   { params }: { params: { assignmentId: string } }
 ) {
   try {
+    console.log('Fetching submissions for assignmentId:', params.assignmentId);
+    
     const submissions = await prisma.submission.findMany({
       where: {
         assignmentId: params.assignmentId,
@@ -14,6 +16,8 @@ export async function GET(
         createdAt: 'desc',
       },
     });
+    
+    console.log('Found submissions:', submissions.length);
 
     return NextResponse.json({
       success: true,

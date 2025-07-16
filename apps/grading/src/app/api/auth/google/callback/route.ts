@@ -17,20 +17,34 @@ export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const code = searchParams.get('code');
   const error = searchParams.get('error');
+  const state = searchParams.get('state');
+
+  // state에서 assignmentId 추출
+  let assignmentId: string | null = null;
+  if (state) {
+    try {
+      const stateData = JSON.parse(state);
+      assignmentId = stateData.assignmentId;
+    } catch (e) {
+      console.error('Failed to parse state:', e);
+    }
+  }
 
   const baseUrl = process.env.NODE_ENV === 'production' 
     ? 'https://grading.bluenote.site'
     : 'http://localhost:3000';
 
+  const assignmentIdParam = assignmentId ? `&assignmentId=${assignmentId}` : '';
+
   if (error) {
     return NextResponse.redirect(
-      `${baseUrl}/import?error=${error}`
+      `${baseUrl}/import?error=${error}${assignmentIdParam}`
     );
   }
 
   if (!code) {
     return NextResponse.redirect(
-      `${baseUrl}/import?error=no_code`
+      `${baseUrl}/import?error=no_code${assignmentIdParam}`
     );
   }
 
@@ -62,12 +76,12 @@ export async function GET(request: NextRequest) {
     }
 
     return NextResponse.redirect(
-      `${baseUrl}/import?success=true`
+      `${baseUrl}/import?success=true${assignmentIdParam}`
     );
   } catch (error) {
     console.error('OAuth callback error:', error);
     return NextResponse.redirect(
-      `${baseUrl}/import?error=auth_failed`
+      `${baseUrl}/import?error=auth_failed${assignmentIdParam}`
     );
   }
 }
