@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
       aiModel as 'claude-3-sonnet' | 'claude-3-opus',
       {
         title: assignment?.title,
-        grade: assignment?.grade,
+        grade: assignment?.gradeLevel,
         writingType: assignment?.writingType,
         studentName
       }
