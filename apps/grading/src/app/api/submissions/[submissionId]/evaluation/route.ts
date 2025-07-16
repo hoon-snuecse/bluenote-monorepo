@@ -39,9 +39,20 @@ export async function GET(
     // domainEvaluations 파싱
     if (evaluation.domainEvaluations) {
       try {
-        parsedEvaluation.domainEvaluations = typeof evaluation.domainEvaluations === 'string' 
+        const rawEvaluations = typeof evaluation.domainEvaluations === 'string' 
           ? JSON.parse(evaluation.domainEvaluations) 
           : evaluation.domainEvaluations;
+        
+        // Convert object values to strings if they have a 'level' property
+        const processedEvaluations: Record<string, string> = {};
+        for (const [key, value] of Object.entries(rawEvaluations)) {
+          if (typeof value === 'object' && value !== null && 'level' in value) {
+            processedEvaluations[key] = (value as any).level;
+          } else {
+            processedEvaluations[key] = value as string;
+          }
+        }
+        parsedEvaluation.domainEvaluations = processedEvaluations;
       } catch (e) {
         console.error('Error parsing domainEvaluations:', e);
         parsedEvaluation.domainEvaluations = {};

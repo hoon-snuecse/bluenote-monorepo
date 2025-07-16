@@ -186,7 +186,13 @@ export default function SubmissionDetailPage() {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-3">
-                      {Object.entries(evaluation.domainEvaluations).map(([domain, level]) => (
+                      {Object.entries(evaluation.domainEvaluations).map(([domain, evalData]) => {
+                        // Handle both string and object formats
+                        const level = typeof evalData === 'object' && evalData !== null 
+                          ? (evalData as any).level 
+                          : evalData;
+                        
+                        return (
                         <div key={domain} className="flex justify-between items-center">
                           <span className="text-sm text-slate-700">{domain}</span>
                           <span className={`px-3 py-1 rounded-full text-sm ${
@@ -198,7 +204,8 @@ export default function SubmissionDetailPage() {
                             {level as string}
                           </span>
                         </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   </CardContent>
                 </Card>
