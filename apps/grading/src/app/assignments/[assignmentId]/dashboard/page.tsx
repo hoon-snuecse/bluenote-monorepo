@@ -42,7 +42,17 @@ export default function DashboardPage() {
       const assignmentData = await assignmentRes.json();
       console.log('Assignment data:', assignmentData);
       if (assignmentData.success) {
-        setAssignment(assignmentData.assignment);
+        // JSON 필드가 배열인지 확인하고 변환
+        const assignment = {
+          ...assignmentData.assignment,
+          evaluationDomains: Array.isArray(assignmentData.assignment.evaluationDomains) 
+            ? assignmentData.assignment.evaluationDomains 
+            : JSON.parse(assignmentData.assignment.evaluationDomains || '[]'),
+          evaluationLevels: Array.isArray(assignmentData.assignment.evaluationLevels)
+            ? assignmentData.assignment.evaluationLevels
+            : JSON.parse(assignmentData.assignment.evaluationLevels || '[]')
+        };
+        setAssignment(assignment);
       }
 
       // Fetch submissions with evaluations
@@ -50,26 +60,44 @@ export default function DashboardPage() {
       const submissionsData = await submissionsRes.json();
       console.log('Evaluations data:', submissionsData);
       if (submissionsData.success) {
-        const evaluatedStudents = submissionsData.evaluations.map((evaluation: any) => ({
-          id: evaluation.id,
-          name: evaluation.studentName,
-          studentId: evaluation.studentId,
-          scores: evaluation.domainScores || {},
-          overallLevel: evaluation.overallLevel || '평가 대기',
-          submittedAt: new Date(evaluation.submittedAt),
-          evaluatedAt: evaluation.evaluatedAt ? new Date(evaluation.evaluatedAt) : undefined
-        }));
+        const evaluatedStudents = submissionsData.evaluations.map((evaluation: any) => {
+          // domainEvaluations가 JSON 객체일 수 있으므로 확인
+          let domainScores = {};
+          if (evaluation.domainScores && typeof evaluation.domainScores === 'object') {
+            // domainScores가 이미 객체 형태인 경우
+            domainScores = evaluation.domainScores;
+          } else if (typeof evaluation.domainScores === 'string') {
+            // 문자열인 경우 파싱
+            try {
+              domainScores = JSON.parse(evaluation.domainScores);
+            } catch (e) {
+              console.error('Failed to parse domainScores:', e);
+            }
+          }
+          
+          return {
+            id: evaluation.id,
+            name: evaluation.studentName,
+            studentId: evaluation.studentId,
+            scores: domainScores,
+            overallLevel: evaluation.overallLevel || '평가 대기',
+            submittedAt: new Date(evaluation.submittedAt),
+            evaluatedAt: evaluation.evaluatedAt ? new Date(evaluation.evaluatedAt) : undefined
+          };
+        });
         setStudents(evaluatedStudents);
 
         // Calculate domain scores
-        if (assignmentData.assignment.evaluationDomains) {
-          const domains = assignmentData.assignment.evaluationDomains;
+        if (assignment.evaluationDomains && assignment.evaluationDomains.length > 0) {
+          const domains = assignment.evaluationDomains;
+          const levels = assignment.evaluationLevels || ['매우 우수', '우수', '보통', '미흡'];
+          
           const calculatedScores = domains.map((domain: string) => {
             const scores = evaluatedStudents
               .map((s: Student) => s.scores[domain])
               .filter(Boolean);
             
-            const levelCounts = assignmentData.assignment.evaluationLevels.reduce((acc: any, level: string) => {
+            const levelCounts = levels.reduce((acc: any, level: string) => {
               acc[level] = scores.filter((s: string) => s === level).length;
               return acc;
             }, {});
