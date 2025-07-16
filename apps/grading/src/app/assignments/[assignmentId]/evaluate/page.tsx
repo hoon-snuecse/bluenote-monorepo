@@ -107,7 +107,7 @@ export default function EvaluatePage() {
       console.error('평가 기준이 없습니다.', assignment);
     }
     
-    const systemPrompt = `당신은 한국 초등학교 ${assignment?.gradeLevel || '초등학교'} 담임교사입니다. 
+    const systemPrompt = `당신은 ${assignment?.schoolName || '한국초등학교'} ${assignment?.gradeLevel || '초등학교'} 담임교사입니다. 
 학생의 ${assignment?.writingType || '논설문'}을 평가하고 있습니다.
 
 평가 영역: ${assignment?.evaluationDomains?.join(', ') || '평가 영역이 설정되지 않음'}

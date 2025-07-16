@@ -7,6 +7,7 @@ const anthropic = new Anthropic({
 
 export interface EvaluationRequest {
   assignmentTitle: string;
+  schoolName: string;
   grade: string;
   writingType: string;
   evaluationDomains: string[];
@@ -34,7 +35,7 @@ export async function evaluateWithClaude(request: EvaluationRequest): Promise<Ev
   }
 
   try {
-    const systemPrompt = `당신은 한국 초등학교 ${request.grade} 담임교사입니다. 
+    const systemPrompt = `당신은 ${request.schoolName} ${request.grade} 담임교사입니다. 
 학생의 ${request.writingType}을 평가하고 있습니다.
 
 평가 영역: ${request.evaluationDomains.join(', ')}

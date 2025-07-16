@@ -39,6 +39,7 @@ export class ClaudeEvaluator implements AIEvaluator {
       // Claude API 호출
       const claudeResult = await evaluateWithClaude({
         assignmentTitle: this.assignmentData?.title || '글쓰기 과제',
+        schoolName: this.assignmentData?.schoolName || '한국초등학교',
         grade: this.assignmentData?.grade || '초등학교',
         writingType: this.assignmentData?.writingType || '논설문',
         evaluationDomains: domains,
