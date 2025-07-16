@@ -19,10 +19,20 @@ export async function GET() {
       }
     });
 
-    // Prisma는 JSON 필드를 자동으로 파싱하므로 그대로 반환
+    // JSON 필드가 제대로 파싱되었는지 확인하고 변환
+    const parsedAssignments = assignments.map(assignment => ({
+      ...assignment,
+      evaluationDomains: Array.isArray(assignment.evaluationDomains) 
+        ? assignment.evaluationDomains 
+        : JSON.parse(assignment.evaluationDomains as string),
+      evaluationLevels: Array.isArray(assignment.evaluationLevels)
+        ? assignment.evaluationLevels
+        : JSON.parse(assignment.evaluationLevels as string)
+    }));
+
     return NextResponse.json({ 
       success: true, 
-      assignments: assignments
+      assignments: parsedAssignments
     });
   } catch (error) {
     console.error('과제 목록 조회 오류:', error);

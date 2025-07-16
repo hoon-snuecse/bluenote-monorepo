@@ -20,10 +20,20 @@ export async function GET(
       );
     }
 
-    // Prisma는 JSON 필드를 자동으로 파싱하므로 그대로 반환
+    // JSON 필드가 제대로 파싱되었는지 확인하고 변환
+    const parsedAssignment = {
+      ...assignment,
+      evaluationDomains: Array.isArray(assignment.evaluationDomains) 
+        ? assignment.evaluationDomains 
+        : JSON.parse(assignment.evaluationDomains as string),
+      evaluationLevels: Array.isArray(assignment.evaluationLevels)
+        ? assignment.evaluationLevels
+        : JSON.parse(assignment.evaluationLevels as string)
+    };
+
     return NextResponse.json({ 
       success: true, 
-      assignment: assignment 
+      assignment: parsedAssignment 
     });
   } catch (error) {
     console.error('과제 조회 오류:', error);
@@ -58,10 +68,20 @@ export async function PUT(
       }
     });
 
-    // Prisma는 JSON 필드를 자동으로 파싱하므로 그대로 반확
+    // JSON 필드가 제대로 파싱되었는지 확인하고 변환
+    const parsedAssignment = {
+      ...assignment,
+      evaluationDomains: Array.isArray(assignment.evaluationDomains) 
+        ? assignment.evaluationDomains 
+        : JSON.parse(assignment.evaluationDomains as string),
+      evaluationLevels: Array.isArray(assignment.evaluationLevels)
+        ? assignment.evaluationLevels
+        : JSON.parse(assignment.evaluationLevels as string)
+    };
+
     return NextResponse.json({ 
       success: true, 
-      assignment: assignment 
+      assignment: parsedAssignment 
     });
   } catch (error) {
     console.error('과제 수정 오류:', error);
