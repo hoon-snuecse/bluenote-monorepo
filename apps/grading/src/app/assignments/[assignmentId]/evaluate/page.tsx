@@ -36,6 +36,14 @@ export default function EvaluatePage() {
   useEffect(() => {
     fetchData();
   }, [params.assignmentId, searchParams]);
+  
+  // assignment나 submissions가 변경될 때마다 프롬프트 미리보기 업데이트
+  useEffect(() => {
+    if (assignment && submissions.length > 0) {
+      const prompt = generateEvaluationPromptPreview(assignment, submissions);
+      setEvaluationPrompt(prompt);
+    }
+  }, [assignment, submissions]);
 
   const fetchData = async () => {
     try {
@@ -84,14 +92,7 @@ export default function EvaluatePage() {
           console.log('Filtered submissions:', filteredSubmissions);
           setSubmissions(filteredSubmissions);
           
-          // 평가 프롬프트 미리보기 생성
-          if (assignmentData.success && filteredSubmissions.length > 0) {
-            const samplePrompt = generateEvaluationPromptPreview(
-              assignment,
-              filteredSubmissions
-            );
-            setEvaluationPrompt(samplePrompt);
-          }
+          // 프롬프트는 useEffect에서 생성됨
         }
       }
     } catch (error) {
@@ -213,10 +214,17 @@ ${submission.content?.substring(0, 100)}...
         console.log(`평가 시작 - 학생: ${submission.studentName}`);
         console.log('제출물 내용 길이:', submission.content?.length || 0);
         console.log('제출물 내용 미리보기:', submission.content?.substring(0, 100) || 'NO CONTENT');
+        console.log('=== Assignment 전체 데이터 ===');
+        console.log('Title:', assignment?.title);
+        console.log('School Name:', assignment?.schoolName);
+        console.log('Grade Level:', assignment?.gradeLevel);
+        console.log('Writing Type:', assignment?.writingType);
+        console.log('Level Count:', assignment?.levelCount);
         console.log('평가 영역:', assignment?.evaluationDomains);
         console.log('평가 수준:', assignment?.evaluationLevels);
         console.log('채점 기준 존재 여부:', !!assignment?.gradingCriteria);
         console.log('채점 기준 길이:', assignment?.gradingCriteria?.length || 0);
+        console.log('채점 기준 미리보기:', assignment?.gradingCriteria?.substring(0, 200));
         
         const requestData = {
           submissionId: tasks[i].id,
@@ -225,6 +233,11 @@ ${submission.content?.substring(0, 100)}...
           gradingCriteria: assignment?.gradingCriteria || '',
           evaluationDomains: assignment?.evaluationDomains || [],
           evaluationLevels: assignment?.evaluationLevels || [],
+          levelCount: assignment?.levelCount || assignment?.evaluationLevels?.length || 4,
+          title: assignment?.title || '',
+          schoolName: assignment?.schoolName || '',
+          gradeLevel: assignment?.gradeLevel || '',
+          writingType: assignment?.writingType || '',
           aiModel: selectedModel,
           studentId: submission.studentId,
           studentName: submission.studentName

@@ -24,6 +24,11 @@ export async function POST(request: NextRequest) {
       gradingCriteria, 
       evaluationDomains, 
       evaluationLevels,
+      levelCount,
+      title,
+      schoolName,
+      gradeLevel,
+      writingType,
       aiModel = 'claude-3-sonnet',
       studentId,
       studentName
@@ -45,17 +50,17 @@ export async function POST(request: NextRequest) {
       where: { id: assignmentId }
     });
     
-    // AI 평가기 생성
+    // AI 평가기 생성 - 평가 페이지에서 전달받은 assignment 정보 사용
     const evaluatorType = process.env.CLAUDE_API_KEY && process.env.CLAUDE_API_KEY !== 'YOUR_CLAUDE_API_KEY_HERE' ? 'claude' : 'mock';
     const evaluator = createEvaluator(
       evaluatorType as 'claude' | 'mock',
       apiKey,
       aiModel as 'claude-3-sonnet' | 'claude-3-opus',
       {
-        title: assignment?.title,
-        schoolName: assignment?.schoolName,
-        grade: assignment?.gradeLevel,
-        writingType: assignment?.writingType,
+        title: title || assignment?.title,
+        schoolName: schoolName || assignment?.schoolName,
+        grade: gradeLevel || assignment?.gradeLevel,
+        writingType: writingType || assignment?.writingType,
         studentName
       }
     );
