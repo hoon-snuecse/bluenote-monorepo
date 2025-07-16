@@ -120,15 +120,37 @@ ${assignment?.evaluationLevels?.join(', ') || '평가 수준이 설정되지 않
   const handleStartEvaluation = async () => {
     setIsEvaluating(true);
     
+    // 평가 직전에 최신 제출물 데이터 다시 가져오기
+    let updatedSubmissions = submissions;
+    try {
+      const submissionsRes = await fetch(`/api/assignments/${params.assignmentId}/submissions`);
+      const submissionsData = await submissionsRes.json();
+      if (submissionsData.success) {
+        const submissionIds = searchParams.get('submissions')?.split(',') || [];
+        updatedSubmissions = submissionsData.submissions
+          .filter((sub: any) => submissionIds.includes(sub.id))
+          .map((sub: any) => ({
+            id: sub.id,
+            studentId: sub.studentId,
+            studentName: sub.studentName,
+            content: sub.content,
+            status: sub.status
+          }));
+        console.log('평가 직전 업데이트된 제출물:', updatedSubmissions);
+      }
+    } catch (error) {
+      console.error('제출물 업데이트 오류:', error);
+    }
+    
     // 초기 태스크 생성
-    const tasks: EvaluationTask[] = submissions.map(submission => ({
+    const tasks: EvaluationTask[] = updatedSubmissions.map(submission => ({
       id: submission.id,
       studentName: submission.studentName,
       status: 'pending',
     }));
     setEvaluationTasks(tasks);
 
-    // 순차적으로 평가 실행 (시뮬레이션)
+    // 순차적으로 평가 실행
     for (let i = 0; i < tasks.length; i++) {
       // 현재 태스크를 processing으로 업데이트
       setEvaluationTasks(prev => 
@@ -139,14 +161,16 @@ ${assignment?.evaluationLevels?.join(', ') || '평가 수준이 설정되지 않
 
       // AI 평가 API 호출
       try {
-        // 먼저 제출물 데이터를 가져옴
-        const submission = submissions[i];
+        // 업데이트된 제출물 데이터 사용
+        const submission = updatedSubmissions[i];
         
         console.log(`평가 시작 - 학생: ${submission.studentName}`);
         console.log('제출물 내용 길이:', submission.content?.length || 0);
         console.log('제출물 내용 미리보기:', submission.content?.substring(0, 100) || 'NO CONTENT');
         console.log('평가 영역:', assignment?.evaluationDomains);
         console.log('평가 수준:', assignment?.evaluationLevels);
+        console.log('채점 기준 존재 여부:', !!assignment?.gradingCriteria);
+        console.log('채점 기준 길이:', assignment?.gradingCriteria?.length || 0);
         
         const requestData = {
           submissionId: tasks[i].id,
