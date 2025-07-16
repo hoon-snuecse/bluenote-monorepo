@@ -68,7 +68,18 @@ export default function NewAssignmentPage() {
       if (!response.ok) {
         const errorData = await response.text();
         console.error('Assignment creation error:', response.status, errorData);
-        throw new Error(`Failed to create assignment: ${response.status}`);
+        let errorMessage = `Failed to create assignment: ${response.status}`;
+        try {
+          const errorJson = JSON.parse(errorData);
+          errorMessage = errorJson.error || errorMessage;
+          if (errorJson.details) {
+            console.error('Error details:', errorJson.details);
+            errorMessage += `\n\n상세 정보: ${errorJson.details}`;
+          }
+        } catch (e) {
+          // JSON 파싱 실패 시 원본 텍스트 사용
+        }
+        throw new Error(errorMessage);
       }
 
       const result = await response.json();

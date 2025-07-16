@@ -87,7 +87,17 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    console.log('Attempting to create assignment in database with teacherId:', teacherId);
+    console.log('Attempting to create assignment in database');
+    console.log('Data to save:', {
+      title: data.title,
+      schoolName: data.schoolName,
+      gradeLevel: data.gradeLevel,
+      writingType: data.writingType,
+      evaluationDomains: data.evaluationDomains || [],
+      evaluationLevels: data.evaluationLevels || [],
+      levelCount: data.levelCount,
+      gradingCriteria: data.gradingCriteria || ''
+    });
     
     // 배열을 JSON으로 저장 (Prisma는 자동으로 처리)
     const assignment = await prisma.assignment.create({
@@ -98,7 +108,7 @@ export async function POST(request: NextRequest) {
         writingType: data.writingType,
         evaluationDomains: data.evaluationDomains || [],
         evaluationLevels: data.evaluationLevels || [],
-        levelCount: parseInt(data.levelCount || '4'),
+        levelCount: typeof data.levelCount === 'string' ? parseInt(data.levelCount) : (data.levelCount || 4),
         gradingCriteria: data.gradingCriteria || ''
       }
     });
@@ -114,11 +124,27 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('과제 생성 오류:', error);
     const errorMessage = error instanceof Error ? error.message : '과제 생성 중 오류가 발생했습니다.';
+    
+    // Prisma 관련 에러 상세 정보
+    let errorDetails = 'Unknown error';
+    if (error instanceof Error) {
+      errorDetails = error.toString();
+      // Prisma 에러인 경우 더 자세한 정보 제공
+      if (error.message.includes('P2002')) {
+        errorDetails = '중복된 데이터가 있습니다.';
+      } else if (error.message.includes('P2025')) {
+        errorDetails = '관련 레코드를 찾을 수 없습니다.';
+      } else if (error.message.includes('connect')) {
+        errorDetails = '데이터베이스 연결 오류입니다. DATABASE_URL을 확인하세요.';
+      }
+    }
+    
     return NextResponse.json(
       { 
         success: false, 
         error: errorMessage,
-        details: error instanceof Error ? error.toString() : 'Unknown error'
+        details: errorDetails,
+        env: process.env.NODE_ENV
       },
       { status: 500 }
     );
