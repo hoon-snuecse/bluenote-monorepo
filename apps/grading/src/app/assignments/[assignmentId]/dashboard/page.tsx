@@ -48,14 +48,14 @@ export default function DashboardPage() {
       const submissionsRes = await fetch(`/api/assignments/${params.assignmentId}/evaluations`);
       const submissionsData = await submissionsRes.json();
       if (submissionsData.success) {
-        const evaluatedStudents = submissionsData.evaluations.map((eval: any) => ({
-          id: eval.id,
-          name: eval.studentName,
-          studentId: eval.studentId,
-          scores: eval.domainScores || {},
-          overallLevel: eval.overallLevel || '평가 대기',
-          submittedAt: new Date(eval.submittedAt),
-          evaluatedAt: eval.evaluatedAt ? new Date(eval.evaluatedAt) : undefined
+        const evaluatedStudents = submissionsData.evaluations.map((evaluation: any) => ({
+          id: evaluation.id,
+          name: evaluation.studentName,
+          studentId: evaluation.studentId,
+          scores: evaluation.domainScores || {},
+          overallLevel: evaluation.overallLevel || '평가 대기',
+          submittedAt: new Date(evaluation.submittedAt),
+          evaluatedAt: evaluation.evaluatedAt ? new Date(evaluation.evaluatedAt) : undefined
         }));
         setStudents(evaluatedStudents);
 
