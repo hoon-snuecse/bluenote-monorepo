@@ -100,18 +100,40 @@ export async function POST(request: NextRequest) {
     });
     
     // 배열을 JSON으로 저장 (Prisma는 자동으로 처리)
-    const assignment = await prisma.assignment.create({
-      data: {
-        title: data.title,
-        schoolName: data.schoolName,
-        gradeLevel: data.gradeLevel,
-        writingType: data.writingType,
-        evaluationDomains: data.evaluationDomains || [],
-        evaluationLevels: data.evaluationLevels || [],
-        levelCount: typeof data.levelCount === 'string' ? parseInt(data.levelCount) : (data.levelCount || 4),
-        gradingCriteria: data.gradingCriteria || ''
+    let assignment;
+    let retryCount = 0;
+    const maxRetries = 3;
+    
+    while (retryCount < maxRetries) {
+      try {
+        assignment = await prisma.assignment.create({
+          data: {
+            title: data.title,
+            schoolName: data.schoolName,
+            gradeLevel: data.gradeLevel,
+            writingType: data.writingType,
+            evaluationDomains: data.evaluationDomains || [],
+            evaluationLevels: data.evaluationLevels || [],
+            levelCount: typeof data.levelCount === 'string' ? parseInt(data.levelCount) : (data.levelCount || 4),
+            gradingCriteria: data.gradingCriteria || ''
+          }
+        });
+        break; // 성공하면 루프 종료
+      } catch (dbError: any) {
+        if (dbError.message?.includes('prepared statement') && retryCount < maxRetries - 1) {
+          console.log(`Retrying due to prepared statement error (attempt ${retryCount + 2}/${maxRetries})...`);
+          retryCount++;
+          // 짧은 지연 후 재시도
+          await new Promise(resolve => setTimeout(resolve, 100));
+        } else {
+          throw dbError; // 다른 에러거나 재시도 횟수 초과
+        }
       }
-    });
+    }
+    
+    if (!assignment) {
+      throw new Error('과제 생성에 실패했습니다.');
+    }
     
     console.log('Assignment created successfully:', assignment.id);
 
