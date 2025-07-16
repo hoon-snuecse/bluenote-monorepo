@@ -86,9 +86,9 @@ export default function EvaluatePage() {
           
           // 평가 프롬프트 미리보기 생성
           if (assignmentData.success && filteredSubmissions.length > 0) {
-            const samplePrompt = generateEvaluationPrompt(
+            const samplePrompt = generateEvaluationPromptPreview(
               assignment,
-              filteredSubmissions[0]
+              filteredSubmissions
             );
             setEvaluationPrompt(samplePrompt);
           }
@@ -101,7 +101,7 @@ export default function EvaluatePage() {
     }
   };
   
-  const generateEvaluationPrompt = (assignment: any, submission: Submission) => {
+  const generateEvaluationPromptPreview = (assignment: any, submissions: Submission[]) => {
     // 실제 Claude API에 전달되는 프롬프트 형식
     if (!assignment || !assignment.gradingCriteria) {
       console.error('평가 기준이 없습니다.', assignment);
@@ -126,15 +126,32 @@ ${assignment?.gradingCriteria || '평가 기준이 설정되지 않음'}
   "detailedFeedback": "상세 피드백 (학생과 학부모가 이해하기 쉽게)"
 }`;
 
-    const userPrompt = `학생 이름: ${submission.studentName}
+    let previewContent = `=== 시스템 프롬프트 (모든 학생 공통) ===\n${systemPrompt}\n\n`;
+    
+    previewContent += `=== 각 학생별 개별 평가 프롬프트 ===\n`;
+    previewContent += `ℹ️ 실제 평가 시 각 학생마다 아래와 같은 형식으로 개별적으로 평가됩니다:\n\n`;
+    
+    for (let index = 0; index < submissions.length; index++) {
+      const submission = submissions[index];
+      const userPrompt = `학생 이름: ${submission.studentName}
 과제 제목: ${assignment?.title || '글쓰기 과제'}
 
 학생의 글:
-${submission.content}
+${submission.content?.substring(0, 100)}...
 
 위 글을 평가해주세요.`;
+      
+      previewContent += `[학생 ${index + 1}: ${submission.studentName}]\n${userPrompt}\n\n`;
+      
+      if (index === 2 && submissions.length > 3) {
+        previewContent += `... 그리고 ${submissions.length - 3}명의 학생이 더 있습니다.\n\n`;
+        break;
+      }
+    }
+    
+    previewContent += `⚠️ 주의: 실제 평가 시에는 각 학생의 글 전체 내용이 AI에게 전달됩니다.`;
 
-    return `=== 시스템 프롬프트 ===\n${systemPrompt}\n\n=== 사용자 프롬프트 ===\n${userPrompt}`;
+    return previewContent;
   };
 
   const handleStartEvaluation = async () => {
@@ -400,7 +417,10 @@ ${submission.content}
                         </p>
                       </div>
                       <p className="mt-2 text-xs text-slate-500">
-                        * 위 프롬프트가 실제 AI 평가 시 사용됩니다.
+                        * 시스템 프롬프트는 모든 학생에게 공통적으로 적용됩니다.
+                      </p>
+                      <p className="mt-1 text-xs text-slate-500">
+                        * 각 학생의 글은 개별적으로 AI에게 전달되어 평가됩니다.
                       </p>
                       {!assignment?.gradingCriteria && (
                         <p className="mt-2 text-sm text-red-600 font-medium">
