@@ -1,10 +1,15 @@
 export interface Assignment {
   id: string;
   title: string;
-  description?: string;
+  schoolName: string;
+  gradeLevel: string;
+  writingType: string;
+  evaluationDomains: string[];
+  evaluationLevels: string[];
+  levelCount: number;
+  gradingCriteria: string;
   createdAt: Date;
   updatedAt: Date;
-  teacherId: string;
 }
 
 export interface Student {
