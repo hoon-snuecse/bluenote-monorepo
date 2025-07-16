@@ -58,6 +58,11 @@ export default function EvaluatePage() {
             ? assignmentData.assignment.evaluationLevels
             : JSON.parse(assignmentData.assignment.evaluationLevels || '[]')
         };
+        console.log('Processed assignment with gradingCriteria:', {
+          hasGradingCriteria: !!assignment.gradingCriteria,
+          gradingCriteriaLength: assignment.gradingCriteria?.length || 0,
+          gradingCriteriaPreview: assignment.gradingCriteria?.substring(0, 100) || 'NO CRITERIA'
+        });
         setAssignment(assignment);
       }
       
@@ -98,6 +103,10 @@ export default function EvaluatePage() {
   
   const generateEvaluationPrompt = (assignment: any, submission: Submission) => {
     // 실제 Claude API에 전달되는 프롬프트 형식
+    if (!assignment || !assignment.gradingCriteria) {
+      console.error('평가 기준이 없습니다.', assignment);
+    }
+    
     const systemPrompt = `당신은 한국 초등학교 ${assignment?.gradeLevel || '초등학교'} 담임교사입니다. 
 학생의 ${assignment?.writingType || '논설문'}을 평가하고 있습니다.
 
@@ -121,7 +130,7 @@ ${assignment?.gradingCriteria || '평가 기준이 설정되지 않음'}
 과제 제목: ${assignment?.title || '글쓰기 과제'}
 
 학생의 글:
-${submission.content?.substring(0, 300)}...
+${submission.content}
 
 위 글을 평가해주세요.`;
 
@@ -391,8 +400,13 @@ ${submission.content?.substring(0, 300)}...
                         </p>
                       </div>
                       <p className="mt-2 text-xs text-slate-500">
-                        * 실제 평가 시에는 각 학생의 전체 글이 사용됩니다.
+                        * 위 프롬프트가 실제 AI 평가 시 사용됩니다.
                       </p>
+                      {!assignment?.gradingCriteria && (
+                        <p className="mt-2 text-sm text-red-600 font-medium">
+                          ⚠️ 경고: 평가 기준(gradingCriteria)이 설정되지 않았습니다. 과제 설정을 확인해주세요.
+                        </p>
+                      )}
                     </div>
                   )}
                 </div>

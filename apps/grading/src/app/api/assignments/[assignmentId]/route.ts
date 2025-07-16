@@ -28,7 +28,8 @@ export async function GET(
         : JSON.parse(assignment.evaluationDomains as string),
       evaluationLevels: Array.isArray(assignment.evaluationLevels)
         ? assignment.evaluationLevels
-        : JSON.parse(assignment.evaluationLevels as string)
+        : JSON.parse(assignment.evaluationLevels as string),
+      gradingCriteria: assignment.gradingCriteria // gradingCriteria 포함
     };
 
     return NextResponse.json({ 
@@ -76,7 +77,8 @@ export async function PUT(
         : JSON.parse(assignment.evaluationDomains as string),
       evaluationLevels: Array.isArray(assignment.evaluationLevels)
         ? assignment.evaluationLevels
-        : JSON.parse(assignment.evaluationLevels as string)
+        : JSON.parse(assignment.evaluationLevels as string),
+      gradingCriteria: assignment.gradingCriteria // gradingCriteria 포함
     };
 
     return NextResponse.json({ 
@@ -94,7 +96,7 @@ export async function PUT(
 
 // 과제 삭제
 export async function DELETE(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: { assignmentId: string } }
 ) {
   try {

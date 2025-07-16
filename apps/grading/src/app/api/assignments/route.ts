@@ -27,7 +27,8 @@ export async function GET() {
         : JSON.parse(assignment.evaluationDomains as string),
       evaluationLevels: Array.isArray(assignment.evaluationLevels)
         ? assignment.evaluationLevels
-        : JSON.parse(assignment.evaluationLevels as string)
+        : JSON.parse(assignment.evaluationLevels as string),
+      gradingCriteria: assignment.gradingCriteria // gradingCriteria 포함
     }));
 
     return NextResponse.json({ 
