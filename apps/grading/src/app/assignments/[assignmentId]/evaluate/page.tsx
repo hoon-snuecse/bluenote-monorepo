@@ -45,7 +45,17 @@ export default function EvaluatePage() {
       const assignmentData = await assignmentRes.json();
       console.log('Assignment data:', assignmentData);
       if (assignmentData.success) {
-        setAssignment(assignmentData.assignment);
+        // JSON 필드가 배열인지 확인하고 변환
+        const assignment = {
+          ...assignmentData.assignment,
+          evaluationDomains: Array.isArray(assignmentData.assignment.evaluationDomains) 
+            ? assignmentData.assignment.evaluationDomains 
+            : JSON.parse(assignmentData.assignment.evaluationDomains || '[]'),
+          evaluationLevels: Array.isArray(assignmentData.assignment.evaluationLevels)
+            ? assignmentData.assignment.evaluationLevels
+            : JSON.parse(assignmentData.assignment.evaluationLevels || '[]')
+        };
+        setAssignment(assignment);
       }
       
       // Fetch specific submissions or all submissions
@@ -96,22 +106,51 @@ export default function EvaluatePage() {
 
       // AI 평가 API 호출
       try {
-        const response = await fetch('/api/evaluate', {
+        // 먼저 제출물 데이터를 가져옴
+        const submission = submissions[i];
+        
+        console.log(`평가 시작 - 학생: ${submission.studentName}`);
+        console.log('제출물 내용 길이:', submission.content?.length || 0);
+        console.log('제출물 내용 미리보기:', submission.content?.substring(0, 100) || 'NO CONTENT');
+        console.log('평가 영역:', assignment?.evaluationDomains);
+        console.log('평가 수준:', assignment?.evaluationLevels);
+        
+        const requestData = {
+          submissionId: tasks[i].id,
+          assignmentId: params.assignmentId,
+          content: submission.content,
+          gradingCriteria: assignment?.gradingCriteria || '',
+          evaluationDomains: assignment?.evaluationDomains || [],
+          evaluationLevels: assignment?.evaluationLevels || [],
+          aiModel: selectedModel,
+          studentId: submission.studentId,
+          studentName: submission.studentName
+        };
+        
+        console.log('평가 요청 데이터:', requestData);
+        
+        const response = await fetch('/api/evaluations', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({
-            submissionId: tasks[i].id,
-            assignmentId: params.assignmentId,
-            model: selectedModel
-          }),
+          body: JSON.stringify(requestData),
         });
 
         if (!response.ok) {
           const errorText = await response.text();
           console.error('Evaluation API error:', response.status, errorText);
-          throw new Error(`Evaluation failed: ${response.status}`);
+          let errorMessage = `Evaluation failed: ${response.status}`;
+          try {
+            const errorJson = JSON.parse(errorText);
+            errorMessage = errorJson.error || errorMessage;
+            if (errorJson.details) {
+              console.error('Error details:', errorJson.details);
+            }
+          } catch (e) {
+            console.error('Error parsing error response:', e);
+          }
+          throw new Error(errorMessage);
         }
 
         const result = await response.json();

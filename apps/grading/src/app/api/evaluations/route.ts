@@ -7,6 +7,16 @@ import { sendEvaluationUpdate } from './stream/route';
 export async function POST(request: NextRequest) {
   try {
     const data = await request.json();
+    console.log('평가 요청 데이터:', {
+      submissionId: data.submissionId,
+      assignmentId: data.assignmentId,
+      hasContent: !!data.content,
+      contentLength: data.content?.length,
+      evaluationDomains: data.evaluationDomains,
+      evaluationLevels: data.evaluationLevels,
+      aiModel: data.aiModel
+    });
+    
     const { 
       submissionId, 
       assignmentId, 
@@ -102,8 +112,15 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error('평가 오류:', error);
+    const errorMessage = error instanceof Error ? error.message : '평가 중 오류가 발생했습니다.';
+    const errorDetails = error instanceof Error ? error.stack : '';
+    
     return NextResponse.json(
-      { success: false, error: '평가 중 오류가 발생했습니다.' },
+      { 
+        success: false, 
+        error: errorMessage,
+        details: process.env.NODE_ENV === 'development' ? errorDetails : undefined
+      },
       { status: 500 }
     );
   }
