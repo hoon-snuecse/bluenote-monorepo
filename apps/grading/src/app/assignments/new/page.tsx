@@ -65,17 +65,27 @@ export default function NewAssignmentPage() {
         body: JSON.stringify(assignmentData),
       });
       
+      if (!response.ok) {
+        const errorData = await response.text();
+        console.error('Assignment creation error:', response.status, errorData);
+        throw new Error(`Failed to create assignment: ${response.status}`);
+      }
+
       const result = await response.json();
+      console.log('Assignment creation result:', result);
       
       if (result.success) {
         // 성공 시 과제 목록 페이지로 이동
         router.push('/assignments');
       } else {
-        alert('과제 생성 중 오류가 발생했습니다.');
+        const errorMessage = result.error || '과제 생성 중 오류가 발생했습니다.';
+        console.error('Assignment creation failed:', result);
+        alert(errorMessage);
       }
     } catch (error) {
       console.error('과제 생성 오류:', error);
-      alert('과제 생성 중 오류가 발생했습니다.');
+      const errorMessage = error instanceof Error ? error.message : '과제 생성 중 오류가 발생했습니다.';
+      alert(errorMessage);
     }
   };
 

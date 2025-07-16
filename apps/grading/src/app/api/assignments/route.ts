@@ -34,6 +34,15 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const data = await request.json();
+    console.log('Creating assignment with data:', data);
+    
+    // 필수 필드 검증
+    if (!data.title || !data.schoolName || !data.gradeLevel || !data.writingType) {
+      return NextResponse.json(
+        { success: false, error: '필수 정보가 누락되었습니다.' },
+        { status: 400 }
+      );
+    }
     
     // 배열을 JSON 문자열로 변환
     const assignment = await prisma.assignment.create({
@@ -42,10 +51,10 @@ export async function POST(request: NextRequest) {
         schoolName: data.schoolName,
         gradeLevel: data.gradeLevel,
         writingType: data.writingType,
-        evaluationDomains: JSON.stringify(data.evaluationDomains),
-        evaluationLevels: JSON.stringify(data.evaluationLevels),
-        levelCount: parseInt(data.levelCount),
-        gradingCriteria: data.gradingCriteria
+        evaluationDomains: JSON.stringify(data.evaluationDomains || []),
+        evaluationLevels: JSON.stringify(data.evaluationLevels || []),
+        levelCount: parseInt(data.levelCount || '4'),
+        gradingCriteria: data.gradingCriteria || ''
       }
     });
 
@@ -63,8 +72,13 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error('과제 생성 오류:', error);
+    const errorMessage = error instanceof Error ? error.message : '과제 생성 중 오류가 발생했습니다.';
     return NextResponse.json(
-      { success: false, error: '과제 생성 중 오류가 발생했습니다.' },
+      { 
+        success: false, 
+        error: errorMessage,
+        details: error instanceof Error ? error.toString() : 'Unknown error'
+      },
       { status: 500 }
     );
   }
