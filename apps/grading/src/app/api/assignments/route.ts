@@ -51,18 +51,20 @@ export async function POST(request: NextRequest) {
   try {
     // 개발 환경에서는 인증 체크를 건너뛰고 기본 teacherId 사용
     const isDevelopment = process.env.NODE_ENV === 'development';
-    let teacherId = 'default-teacher-id';
+    const teacherId = 'default-teacher-id';
     
     if (!isDevelopment) {
-      // 프로덕션에서는 인증 체크
-      // TODO: JWT 토큰에서 teacherId 추출
-      const authHeader = request.headers.get('authorization');
-      if (!authHeader) {
+      // 프로덕션에서는 쿠키에서 인증 토큰 확인
+      const cookieStore = request.cookies;
+      const authToken = cookieStore.get('auth-token');
+      
+      if (!authToken) {
         return NextResponse.json(
           { success: false, error: '인증이 필요합니다.' },
           { status: 401 }
         );
       }
+      // TODO: JWT 토큰에서 teacherId 추출
     }
     
     // 필수 필드 검증

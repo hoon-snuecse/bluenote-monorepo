@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 
 // Development-only auto-login endpoint
-export async function GET(request: NextRequest) {
+export async function GET() {
   if (process.env.NODE_ENV !== 'development') {
     return NextResponse.json(
       { success: false, error: 'This endpoint is only available in development' },
