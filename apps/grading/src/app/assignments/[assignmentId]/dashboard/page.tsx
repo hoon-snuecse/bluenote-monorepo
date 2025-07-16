@@ -94,7 +94,13 @@ export default function DashboardPage() {
           
           const calculatedScores = domains.map((domain: string) => {
             const scores = evaluatedStudents
-              .map((s: Student) => s.scores[domain])
+              .map((s: Student) => {
+                const score = s.scores[domain];
+                // score가 객체인 경우 level 속성을 사용하고, 문자열인 경우 그대로 사용
+                return typeof score === 'object' && score !== null 
+                  ? (score as any).level 
+                  : score;
+              })
               .filter(Boolean);
             
             const levelCounts = levels.reduce((acc: any, level: string) => {
@@ -136,7 +142,10 @@ export default function DashboardPage() {
 
   const filteredStudents = filterDomain === 'all' 
     ? sortedStudents 
-    : sortedStudents.filter(s => s.scores[filterDomain]);
+    : sortedStudents.filter(s => {
+        const score = s.scores[filterDomain];
+        return score !== null && score !== undefined;
+      });
 
   if (loading) {
     return (
@@ -329,18 +338,26 @@ export default function DashboardPage() {
                     <tr key={student.id} className="border-b hover:bg-blue-50/10 transition-colors">
                       <td className="p-4 font-medium">{student.name}</td>
                       <td className="p-4 text-slate-600">{student.studentId}</td>
-                      {assignment?.evaluationDomains?.map((domain: string) => (
-                        <td key={domain} className="p-4 text-center">
-                          <span className={`px-2 py-1 rounded-full text-sm ${
-                            student.scores[domain] === '매우 우수' ? 'bg-green-100 text-green-700' :
-                            student.scores[domain] === '우수' ? 'bg-blue-100 text-blue-700' :
-                            student.scores[domain] === '보통' ? 'bg-yellow-100 text-yellow-700' :
-                            'bg-gray-100 text-gray-700'
-                          }`}>
-                            {student.scores[domain] || '-'}
-                          </span>
-                        </td>
-                      ))}
+                      {assignment?.evaluationDomains?.map((domain: string) => {
+                        const score = student.scores[domain];
+                        // score가 객체인 경우 level 속성을 사용하고, 문자열인 경우 그대로 사용
+                        const level = typeof score === 'object' && score !== null 
+                          ? (score as any).level 
+                          : score;
+                        
+                        return (
+                          <td key={domain} className="p-4 text-center">
+                            <span className={`px-2 py-1 rounded-full text-sm ${
+                              level === '매우 우수' ? 'bg-green-100 text-green-700' :
+                              level === '우수' ? 'bg-blue-100 text-blue-700' :
+                              level === '보통' ? 'bg-yellow-100 text-yellow-700' :
+                              'bg-gray-100 text-gray-700'
+                            }`}>
+                              {level || '-'}
+                            </span>
+                          </td>
+                        );
+                      })}
                       <td className="p-4 text-center">
                         <span className={`px-3 py-1 rounded-full text-sm font-medium ${
                           student.overallLevel === '매우 우수' ? 'bg-green-100 text-green-700' :
