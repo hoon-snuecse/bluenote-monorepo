@@ -29,7 +29,7 @@ export async function GET(
         submittedAt: sub.createdAt,
         evaluatedAt: sub.evaluatedAt,
         evaluation: sub.evaluation,
-        status: sub.evaluation ? 'evaluated' : 'submitted'
+        status: sub.evaluatedAt ? 'evaluated' : 'submitted'
       }))
     });
   } catch (error) {

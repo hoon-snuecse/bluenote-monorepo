@@ -85,10 +85,16 @@ export async function POST(request: NextRequest) {
         domainEvaluations: evaluationResult.domainEvaluations,
         overallLevel: evaluationResult.overallLevel,
         overallFeedback: evaluationResult.overallFeedback,
-        improvementSuggestions: JSON.stringify(evaluationResult.improvementSuggestions || []),
-        strengths: JSON.stringify(evaluationResult.strengths || []),
+        improvementSuggestions: evaluationResult.improvementSuggestions || [],
+        strengths: evaluationResult.strengths || [],
         evaluatedBy: aiModel
       }
+    });
+    
+    // 제출물 상태 업데이트 (evaluatedAt 시간 설정)
+    await prisma.submission.update({
+      where: { id: submissionId },
+      data: { evaluatedAt: new Date() }
     });
     
     // 평가 완료 알림

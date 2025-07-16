@@ -342,7 +342,7 @@ export default function SubmissionsPage() {
                               onClick={() => handleViewSubmission(submission.id)}
                               className="px-4 py-2 bg-white/60 text-slate-700 rounded-lg hover:bg-white/80 transition-colors text-sm border border-slate-200/50"
                             >
-                              상세보기
+                              {submission.status === 'evaluated' ? '평가결과 보기' : '상세보기'}
                             </button>
                             {submission.status === 'submitted' && (
                               <button

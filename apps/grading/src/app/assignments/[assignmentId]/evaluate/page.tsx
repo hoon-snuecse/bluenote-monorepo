@@ -495,13 +495,22 @@ ${submission.content}
           )}
 
           {evaluationTasks.length > 0 && completedCount === totalCount && (
-            <button
-              onClick={() => router.push(`/assignments/${params.assignmentId}/dashboard`)}
-              className="px-8 py-3 bg-green-500/20 text-slate-700 rounded-lg hover:bg-green-500/30 transition-colors flex items-center gap-2 border border-green-200/30 text-lg font-medium"
-            >
-              <CheckCircle className="w-5 h-5" />
-              평가 결과 보기
-            </button>
+            <>
+              <button
+                onClick={() => router.push(`/assignments/${params.assignmentId}/submissions`)}
+                className="px-8 py-3 bg-blue-500/20 text-slate-700 rounded-lg hover:bg-blue-500/30 transition-colors flex items-center gap-2 border border-blue-200/30 text-lg font-medium"
+              >
+                <ArrowLeft className="w-5 h-5" />
+                제출 현황으로 돌아가기
+              </button>
+              <button
+                onClick={() => router.push(`/assignments/${params.assignmentId}/dashboard`)}
+                className="px-8 py-3 bg-green-500/20 text-slate-700 rounded-lg hover:bg-green-500/30 transition-colors flex items-center gap-2 border border-green-200/30 text-lg font-medium"
+              >
+                <CheckCircle className="w-5 h-5" />
+                평가 결과 대시보드 보기
+              </button>
+            </>
           )}
         </div>
       </div>
