@@ -97,13 +97,12 @@ export default function SubmissionsPage() {
   };
   
   const toggleAllSelection = () => {
-    if (selectedSubmissions.size === filteredSubmissions.filter(s => s.status === 'submitted').length) {
+    if (selectedSubmissions.size === filteredSubmissions.length && filteredSubmissions.length > 0) {
       setSelectedSubmissions(new Set());
     } else {
-      const allSubmittedIds = filteredSubmissions
-        .filter(s => s.status === 'submitted')
-        .map(s => s.id);
-      setSelectedSubmissions(new Set(allSubmittedIds));
+      // 필터링된 모든 학생 선택 (평가 여부 관계없이)
+      const allIds = filteredSubmissions.map(s => s.id);
+      setSelectedSubmissions(new Set(allIds));
     }
   };
 
@@ -185,23 +184,26 @@ export default function SubmissionsPage() {
                 테스트 데이터 생성
               </button>
             )}
-            {stats.submitted > 0 && (
+            {submissions.length > 0 && (
               <>
-                {selectedSubmissions.size > 0 ? (
+                {selectedSubmissions.size > 0 && (
                   <button
                     onClick={handleEvaluateSelected}
                     className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
                   >
                     <PlayCircle className="w-5 h-5" />
-                    선택한 학생 평가하기 ({selectedSubmissions.size}개)
+                    선택한 학생 {Array.from(selectedSubmissions).some(id => 
+                      submissions.find(s => s.id === id)?.status === 'evaluated'
+                    ) ? '재평가' : '평가'}하기 ({selectedSubmissions.size}명)
                   </button>
-                ) : (
+                )}
+                {selectedSubmissions.size === 0 && stats.submitted > 0 && (
                   <button
                     onClick={handleEvaluateAll}
                     className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
                   >
                     <PlayCircle className="w-5 h-5" />
-                    전체 평가하기 ({stats.submitted}개)
+                    미평가 전체 평가하기 ({stats.submitted}개)
                   </button>
                 )}
               </>
@@ -260,10 +262,10 @@ export default function SubmissionsPage() {
                 <thead>
                   <tr className="border-b bg-gradient-to-r from-blue-50/10 to-indigo-50/10">
                     <th className="text-center p-4 font-medium text-base w-12">
-                      {stats.submitted > 0 && (
+                      {filteredSubmissions.length > 0 && (
                         <input
                           type="checkbox"
-                          checked={selectedSubmissions.size === filteredSubmissions.filter(s => s.status === 'submitted').length && filteredSubmissions.filter(s => s.status === 'submitted').length > 0}
+                          checked={selectedSubmissions.size === filteredSubmissions.length && filteredSubmissions.length > 0}
                           onChange={toggleAllSelection}
                           className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                         />
@@ -297,14 +299,12 @@ export default function SubmissionsPage() {
                     filteredSubmissions.map((submission) => (
                       <tr key={submission.id} className="border-b hover:bg-blue-50/10 transition-colors">
                         <td className="text-center p-4">
-                          {submission.status === 'submitted' && (
-                            <input
-                              type="checkbox"
-                              checked={selectedSubmissions.has(submission.id)}
-                              onChange={() => toggleSubmissionSelection(submission.id)}
-                              className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                            />
-                          )}
+                          <input
+                            type="checkbox"
+                            checked={selectedSubmissions.has(submission.id)}
+                            onChange={() => toggleSubmissionSelection(submission.id)}
+                            className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                          />
                         </td>
                         <td className="p-4">
                           <div className="flex items-center gap-2">
@@ -350,6 +350,14 @@ export default function SubmissionsPage() {
                                 className="px-4 py-2 bg-blue-500/20 text-slate-700 rounded-lg hover:bg-blue-500/30 transition-colors text-sm border border-blue-200/30 font-medium"
                               >
                                 평가하기
+                              </button>
+                            )}
+                            {submission.status === 'evaluated' && (
+                              <button
+                                onClick={() => router.push(`/assignments/${params.assignmentId}/evaluate?submissions=${submission.id}`)}
+                                className="px-4 py-2 bg-amber-500/20 text-slate-700 rounded-lg hover:bg-amber-500/30 transition-colors text-sm border border-amber-200/30 font-medium"
+                              >
+                                재평가하기
                               </button>
                             )}
                           </div>
