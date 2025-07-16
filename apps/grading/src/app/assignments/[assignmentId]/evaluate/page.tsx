@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
-import { ArrowLeft, Play, Loader2, CheckCircle, AlertCircle, FileText } from 'lucide-react';
+import { ArrowLeft, Play, Loader2, CheckCircle, AlertCircle, FileText, Eye, ChevronDown, ChevronUp } from 'lucide-react';
 
 interface EvaluationTask {
   id: string;
@@ -29,6 +29,9 @@ export default function EvaluatePage() {
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [assignment, setAssignment] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [showStudentPreview, setShowStudentPreview] = useState(false);
+  const [showPromptPreview, setShowPromptPreview] = useState(false);
+  const [evaluationPrompt, setEvaluationPrompt] = useState('');
 
   useEffect(() => {
     fetchData();
@@ -75,6 +78,15 @@ export default function EvaluatePage() {
             }));
           console.log('Filtered submissions:', filteredSubmissions);
           setSubmissions(filteredSubmissions);
+          
+          // 평가 프롬프트 미리보기 생성
+          if (assignmentData.success && filteredSubmissions.length > 0) {
+            const samplePrompt = generateEvaluationPrompt(
+              assignment,
+              filteredSubmissions[0]
+            );
+            setEvaluationPrompt(samplePrompt);
+          }
         }
       }
     } catch (error) {
@@ -82,6 +94,27 @@ export default function EvaluatePage() {
     } finally {
       setLoading(false);
     }
+  };
+  
+  const generateEvaluationPrompt = (assignment: any, submission: Submission) => {
+    return `
+다음 학생의 글을 평가해주세요.
+
+학생 이름: ${submission.studentName}
+학번: ${submission.studentId}
+
+=== 글 내용 ===
+${submission.content?.substring(0, 200)}...
+
+=== 평가 기준 ===
+${assignment?.gradingCriteria || '평가 기준이 설정되지 않음'}
+
+=== 평가 영역 ===
+${assignment?.evaluationDomains?.join(', ') || '평가 영역이 설정되지 않음'}
+
+=== 평가 수준 ===
+${assignment?.evaluationLevels?.join(', ') || '평가 수준이 설정되지 않음'}
+`;
   };
 
   const handleStartEvaluation = async () => {
@@ -280,6 +313,59 @@ export default function EvaluatePage() {
                       </p>
                     </div>
                   </div>
+                </div>
+                
+                {/* 학생 정보 미리보기 */}
+                <div className="mt-6 border-t border-slate-200/50 pt-4">
+                  <button
+                    onClick={() => setShowStudentPreview(!showStudentPreview)}
+                    className="flex items-center gap-2 text-slate-700 hover:text-slate-900 transition-colors"
+                  >
+                    <Eye className="w-5 h-5" />
+                    <span className="font-medium">평가할 학생 목록 및 글 내용 미리보기</span>
+                    {showStudentPreview ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                  </button>
+                  
+                  {showStudentPreview && (
+                    <div className="mt-4 space-y-3 max-h-64 overflow-y-auto">
+                      {submissions.map((sub, idx) => (
+                        <div key={sub.id} className="p-3 bg-slate-50/50 rounded-lg border border-slate-200/30">
+                          <div className="flex justify-between items-start mb-2">
+                            <span className="font-medium text-slate-800">{idx + 1}. {sub.studentName}</span>
+                            <span className="text-sm text-slate-600">학번: {sub.studentId}</span>
+                          </div>
+                          <p className="text-sm text-slate-600 line-clamp-2">
+                            {sub.content?.substring(0, 100)}...
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                
+                {/* AI 프롬프트 미리보기 */}
+                <div className="mt-6 border-t border-slate-200/50 pt-4">
+                  <button
+                    onClick={() => setShowPromptPreview(!showPromptPreview)}
+                    className="flex items-center gap-2 text-slate-700 hover:text-slate-900 transition-colors"
+                  >
+                    <Eye className="w-5 h-5" />
+                    <span className="font-medium">AI 평가 프롬프트 미리보기</span>
+                    {showPromptPreview ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                  </button>
+                  
+                  {showPromptPreview && (
+                    <div className="mt-4">
+                      <div className="p-4 bg-slate-50/50 rounded-lg border border-slate-200/30">
+                        <p className="text-sm text-slate-600 whitespace-pre-wrap font-mono">
+                          {evaluationPrompt}
+                        </p>
+                      </div>
+                      <p className="mt-2 text-xs text-slate-500">
+                        * 실제 평가 시에는 각 학생의 전체 글이 사용됩니다.
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
               )}

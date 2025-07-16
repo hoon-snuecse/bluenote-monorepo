@@ -55,9 +55,42 @@ export async function GET(
   }
 }
 
+// 제출물 수정
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: { submissionId: string } }
+) {
+  try {
+    const data = await request.json();
+    const { studentName, content } = data;
+
+    const updatedSubmission = await prisma.submission.update({
+      where: {
+        id: params.submissionId
+      },
+      data: {
+        studentName: studentName || undefined,
+        content: content || undefined,
+        updatedAt: new Date()
+      }
+    });
+
+    return NextResponse.json({ 
+      success: true, 
+      submission: updatedSubmission
+    });
+  } catch (error) {
+    console.error('제출물 수정 오류:', error);
+    return NextResponse.json(
+      { success: false, error: '제출물 수정 중 오류가 발생했습니다.' },
+      { status: 500 }
+    );
+  }
+}
+
 // 제출물 삭제
 export async function DELETE(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: { submissionId: string } }
 ) {
   try {

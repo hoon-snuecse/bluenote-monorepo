@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
-import { ArrowLeft, User, Calendar, FileText, Award, Target, BookOpen, Lightbulb } from 'lucide-react';
+import { ArrowLeft, User, Calendar, FileText, Award, Target, BookOpen, Lightbulb, Edit, Save, X } from 'lucide-react';
 
 interface Submission {
   id: string;
@@ -31,10 +31,59 @@ export default function SubmissionDetailPage() {
   const [evaluation, setEvaluation] = useState<Evaluation | null>(null);
   const [assignment, setAssignment] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedName, setEditedName] = useState('');
+  const [editedContent, setEditedContent] = useState('');
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     fetchData();
   }, [params.submissionId]);
+
+  const handleSave = async () => {
+    if (!submission) return;
+    
+    setSaving(true);
+    try {
+      const response = await fetch(`/api/submissions/${params.submissionId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          studentName: editedName,
+          content: editedContent,
+        }),
+      });
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        setSubmission({
+          ...submission,
+          studentName: editedName,
+          content: editedContent,
+        });
+        setIsEditing(false);
+        alert('저장되었습니다.');
+      } else {
+        alert('저장 실패: ' + data.error);
+      }
+    } catch (error) {
+      console.error('Error saving submission:', error);
+      alert('저장 중 오류가 발생했습니다.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleCancel = () => {
+    if (submission) {
+      setEditedName(submission.studentName);
+      setEditedContent(submission.content || '');
+    }
+    setIsEditing(false);
+  };
 
   const fetchData = async () => {
     try {
@@ -42,11 +91,14 @@ export default function SubmissionDetailPage() {
       const submissionRes = await fetch(`/api/submissions/${params.submissionId}`);
       const submissionData = await submissionRes.json();
       if (submissionData.success) {
-        setSubmission({
+        const submissionInfo = {
           ...submissionData.submission,
           submittedAt: new Date(submissionData.submission.submittedAt),
           evaluatedAt: submissionData.submission.evaluatedAt ? new Date(submissionData.submission.evaluatedAt) : undefined
-        });
+        };
+        setSubmission(submissionInfo);
+        setEditedName(submissionInfo.studentName);
+        setEditedContent(submissionInfo.content || '');
       }
 
       // Fetch assignment
@@ -114,15 +166,59 @@ export default function SubmissionDetailPage() {
 
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-slate-900 mb-2">제출물 상세보기</h1>
-          <div className="flex items-center gap-4 text-slate-600">
-            <div className="flex items-center gap-2">
-              <User className="w-5 h-5" />
-              <span>{submission.studentName}</span>
+          <div className="flex justify-between items-start">
+            <div>
+              <h1 className="text-4xl font-bold text-slate-900 mb-2">제출물 상세보기</h1>
+              <div className="flex items-center gap-4 text-slate-600">
+                <div className="flex items-center gap-2">
+                  <User className="w-5 h-5" />
+                  {isEditing ? (
+                    <input
+                      type="text"
+                      value={editedName}
+                      onChange={(e) => setEditedName(e.target.value)}
+                      className="px-2 py-1 border rounded-md"
+                      placeholder="학생 이름"
+                    />
+                  ) : (
+                    <span>{submission.studentName}</span>
+                  )}
+                </div>
+                <div className="flex items-center gap-2">
+                  <Calendar className="w-5 h-5" />
+                  <span>{submission.submittedAt.toLocaleString('ko-KR')}</span>
+                </div>
+              </div>
             </div>
-            <div className="flex items-center gap-2">
-              <Calendar className="w-5 h-5" />
-              <span>{submission.submittedAt.toLocaleString('ko-KR')}</span>
+            <div className="flex gap-2">
+              {!isEditing ? (
+                <button
+                  onClick={() => setIsEditing(true)}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+                >
+                  <Edit className="w-4 h-4" />
+                  수정하기
+                </button>
+              ) : (
+                <>
+                  <button
+                    onClick={handleSave}
+                    disabled={saving}
+                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2 disabled:opacity-50"
+                  >
+                    <Save className="w-4 h-4" />
+                    {saving ? '저장 중...' : '저장'}
+                  </button>
+                  <button
+                    onClick={handleCancel}
+                    disabled={saving}
+                    className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors flex items-center gap-2 disabled:opacity-50"
+                  >
+                    <X className="w-4 h-4" />
+                    취소
+                  </button>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -139,9 +235,18 @@ export default function SubmissionDetailPage() {
               </CardHeader>
               <CardContent>
                 <div className="prose prose-slate max-w-none">
-                  <div className="whitespace-pre-wrap bg-slate-50/50 p-6 rounded-lg border border-slate-200/50">
-                    {submission.content}
-                  </div>
+                  {isEditing ? (
+                    <textarea
+                      value={editedContent}
+                      onChange={(e) => setEditedContent(e.target.value)}
+                      className="w-full min-h-[400px] p-6 rounded-lg border border-slate-200 focus:border-blue-400 focus:outline-none"
+                      placeholder="글 내용을 입력하세요..."
+                    />
+                  ) : (
+                    <div className="whitespace-pre-wrap bg-slate-50/50 p-6 rounded-lg border border-slate-200/50">
+                      {submission.content}
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
