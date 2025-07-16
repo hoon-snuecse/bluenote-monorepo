@@ -40,6 +40,7 @@ export default function DashboardPage() {
       // Fetch assignment
       const assignmentRes = await fetch(`/api/assignments/${params.assignmentId}`);
       const assignmentData = await assignmentRes.json();
+      console.log('Assignment data:', assignmentData);
       if (assignmentData.success) {
         setAssignment(assignmentData.assignment);
       }
@@ -47,6 +48,7 @@ export default function DashboardPage() {
       // Fetch submissions with evaluations
       const submissionsRes = await fetch(`/api/assignments/${params.assignmentId}/evaluations`);
       const submissionsData = await submissionsRes.json();
+      console.log('Evaluations data:', submissionsData);
       if (submissionsData.success) {
         const evaluatedStudents = submissionsData.evaluations.map((evaluation: any) => ({
           id: evaluation.id,

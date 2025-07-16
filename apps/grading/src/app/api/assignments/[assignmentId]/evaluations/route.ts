@@ -27,6 +27,12 @@ export async function GET(
     });
     
     console.log('Found submissions with evaluations:', submissions.length);
+    console.log('Submissions details:', submissions.map(s => ({
+      id: s.id,
+      studentName: s.studentName,
+      evaluationCount: s.evaluations.length,
+      hasEvaluation: s.evaluations.length > 0
+    })));
 
     // Transform the data
     const evaluations = submissions.map(sub => {

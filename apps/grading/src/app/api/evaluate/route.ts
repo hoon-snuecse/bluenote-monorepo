@@ -34,6 +34,7 @@ ${content}`;
 export async function POST(request: NextRequest) {
   try {
     const { submissionId, assignmentId, model } = await request.json();
+    console.log('Evaluate API called:', { submissionId, assignmentId, model });
 
     if (!submissionId || !assignmentId) {
       return NextResponse.json(
@@ -70,6 +71,8 @@ export async function POST(request: NextRequest) {
 
     try {
       // Call Claude API for evaluation
+      console.log('Calling Claude API with model:', model || 'claude-3-5-sonnet-20241022');
+      
       const response = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
         headers: {
@@ -90,15 +93,20 @@ export async function POST(request: NextRequest) {
       });
 
       if (!response.ok) {
-        console.error('Claude API error:', response.status);
-        throw new Error('Claude API failed');
+        const errorData = await response.text();
+        console.error('Claude API error:', response.status, errorData);
+        throw new Error(`Claude API failed: ${response.status} - ${errorData}`);
       }
 
       const data = await response.json();
+      console.log('Claude API response:', JSON.stringify(data).substring(0, 200));
+      
       const content = data.content[0].text;
+      console.log('AI evaluation content:', content.substring(0, 200));
       
       // Parse the JSON response
       const aiEvaluation = JSON.parse(content);
+      console.log('Parsed evaluation:', aiEvaluation);
       
       // Map AI evaluation to our domain structure
       const domainEvaluations: any = {};
@@ -114,6 +122,13 @@ export async function POST(request: NextRequest) {
         else level = evaluationLevels[3] || '미흡';
         
         domainEvaluations[domain] = level;
+      });
+
+      console.log('Creating evaluation with data:', {
+        submissionId,
+        assignmentId,
+        domainEvaluations,
+        overallLevel: aiEvaluation.grade
       });
 
       // Create evaluation record
@@ -150,6 +165,8 @@ export async function POST(request: NextRequest) {
         }
       });
 
+      console.log('Evaluation created successfully:', evaluation.id);
+
       return NextResponse.json({
         success: true,
         evaluation: {
@@ -158,10 +175,25 @@ export async function POST(request: NextRequest) {
           domainEvaluations: evaluation.domainEvaluations
         }
       });
+    } catch (error) {
+      console.error('Error in evaluation:', error);
+      return NextResponse.json(
+        { 
+          error: 'Failed to evaluate', 
+          details: error instanceof Error ? error.message : 'Unknown error',
+          success: false 
+        },
+        { status: 500 }
+      );
+    }
   } catch (error) {
-    console.error('Error in evaluation:', error);
+    console.error('Error in evaluation request:', error);
     return NextResponse.json(
-      { error: 'Failed to evaluate documents' },
+      { 
+        error: 'Failed to process evaluation request', 
+        details: error instanceof Error ? error.message : 'Unknown error',
+        success: false 
+      },
       { status: 500 }
     );
   }
