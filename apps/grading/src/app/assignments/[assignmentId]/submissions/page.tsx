@@ -79,6 +79,32 @@ export default function SubmissionsPage() {
     router.push(`/assignments/${params.assignmentId}/collect`);
   };
 
+  const handleCreateTestData = async () => {
+    if (!confirm('테스트 제출물 5개를 생성하시겠습니까?')) return;
+    
+    try {
+      const response = await fetch('/api/test/create-submissions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ assignmentId: params.assignmentId }),
+      });
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        alert(data.message);
+        fetchSubmissions(); // 목록 새로고침
+      } else {
+        alert('테스트 데이터 생성 실패: ' + data.error);
+      }
+    } catch (error) {
+      console.error('Error creating test data:', error);
+      alert('테스트 데이터 생성 중 오류가 발생했습니다.');
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -118,6 +144,15 @@ export default function SubmissionsPage() {
               <FileInput className="w-5 h-5" />
               글 가져오기
             </button>
+            {process.env.NODE_ENV === 'development' && submissions.length === 0 && (
+              <button
+                onClick={handleCreateTestData}
+                className="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2"
+              >
+                <FileText className="w-5 h-5" />
+                테스트 데이터 생성
+              </button>
+            )}
             {stats.submitted > 0 && (
               <button
                 onClick={handleEvaluateAll}
