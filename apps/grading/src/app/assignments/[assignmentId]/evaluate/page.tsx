@@ -1,10 +1,9 @@
 'use client';
 
-import { useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { ArrowLeft, Play, Loader2, CheckCircle, AlertCircle, FileText } from 'lucide-react';
-import { mockStudents } from '@/lib/mock-data';
 
 interface EvaluationTask {
   id: string;
@@ -13,23 +12,70 @@ interface EvaluationTask {
   message?: string;
 }
 
+interface Submission {
+  id: string;
+  studentId: string;
+  studentName: string;
+  content: string;
+}
+
 export default function EvaluatePage() {
-  const _params = useParams();
+  const params = useParams();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [isEvaluating, setIsEvaluating] = useState(false);
   const [evaluationTasks, setEvaluationTasks] = useState<EvaluationTask[]>([]);
   const [selectedModel, setSelectedModel] = useState('gpt-4');
+  const [submissions, setSubmissions] = useState<Submission[]>([]);
+  const [assignment, setAssignment] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
-  // 제출한 학생들만 필터링 (실제로는 API에서 가져와야 함)
-  const submittedStudents = mockStudents.slice(0, 7);
+  useEffect(() => {
+    fetchData();
+  }, [params.assignmentId, searchParams]);
+
+  const fetchData = async () => {
+    try {
+      // Get submission IDs from query params
+      const submissionIds = searchParams.get('submissions')?.split(',') || [];
+      
+      // Fetch assignment details
+      const assignmentRes = await fetch(`/api/assignments/${params.assignmentId}`);
+      const assignmentData = await assignmentRes.json();
+      if (assignmentData.success) {
+        setAssignment(assignmentData.assignment);
+      }
+      
+      // Fetch specific submissions or all submissions
+      if (submissionIds.length > 0) {
+        const submissionsRes = await fetch(`/api/assignments/${params.assignmentId}/submissions`);
+        const submissionsData = await submissionsRes.json();
+        if (submissionsData.success) {
+          const filteredSubmissions = submissionsData.submissions
+            .filter((sub: any) => submissionIds.includes(sub.id) && sub.status === 'submitted')
+            .map((sub: any) => ({
+              id: sub.id,
+              studentId: sub.studentId,
+              studentName: sub.studentName,
+              content: sub.content
+            }));
+          setSubmissions(filteredSubmissions);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleStartEvaluation = async () => {
     setIsEvaluating(true);
     
     // 초기 태스크 생성
-    const tasks: EvaluationTask[] = submittedStudents.map(student => ({
-      id: student.id,
-      studentName: student.name,
+    const tasks: EvaluationTask[] = submissions.map(submission => ({
+      id: submission.id,
+      studentName: submission.studentName,
       status: 'pending',
     }));
     setEvaluationTasks(tasks);
@@ -66,6 +112,17 @@ export default function EvaluatePage() {
   const completedCount = evaluationTasks.filter(t => t.status === 'completed').length;
   const totalCount = evaluationTasks.length;
 
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">데이터를 불러오는 중...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-50">
       <div className="container mx-auto py-8 px-4 max-w-4xl">
@@ -83,7 +140,7 @@ export default function EvaluatePage() {
         {/* Header */}
         <div className="mb-8 text-center">
           <h1 className="text-4xl font-bold text-slate-900 mb-2">AI 평가 실행</h1>
-          <p className="text-slate-600">설득하는 글쓰기 - 환경 보호의 중요성</p>
+          <p className="text-slate-600">{assignment?.title || '과제 제목'}</p>
         </div>
 
         {/* Settings Card */}
@@ -114,7 +171,7 @@ export default function EvaluatePage() {
                     <AlertCircle className="w-5 h-5 text-blue-600 mt-0.5" />
                     <div>
                       <p className="text-base text-slate-700">
-                        총 <strong>{submittedStudents.length}명</strong>의 학생이 글쓰기를 제출했습니다.
+                        총 <strong>{submissions.length}명</strong>의 학생이 글쓰기를 제출했습니다.
                       </p>
                       <p className="text-sm text-slate-600 mt-1">
                         평가는 학생당 약 30초~1분 정도 소요됩니다.
@@ -202,7 +259,7 @@ export default function EvaluatePage() {
 
           {evaluationTasks.length > 0 && completedCount === totalCount && (
             <button
-              onClick={() => router.push('/grading')}
+              onClick={() => router.push(`/assignments/${params.assignmentId}/dashboard`)}
               className="px-8 py-3 bg-green-500/20 text-slate-700 rounded-lg hover:bg-green-500/30 transition-colors flex items-center gap-2 border border-green-200/30 text-lg font-medium"
             >
               <CheckCircle className="w-5 h-5" />
