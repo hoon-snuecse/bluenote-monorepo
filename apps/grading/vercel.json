@@ -1,6 +1,0 @@
-{
-  "buildCommand": "cd ../.. && pnpm build --filter=@bluenote/grading",
-  "outputDirectory": ".next",
-  "installCommand": "cd ../.. && pnpm install",
-  "devCommand": "pnpm dev"
-}
