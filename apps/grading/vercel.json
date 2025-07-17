@@ -4,4 +4,3 @@
   "installCommand": "cd ../.. && pnpm install",
   "devCommand": "pnpm dev"
 }
-EOF < /dev/null
