@@ -24,7 +24,7 @@ export default function TeachingPostClient({ params }) {
       const response = await fetch('/api/teaching/posts/supabase');
       if (response.ok) {
         const data = await response.json();
-        const foundPost = data.posts.find(p => p.id === id);
+        const foundPost = data.posts.find(p => p.id.toString() === id.toString());
         if (foundPost) {
           console.log('Found post:', foundPost);
           setPost(foundPost);

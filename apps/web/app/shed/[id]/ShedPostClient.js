@@ -27,7 +27,7 @@ export default function ShedPostClient({ params }) {
       const response = await fetch('/api/shed/posts/supabase');
       if (response.ok) {
         const data = await response.json();
-        const foundPost = data.posts.find(p => p.id === id);
+        const foundPost = data.posts.find(p => p.id.toString() === id.toString());
         if (foundPost) {
           console.log('Found post:', foundPost);
           console.log('Post content:', foundPost.content);
