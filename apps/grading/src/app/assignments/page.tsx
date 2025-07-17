@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { AuthLayout } from '@/components/AuthLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
-import { Plus, Edit, Trash2, Users, Calendar, FileText, BookOpen, School, Link, BarChart3, PieChart, Settings, FileInput } from 'lucide-react';
+import { Plus, Edit, Trash2, Users, Calendar, FileText, BookOpen, School, Link, BarChart3, FileInput } from 'lucide-react';
 
 interface AssignmentData {
   id: string;
@@ -86,16 +86,13 @@ function AssignmentsContent() {
   };
 
   const handleRunEvaluation = (assignmentId: string) => {
-    router.push(`/grading?assignmentId=${assignmentId}`);
+    router.push(`/assignments/${assignmentId}/evaluate`);
   };
 
   const handleViewDashboard = (assignmentId: string) => {
-    router.push(`/grading/dashboard/${assignmentId}`);
+    router.push(`/assignments/${assignmentId}/dashboard`);
   };
 
-  const handleViewAnalytics = (assignmentId: string) => {
-    router.push(`/grading/analytics/${assignmentId}`);
-  };
 
   const handleCollectSubmissions = (assignmentId: string) => {
     router.push(`/assignments/${assignmentId}/collect`);
@@ -219,22 +216,13 @@ function AssignmentsContent() {
                     AI 평가
                   </button>
                 </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    onClick={() => handleViewDashboard(assignment.id)}
-                    className="px-3 py-2 bg-purple-500/20 text-slate-700 rounded-lg hover:bg-purple-500/30 transition-colors flex items-center justify-center gap-2 border border-purple-200/30 text-sm font-medium"
-                  >
-                    <BarChart3 className="w-4 h-4" />
-                    대시보드
-                  </button>
-                  <button
-                    onClick={() => handleViewAnalytics(assignment.id)}
-                    className="px-3 py-2 bg-green-500/20 text-slate-700 rounded-lg hover:bg-green-500/30 transition-colors flex items-center justify-center gap-2 border border-green-200/30 text-sm font-medium"
-                  >
-                    <PieChart className="w-4 h-4" />
-                    통계 분석
-                  </button>
-                </div>
+                <button
+                  onClick={() => handleViewDashboard(assignment.id)}
+                  className="w-full px-3 py-2 bg-purple-500/20 text-slate-700 rounded-lg hover:bg-purple-500/30 transition-colors flex items-center justify-center gap-2 border border-purple-200/30 text-sm font-medium"
+                >
+                  <BarChart3 className="w-4 h-4" />
+                  평가 대시보드
+                </button>
               </CardContent>
             </Card>
           ))}
