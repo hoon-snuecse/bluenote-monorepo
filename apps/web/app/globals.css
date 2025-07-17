@@ -1,5 +1,5 @@
 /* Google Fonts - must be first */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=Gowun+Dodum&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -8,7 +8,7 @@
 /* Base Styles */
 @layer base {
   body {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-family: 'Gowun Dodum', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
     @apply antialiased;
   }
 }
@@ -53,6 +53,7 @@
   /* Typography */
   --font-inter: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   --font-space-grotesk: 'Space Grotesk', sans-serif;
+  --font-gowun-dodum: 'Gowun Dodum', sans-serif;
   
   /* Shadows */
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
@@ -76,7 +77,7 @@ body {
 
 /* Base Styles */
 body {
-  font-family: var(--font-inter);
+  font-family: var(--font-gowun-dodum), var(--font-inter);
   background: linear-gradient(135deg, var(--blue-50) 0%, var(--slate-50) 100%);
   color: var(--slate-900);
   line-height: 1.6;
