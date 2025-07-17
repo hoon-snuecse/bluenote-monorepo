@@ -1,7 +1,5 @@
-
-import type { Config } from "tailwindcss";
-
-const config: Config = {
+/** @type {import('tailwindcss').Config} */
+module.exports = {
   content: [
     "./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
@@ -9,6 +7,11 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        'inter': ['var(--font-inter)'],
+        'space-grotesk': ['var(--font-space-grotesk)'],
+        'gowun-dodum': ['var(--font-gowun-dodum)'],
+      },
       keyframes: {
         "fade-in-up": {
           "0%": { opacity: "0", transform: "translateY(10px)" },
@@ -22,4 +25,3 @@ const config: Config = {
   },
   plugins: [],
 };
-export default config;
