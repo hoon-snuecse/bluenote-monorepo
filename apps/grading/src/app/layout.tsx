@@ -4,7 +4,7 @@ import "./globals.css";
 import { UserProvider } from "@/contexts/UserContext";
 import { NotificationProvider } from "@/contexts/NotificationContext";
 import { NotificationContainer } from "@/components/NotificationContainer";
-import UnifiedNavigation from "@/components/UnifiedNavigation";
+import NavigationWithAuth from "@/components/NavigationWithAuth";
 import { DevAutoLogin } from "@/components/DevAutoLogin";
 
 const inter = Inter({
@@ -52,7 +52,7 @@ export default function RootLayout({
         <UserProvider>
           <NotificationProvider>
             <DevAutoLogin />
-            <UnifiedNavigation />
+            <NavigationWithAuth />
             <NotificationContainer />
             {children}
           </NotificationProvider>
