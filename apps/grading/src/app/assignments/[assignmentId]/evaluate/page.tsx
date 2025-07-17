@@ -75,12 +75,15 @@ export default function EvaluatePage() {
       }
       
       // Fetch specific submissions or all submissions
-      if (submissionIds.length > 0) {
-        const submissionsRes = await fetch(`/api/assignments/${params.assignmentId}/submissions`);
-        const submissionsData = await submissionsRes.json();
-        console.log('Submissions data:', submissionsData);
-        if (submissionsData.success) {
-          const filteredSubmissions = submissionsData.submissions
+      const submissionsRes = await fetch(`/api/assignments/${params.assignmentId}/submissions`);
+      const submissionsData = await submissionsRes.json();
+      console.log('Submissions data:', submissionsData);
+      if (submissionsData.success) {
+        let filteredSubmissions;
+        
+        if (submissionIds.length > 0) {
+          // 특정 submission IDs만 필터링
+          filteredSubmissions = submissionsData.submissions
             .filter((sub: any) => submissionIds.includes(sub.id))
             .map((sub: any) => ({
               id: sub.id,
@@ -89,11 +92,23 @@ export default function EvaluatePage() {
               content: sub.content,
               status: sub.status
             }));
-          console.log('Filtered submissions:', filteredSubmissions);
-          setSubmissions(filteredSubmissions);
-          
-          // 프롬프트는 useEffect에서 생성됨
+        } else {
+          // submission IDs가 없으면 모든 제출물 사용
+          filteredSubmissions = submissionsData.submissions
+            .filter((sub: any) => sub.content && sub.content.length > 0) // 내용이 있는 제출물만
+            .map((sub: any) => ({
+              id: sub.id,
+              studentId: sub.studentId,
+              studentName: sub.studentName,
+              content: sub.content,
+              status: sub.status
+            }));
         }
+        
+        console.log('Filtered submissions:', filteredSubmissions);
+        setSubmissions(filteredSubmissions);
+        
+        // 프롬프트는 useEffect에서 생성됨
       }
     } catch (error) {
       console.error('Error fetching data:', error);

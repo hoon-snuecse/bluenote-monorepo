@@ -81,6 +81,13 @@ export async function POST(request: NextRequest) {
       evaluationLevels
     );
     
+    // 기존 평가 횟수 확인
+    const existingEvaluations = await prisma.evaluation.count({
+      where: { submissionId }
+    });
+    
+    console.log(`평가 저장: 제출물 ${submissionId}의 ${existingEvaluations + 1}번째 평가`);
+    
     // 평가 결과 저장 (재평가인 경우 기존 평가는 유지하고 새로운 평가 추가)
     const evaluation = await prisma.evaluation.create({
       data: {
@@ -95,6 +102,8 @@ export async function POST(request: NextRequest) {
         evaluatedBy: aiModel
       }
     });
+    
+    console.log('평가 저장 완료:', evaluation.id);
     
     // 제출물 상태 업데이트 (evaluatedAt 시간 설정)
     await prisma.submission.update({
@@ -169,8 +178,8 @@ export async function GET(request: NextRequest) {
     // JSON 문자열 파싱
     const formattedEvaluations = evaluations.map(evaluation => ({
       ...evaluation,
-      improvementSuggestions: JSON.parse(evaluation.improvementSuggestions),
-      strengths: JSON.parse(evaluation.strengths),
+      improvementSuggestions: JSON.parse(evaluation.improvementSuggestions as string),
+      strengths: JSON.parse(evaluation.strengths as string),
     }));
 
     return NextResponse.json({ 
