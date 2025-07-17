@@ -155,7 +155,8 @@ export default function ShedPageClient() {
                   <Link
                     key={post.id}
                     href={`/shed/${post.id}`}
-                    className="quote-sheet hover:shadow-lg transition-all group"
+                    className="quote-sheet hover:shadow-lg transition-all group relative z-10 block"
+                    onClick={() => console.log('Clicked post:', post.id, post.title)}
                   >
                     <div className="relative">
                       <div className="absolute inset-4 border border-dashed border-blue-200 rounded-lg opacity-30"></div>

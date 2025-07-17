@@ -142,7 +142,7 @@ export default function AnalyticsPageClient() {
                   <Link
                     key={post.id}
                     href={`/analytics/${post.id}`}
-                    className="quote-sheet hover:shadow-lg transition-all group"
+                    className="relative z-10 block quote-sheet hover:shadow-lg transition-all group"
                   >
                     <div className="relative">
                       <div className="absolute inset-4 border border-dashed border-blue-200 rounded-lg opacity-30"></div>
