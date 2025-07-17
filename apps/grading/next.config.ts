@@ -32,7 +32,7 @@ const nextConfig: NextConfig = {
   
   // Enable experimental features for better performance
   experimental: {
-    optimizeCss: true,
+    // optimizeCss: true, // Disabled - causing CSS issues
     optimizePackageImports: ['lucide-react', 'recharts'],
   },
   
