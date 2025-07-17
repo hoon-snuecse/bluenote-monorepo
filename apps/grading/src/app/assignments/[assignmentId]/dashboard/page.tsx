@@ -39,6 +39,8 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [sortBy, setSortBy] = useState<'name' | 'overallLevel'>('name');
   const [filterDomain, setFilterDomain] = useState<string>('all');
+  const [filterRound, setFilterRound] = useState<string>('latest'); // latest, all, 1, 2, 3...
+  const [availableRounds, setAvailableRounds] = useState<number[]>([]);
 
   useEffect(() => {
     fetchDashboardData();
@@ -97,39 +99,19 @@ export default function DashboardPage() {
           };
         });
         setStudents(evaluatedStudents);
+        
+        // 사용 가능한 평가 차수 계산
+        const rounds = new Set<number>();
+        evaluatedStudents.forEach((student: Student) => {
+          if (student.evaluationCount && student.evaluationCount > 0) {
+            for (let i = 1; i <= student.evaluationCount; i++) {
+              rounds.add(i);
+            }
+          }
+        });
+        setAvailableRounds(Array.from(rounds).sort((a, b) => a - b));
 
-        // Calculate domain scores
-        if (assignment.evaluationDomains && assignment.evaluationDomains.length > 0) {
-          const domains = assignment.evaluationDomains;
-          const levels = assignment.evaluationLevels || ['매우 우수', '우수', '보통', '미흡'];
-          
-          const calculatedScores = domains.map((domain: string) => {
-            const scores = evaluatedStudents
-              .map((s: Student) => {
-                const score = s.scores[domain];
-                // score가 객체인 경우 level 속성을 사용하고, 문자열인 경우 그대로 사용
-                return typeof score === 'object' && score !== null 
-                  ? (score as any).level 
-                  : score;
-              })
-              .filter(Boolean);
-            
-            const levelCounts = levels.reduce((acc: any, level: string) => {
-              acc[level] = scores.filter((s: string) => s === level).length;
-              return acc;
-            }, {});
-
-            return {
-              domain,
-              average: scores.length,
-              distribution: Object.entries(levelCounts).map(([level, count]) => ({
-                level,
-                count: count as number
-              }))
-            };
-          });
-          setDomainScores(calculatedScores);
-        }
+        // Calculate domain scores은 필터링 후에 다시 계산되도록 함
       }
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
@@ -274,7 +256,68 @@ export default function DashboardPage() {
     }
   };
 
-  const sortedStudents = [...students].sort((a, b) => {
+  // 평가 차수별로 학생 데이터 필터링 및 변환
+  const getStudentDataForRound = (student: Student, round: string) => {
+    if (round === 'latest') {
+      return student; // 최신 평가 데이터 그대로 사용
+    } else if (round === 'all') {
+      return student; // 모든 평가 보기 (최신 데이터 표시)
+    } else {
+      // 특정 차수의 평가 데이터 가져오기
+      const roundNum = parseInt(round);
+      const evalHistory = student.evaluationHistory?.find(h => h.round === roundNum);
+      if (evalHistory) {
+        return {
+          ...student,
+          scores: evalHistory.domainScores || {},
+          overallLevel: evalHistory.overallLevel,
+          evaluatedAt: new Date(evalHistory.evaluatedAt)
+        };
+      }
+      return null; // 해당 차수 평가가 없는 경우
+    }
+  };
+
+  // 필터링된 학생 목록 생성
+  const processedStudents = students
+    .map(student => getStudentDataForRound(student, filterRound))
+    .filter(student => student !== null) as Student[];
+    
+  // 필터가 변경될 때마다 도메인 점수 재계산
+  useEffect(() => {
+    if (assignment && assignment.evaluationDomains && processedStudents.length > 0) {
+      const domains = assignment.evaluationDomains;
+      const levels = assignment.evaluationLevels || ['매우 우수', '우수', '보통', '미흡'];
+      
+      const calculatedScores = domains.map((domain: string) => {
+        const scores = processedStudents
+          .map((s: Student) => {
+            const score = s.scores[domain];
+            return typeof score === 'object' && score !== null 
+              ? (score as any).level 
+              : score;
+          })
+          .filter(Boolean);
+        
+        const levelCounts = levels.reduce((acc: any, level: string) => {
+          acc[level] = scores.filter((s: string) => s === level).length;
+          return acc;
+        }, {});
+
+        return {
+          domain,
+          average: scores.length,
+          distribution: Object.entries(levelCounts).map(([level, count]) => ({
+            level,
+            count: count as number
+          }))
+        };
+      });
+      setDomainScores(calculatedScores);
+    }
+  }, [filterRound, students, assignment]);
+
+  const sortedStudents = [...processedStudents].sort((a, b) => {
     if (sortBy === 'name') {
       return a.name.localeCompare(b.name);
     } else {
@@ -457,6 +500,17 @@ export default function DashboardPage() {
               <option key={domain} value={domain}>{domain}</option>
             ))}
           </select>
+          <select
+            value={filterRound}
+            onChange={(e) => setFilterRound(e.target.value)}
+            className="px-3 py-2 border border-slate-200 rounded-lg bg-white/70"
+          >
+            <option value="latest">최신 평가</option>
+            <option value="all">전체 보기</option>
+            {availableRounds.map((round) => (
+              <option key={round} value={round.toString()}>{round}차 평가</option>
+            ))}
+          </select>
         </div>
 
         {/* Student Table */}
@@ -512,13 +566,31 @@ export default function DashboardPage() {
                         </span>
                       </td>
                       <td className="p-4 text-center">
-                        {student.evaluationCount && student.evaluationCount > 0 ? (
-                          <span className="text-sm text-slate-600">
-                            {student.evaluationCount}차 평가
-                          </span>
-                        ) : (
-                          <span className="text-sm text-slate-400">-</span>
-                        )}
+                        {(() => {
+                          if (filterRound === 'latest') {
+                            return student.evaluationCount && student.evaluationCount > 0 ? (
+                              <span className="text-sm text-slate-600">
+                                최신 ({student.evaluationCount}차)
+                              </span>
+                            ) : (
+                              <span className="text-sm text-slate-400">-</span>
+                            );
+                          } else if (filterRound === 'all') {
+                            return student.evaluationCount && student.evaluationCount > 0 ? (
+                              <span className="text-sm text-slate-600">
+                                총 {student.evaluationCount}회
+                              </span>
+                            ) : (
+                              <span className="text-sm text-slate-400">-</span>
+                            );
+                          } else {
+                            return (
+                              <span className="text-sm text-slate-600">
+                                {filterRound}차 평가
+                              </span>
+                            );
+                          }
+                        })()}
                       </td>
                       <td className="p-4 text-center">
                         <button
