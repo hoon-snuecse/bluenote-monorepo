@@ -16,7 +16,6 @@ export async function GET(request) {
           id,
           file_path,
           file_name,
-          file_type,
           file_size,
           mime_type,
           display_order
@@ -140,7 +139,6 @@ export async function POST(request) {
           file_name: file.name || 'untitled',
           file_size: file.size || 0,
           mime_type: file.type || 'application/octet-stream',
-          file_type: 'document',
           display_order: index
         }));
 
@@ -271,7 +269,6 @@ export async function PUT(request) {
             file_name: file.name || 'untitled',
             file_size: file.size || 0,
             mime_type: file.type || 'application/octet-stream',
-            file_type: 'document',
             display_order: index
           }));
 
