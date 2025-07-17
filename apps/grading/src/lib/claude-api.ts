@@ -118,6 +118,8 @@ ${request.studentText}
     const content = message.content[0];
     if (content.type === 'text') {
       try {
+        console.log('Claude 원본 응답:', content.text.substring(0, 500) + '...');
+        
         const jsonMatch = content.text.match(/\{[\s\S]*\}/);
         if (jsonMatch) {
           const result = JSON.parse(jsonMatch[0]);
@@ -125,6 +127,7 @@ ${request.studentText}
         }
       } catch (parseError) {
         console.error('Failed to parse Claude response:', parseError);
+        console.error('응답 내용:', content.text);
       }
     }
 
@@ -162,6 +165,26 @@ function validateEvaluationResult(result: any, request: EvaluationRequest): Eval
 function generateFallbackEvaluation(request: EvaluationRequest, responseText: string): EvaluationResult {
   console.warn('⚠️ Fallback 평가 사용 중 - Claude 응답 파싱 실패');
   
+  // 응답 텍스트에서 JSON 부분 제거
+  let cleanedResponseText = responseText;
+  const jsonStartIndex = responseText.indexOf('{');
+  const jsonEndIndex = responseText.lastIndexOf('}');
+  
+  if (jsonStartIndex !== -1 && jsonEndIndex !== -1 && jsonStartIndex < jsonEndIndex) {
+    // JSON 블록 이후의 텍스트만 추출
+    cleanedResponseText = responseText.substring(jsonEndIndex + 1).trim();
+    
+    // 텍스트가 비어있다면 JSON 블록 이전의 텍스트 확인
+    if (!cleanedResponseText) {
+      cleanedResponseText = responseText.substring(0, jsonStartIndex).trim();
+    }
+    
+    // 여전히 비어있다면 기본 메시지
+    if (!cleanedResponseText) {
+      cleanedResponseText = `${request.studentName} 학생은 ${request.writingType}의 기본 구조를 이해하고 있으며, 자신의 생각을 표현하려고 노력했습니다.`;
+    }
+  }
+  
   // 학생 텍스트 기반으로 일관된 결과 생성
   const textHash = request.studentText.split('').reduce((acc, char) => {
     return ((acc << 5) - acc) + char.charCodeAt(0);
@@ -181,7 +204,7 @@ function generateFallbackEvaluation(request: EvaluationRequest, responseText: st
     domainGrades: {},
     strengths: ['논리적인 구성으로 글을 작성함', '주제에 대한 이해도가 높음'],
     improvements: ['더 구체적인 예시 제시 필요', '문장 간 연결을 자연스럽게 개선'],
-    detailedFeedback: responseText.substring(0, 500) + '...'
+    detailedFeedback: cleanedResponseText
   };
 
   // 각 영역에 일관된 점수 할당

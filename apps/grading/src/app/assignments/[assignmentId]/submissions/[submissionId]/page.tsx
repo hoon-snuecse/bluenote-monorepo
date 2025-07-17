@@ -26,6 +26,41 @@ interface Evaluation {
   evaluatedBy?: string;
 }
 
+// JSON 응답 형식을 제거하는 함수
+function cleanFeedbackText(text: string): string {
+  if (!text) return '';
+  
+  // 먼저 텍스트에 JSON이 포함되어 있는지 확인
+  if (text.includes('"overallScore"') || text.includes('"domainScores"')) {
+    // JSON 블록을 찾아서 제거
+    const jsonStartIndex = text.indexOf('{');
+    const jsonEndIndex = text.lastIndexOf('}');
+    
+    if (jsonStartIndex !== -1 && jsonEndIndex !== -1 && jsonStartIndex < jsonEndIndex) {
+      // JSON 블록 이후의 텍스트만 추출
+      let cleanedText = text.substring(jsonEndIndex + 1).trim();
+      
+      // 남은 따옴표나 쉼표 제거
+      cleanedText = cleanedText.replace(/^[,"'\s]+/, '').trim();
+      
+      // 텍스트가 비어있다면 JSON 블록 이전의 텍스트 확인
+      if (!cleanedText) {
+        cleanedText = text.substring(0, jsonStartIndex).trim();
+      }
+      
+      // 여전히 비어있다면 원본 텍스트에서 JSON 패턴만 제거
+      if (!cleanedText) {
+        cleanedText = text.replace(/\{[\s\S]*?\}/g, '').trim();
+      }
+      
+      return cleanedText;
+    }
+  }
+  
+  // JSON이 없으면 원본 텍스트 반환
+  return text;
+}
+
 export default function SubmissionDetailPage() {
   const params = useParams();
   const router = useRouter();
@@ -33,7 +68,7 @@ export default function SubmissionDetailPage() {
   const [evaluation, setEvaluation] = useState<Evaluation | null>(null);
   const [evaluations, setEvaluations] = useState<Evaluation[]>([]);
   const [currentEvaluationIndex, setCurrentEvaluationIndex] = useState(0);
-  const [assignment, setAssignment] = useState<any>(null);
+  const [assignment, setAssignment] = useState<any>(null); // eslint-disable-line @typescript-eslint/no-unused-vars
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [editedName, setEditedName] = useState('');
@@ -366,9 +401,14 @@ export default function SubmissionDetailPage() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-slate-700 text-sm leading-relaxed">
-                      {evaluation.overallFeedback}
-                    </p>
+                    <div className="relative">
+                      <div className="text-slate-700 text-sm leading-relaxed whitespace-pre-wrap min-h-[100px] max-h-[400px] overflow-y-auto p-4 bg-slate-50/50 rounded-lg border border-slate-200/50">
+                        {cleanFeedbackText(evaluation.overallFeedback)}
+                      </div>
+                      {evaluation.overallFeedback && evaluation.overallFeedback.length > 500 && (
+                        <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-slate-50/50 to-transparent pointer-events-none rounded-b-lg"></div>
+                      )}
+                    </div>
                   </CardContent>
                 </Card>
 
