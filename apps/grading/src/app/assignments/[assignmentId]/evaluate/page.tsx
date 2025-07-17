@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
-import { ArrowLeft, Play, Loader2, CheckCircle, AlertCircle, FileText, Eye, ChevronDown, ChevronUp } from 'lucide-react';
+import { ArrowLeft, Play, Loader2, CheckCircle, AlertCircle, FileText, Eye, ChevronDown, ChevronUp, Settings } from 'lucide-react';
 
 interface EvaluationTask {
   id: string;
@@ -32,6 +32,8 @@ export default function EvaluatePage() {
   const [showStudentPreview, setShowStudentPreview] = useState(false);
   const [showPromptPreview, setShowPromptPreview] = useState(false);
   const [evaluationPrompt, setEvaluationPrompt] = useState('');
+  const [temperature, setTemperature] = useState(0.1);
+  const [showAdvancedSettings, setShowAdvancedSettings] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -255,7 +257,8 @@ ${submission.content?.substring(0, 100)}...
           writingType: assignment?.writingType || '',
           aiModel: selectedModel,
           studentId: submission.studentId,
-          studentName: submission.studentName
+          studentName: submission.studentName,
+          temperature: temperature
         };
         
         console.log('평가 요청 데이터:', requestData);
@@ -392,6 +395,43 @@ ${submission.content?.substring(0, 100)}...
                     <option value="claude-opus-4-20250514">Claude Opus 4 (가장 강력한 모델)</option>
                     <option value="mock">Mock 평가기 (테스트용 - 실제 AI 아님)</option>
                   </select>
+                </div>
+
+                {/* 고급 설정 */}
+                <div className="mt-6 border-t border-slate-200/50 pt-4">
+                  <button
+                    onClick={() => setShowAdvancedSettings(!showAdvancedSettings)}
+                    className="flex items-center gap-2 text-slate-700 hover:text-slate-900 transition-colors"
+                  >
+                    <Settings className="w-5 h-5" />
+                    <span className="font-medium">고급 설정</span>
+                    {showAdvancedSettings ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                  </button>
+                  
+                  {showAdvancedSettings && (
+                    <div className="mt-4 space-y-4 p-4 bg-slate-50/50 rounded-lg border border-slate-200/30">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Temperature (창의성 수준)
+                        </label>
+                        <div className="flex items-center gap-4">
+                          <input
+                            type="range"
+                            min="0"
+                            max="1"
+                            step="0.1"
+                            value={temperature}
+                            onChange={(e) => setTemperature(parseFloat(e.target.value))}
+                            className="flex-1"
+                          />
+                          <span className="w-12 text-sm font-medium text-slate-700">{temperature}</span>
+                        </div>
+                        <p className="mt-2 text-xs text-slate-600">
+                          낮을수록 일관된 평가, 높을수록 창의적인 평가 (권장: 0.1~0.3)
+                        </p>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <div className="bg-blue-50/50 rounded-lg p-4 border border-blue-200/30">

@@ -47,7 +47,8 @@ export class ClaudeEvaluator implements AIEvaluator {
         levelCount: levels.length,
         evaluationPrompt: criteria,
         studentText: content,
-        studentName: this.assignmentData?.studentName || '학생'
+        studentName: this.assignmentData?.studentName || '학생',
+        temperature: this.assignmentData?.temperature || 0.1
       });
 
       // Claude API 결과를 기존 형식으로 변환

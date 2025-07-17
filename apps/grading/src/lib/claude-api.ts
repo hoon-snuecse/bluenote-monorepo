@@ -16,6 +16,7 @@ export interface EvaluationRequest {
   evaluationPrompt: string;
   studentText: string;
   studentName: string;
+  temperature?: number;
 }
 
 export interface EvaluationResult {
@@ -98,7 +99,7 @@ ${request.studentText}
     const message = await anthropic.messages.create({
       model: actualModel,
       max_tokens: 2000,
-      temperature: 0.1, // 더 일관된 결과를 위해 온도를 0.1로 낮춤
+      temperature: request.temperature || 0.1, // 사용자 지정 temperature 사용
       system: systemPrompt,
       messages: [
         {
@@ -110,7 +111,7 @@ ${request.studentText}
     
     console.log('Claude API 호출 성공:', {
       modelUsed: actualModel,
-      temperature: 0.1,
+      temperature: request.temperature || 0.1,
       messageId: (message as any).id
     });
 

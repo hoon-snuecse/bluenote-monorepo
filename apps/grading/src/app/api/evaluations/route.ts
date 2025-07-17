@@ -31,7 +31,8 @@ export async function POST(request: NextRequest) {
       writingType,
       aiModel = 'claude-3-sonnet',
       studentId,
-      studentName
+      studentName,
+      temperature = 0.1
     } = data;
     
     // 설정에서 API 키 가져오기
@@ -81,7 +82,8 @@ export async function POST(request: NextRequest) {
         schoolName: schoolName || assignment?.schoolName,
         grade: gradeLevel || assignment?.gradeLevel,
         writingType: writingType || assignment?.writingType,
-        studentName
+        studentName,
+        temperature
       }
     );
     
