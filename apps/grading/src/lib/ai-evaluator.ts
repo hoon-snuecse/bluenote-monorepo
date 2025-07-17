@@ -85,28 +85,46 @@ export class MockEvaluator implements AIEvaluator {
     domains: string[], 
     levels: string[]
   ): Promise<EvaluationResult> {
-    // 실제 구현에서는 Claude API를 사용
+    console.warn('⚠️ MockEvaluator 사용 중 - 실제 AI 평가가 아닙니다!');
+    
+    // 콘텐츠 기반 해시를 사용하여 일관된 결과 생성
+    const textHash = content.split('').reduce((acc, char) => {
+      return ((acc << 5) - acc) + char.charCodeAt(0);
+    }, 0);
+    
+    const consistentRandom = (seed: number, max: number) => {
+      const x = Math.sin(seed) * 10000;
+      return Math.floor((x - Math.floor(x)) * max);
+    };
+    
     const domainEvaluations: Record<string, any> = {};
+    let totalScore = 0;
     
     domains.forEach((domain, index) => {
-      const randomLevelIndex = Math.floor(Math.random() * levels.length);
-      const level = levels[randomLevelIndex];
+      const domainSeed = textHash + index + domain.charCodeAt(0);
+      const baseLevelIndex = Math.min(1, levels.length - 1); // 기본적으로 두 번째 레벨
+      const variance = consistentRandom(domainSeed, 3) - 1; // -1, 0, 1 변동
+      const levelIndex = Math.max(0, Math.min(levels.length - 1, baseLevelIndex + variance));
+      const level = levels[levelIndex];
+      const score = levels.length - levelIndex;
       
       domainEvaluations[domain] = {
         level,
-        score: levels.length - randomLevelIndex,
-        feedback: `${domain}에 대한 평가: 학생의 글은 ${level} 수준을 보여주고 있습니다. 더 발전하기 위해서는 구체적인 예시를 추가하고 문장 구조를 다양화하면 좋겠습니다.`
+        score,
+        feedback: `[Mock] ${domain}에 대한 평가: 학생의 글은 ${level} 수준을 보여주고 있습니다. 더 발전하기 위해서는 구체적인 예시를 추가하고 문장 구조를 다양화하면 좋겠습니다.`
       };
+      
+      totalScore += score;
     });
     
-    const averageScore = Object.values(domainEvaluations).reduce((sum, score) => sum + score.score, 0) / domains.length;
+    const averageScore = totalScore / domains.length;
     const overallLevelIndex = Math.round(levels.length - averageScore);
     const overallLevel = levels[Math.max(0, Math.min(overallLevelIndex, levels.length - 1))];
     
     return {
       domainEvaluations,
       overallLevel,
-      overallFeedback: `전체적으로 ${overallLevel} 수준의 글쓰기 능력을 보여주고 있습니다. 주제를 명확하게 표현하려는 노력이 보이며, 자신의 생각을 전달하려는 의지가 느껴집니다. 앞으로도 꾸준히 글쓰기 연습을 하면 더욱 발전할 수 있을 것입니다.`,
+      overallFeedback: `[Mock 평가] 전체적으로 ${overallLevel} 수준의 글쓰기 능력을 보여주고 있습니다. 주제를 명확하게 표현하려는 노력이 보이며, 자신의 생각을 전달하려는 의지가 느껴집니다. 앞으로도 꾸준히 글쓰기 연습을 하면 더욱 발전할 수 있을 것입니다.`,
       improvementSuggestions: [
         '문장과 문장 사이의 연결을 더 자연스럽게 만들어보세요.',
         '구체적인 예시나 경험을 추가하면 글이 더 생생해집니다.',
@@ -123,8 +141,8 @@ export class MockEvaluator implements AIEvaluator {
 // Factory function
 export function createEvaluator(
   type: 'claude' | 'mock' = 'mock',
-  apiKey?: string,
-  model?: 'claude-3-sonnet' | 'claude-3-opus',
+  _apiKey?: string,
+  _model?: 'claude-3-sonnet' | 'claude-3-opus',
   assignmentData?: any
 ): AIEvaluator {
   if (type === 'claude') {

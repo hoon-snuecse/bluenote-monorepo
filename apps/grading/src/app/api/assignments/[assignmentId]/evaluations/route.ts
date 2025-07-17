@@ -42,7 +42,8 @@ export async function GET(
         round: sub.evaluations.length - index, // 차수 (최신이 가장 높은 번호)
         evaluatedAt: evaluation.evaluatedAt,
         overallLevel: evaluation.overallLevel,
-        domainScores: evaluation.domainEvaluations
+        domainScores: evaluation.domainEvaluations,
+        evaluatedBy: evaluation.evaluatedBy
       }));
       
       return {
@@ -54,6 +55,7 @@ export async function GET(
         domainScores: latestEvaluation?.domainEvaluations || {},
         overallLevel: latestEvaluation?.overallLevel || null,
         overallFeedback: latestEvaluation?.overallFeedback || null,
+        evaluatedBy: latestEvaluation?.evaluatedBy || null,
         status: latestEvaluation ? 'evaluated' : 'submitted',
         evaluationCount: sub.evaluations.length,
         evaluationHistory: evaluationHistory

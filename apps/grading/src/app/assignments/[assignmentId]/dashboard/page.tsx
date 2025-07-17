@@ -20,6 +20,7 @@ interface Student {
   overallLevel: string;
   submittedAt: Date;
   evaluatedAt?: Date;
+  evaluatedBy?: string;
   evaluationCount?: number;
   evaluationHistory?: Array<{
     evaluationId: string;
@@ -27,6 +28,7 @@ interface Student {
     evaluatedAt: Date;
     overallLevel: string;
     domainScores: any;
+    evaluatedBy?: string;
   }>;
 }
 
@@ -94,6 +96,7 @@ export default function DashboardPage() {
             overallLevel: evaluation.overallLevel || '평가 대기',
             submittedAt: new Date(evaluation.submittedAt),
             evaluatedAt: evaluation.evaluatedAt ? new Date(evaluation.evaluatedAt) : undefined,
+            evaluatedBy: evaluation.evaluatedBy,
             evaluationCount: evaluation.evaluationCount || 0,
             evaluationHistory: evaluation.evaluationHistory || []
           };
@@ -131,7 +134,7 @@ export default function DashboardPage() {
       if (assignment?.evaluationDomains) {
         latestHeaders.push(...assignment.evaluationDomains);
       }
-      latestHeaders.push('종합 평가', '평가 차수', '제출일시', '평가일시');
+      latestHeaders.push('종합 평가', '평가 모델', '평가 차수', '제출일시', '평가일시');
       latestData.push(latestHeaders);
       
       // 학생별 최신 평가 데이터
@@ -149,6 +152,7 @@ export default function DashboardPage() {
         }
         
         row.push(student.overallLevel);
+        row.push(student.evaluatedBy || '-');
         row.push(student.evaluationCount ? `${student.evaluationCount}차` : '-');
         row.push(student.submittedAt.toLocaleString('ko-KR'));
         row.push(student.evaluatedAt ? student.evaluatedAt.toLocaleString('ko-KR') : '미평가');
@@ -168,7 +172,7 @@ export default function DashboardPage() {
       
       // 2. 전체 평가 이력 시트
       const historyData = [];
-      const historyHeaders = ['학생 이름', '학번', '평가 차수', '평가일시'];
+      const historyHeaders = ['학생 이름', '학번', '평가 차수', '평가일시', '평가 모델'];
       if (assignment?.evaluationDomains) {
         historyHeaders.push(...assignment.evaluationDomains);
       }
@@ -180,7 +184,8 @@ export default function DashboardPage() {
         if (student.evaluationHistory && student.evaluationHistory.length > 0) {
           student.evaluationHistory.forEach(evalHistory => {
             const row = [student.name, student.studentId, `${evalHistory.round}차`, 
-                        new Date(evalHistory.evaluatedAt).toLocaleString('ko-KR')];
+                        new Date(evalHistory.evaluatedAt).toLocaleString('ko-KR'),
+                        evalHistory.evaluatedBy || '-'];
             
             if (assignment?.evaluationDomains) {
               assignment.evaluationDomains.forEach((domain: string) => {
@@ -271,7 +276,8 @@ export default function DashboardPage() {
           ...student,
           scores: evalHistory.domainScores || {},
           overallLevel: evalHistory.overallLevel,
-          evaluatedAt: new Date(evalHistory.evaluatedAt)
+          evaluatedAt: new Date(evalHistory.evaluatedAt),
+          evaluatedBy: evalHistory.evaluatedBy
         };
       }
       return null; // 해당 차수 평가가 없는 경우

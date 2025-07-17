@@ -390,6 +390,7 @@ ${submission.content?.substring(0, 100)}...
                   >
                     <option value="claude-sonnet-4-20250514">Claude Sonnet 4 (권장 - 스마트하고 효율적)</option>
                     <option value="claude-opus-4-20250514">Claude Opus 4 (가장 강력한 모델)</option>
+                    <option value="mock">Mock 평가기 (테스트용 - 실제 AI 아님)</option>
                   </select>
                 </div>
 

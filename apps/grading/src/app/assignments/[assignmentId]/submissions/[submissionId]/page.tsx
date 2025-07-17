@@ -23,6 +23,7 @@ interface Evaluation {
   improvementSuggestions: string[];
   strengths: string[];
   evaluatedAt: Date | string;
+  evaluatedBy?: string;
 }
 
 export default function SubmissionDetailPage() {
@@ -282,6 +283,9 @@ export default function SubmissionDetailPage() {
                       <p className="text-sm text-slate-600 mb-2">
                         평가일: {new Date(evaluation.evaluatedAt).toLocaleString('ko-KR')}
                       </p>
+                      <p className="text-xs text-slate-500">
+                        평가 모델: {evaluation.evaluatedBy || 'AI'}
+                      </p>
                       {evaluations.length > 1 && (
                         <div className="flex items-center justify-center gap-2 mt-4">
                           <button
@@ -451,6 +455,9 @@ export default function SubmissionDetailPage() {
                             </div>
                             <div className="text-xs text-slate-600 mt-1">
                               {new Date(evalItem.evaluatedAt).toLocaleString('ko-KR')}
+                              {evalItem.evaluatedBy && (
+                                <span className="ml-2">• {evalItem.evaluatedBy}</span>
+                              )}
                             </div>
                           </button>
                         ))}

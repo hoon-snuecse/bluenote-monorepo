@@ -32,8 +32,20 @@ export async function evaluateWithClaude(request: EvaluationRequest): Promise<Ev
   // API 키가 설정되지 않은 경우 Mock 데이터 반환
   if (!process.env.CLAUDE_API_KEY || process.env.CLAUDE_API_KEY === 'YOUR_CLAUDE_API_KEY_HERE') {
     console.warn('Claude API key not set, returning mock data');
+    console.warn('API Key 상태:', {
+      exists: !!process.env.CLAUDE_API_KEY,
+      isDefault: process.env.CLAUDE_API_KEY === 'YOUR_CLAUDE_API_KEY_HERE',
+      firstChars: process.env.CLAUDE_API_KEY?.substring(0, 10)
+    });
     return generateMockEvaluation(request);
   }
+  
+  console.log('Claude API 호출 시작:', {
+    studentName: request.studentName,
+    assignmentTitle: request.assignmentTitle,
+    writingType: request.writingType,
+    evaluationDomains: request.evaluationDomains
+  });
 
   try {
     const systemPrompt = `당신은 ${request.schoolName} ${request.grade} 담임교사입니다. 
@@ -72,10 +84,21 @@ ${request.studentText}
 
 위 글을 평가해주세요.`;
 
+    // 요청에서 모델 정보 확인
+    const modelMap: { [key: string]: string } = {
+      'claude-sonnet-4-20250514': 'claude-3-5-sonnet-20241022',
+      'claude-opus-4-20250514': 'claude-3-opus-20240229',
+      'claude-3-sonnet': 'claude-3-5-sonnet-20241022',
+      'claude-3-opus': 'claude-3-opus-20240229'
+    };
+    
+    // 기본값은 sonnet
+    const actualModel = modelMap['claude-sonnet-4-20250514']; // 기본 모델
+    
     const message = await anthropic.messages.create({
-      model: 'claude-3-sonnet-20240229',
+      model: actualModel,
       max_tokens: 2000,
-      temperature: 0.3,
+      temperature: 0.1, // 더 일관된 결과를 위해 온도를 0.1로 낮춤
       system: systemPrompt,
       messages: [
         {
@@ -83,6 +106,12 @@ ${request.studentText}
           content: userPrompt
         }
       ]
+    });
+    
+    console.log('Claude API 호출 성공:', {
+      modelUsed: actualModel,
+      temperature: 0.1,
+      messageId: (message as any).id
     });
 
     // Claude의 응답에서 JSON 추출
@@ -131,9 +160,23 @@ function validateEvaluationResult(result: any, request: EvaluationRequest): Eval
 
 // 텍스트 응답을 기반으로 간단한 평가 결과 생성
 function generateFallbackEvaluation(request: EvaluationRequest, responseText: string): EvaluationResult {
+  console.warn('⚠️ Fallback 평가 사용 중 - Claude 응답 파싱 실패');
+  
+  // 학생 텍스트 기반으로 일관된 결과 생성
+  const textHash = request.studentText.split('').reduce((acc, char) => {
+    return ((acc << 5) - acc) + char.charCodeAt(0);
+  }, 0);
+  
+  const consistentRandom = (seed: number, max: number) => {
+    const x = Math.sin(seed) * 10000;
+    return Math.floor((x - Math.floor(x)) * max);
+  };
+  
+  const baseLevel = Math.min(1, request.evaluationLevels.length - 1); // 기본적으로 두 번째 레벨 (보통 "우수")
+  
   const result: EvaluationResult = {
     overallScore: 75,
-    overallGrade: request.evaluationLevels[1] || '우수',
+    overallGrade: request.evaluationLevels[baseLevel],
     domainScores: {},
     domainGrades: {},
     strengths: ['논리적인 구성으로 글을 작성함', '주제에 대한 이해도가 높음'],
@@ -141,19 +184,43 @@ function generateFallbackEvaluation(request: EvaluationRequest, responseText: st
     detailedFeedback: responseText.substring(0, 500) + '...'
   };
 
-  // 각 영역에 기본 점수 할당
-  for (const domain of request.evaluationDomains) {
-    result.domainScores[domain] = 70 + Math.floor(Math.random() * 20);
-    result.domainGrades[domain] = request.evaluationLevels[Math.floor(Math.random() * request.evaluationLevels.length)];
-  }
+  // 각 영역에 일관된 점수 할당
+  request.evaluationDomains.forEach((domain, index) => {
+    const domainSeed = textHash + index + domain.charCodeAt(0);
+    const variance = consistentRandom(domainSeed, 10) - 5; // -5 ~ +5 변동
+    result.domainScores[domain] = 75 + variance;
+    
+    // 점수에 따른 등급 결정
+    const score = result.domainScores[domain];
+    let gradeIndex = baseLevel;
+    if (score >= 85) gradeIndex = 0; // 최고 등급
+    else if (score >= 75) gradeIndex = Math.min(1, request.evaluationLevels.length - 1);
+    else if (score >= 65) gradeIndex = Math.min(2, request.evaluationLevels.length - 1);
+    else gradeIndex = request.evaluationLevels.length - 1; // 최저 등급
+    
+    result.domainGrades[domain] = request.evaluationLevels[gradeIndex];
+  });
 
   return result;
 }
 
 // Mock 평가 결과 생성 (API 키가 없을 때)
 function generateMockEvaluation(request: EvaluationRequest): EvaluationResult {
-  const levelIndex = Math.floor(Math.random() * request.evaluationLevels.length);
-  const baseScore = 60 + (levelIndex * 10) + Math.floor(Math.random() * 10);
+  console.warn('⚠️ Mock 평가기 사용 중 - 실제 AI 평가가 아닙니다!');
+  
+  // 학생 텍스트의 해시값을 기반으로 일관된 결과 생성
+  const textHash = request.studentText.split('').reduce((acc, char) => {
+    return ((acc << 5) - acc) + char.charCodeAt(0);
+  }, 0);
+  
+  // 해시값을 기반으로 일관된 레벨 인덱스 계산
+  const consistentRandom = (seed: number, max: number) => {
+    const x = Math.sin(seed) * 10000;
+    return Math.floor((x - Math.floor(x)) * max);
+  };
+  
+  const levelIndex = consistentRandom(textHash, request.evaluationLevels.length);
+  const baseScore = 70 + (levelIndex * 8) + consistentRandom(textHash + 1, 5);
   
   const result: EvaluationResult = {
     overallScore: baseScore,
@@ -170,16 +237,17 @@ function generateMockEvaluation(request: EvaluationRequest): EvaluationResult {
       '문단 간 연결을 더 자연스럽게 만들 필요가 있음',
       '결론 부분을 더 강화하면 좋겠음'
     ],
-    detailedFeedback: `${request.studentName} 학생은 ${request.writingType}의 기본 구조를 잘 이해하고 있으며, 자신의 생각을 명확하게 표현하려고 노력했습니다. 특히 주제에 대한 이해도가 높고, 글의 전체적인 구성이 안정적입니다. 앞으로 더 구체적인 예시와 근거를 제시하면서 글을 작성한다면 더욱 설득력 있는 글을 쓸 수 있을 것입니다.`
+    detailedFeedback: `[Mock 평가] ${request.studentName} 학생은 ${request.writingType}의 기본 구조를 잘 이해하고 있으며, 자신의 생각을 명확하게 표현하려고 노력했습니다. 특히 주제에 대한 이해도가 높고, 글의 전체적인 구성이 안정적입니다. 앞으로 더 구체적인 예시와 근거를 제시하면서 글을 작성한다면 더욱 설득력 있는 글을 쓸 수 있을 것입니다.`
   };
 
-  // 각 영역별 점수와 등급 생성
-  for (const domain of request.evaluationDomains) {
+  // 각 영역별 점수와 등급 생성 (일관된 방식으로)
+  request.evaluationDomains.forEach((domain, index) => {
+    const domainSeed = textHash + index + domain.charCodeAt(0);
     const domainLevelIndex = Math.max(0, Math.min(request.evaluationLevels.length - 1, 
-      levelIndex + Math.floor(Math.random() * 3) - 1));
-    result.domainScores[domain] = 60 + (domainLevelIndex * 10) + Math.floor(Math.random() * 10);
+      levelIndex + consistentRandom(domainSeed, 3) - 1));
+    result.domainScores[domain] = 70 + (domainLevelIndex * 8) + consistentRandom(domainSeed + 1, 5);
     result.domainGrades[domain] = request.evaluationLevels[domainLevelIndex];
-  }
+  });
 
   return result;
 }

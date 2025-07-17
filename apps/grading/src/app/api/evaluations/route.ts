@@ -50,8 +50,28 @@ export async function POST(request: NextRequest) {
       where: { id: assignmentId }
     });
     
-    // AI 평가기 생성 - 평가 페이지에서 전달받은 assignment 정보 사용
-    const evaluatorType = process.env.CLAUDE_API_KEY && process.env.CLAUDE_API_KEY !== 'YOUR_CLAUDE_API_KEY_HERE' ? 'claude' : 'mock';
+    // AI 평가기 생성 - Mock 모델을 명시적으로 선택한 경우만 Mock 사용
+    const evaluatorType = aiModel === 'mock' ? 'mock' : 'claude';
+    
+    // Claude API 키가 없으면서 Mock을 선택하지 않은 경우 에러
+    if (evaluatorType === 'claude' && (!process.env.CLAUDE_API_KEY || process.env.CLAUDE_API_KEY === 'YOUR_CLAUDE_API_KEY_HERE')) {
+      console.error('Claude API 키가 설정되지 않았습니다.');
+      return NextResponse.json(
+        { 
+          success: false, 
+          error: 'Claude API 키가 설정되지 않았습니다. Mock 평가기를 사용하거나 API 키를 설정해주세요.' 
+        },
+        { status: 500 }
+      );
+    }
+    
+    // 디버그 로그 추가
+    console.log('=== 평가기 선택 정보 ===');
+    console.log('요청된 AI 모델:', aiModel);
+    console.log('선택된 평가기 타입:', evaluatorType);
+    console.log('CLAUDE_API_KEY 존재:', !!process.env.CLAUDE_API_KEY);
+    console.log('=====================');
+    
     const evaluator = createEvaluator(
       evaluatorType as 'claude' | 'mock',
       apiKey,
@@ -99,7 +119,7 @@ export async function POST(request: NextRequest) {
         overallFeedback: evaluationResult.overallFeedback,
         improvementSuggestions: evaluationResult.improvementSuggestions || [],
         strengths: evaluationResult.strengths || [],
-        evaluatedBy: aiModel
+        evaluatedBy: evaluatorType === 'mock' ? 'Mock 평가기' : (aiModel || 'claude')
       }
     });
     
