@@ -5,6 +5,10 @@ import { authOptions } from '@/lib/auth';
 
 export async function GET(request) {
   try {
+    // Debug: Check environment variables
+    console.log('Supabase URL:', process.env.NEXT_PUBLIC_SUPABASE_URL);
+    console.log('Has Anon Key:', !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
+    
     const supabase = await createClient();
     
     // Fetch posts with their images

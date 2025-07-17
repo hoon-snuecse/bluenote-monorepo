@@ -16,12 +16,6 @@ export async function GET(request) {
           id,
           file_path,
           file_name,
-          display_order
-        ),
-        teaching_post_images (
-          id,
-          file_path,
-          file_name,
           file_type,
           file_size,
           mime_type,

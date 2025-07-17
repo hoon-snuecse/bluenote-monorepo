@@ -7,7 +7,7 @@ export async function GET(request) {
   try {
     const supabase = await createClient();
     
-    // Fetch posts with their images and files
+    // Fetch posts with their images
     const { data: posts, error } = await supabase
       .from('research_posts')
       .select(`
@@ -16,13 +16,6 @@ export async function GET(request) {
           id,
           file_path,
           file_name,
-          display_order
-        ),
-        research_post_images (
-          id,
-          file_path,
-          file_name,
-          file_type,
           file_size,
           mime_type,
           display_order
