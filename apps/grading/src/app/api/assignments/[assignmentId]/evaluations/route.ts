@@ -8,7 +8,7 @@ export async function GET(
   try {
     console.log('Fetching evaluations for assignmentId:', params.assignmentId);
     
-    // Get all submissions with their evaluations
+    // Get all submissions with ALL their evaluations
     const submissions = await prisma.submission.findMany({
       where: {
         assignmentId: params.assignmentId,
@@ -17,8 +17,8 @@ export async function GET(
         evaluations: {
           orderBy: {
             evaluatedAt: 'desc'
-          },
-          take: 1 // Get only the latest evaluation
+          }
+          // Removed take: 1 to get all evaluations
         }
       },
       orderBy: {
@@ -34,9 +34,16 @@ export async function GET(
       hasEvaluation: s.evaluations.length > 0
     })));
 
-    // Transform the data
+    // Transform the data - include evaluation history
     const evaluations = submissions.map(sub => {
       const latestEvaluation = sub.evaluations[0];
+      const evaluationHistory = sub.evaluations.map((evaluation, index) => ({
+        evaluationId: evaluation.id,
+        round: sub.evaluations.length - index, // 차수 (최신이 가장 높은 번호)
+        evaluatedAt: evaluation.evaluatedAt,
+        overallLevel: evaluation.overallLevel,
+        domainScores: evaluation.domainEvaluations
+      }));
       
       return {
         id: sub.id,
@@ -47,7 +54,9 @@ export async function GET(
         domainScores: latestEvaluation?.domainEvaluations || {},
         overallLevel: latestEvaluation?.overallLevel || null,
         overallFeedback: latestEvaluation?.overallFeedback || null,
-        status: latestEvaluation ? 'evaluated' : 'submitted'
+        status: latestEvaluation ? 'evaluated' : 'submitted',
+        evaluationCount: sub.evaluations.length,
+        evaluationHistory: evaluationHistory
       };
     });
 

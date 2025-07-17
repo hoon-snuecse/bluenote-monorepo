@@ -20,6 +20,14 @@ interface Student {
   overallLevel: string;
   submittedAt: Date;
   evaluatedAt?: Date;
+  evaluationCount?: number;
+  evaluationHistory?: Array<{
+    evaluationId: string;
+    round: number;
+    evaluatedAt: Date;
+    overallLevel: string;
+    domainScores: any;
+  }>;
 }
 
 export default function DashboardPage() {
@@ -83,7 +91,9 @@ export default function DashboardPage() {
             scores: domainScores,
             overallLevel: evaluation.overallLevel || '평가 대기',
             submittedAt: new Date(evaluation.submittedAt),
-            evaluatedAt: evaluation.evaluatedAt ? new Date(evaluation.evaluatedAt) : undefined
+            evaluatedAt: evaluation.evaluatedAt ? new Date(evaluation.evaluatedAt) : undefined,
+            evaluationCount: evaluation.evaluationCount || 0,
+            evaluationHistory: evaluation.evaluationHistory || []
           };
         });
         setStudents(evaluatedStudents);
@@ -133,22 +143,19 @@ export default function DashboardPage() {
       // 워크북 생성
       const wb = XLSX.utils.book_new();
       
-      // 데이터 준비
-      const excelData = [];
-      
-      // 헤더 행 추가
-      const headers = ['학생 이름', '학번'];
+      // 1. 최신 평가 결과 시트
+      const latestData = [];
+      const latestHeaders = ['학생 이름', '학번'];
       if (assignment?.evaluationDomains) {
-        headers.push(...assignment.evaluationDomains);
+        latestHeaders.push(...assignment.evaluationDomains);
       }
-      headers.push('종합 평가', '제출일시', '평가일시');
-      excelData.push(headers);
+      latestHeaders.push('종합 평가', '평가 차수', '제출일시', '평가일시');
+      latestData.push(latestHeaders);
       
-      // 학생 데이터 추가
+      // 학생별 최신 평가 데이터
       students.forEach(student => {
         const row = [student.name, student.studentId];
         
-        // 각 평가 영역별 점수 추가
         if (assignment?.evaluationDomains) {
           assignment.evaluationDomains.forEach((domain: string) => {
             const score = student.scores[domain];
@@ -159,30 +166,66 @@ export default function DashboardPage() {
           });
         }
         
-        // 종합 평가, 제출일시, 평가일시 추가
         row.push(student.overallLevel);
+        row.push(student.evaluationCount ? `${student.evaluationCount}차` : '-');
         row.push(student.submittedAt.toLocaleString('ko-KR'));
         row.push(student.evaluatedAt ? student.evaluatedAt.toLocaleString('ko-KR') : '미평가');
         
-        excelData.push(row);
+        latestData.push(row);
       });
       
-      // 워크시트 생성
-      const ws = XLSX.utils.aoa_to_sheet(excelData);
-      
-      // 열 너비 설정
-      const colWidths = headers.map((header, index) => {
+      const wsLatest = XLSX.utils.aoa_to_sheet(latestData);
+      const latestColWidths = latestHeaders.map((header, index) => {
         if (index === 0) return { wch: 15 }; // 이름
         if (index === 1) return { wch: 12 }; // 학번
         if (header.includes('일시')) return { wch: 20 }; // 일시
         return { wch: 15 }; // 기본
       });
-      ws['!cols'] = colWidths;
+      wsLatest['!cols'] = latestColWidths;
+      XLSX.utils.book_append_sheet(wb, wsLatest, '최신 평가 결과');
       
-      // 워크북에 워크시트 추가
-      XLSX.utils.book_append_sheet(wb, ws, '평가 결과');
+      // 2. 전체 평가 이력 시트
+      const historyData = [];
+      const historyHeaders = ['학생 이름', '학번', '평가 차수', '평가일시'];
+      if (assignment?.evaluationDomains) {
+        historyHeaders.push(...assignment.evaluationDomains);
+      }
+      historyHeaders.push('종합 평가');
+      historyData.push(historyHeaders);
       
-      // 통계 시트 추가
+      // 모든 평가 이력 데이터
+      students.forEach(student => {
+        if (student.evaluationHistory && student.evaluationHistory.length > 0) {
+          student.evaluationHistory.forEach(evalHistory => {
+            const row = [student.name, student.studentId, `${evalHistory.round}차`, 
+                        new Date(evalHistory.evaluatedAt).toLocaleString('ko-KR')];
+            
+            if (assignment?.evaluationDomains) {
+              assignment.evaluationDomains.forEach((domain: string) => {
+                const score = evalHistory.domainScores?.[domain];
+                const level = typeof score === 'object' && score !== null 
+                  ? (score as any).level 
+                  : score;
+                row.push(level || '-');
+              });
+            }
+            
+            row.push(evalHistory.overallLevel);
+            historyData.push(row);
+          });
+        }
+      });
+      
+      const wsHistory = XLSX.utils.aoa_to_sheet(historyData);
+      wsHistory['!cols'] = historyHeaders.map((header, index) => {
+        if (index === 0) return { wch: 15 }; // 이름
+        if (index === 1) return { wch: 12 }; // 학번
+        if (header.includes('일시')) return { wch: 20 }; // 일시
+        return { wch: 15 }; // 기본
+      });
+      XLSX.utils.book_append_sheet(wb, wsHistory, '전체 평가 이력');
+      
+      // 3. 통계 시트
       const statsData = [];
       statsData.push(['평가 통계']);
       statsData.push(['']);
@@ -191,7 +234,21 @@ export default function DashboardPage() {
       statsData.push(['평가 완료', students.filter(s => s.evaluatedAt).length]);
       statsData.push(['미평가', students.filter(s => !s.evaluatedAt).length]);
       statsData.push(['']);
-      statsData.push(['영역별 분포']);
+      statsData.push(['평가 차수별 현황']);
+      const roundCounts = new Map();
+      students.forEach(s => {
+        if (s.evaluationCount) {
+          roundCounts.set(s.evaluationCount, (roundCounts.get(s.evaluationCount) || 0) + 1);
+        }
+      });
+      Array.from(roundCounts.entries())
+        .sort((a, b) => a[0] - b[0])
+        .forEach(([round, count]) => {
+          statsData.push([`${round}차 평가`, count]);
+        });
+      
+      statsData.push(['']);
+      statsData.push(['영역별 분포 (최신 평가 기준)']);
       
       if (domainScores.length > 0) {
         domainScores.forEach(domain => {
@@ -415,6 +472,7 @@ export default function DashboardPage() {
                       <th key={domain} className="text-center p-4 font-medium">{domain}</th>
                     ))}
                     <th className="text-center p-4 font-medium">종합 평가</th>
+                    <th className="text-center p-4 font-medium">평가 차수</th>
                     <th className="text-center p-4 font-medium">작업</th>
                   </tr>
                 </thead>
@@ -452,6 +510,15 @@ export default function DashboardPage() {
                         }`}>
                           {student.overallLevel}
                         </span>
+                      </td>
+                      <td className="p-4 text-center">
+                        {student.evaluationCount && student.evaluationCount > 0 ? (
+                          <span className="text-sm text-slate-600">
+                            {student.evaluationCount}차 평가
+                          </span>
+                        ) : (
+                          <span className="text-sm text-slate-400">-</span>
+                        )}
                       </td>
                       <td className="p-4 text-center">
                         <button
