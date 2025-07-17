@@ -241,7 +241,7 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="container mx-auto py-8 px-4">
+    <div className="container-custom py-8">
       <div className="mb-8">
         <h1 className="text-3xl font-bold mb-2">평가 대시보드</h1>
         <p className="text-gray-600">학생들의 논설문 평가 결과를 관리하고 분석합니다</p>
@@ -251,21 +251,21 @@ export default function DashboardPage() {
         <button
           onClick={handleEvaluateSelected}
           disabled={selectedStudents.size === 0}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 flex items-center gap-2"
+          className="btn-primary disabled:opacity-50 flex items-center gap-2"
         >
           <RefreshCw className="w-4 h-4" />
           선택한 문서 평가 ({selectedStudents.size}개)
         </button>
         <button
           onClick={handleExportToExcel}
-          className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
+          className="btn-primary bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 flex items-center gap-2"
         >
           <Download className="w-4 h-4" />
           Excel 내보내기
         </button>
       </div>
 
-      <Card>
+      <Card className="glass">
         <CardHeader>
           <CardTitle>학생 평가 현황</CardTitle>
           <CardDescription>
@@ -330,7 +330,7 @@ export default function DashboardPage() {
               </thead>
               <tbody>
                 {sortedStudents.map((student) => (
-                  <tr key={student.id} className="border-b hover:bg-gray-50">
+                  <tr key={student.id} className="border-b hover:bg-slate-50/50 transition-colors">
                     <td className="p-3">
                       <input
                         type="checkbox"

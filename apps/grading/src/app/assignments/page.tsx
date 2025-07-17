@@ -111,7 +111,7 @@ function AssignmentsContent() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50/30 via-slate-50 to-purple-50/20">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="container-custom py-8">
         <div className="mb-8 flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-slate-800 mb-2">과제 관리</h1>
@@ -119,7 +119,7 @@ function AssignmentsContent() {
           </div>
           <button
             onClick={handleCreateAssignment}
-            className="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-2 shadow-lg shadow-blue-500/20"
+            className="btn-primary flex items-center gap-2"
           >
             <Plus className="w-5 h-5" />
             새 과제 만들기
@@ -130,7 +130,7 @@ function AssignmentsContent() {
           {assignments.map((assignment) => (
             <Card 
               key={assignment.id} 
-              className="bg-white/70 backdrop-blur-sm border border-slate-200/50 hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
+              className="glass card-hover"
             >
               <CardHeader className="pb-4">
                 <div className="flex items-start justify-between">
@@ -195,7 +195,7 @@ function AssignmentsContent() {
 
                 <button
                   onClick={() => handleCollectSubmissions(assignment.id)}
-                  className="w-full px-3 py-2 mb-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 text-sm font-medium"
+                  className="w-full btn-primary flex items-center justify-center gap-2 text-sm"
                 >
                   <FileInput className="w-4 h-4" />
                   학생 글 가져오기

@@ -280,7 +280,7 @@ ${typeInfo.keyElements.map(element => `- ${element}: ${formData.writingType}에 
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Title */}
               <div>
-                <label htmlFor="title" className="block text-base font-medium text-gray-700 mb-2">
+                <label htmlFor="title" className="block text-base font-medium text-slate-700 mb-2">
                   과제 제목
                 </label>
                 <input
@@ -298,7 +298,7 @@ ${typeInfo.keyElements.map(element => `- ${element}: ${formData.writingType}에 
               {/* School Name and Grade Level */}
               <div className="grid grid-cols-2 gap-4">
                 <div className="max-w-sm">
-                  <label htmlFor="schoolName" className="block text-base font-medium text-gray-700 mb-2">
+                  <label htmlFor="schoolName" className="block text-base font-medium text-slate-700 mb-2">
                     학교 이름
                   </label>
                   <input
@@ -308,12 +308,12 @@ ${typeInfo.keyElements.map(element => `- ${element}: ${formData.writingType}에 
                     value={formData.schoolName}
                     onChange={handleChange}
                     required
-                    className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/30 bg-white text-sm"
+                    className="w-full px-4 py-3 border border-slate-200/50 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/30 bg-white/70 backdrop-blur-sm text-sm transition-all duration-200"
                     placeholder="예: 서울초등학교"
                   />
                 </div>
                 <div>
-                  <label htmlFor="gradeLevel" className="block text-base font-medium text-gray-700 mb-2">
+                  <label htmlFor="gradeLevel" className="block text-base font-medium text-slate-700 mb-2">
                     대상 학년
                   </label>
                   <select
@@ -321,7 +321,7 @@ ${typeInfo.keyElements.map(element => `- ${element}: ${formData.writingType}에 
                     name="gradeLevel"
                     value={formData.gradeLevel}
                     onChange={handleChange}
-                    className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:bg-white active:bg-white bg-white text-sm appearance-none"
+                    className="w-full px-4 py-3 border border-slate-200/50 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/30 bg-white/70 backdrop-blur-sm text-sm appearance-none transition-all duration-200"
                   >
                     <option value="초등학교 3학년" className="bg-white">초등학교 3학년</option>
                     <option value="초등학교 4학년" className="bg-white">초등학교 4학년</option>
@@ -333,7 +333,7 @@ ${typeInfo.keyElements.map(element => `- ${element}: ${formData.writingType}에 
 
               {/* Writing Type */}
               <div className="max-w-xs">
-                <label htmlFor="writingType" className="block text-base font-medium text-gray-700 mb-2">
+                <label htmlFor="writingType" className="block text-base font-medium text-slate-700 mb-2">
                   글의 종류
                 </label>
                 <select
@@ -341,7 +341,7 @@ ${typeInfo.keyElements.map(element => `- ${element}: ${formData.writingType}에 
                   name="writingType"
                   value={formData.writingType}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:bg-white active:bg-white bg-white text-sm appearance-none"
+                  className="w-full px-4 py-3 border border-slate-200/50 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/30 bg-white/70 backdrop-blur-sm text-sm appearance-none transition-all duration-200"
                 >
                   <option value="설명문" className="bg-white">설명문</option>
                   <option value="논설문" className="bg-white">논설문</option>
@@ -355,7 +355,7 @@ ${typeInfo.keyElements.map(element => `- ${element}: ${formData.writingType}에 
               <div className="grid grid-cols-2 gap-6">
                 {/* Evaluation Domains */}
                 <div>
-                  <label className="block text-base font-medium text-gray-700 mb-2">
+                  <label className="block text-base font-medium text-slate-700 mb-2">
                     평가 영역
                   </label>
                   <div className="space-y-3">
@@ -465,14 +465,14 @@ ${typeInfo.keyElements.map(element => `- ${element}: ${formData.writingType}에 
                 <button
                   type="button"
                   onClick={() => router.push('/assignments')}
-                  className="px-6 py-3 bg-white text-slate-700 rounded-lg hover:bg-slate-50 transition-colors border border-slate-200 text-base"
+                  className="px-6 py-3 bg-white/80 text-slate-700 rounded-lg hover:bg-white/90 transition-all duration-200 border border-slate-200/50 text-base backdrop-blur-sm"
                 >
                   취소
                 </button>
                 <button
                   type="submit"
                   disabled={!formData.title || evaluationDomains.filter(d => d.trim()).length === 0 || !gradingCriteria}
-                  className="px-6 py-3 bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition-colors flex items-center gap-2 text-base font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="btn-primary flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Check className="w-5 h-5" />
                   과제 생성

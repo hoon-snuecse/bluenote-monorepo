@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Gowun_Dodum } from "next/font/google";
+import { Inter, Space_Grotesk, Gowun_Dodum } from "next/font/google";
 import "./globals.css";
 import { UserProvider } from "@/contexts/UserContext";
 import { NotificationProvider } from "@/contexts/NotificationContext";
@@ -7,9 +7,22 @@ import { NotificationContainer } from "@/components/NotificationContainer";
 import UnifiedNavigation from "@/components/UnifiedNavigation";
 import { DevAutoLogin } from "@/components/DevAutoLogin";
 
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter",
+  display: "swap",
+});
+
+const spaceGrotesk = Space_Grotesk({
+  subsets: ["latin"],
+  variable: "--font-space-grotesk",
+  display: "swap",
+});
+
 const gowunDodum = Gowun_Dodum({
   weight: "400",
   subsets: ["latin"],
+  variable: "--font-gowun-dodum",
   display: "swap",
 });
 
@@ -32,7 +45,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ko">
+    <html lang="ko" className={`${inter.variable} ${spaceGrotesk.variable} ${gowunDodum.variable}`}>
       <body
         className={`${gowunDodum.className} antialiased`}
       >

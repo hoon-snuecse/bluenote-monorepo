@@ -30,7 +30,7 @@ export default function CollectSubmissionsPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-50">
-      <div className="container mx-auto py-8 px-4 max-w-6xl">
+      <div className="container-custom py-8 max-w-6xl mx-auto">
         {/* Navigation */}
         <div className="mb-8">
           <button

@@ -343,7 +343,7 @@ ${submission.content?.substring(0, 100)}...
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-50">
-      <div className="container mx-auto py-8 px-4 max-w-4xl">
+      <div className="container-custom py-8 max-w-4xl mx-auto">
         {/* Navigation */}
         <div className="mb-8">
           <button
@@ -363,7 +363,7 @@ ${submission.content?.substring(0, 100)}...
 
         {/* Settings Card */}
         {!isEvaluating && evaluationTasks.length === 0 && (
-          <Card className="bg-white/70 backdrop-blur-sm border border-slate-200/50 mb-8">
+          <Card className="glass mb-8">
             <CardHeader>
               <CardTitle className="text-xl">평가 설정</CardTitle>
             </CardHeader>
@@ -529,7 +529,7 @@ ${submission.content?.substring(0, 100)}...
 
         {/* Progress Card */}
         {(isEvaluating || evaluationTasks.length > 0) && (
-          <Card className="bg-white/70 backdrop-blur-sm border border-slate-200/50 mb-8">
+          <Card className="glass mb-8">
             <CardHeader>
               <CardTitle className="text-xl">평가 진행 상황</CardTitle>
             </CardHeader>
@@ -598,7 +598,7 @@ ${submission.content?.substring(0, 100)}...
           {!isEvaluating && evaluationTasks.length === 0 && submissions.length > 0 && (
             <button
               onClick={handleStartEvaluation}
-              className="px-8 py-3 bg-blue-500/20 text-slate-700 rounded-lg hover:bg-blue-500/30 transition-colors flex items-center gap-2 border border-blue-200/30 text-lg font-medium"
+              className="btn-primary flex items-center gap-2 text-lg"
             >
               <Play className="w-5 h-5" />
               평가 시작
@@ -609,14 +609,14 @@ ${submission.content?.substring(0, 100)}...
             <>
               <button
                 onClick={() => router.push(`/assignments/${params.assignmentId}/submissions`)}
-                className="px-8 py-3 bg-blue-500/20 text-slate-700 rounded-lg hover:bg-blue-500/30 transition-colors flex items-center gap-2 border border-blue-200/30 text-lg font-medium"
+                className="btn-primary bg-gradient-to-r from-slate-600 to-slate-700 hover:from-slate-700 hover:to-slate-800 flex items-center gap-2 text-lg"
               >
                 <ArrowLeft className="w-5 h-5" />
                 제출 현황으로 돌아가기
               </button>
               <button
                 onClick={() => router.push(`/assignments/${params.assignmentId}/dashboard`)}
-                className="px-8 py-3 bg-green-500/20 text-slate-700 rounded-lg hover:bg-green-500/30 transition-colors flex items-center gap-2 border border-green-200/30 text-lg font-medium"
+                className="btn-primary bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 flex items-center gap-2 text-lg"
               >
                 <CheckCircle className="w-5 h-5" />
                 평가 결과 대시보드 보기

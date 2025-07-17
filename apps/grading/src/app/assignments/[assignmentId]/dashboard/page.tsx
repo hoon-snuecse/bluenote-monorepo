@@ -351,7 +351,7 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-50">
-      <div className="container mx-auto py-8 px-4 max-w-7xl">
+      <div className="container-custom py-8">
         {/* Navigation */}
         <div className="mb-8">
           <button
@@ -371,7 +371,7 @@ export default function DashboardPage() {
           </div>
           <button
             onClick={handleExportExcel}
-            className="px-6 py-3 bg-green-500/20 text-slate-700 rounded-lg hover:bg-green-500/30 transition-colors flex items-center gap-2 border border-green-200/30"
+            className="btn-primary bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 flex items-center gap-2"
           >
             <Download className="w-5 h-5" />
             Excel 다운로드
@@ -380,7 +380,7 @@ export default function DashboardPage() {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-          <Card className="bg-white/70 backdrop-blur-sm border border-slate-200/50">
+          <Card className="glass">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
@@ -392,7 +392,7 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
           
-          <Card className="bg-white/70 backdrop-blur-sm border border-slate-200/50">
+          <Card className="glass">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
@@ -406,7 +406,7 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
 
-          <Card className="bg-white/70 backdrop-blur-sm border border-slate-200/50">
+          <Card className="glass">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
@@ -418,7 +418,7 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
 
-          <Card className="bg-white/70 backdrop-blur-sm border border-slate-200/50">
+          <Card className="glass">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>

@@ -97,10 +97,10 @@ export default function UnifiedNavigation() {
   return (
     <nav className={`sticky top-0 z-50 transition-all duration-300 ${
       isScrolled 
-        ? 'bg-white/95 backdrop-blur-sm shadow-sm' 
-        : 'bg-white/80 backdrop-blur-sm'
-    } border-b border-slate-200`}>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        ? 'glass shadow-lg' 
+        : 'bg-white/60 backdrop-blur-sm'
+    } border-b border-slate-200/50`}>
+      <div className="container-custom">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <Link 
@@ -111,11 +111,11 @@ export default function UnifiedNavigation() {
               window.location.href = 'https://bluenote.site';
             }}
           >
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center text-white font-bold text-xl shadow-md group-hover:shadow-lg transition-shadow">
+            <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg flex items-center justify-center text-white font-bold text-xl shadow-md group-hover:shadow-xl transform transition-all duration-300 group-hover:scale-110">
               ♭
             </div>
-            <span className="hidden md:block font-semibold text-slate-800 text-lg group-hover:text-blue-700 transition-colors">
-              BlueNote Atelier
+            <span className="hidden md:block font-semibold text-slate-800 text-lg">
+              BlueNote <span className="font-light text-slate-600">Atelier</span>
             </span>
           </Link>
 
@@ -130,10 +130,10 @@ export default function UnifiedNavigation() {
                   key={item.href}
                   href={item.href}
                   onClick={(e) => handleNavigation(e, item)}
-                  className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                  className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
                     active
-                      ? 'bg-blue-50 text-blue-700'
-                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                      ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-md transform scale-105'
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/50 hover:shadow-sm'
                   }`}
                 >
                   <Icon className="w-4 h-4" />
@@ -146,7 +146,7 @@ export default function UnifiedNavigation() {
           {/* Mobile menu button */}
           <button
             onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="md:hidden inline-flex items-center justify-center p-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors"
+            className="md:hidden inline-flex items-center justify-center p-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100/50 transition-all duration-200"
           >
             {isMenuOpen ? (
               <X className="h-6 w-6" />
@@ -159,7 +159,7 @@ export default function UnifiedNavigation() {
 
       {/* Mobile Menu */}
       {isMenuOpen && (
-        <div className="md:hidden bg-white border-t border-slate-200">
+        <div className="md:hidden glass border-t border-slate-200/50">
           <div className="px-2 pt-2 pb-3 space-y-1">
             {menuItems.map((item) => {
               const Icon = item.icon;
@@ -173,10 +173,10 @@ export default function UnifiedNavigation() {
                     handleNavigation(e, item);
                     setIsMenuOpen(false);
                   }}
-                  className={`flex items-center space-x-3 px-3 py-2 rounded-lg text-base font-medium transition-colors ${
+                  className={`flex items-center space-x-3 px-3 py-2 rounded-lg text-base font-medium transition-all duration-300 ${
                     active
-                      ? 'bg-blue-50 text-blue-700'
-                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                      ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-md'
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/50'
                   }`}
                 >
                   <Icon className="w-5 h-5" />
