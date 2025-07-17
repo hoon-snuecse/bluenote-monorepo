@@ -18,7 +18,7 @@ export async function GET(request) {
           file_name,
           display_order
         ),
-        research_post_files (
+        research_post_images (
           id,
           file_path,
           file_name,
@@ -55,7 +55,7 @@ export async function GET(request) {
         name: img.file_name,
         url: `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/research-images/${img.file_path}`
       })) : [],
-      files: post.research_post_files ? post.research_post_files.map(file => ({
+      files: post.research_post_images ? post.research_post_images.map(file => ({
         id: file.id,
         name: file.file_name,
         url: `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/research-images/${file.file_path}`,
@@ -152,7 +152,7 @@ export async function POST(request) {
 
       if (fileRecords.length > 0) {
         const { error: fileError } = await supabase
-          .from('research_post_files')
+          .from('research_post_images')
           .insert(fileRecords);
 
         if (fileError) {
@@ -263,7 +263,7 @@ export async function PUT(request) {
     if (files !== undefined) {
       // Delete existing file records
       await supabase
-        .from('research_post_files')
+        .from('research_post_images')
         .delete()
         .eq('post_id', id);
 
@@ -282,7 +282,7 @@ export async function PUT(request) {
           }));
 
         const { error: fileError } = await supabase
-          .from('research_post_files')
+          .from('research_post_images')
           .insert(fileRecords);
 
         if (fileError) {
@@ -330,7 +330,7 @@ export async function DELETE(request) {
       .eq('post_id', id);
 
     const { data: files } = await supabase
-      .from('research_post_files')
+      .from('research_post_images')
       .select('file_path')
       .eq('post_id', id);
 
