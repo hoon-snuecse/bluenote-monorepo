@@ -169,14 +169,9 @@ export default function ResearchPostClient({ params }) {
                 
                 {/* AI 생성 표시 */}
                 {post.isAIGenerated && (
-                  <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                    <p className="text-sm text-blue-700 flex items-center gap-2">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                      이 글은 AI와 함께 작성되었습니다.
-                    </p>
-                  </div>
+                  <p className="mt-4 text-sm text-slate-600 italic font-serif">
+                    이 글은 AI와 함께 작성되었습니다.
+                  </p>
                 )}
               </header>
 

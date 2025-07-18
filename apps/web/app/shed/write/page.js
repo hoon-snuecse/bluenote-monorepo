@@ -54,7 +54,7 @@ function WritePageContent() {
             summary: post.summary || '',
             tags: post.tags || [],
             images: post.images || [],
-            isAIGenerated: post.is_ai_generated || false
+            isAIGenerated: post.isAIGenerated || false
           });
           
           // Check if category exists, if not add it as custom
