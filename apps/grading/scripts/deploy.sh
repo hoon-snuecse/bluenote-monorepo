@@ -67,9 +67,18 @@ fi
 log "의존성 설치 중..."
 pnpm install --frozen-lockfile
 
-# 환경 변수 검증
+# 환경 변수 로드 및 검증
 log "환경 변수 검증 중..."
-node -e "require('./src/config').checkRequiredEnvVars()" || error "환경 변수 검증 실패"
+# .env.production 파일 로드
+if [ -f ".env.production" ]; then
+    export $(grep -v '^#' .env.production | xargs)
+fi
+
+# 필수 환경 변수 확인
+if [ -z "$DATABASE_URL" ] || [ -z "$JWT_SECRET" ] || [ -z "$ENCRYPTION_KEY" ]; then
+    error "필수 환경 변수가 설정되지 않았습니다. .env.production 파일을 확인하세요."
+fi
+log "환경 변수 검증 완료"
 
 # 테스트 실행
 if [ "$SKIP_TESTS" != "--skip-tests" ]; then
