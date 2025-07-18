@@ -1,5 +1,5 @@
 {
-  "buildCommand": "cd ../.. && pnpm build --filter=grading",
+  "buildCommand": "cd ../.. && pnpm build --filter=@bluenote/grading",
   "outputDirectory": "apps/grading/.next",
   "installCommand": "pnpm install",
   "framework": "nextjs",
