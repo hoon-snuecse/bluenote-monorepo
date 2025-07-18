@@ -5,11 +5,24 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { GraduationCap, BarChart2, Network, Plus, Save, X, Loader2, Image as ImageIcon, Upload, FileText, Paperclip, Music, Video } from 'lucide-react';
 import Link from 'next/link';
 import matter from 'gray-matter';
+import { useSession } from 'next-auth/react';
 
 function WritePageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const editId = searchParams.get('id') || searchParams.get('edit'); // 'id' 파라미터도 지원
+  const { data: session } = useSession();
+  
+  // Debug: 세션 정보 출력
+  useEffect(() => {
+    if (session) {
+      console.log('Current session:', {
+        email: session.user?.email,
+        isAdmin: session.user?.isAdmin,
+        canWrite: session.user?.canWrite
+      });
+    }
+  }, [session]);
   
   const [loading, setLoading] = useState(false);
   const [showNewCategory, setShowNewCategory] = useState(false);
@@ -469,6 +482,15 @@ function WritePageContent() {
   return (
     <div className="min-h-screen py-16 px-4">
       <div className="container-custom max-w-4xl">
+        {/* Debug: 권한 정보 표시 */}
+        {session && (
+          <div className="mb-4 p-4 bg-gray-100 rounded-lg text-sm">
+            <p>현재 사용자: {session.user?.email}</p>
+            <p>관리자 권한: {session.user?.isAdmin ? '예' : '아니오'}</p>
+            <p>글쓰기 권한: {session.user?.canWrite ? '예' : '아니오'}</p>
+          </div>
+        )}
+        
         <div className="mb-8">
           <Link href="/research" className="text-blue-600 hover:text-blue-700 transition-colors">
             ← 연구로 돌아가기
