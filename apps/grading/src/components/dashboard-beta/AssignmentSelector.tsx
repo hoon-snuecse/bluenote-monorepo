@@ -31,11 +31,11 @@ export function AssignmentSelector({
       </SelectTrigger>
       <SelectContent>
         <SelectItem value="all">전체 과제</SelectItem>
-        {assignments.map((assignment) => (
+        {assignments && assignments.length > 0 ? assignments.map((assignment) => (
           <SelectItem key={assignment.id} value={assignment.id}>
             {assignment.title}
           </SelectItem>
-        ))}
+        )) : null}
       </SelectContent>
     </Select>
   )

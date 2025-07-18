@@ -15,7 +15,7 @@ export function useAssignments() {
           throw new Error('Failed to fetch assignments')
         }
         const data = await response.json()
-        setAssignments(data)
+        setAssignments(data.assignments || [])
       } catch (err) {
         setError(err as Error)
         console.error('Error fetching assignments:', err)
