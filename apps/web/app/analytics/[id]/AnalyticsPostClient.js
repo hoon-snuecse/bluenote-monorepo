@@ -4,6 +4,7 @@ import { use, useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { ChevronLeft, Calendar, Tag, Edit, Trash2, BarChart2, Network, Plus, FileText, Download, Music, Video, Eye } from 'lucide-react';
 import Link from 'next/link';
+import { useSession } from 'next-auth/react';
 
 const iconMap = {
   pisa: BarChart2,
@@ -17,6 +18,13 @@ export default function AnalyticsPostClient({ params }) {
   const [post, setPost] = useState(null);
   const [loading, setLoading] = useState(true);
   const [fadeIn, setFadeIn] = useState(false);
+  
+  const { data: session } = useSession();
+  
+  // 임시 관리자 이메일 체크
+  const adminEmails = ['hoon@snuecse.org', 'hoon@iw.es.kr', 'sociogram@gmail.com'];
+  const isAdminEmail = session?.user?.email && adminEmails.includes(session.user.email);
+  const hasEditPermission = session?.user?.isAdmin || session?.user?.canWrite || isAdminEmail;
 
   const fetchPost = useCallback(async () => {
     try {
@@ -180,10 +188,10 @@ export default function AnalyticsPostClient({ params }) {
           )}
 
           {/* Admin Controls */}
-          {false && (
+          {hasEditPermission && (
             <div className="flex items-center gap-2">
               <Link
-                href={`/analytics/write?edit=${post.id}`}
+                href={`/analytics/write?id=${post.id}`}
                 className="p-2 text-slate-600 hover:text-blue-600 transition-colors"
                 title="수정"
               >

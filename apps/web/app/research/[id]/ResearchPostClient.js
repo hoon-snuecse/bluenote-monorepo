@@ -4,6 +4,7 @@ import { use, useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { ChevronLeft, Calendar, Tag, Edit, Trash2, GraduationCap, BarChart2, Network, Plus, FileText, Download, Music, Video, Eye } from 'lucide-react';
 import Link from 'next/link';
+import { useSession } from 'next-auth/react';
 
 const iconMap = {
   evaluation: GraduationCap,
@@ -15,9 +16,15 @@ const iconMap = {
 export default function ResearchPostClient({ params }) {
   const { id } = use(params);
   const router = useRouter();
+  const { data: session } = useSession();
   const [post, setPost] = useState(null);
   const [loading, setLoading] = useState(true);
   const [fadeIn, setFadeIn] = useState(false);
+  
+  // 임시 관리자 이메일 체크
+  const adminEmails = ['hoon@snuecse.org', 'hoon@iw.es.kr', 'sociogram@gmail.com'];
+  const isAdminEmail = session?.user?.email && adminEmails.includes(session.user.email);
+  const hasEditPermission = session?.user?.isAdmin || session?.user?.canWrite || isAdminEmail;
 
   const fetchPost = useCallback(async () => {
     try {
@@ -110,17 +117,19 @@ export default function ResearchPostClient({ params }) {
                   <div className="w-12 h-12 bg-gradient-to-br from-blue-500/20 to-blue-600/20 backdrop-blur-sm border border-blue-200 rounded-lg flex items-center justify-center">
                     <Icon className="w-6 h-6 text-blue-600" />
                   </div>
-                  {false && (
+                  {hasEditPermission && (
                     <div className="flex gap-2">
                       <Link
-                        href={`/research/edit/${id}`}
+                        href={`/research/write?id=${id}`}
                         className="p-2 text-slate-600 hover:text-blue-600 transition-colors"
+                        title="수정"
                       >
                         <Edit className="w-5 h-5" />
                       </Link>
                       <button
                         onClick={handleDelete}
                         className="p-2 text-slate-600 hover:text-red-600 transition-colors"
+                        title="삭제"
                       >
                         <Trash2 className="w-5 h-5" />
                       </button>

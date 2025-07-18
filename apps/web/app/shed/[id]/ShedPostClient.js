@@ -4,6 +4,7 @@ import { use, useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { ChevronLeft, Calendar, Tag, Edit, Trash2, Coffee, Hammer, Camera, Music, Film, Plane } from 'lucide-react';
 import Link from 'next/link';
+import { useSession } from 'next-auth/react';
 
 const iconMap = {
   coffee: Coffee,
@@ -20,6 +21,13 @@ export default function ShedPostClient({ params }) {
   const [post, setPost] = useState(null);
   const [loading, setLoading] = useState(true);
   const [fadeIn, setFadeIn] = useState(false);
+  
+  const { data: session } = useSession();
+  
+  // 임시 관리자 이메일 체크
+  const adminEmails = ['hoon@snuecse.org', 'hoon@iw.es.kr', 'sociogram@gmail.com'];
+  const isAdminEmail = session?.user?.email && adminEmails.includes(session.user.email);
+  const hasEditPermission = session?.user?.isAdmin || session?.user?.canWrite || isAdminEmail;
 
   const fetchPost = useCallback(async () => {
     try {
@@ -191,17 +199,19 @@ export default function ShedPostClient({ params }) {
             일상으로 돌아가기
           </Link>
           
-          {false && (
+          {hasEditPermission && (
             <div className="flex items-center gap-2">
               <Link
-                href={`/shed/write?edit=${post.id}`}
+                href={`/shed/write?id=${post.id}`}
                 className="p-2 text-slate-600 hover:text-blue-600 transition-colors"
+                title="수정"
               >
                 <Edit className="w-5 h-5" />
               </Link>
               <button
                 onClick={handleDelete}
                 className="p-2 text-slate-600 hover:text-red-600 transition-colors"
+                title="삭제"
               >
                 <Trash2 className="w-5 h-5" />
               </button>
