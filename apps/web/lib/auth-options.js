@@ -33,11 +33,15 @@ export const authOptions = {
         // Supabase에서 사용자 권한 확인
         try {
           const supabase = createClientForServer();
-          const { data: userPermission } = await supabase
+          console.log('[Auth] Checking permissions for:', user.email);
+          
+          const { data: userPermission, error } = await supabase
             .from('user_permissions')
             .select('can_write, role')
             .eq('email', user.email)
             .single();
+          
+          console.log('[Auth] User permission data:', userPermission, 'Error:', error);
           
           if (userPermission) {
             token.canWrite = userPermission.can_write || false;
@@ -47,6 +51,7 @@ export const authOptions = {
             }
           } else {
             token.canWrite = false;
+            console.log('[Auth] No user permission found for:', user.email);
           }
         } catch (error) {
           console.error('Error fetching user permissions:', error);

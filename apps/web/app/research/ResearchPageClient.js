@@ -6,7 +6,12 @@ import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 
 export default function ResearchPageClient() {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
+  
+  // 임시 관리자 이메일 체크 (프로덕션에서는 서버 측 검증 필요)
+  const adminEmails = ['hoon@snuecse.org', 'hoon@iw.es.kr', 'sociogram@gmail.com'];
+  const isAdminEmail = session?.user?.email && adminEmails.includes(session.user.email);
+  const hasWritePermission = session?.user?.isAdmin || session?.user?.canWrite || isAdminEmail;
   
   const [fadeIn, setFadeIn] = useState({
     hero: false,
@@ -90,6 +95,18 @@ export default function ResearchPageClient() {
         fadeIn.content ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
       }`}>
         <div className="container-custom max-w-6xl">
+          {/* Debug Info */}
+          {process.env.NODE_ENV === 'development' && (
+            <div className="mb-4 p-4 bg-yellow-100 rounded-lg text-sm">
+              <p>Session Status: {status}</p>
+              <p>User Email: {session?.user?.email || 'N/A'}</p>
+              <p>Is Admin: {session?.user?.isAdmin ? 'Yes' : 'No'}</p>
+              <p>Can Write: {session?.user?.canWrite ? 'Yes' : 'No'}</p>
+              <p>Is Admin Email: {isAdminEmail ? 'Yes' : 'No'}</p>
+              <p>Has Write Permission: {hasWritePermission ? 'Yes' : 'No'}</p>
+            </div>
+          )}
+          
           <div className="flex items-center justify-between mb-8">
             <div className="flex flex-wrap gap-2">
               <button
@@ -121,7 +138,7 @@ export default function ResearchPageClient() {
               })}
             </div>
             
-            {(session?.user?.isAdmin || session?.user?.canWrite) && (
+            {hasWritePermission && (
               <Link
                 href="/research/write"
                 className="flex items-center gap-2 px-4 py-2 bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-lg hover:shadow-lg transition-all"
@@ -209,7 +226,7 @@ export default function ResearchPageClient() {
                       ? '아직 작성된 연구가 없습니다.'
                       : `${categories.find(c => c.id === selectedCategory)?.name} 카테고리에 연구가 없습니다.`}
                   </p>
-                  {(session?.user?.isAdmin || session?.user?.canWrite) && (
+                  {hasWritePermission && (
                     <Link
                       href="/research/write"
                       className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 transition-colors"
