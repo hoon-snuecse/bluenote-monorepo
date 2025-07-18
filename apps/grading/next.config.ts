@@ -63,6 +63,11 @@ const nextConfig: NextConfig = {
       crypto: false,
     };
 
+    // Fix for Prisma on Vercel
+    if (isServer) {
+      config.externals.push('@prisma/client');
+    }
+
     return config;
   },
   
