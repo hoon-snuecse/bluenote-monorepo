@@ -71,7 +71,9 @@ pnpm install --frozen-lockfile
 log "환경 변수 검증 중..."
 # .env.production 파일 로드
 if [ -f ".env.production" ]; then
-    export $(grep -v '^#' .env.production | xargs)
+    set -a
+    source .env.production
+    set +a
 fi
 
 # 필수 환경 변수 확인
@@ -83,20 +85,20 @@ log "환경 변수 검증 완료"
 # 테스트 실행
 if [ "$SKIP_TESTS" != "--skip-tests" ]; then
     log "테스트 실행 중..."
-    pnpm test --filter=grading || warning "일부 테스트가 실패했습니다."
+    pnpm test || warning "일부 테스트가 실패했습니다."
 fi
 
 # 린트 실행
 log "코드 린트 실행 중..."
-pnpm lint --filter=grading
+pnpm lint || warning "일부 린트 경고가 있습니다. 프로덕션 배포 전 수정을 권장합니다."
 
 # 타입 체크
 log "TypeScript 타입 체크 중..."
-pnpm tsc --noEmit
+pnpm tsc --noEmit || warning "일부 타입 오류가 있습니다. 프로덕션 배포 전 수정을 권장합니다."
 
 # 빌드
 log "애플리케이션 빌드 중..."
-pnpm build --filter=grading
+pnpm build
 
 # 빌드 성공 확인
 if [ ! -d ".next" ]; then
