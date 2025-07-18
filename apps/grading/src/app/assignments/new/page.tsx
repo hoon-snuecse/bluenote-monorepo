@@ -1,9 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft, Check } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@bluenote/ui';
+import { Button } from '@bluenote/ui';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@bluenote/ui';
+import { ArrowLeft, Check, FileText } from 'lucide-react';
+import { TemplateManager } from '@/components/TemplateManager';
+import { EvaluationTemplate } from '@/hooks/useTemplates';
 
 type GradeLevel = '초등학교 3학년' | '초등학교 4학년' | '초등학교 5학년' | '초등학교 6학년';
 type WritingType = '설명문' | '논설문' | '생활문' | '독서감상문' | '기행문';
@@ -32,6 +36,7 @@ export default function NewAssignmentPage() {
   const [levelCount, setLevelCount] = useState<'3' | '4' | '5'>('4');
   const [gradingCriteria, setGradingCriteria] = useState('');
   const [isGeneratingCriteria, setIsGeneratingCriteria] = useState(false);
+  const [templateDialogOpen, setTemplateDialogOpen] = useState(false);
   
   // 평가 수준 개수별 기본값
   const defaultLevelsByCount: Record<'3' | '4' | '5', string[]> = {
@@ -257,6 +262,36 @@ ${typeInfo.keyElements.map(element => `- ${element}: ${formData.writingType}에 
     }, 1500);
   };
 
+  const handleTemplateSelect = (template: EvaluationTemplate) => {
+    // 템플릿에서 데이터 가져오기
+    if (template.writingType) {
+      setFormData(prev => ({ ...prev, writingType: template.writingType as WritingType }));
+    }
+    if (template.gradeLevel) {
+      // 학년 형식 맞추기
+      const gradeMapping: Record<string, GradeLevel> = {
+        '초3': '초등학교 3학년',
+        '초4': '초등학교 4학년',
+        '초5': '초등학교 5학년',
+        '초6': '초등학교 6학년',
+        '초등학교 3학년': '초등학교 3학년',
+        '초등학교 4학년': '초등학교 4학년',
+        '초등학교 5학년': '초등학교 5학년',
+        '초등학교 6학년': '초등학교 6학년'
+      };
+      const mappedGrade = gradeMapping[template.gradeLevel];
+      if (mappedGrade) {
+        setFormData(prev => ({ ...prev, gradeLevel: mappedGrade }));
+      }
+    }
+    
+    setEvaluationDomains([...template.evaluationDomains, '']);
+    setEvaluationLevels(template.evaluationLevels);
+    setLevelCount(template.levelCount.toString() as '3' | '4' | '5');
+    setGradingCriteria(template.gradingCriteria);
+    setTemplateDialogOpen(false);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-50">
       <div className="container mx-auto py-8 px-4 max-w-4xl">
@@ -349,6 +384,30 @@ ${typeInfo.keyElements.map(element => `- ${element}: ${formData.writingType}에 
                   <option value="독서감상문" className="bg-white">독서감상문</option>
                   <option value="기행문" className="bg-white">기행문</option>
                 </select>
+              </div>
+
+              {/* Template Selection Button */}
+              <div className="flex justify-end">
+                <Dialog open={templateDialogOpen} onOpenChange={setTemplateDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" className="flex items-center gap-2">
+                      <FileText className="w-4 h-4" />
+                      템플릿에서 불러오기
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+                    <DialogHeader>
+                      <DialogTitle>평가 기준 템플릿 선택</DialogTitle>
+                      <DialogDescription>
+                        저장된 템플릿을 선택하여 평가 기준을 빠르게 설정할 수 있습니다.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <TemplateManager 
+                      mode="select" 
+                      onSelectTemplate={handleTemplateSelect}
+                    />
+                  </DialogContent>
+                </Dialog>
               </div>
 
               {/* Evaluation Domains and Levels - 2 column layout */}

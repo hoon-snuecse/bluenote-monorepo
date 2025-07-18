@@ -1,9 +1,9 @@
 'use client'
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Progress } from '@/components/ui/progress'
+import { Card, CardContent, CardHeader, CardTitle } from '@bluenote/ui'
+import { Progress } from '@bluenote/ui'
 import { Users, CheckCircle, XCircle, Clock } from 'lucide-react'
-import { Skeleton } from '@/components/ui/skeleton'
+import { Skeleton } from '@bluenote/ui'
 
 interface EvaluationStatusProps {
   stats: {

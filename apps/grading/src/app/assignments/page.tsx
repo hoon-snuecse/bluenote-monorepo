@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { AuthLayout } from '@/components/AuthLayout';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@bluenote/ui';
 import { Plus, Edit, Trash2, Users, Calendar, FileText, BookOpen, School, Link, BarChart3, FileInput } from 'lucide-react';
 
 interface AssignmentData {

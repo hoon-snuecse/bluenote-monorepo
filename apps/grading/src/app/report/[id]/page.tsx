@@ -2,7 +2,7 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import { useParams } from 'next/navigation';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@bluenote/ui';
 import { GrowthStageIndicator } from '@/components/GrowthStageIndicator';
 import { ArrowLeft, Download, Edit2, Save, X } from 'lucide-react';
 

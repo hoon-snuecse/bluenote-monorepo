@@ -1,12 +1,12 @@
 'use client'
 
 import { useState } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Label } from '@/components/ui/label'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@bluenote/ui'
+import { Button } from '@bluenote/ui'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@bluenote/ui'
+import { Label } from '@bluenote/ui'
 import { Download, FileText, FileSpreadsheet, Loader2 } from 'lucide-react'
-import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Alert, AlertDescription } from '@bluenote/ui'
 
 interface ReportGeneratorProps {
   selectedAssignmentId: string
@@ -64,6 +64,54 @@ export function ReportGenerator({ selectedAssignmentId, assignmentTitle }: Repor
         window.URL.revokeObjectURL(url)
         document.body.removeChild(a)
         setSuccess('Excel 보고서가 다운로드되었습니다.')
+      } else if (format === 'pdf') {
+        // PDF 보고서 생성
+        // 먼저 평가 목록을 가져옵니다
+        const evaluationsResponse = await fetch(
+          `/api/evaluations?assignmentId=${selectedAssignmentId}`
+        )
+        
+        if (!evaluationsResponse.ok) {
+          throw new Error('평가 목록을 가져올 수 없습니다.')
+        }
+        
+        const { evaluations } = await evaluationsResponse.json()
+        
+        if (!evaluations || evaluations.length === 0) {
+          setError('평가 결과가 없습니다.')
+          return
+        }
+        
+        // 각 평가에 대해 PDF 생성
+        for (const evaluation of evaluations) {
+          const pdfResponse = await fetch('/api/reports/pdf', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ evaluationId: evaluation.id }),
+          })
+          
+          if (!pdfResponse.ok) {
+            console.error(`PDF 생성 실패: ${evaluation.studentName}`)
+            continue
+          }
+          
+          const blob = await pdfResponse.blob()
+          const url = window.URL.createObjectURL(blob)
+          const a = document.createElement('a')
+          a.href = url
+          a.download = `evaluation_${evaluation.studentName}_${assignmentTitle || selectedAssignmentId}.pdf`
+          document.body.appendChild(a)
+          a.click()
+          window.URL.revokeObjectURL(url)
+          document.body.removeChild(a)
+          
+          // 다음 다운로드 전에 잠시 대기
+          await new Promise(resolve => setTimeout(resolve, 100))
+        }
+        
+        setSuccess(`${evaluations.length}개의 PDF 보고서가 다운로드되었습니다.`)
       }
     } catch (err) {
       console.error('보고서 생성 오류:', err)
@@ -130,10 +178,10 @@ export function ReportGenerator({ selectedAssignmentId, assignmentTitle }: Repor
                         JSON (.json)
                       </div>
                     </SelectItem>
-                    <SelectItem value="pdf" disabled>
+                    <SelectItem value="pdf">
                       <div className="flex items-center gap-2">
                         <FileText className="h-4 w-4" />
-                        PDF (준비 중)
+                        PDF (.pdf)
                       </div>
                     </SelectItem>
                   </SelectContent>

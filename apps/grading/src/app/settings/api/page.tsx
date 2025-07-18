@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@bluenote/ui';
 import { Key, AlertCircle, CheckCircle, Copy, ExternalLink } from 'lucide-react';
 
 export default function ApiSettingsPage() {

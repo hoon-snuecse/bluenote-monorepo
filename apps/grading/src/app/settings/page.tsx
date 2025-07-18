@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@bluenote/ui';
 import { ArrowLeft, Settings, Key, FileText, Save, Plus, Trash2, Edit2, School } from 'lucide-react';
 
 interface EvaluationTemplate {

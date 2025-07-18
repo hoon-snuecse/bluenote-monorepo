@@ -1,7 +1,7 @@
 'use client'
 
-import { Button } from '@/components/ui/button'
-import { Plus, Download, RefreshCw, FileText, Users } from 'lucide-react'
+import { Button } from '@bluenote/ui'
+import { Plus, Download, RefreshCw, FileText, Users, Settings } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 // Temporarily removed dropdown menu import
 
@@ -33,6 +33,10 @@ export function ActionButtons({ selectedAssignmentId, onRefresh }: ActionButtons
     router.push(`/assignments/${selectedAssignmentId}/evaluate`)
   }
 
+  const handleManageTemplates = () => {
+    router.push('/templates')
+  }
+
   return (
     <div className="flex flex-wrap gap-2">
       {/* 과제 만들기 */}
@@ -61,6 +65,26 @@ export function ActionButtons({ selectedAssignmentId, onRefresh }: ActionButtons
       >
         <FileText className="h-4 w-4" />
         평가하기
+      </Button>
+
+      {/* 템플릿 관리 */}
+      <Button 
+        onClick={handleManageTemplates}
+        variant="outline" 
+        className="gap-2"
+      >
+        <Settings className="h-4 w-4" />
+        템플릿 관리
+      </Button>
+
+      {/* 학생 그룹 관리 */}
+      <Button 
+        onClick={() => router.push('/students')}
+        variant="outline" 
+        className="gap-2"
+      >
+        <Users className="h-4 w-4" />
+        학생 관리
       </Button>
 
       {/* 새로고침 */}

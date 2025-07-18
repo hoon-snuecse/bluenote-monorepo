@@ -1,8 +1,8 @@
 'use client'
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@bluenote/ui'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar } from 'recharts'
-import { Skeleton } from '@/components/ui/skeleton'
+import { Skeleton } from '@bluenote/ui'
 
 interface EvaluationChartsProps {
   evaluations: any[]

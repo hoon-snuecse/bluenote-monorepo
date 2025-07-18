@@ -1,8 +1,8 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { ScrollArea } from '@/components/ui/scroll-area'
+import { Card, CardContent, CardHeader, CardTitle } from '@bluenote/ui'
+import { ScrollArea } from '@bluenote/ui'
 import { CheckCircle, Clock, AlertCircle } from 'lucide-react'
 
 interface Update {

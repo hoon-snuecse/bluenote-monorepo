@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, Suspense } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@bluenote/ui';
 import { useSearchParams } from 'next/navigation';
 import { FolderOpen, FileText, CheckCircle, ChevronRight, HardDrive, Users, Share2, Square, CheckSquare } from 'lucide-react';
 

@@ -9,13 +9,15 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table'
-import { Button } from '@/components/ui/button'
-import { Checkbox } from '@/components/ui/checkbox'
-import { Badge } from '@/components/ui/badge'
-import { Input } from '@/components/ui/input'
+} from '@bluenote/ui'
+import { Button } from '@bluenote/ui'
+import { Checkbox } from '@bluenote/ui'
+import { Badge } from '@bluenote/ui'
+import { Input } from '@bluenote/ui'
 import { FileText, Download, RefreshCw, Search } from 'lucide-react'
-import { Skeleton } from '@/components/ui/skeleton'
+import { Skeleton } from '@bluenote/ui'
+import { StudentReportDialog } from './StudentReportDialog'
+import { BatchEvaluationDialog } from './BatchEvaluationDialog'
 
 interface StudentGridProps {
   evaluations: any[]
@@ -27,6 +29,9 @@ export function StudentGrid({ evaluations, loading, selectedAssignmentId }: Stud
   const router = useRouter()
   const [selectedStudents, setSelectedStudents] = useState<Set<string>>(new Set())
   const [searchQuery, setSearchQuery] = useState('')
+  const [selectedEvaluation, setSelectedEvaluation] = useState<any>(null)
+  const [reportDialogOpen, setReportDialogOpen] = useState(false)
+  const [batchDialogOpen, setBatchDialogOpen] = useState(false)
 
   const filteredEvaluations = evaluations.filter(evaluation => {
     const searchLower = searchQuery.toLowerCase()
@@ -54,8 +59,9 @@ export function StudentGrid({ evaluations, loading, selectedAssignmentId }: Stud
     setSelectedStudents(newSelected)
   }
 
-  const handleViewReport = (evaluationId: string) => {
-    router.push(`/student-report/${evaluationId}`)
+  const handleViewReport = (evaluation: any) => {
+    setSelectedEvaluation(evaluation)
+    setReportDialogOpen(true)
   }
 
   const handleBatchEvaluate = () => {
@@ -63,8 +69,7 @@ export function StudentGrid({ evaluations, loading, selectedAssignmentId }: Stud
       alert('평가할 학생을 선택해주세요.')
       return
     }
-    // TODO: 선택 평가 기능 구현
-    alert('선택 평가 기능은 개발 중입니다.')
+    setBatchDialogOpen(true)
   }
 
   const handleExportExcel = () => {
@@ -219,7 +224,7 @@ export function StudentGrid({ evaluations, loading, selectedAssignmentId }: Stud
                     <Button
                       size="sm"
                       variant="ghost"
-                      onClick={() => handleViewReport(evaluation.id)}
+                      onClick={() => handleViewReport(evaluation)}
                       disabled={evaluation.status !== 'completed'}
                     >
                       <FileText className="h-4 w-4 mr-1" />
@@ -232,6 +237,25 @@ export function StudentGrid({ evaluations, loading, selectedAssignmentId }: Stud
           </TableBody>
         </Table>
       </div>
+
+      {/* 학생 보고서 다이얼로그 */}
+      <StudentReportDialog
+        evaluation={selectedEvaluation}
+        open={reportDialogOpen}
+        onOpenChange={setReportDialogOpen}
+      />
+
+      {/* 배치 평가 다이얼로그 */}
+      <BatchEvaluationDialog
+        open={batchDialogOpen}
+        onOpenChange={setBatchDialogOpen}
+        assignmentId={selectedAssignmentId}
+        studentIds={Array.from(selectedStudents)}
+        onComplete={() => {
+          // 평가 완료 후 데이터 새로고침
+          window.location.reload()
+        }}
+      />
     </div>
   )
 }

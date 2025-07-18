@@ -1,35 +1,58 @@
-import { NextRequest, NextResponse } from 'next/server';
-import fs from 'fs/promises';
-import path from 'path';
+import { NextRequest, NextResponse } from 'next/server'
+import { getServerSession } from '@/lib/auth'
+import prisma from '@/lib/prisma'
 
-const TEMPLATES_DIR = path.join(process.cwd(), 'data', 'templates');
-
-export async function DELETE(
+export async function GET(
   request: NextRequest,
   { params }: { params: { templateId: string } }
 ) {
   try {
-    const filePath = path.join(TEMPLATES_DIR, `${params.templateId}.json`);
+    const session = await getServerSession()
     
-    // 파일 존재 확인
-    try {
-      await fs.access(filePath);
-    } catch {
-      return NextResponse.json(
-        { success: false, error: '템플릿을 찾을 수 없습니다.' },
-        { status: 404 }
-      );
+    if (!session?.user?.email) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
-    
-    // 템플릿 삭제
-    await fs.unlink(filePath);
-    
-    return NextResponse.json({ success: true });
+
+    const template = await prisma.evaluationTemplate.findUnique({
+      where: { id: params.templateId },
+      include: {
+        creator: {
+          select: {
+            name: true,
+            email: true
+          }
+        }
+      }
+    })
+
+    if (!template) {
+      return NextResponse.json(
+        { error: '템플릿을 찾을 수 없습니다.' },
+        { status: 404 }
+      )
+    }
+
+    // 비공개 템플릿인 경우 소유자만 접근 가능
+    if (!template.isPublic && template.createdBy !== session.user.email) {
+      return NextResponse.json(
+        { error: '접근 권한이 없습니다.' },
+        { status: 403 }
+      )
+    }
+
+    return NextResponse.json({ 
+      success: true, 
+      template: {
+        ...template,
+        evaluationDomains: template.evaluationDomains as string[],
+        evaluationLevels: template.evaluationLevels as string[]
+      }
+    })
   } catch (error) {
-    console.error('템플릿 삭제 오류:', error);
+    console.error('Error fetching template:', error)
     return NextResponse.json(
-      { success: false, error: '템플릿 삭제 중 오류가 발생했습니다.' },
+      { error: '템플릿 조회 중 오류가 발생했습니다.' },
       { status: 500 }
-    );
+    )
   }
 }

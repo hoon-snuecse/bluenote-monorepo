@@ -6,6 +6,9 @@ import { NotificationProvider } from "@/contexts/NotificationContext";
 import { NotificationContainer } from "@/components/NotificationContainer";
 import NavigationWithAuth from "@/components/NavigationWithAuth";
 import { DevAutoLogin } from "@/components/DevAutoLogin";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { NetworkErrorBoundary } from "@/components/NetworkErrorBoundary";
+import { FeedbackWidget } from "@/components/FeedbackWidget";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -49,14 +52,19 @@ export default function RootLayout({
       <body
         className={`${gowunDodum.className} antialiased`}
       >
-        <UserProvider>
-          <NotificationProvider>
-            <DevAutoLogin />
-            <NavigationWithAuth />
-            <NotificationContainer />
-            {children}
-          </NotificationProvider>
-        </UserProvider>
+        <ErrorBoundary>
+          <NetworkErrorBoundary>
+            <UserProvider>
+              <NotificationProvider>
+                <DevAutoLogin />
+                <NavigationWithAuth />
+                <NotificationContainer />
+                {children}
+                <FeedbackWidget />
+              </NotificationProvider>
+            </UserProvider>
+          </NetworkErrorBoundary>
+        </ErrorBoundary>
       </body>
     </html>
   );

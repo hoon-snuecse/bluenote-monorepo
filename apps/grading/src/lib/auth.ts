@@ -1,64 +1,54 @@
-import jwt from 'jsonwebtoken';
-import bcrypt from 'bcryptjs';
+import { createAuthOptions } from '@bluenote/auth'
+import { getServerSession as nextAuthGetServerSession } from 'next-auth'
+import { createClient } from '@/lib/supabase'
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
-
-export interface User {
-  id: string;
-  email: string;
-  name: string;
-  role: 'teacher' | 'admin';
-}
-
-export interface JWTPayload {
-  userId: string;
-  email: string;
-  name: string;
-  role: 'teacher' | 'admin';
-}
-
-// 비밀번호 해싱
-export async function hashPassword(password: string): Promise<string> {
-  return bcrypt.hash(password, 12);
-}
-
-// 비밀번호 확인
-export async function verifyPassword(password: string, hashedPassword: string): Promise<boolean> {
-  return bcrypt.compare(password, hashedPassword);
-}
-
-// JWT 토큰 생성
-export function generateToken(user: User): string {
-  const payload: JWTPayload = {
-    userId: user.id,
-    email: user.email,
-    name: user.name,
-    role: user.role
-  };
+// Supabase 기반 권한 체크 함수들
+const authCallbacks = {
+  checkUserPermission: async (email: string) => {
+    const supabase = createClient()
+    
+    try {
+      const { data, error } = await supabase
+        .from('user_permissions')
+        .select('id')
+        .eq('email', email)
+        .eq('is_active', true)
+        .single()
+      
+      return !error && !!data
+    } catch (error) {
+      console.error('Error checking user permission:', error)
+      return false
+    }
+  },
   
-  return jwt.sign(payload, JWT_SECRET, {
-    expiresIn: '7d' // 7일 유효
-  });
-}
-
-// JWT 토큰 검증
-export function verifyToken(token: string): JWTPayload | null {
-  try {
-    return jwt.verify(token, JWT_SECRET) as JWTPayload;
-  } catch (error) {
-    return null;
+  getUserPermissions: async (email: string) => {
+    const supabase = createClient()
+    
+    try {
+      const { data, error } = await supabase
+        .from('user_permissions')
+        .select('role, can_write, claude_daily_limit')
+        .eq('email', email)
+        .eq('is_active', true)
+        .single()
+      
+      if (error || !data) return null
+      
+      return {
+        role: data.role || 'user',
+        can_write: data.can_write || false,
+        claude_daily_limit: data.claude_daily_limit || 3
+      }
+    } catch (error) {
+      console.error('Error fetching user permissions:', error)
+      return null
+    }
   }
 }
 
-// 쿠키에서 토큰 추출
-export function getTokenFromCookie(cookieHeader: string | null): string | null {
-  if (!cookieHeader) return null;
-  
-  const cookies = cookieHeader.split(';').reduce((acc, cookie) => {
-    const [key, value] = cookie.trim().split('=');
-    acc[key] = value;
-    return acc;
-  }, {} as Record<string, string>);
-  
-  return cookies['auth-token'] || null;
+export const authOptions = createAuthOptions(authCallbacks)
+
+export async function getServerSession() {
+  return nextAuthGetServerSession(authOptions)
 }

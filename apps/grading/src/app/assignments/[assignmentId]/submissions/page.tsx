@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent } from '@bluenote/ui';
 import { ArrowLeft, FileText, User, Calendar, CheckCircle, Clock, PlayCircle, FileInput } from 'lucide-react';
 
 interface Submission {

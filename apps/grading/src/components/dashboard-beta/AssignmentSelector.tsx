@@ -1,6 +1,6 @@
 'use client'
 
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@bluenote/ui'
 import { Loader2 } from 'lucide-react'
 import type { Assignment } from '@/types'
 

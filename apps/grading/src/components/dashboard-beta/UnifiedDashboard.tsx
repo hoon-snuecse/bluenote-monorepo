@@ -1,32 +1,57 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@bluenote/ui'
+import { Button } from '@bluenote/ui'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@bluenote/ui'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@bluenote/ui'
 import { Loader2, Plus, Download, FileText, Users, CheckCircle, XCircle, Wifi, WifiOff } from 'lucide-react'
 import { AssignmentSelector } from './AssignmentSelector'
 import { EvaluationStatus } from './EvaluationStatus'
-import { StudentGrid } from './StudentGrid'
-import { EvaluationCharts } from './EvaluationCharts'
 import { ActionButtons } from './ActionButtons'
-import { ReportGenerator } from './ReportGenerator'
 import { RealtimeUpdates } from './RealtimeUpdates'
+import { 
+  DynamicEvaluationCharts,
+  DynamicAdvancedAnalytics,
+  DynamicStudentGrid,
+  DynamicReportGenerator
+} from './DynamicComponents'
 import { useAssignments } from '@/hooks/useAssignments'
-import { useEvaluations } from '@/hooks/useEvaluations'
+import { useCachedEvaluations } from '@/hooks/useCachedEvaluations'
 import { useEvaluationStream } from '@/hooks/useEvaluationStream'
+import { useErrorHandler } from '@/hooks/useErrorHandler'
+import { 
+  FullPageLoading, 
+  AssignmentListSkeleton, 
+  StudentGridSkeleton, 
+  ChartSkeleton 
+} from '@/components/LoadingStates'
+import { 
+  NoAssignments, 
+  NoStudents, 
+  NoEvaluations, 
+  ErrorState 
+} from '@/components/EmptyStates'
 
 export function UnifiedDashboard() {
   const [selectedAssignmentId, setSelectedAssignmentId] = useState<string>('all')
   const [selectedRound, setSelectedRound] = useState<number>(1)
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null)
+  const { handleError } = useErrorHandler()
   
-  const { assignments, loading: assignmentsLoading } = useAssignments()
-  const { evaluations, stats, loading: evaluationsLoading, error: evaluationsError, refetch } = useEvaluations(
+  const { assignments, loading: assignmentsLoading, error: assignmentsError, refetch: refetchAssignments } = useAssignments()
+  const { 
+    data, 
+    loading: evaluationsLoading, 
+    error: evaluationsError, 
+    refetch 
+  } = useCachedEvaluations(
     selectedAssignmentId === 'all' ? undefined : selectedAssignmentId,
     selectedRound
   )
+  
+  const evaluations = data?.evaluations || []
+  const stats = data?.stats || null
   
   // SSE 연결
   const { updates, isConnected } = useEvaluationStream(
@@ -58,11 +83,7 @@ export function UnifiedDashboard() {
 
   // 로그인 체크
   if (isAuthenticated === null) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="h-8 w-8 animate-spin" />
-      </div>
-    )
+    return <FullPageLoading message="인증 확인 중..." />
   }
 
   if (!isAuthenticated) {
@@ -75,7 +96,27 @@ export function UnifiedDashboard() {
               대시보드를 사용하려면 로그인해주세요.
             </CardDescription>
           </CardHeader>
+          <CardContent>
+            <Button 
+              onClick={() => window.location.href = '/login'}
+              className="w-full"
+            >
+              로그인 페이지로 이동
+            </Button>
+          </CardContent>
         </Card>
+      </div>
+    )
+  }
+
+  // 과제 로딩 에러 처리
+  if (assignmentsError) {
+    return (
+      <div className="container mx-auto p-6">
+        <ErrorState 
+          message="과제 목록을 불러올 수 없습니다."
+          onRetry={refetchAssignments}
+        />
       </div>
     )
   }
@@ -146,7 +187,7 @@ export function UnifiedDashboard() {
         <TabsContent value="overview" className="space-y-4">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
             <div className="lg:col-span-2">
-              <EvaluationCharts
+              <DynamicEvaluationCharts
                 evaluations={evaluations}
                 loading={evaluationsLoading}
               />
@@ -177,7 +218,7 @@ export function UnifiedDashboard() {
             </div>
           </div>
           
-          <StudentGrid
+          <DynamicStudentGrid
             evaluations={evaluations}
             loading={evaluationsLoading}
             selectedAssignmentId={selectedAssignmentId}
@@ -185,21 +226,15 @@ export function UnifiedDashboard() {
         </TabsContent>
 
         <TabsContent value="analytics" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>고급 통계 분석</CardTitle>
-              <CardDescription>
-                평가 데이터의 심층 분석 및 인사이트
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">개발 중...</p>
-            </CardContent>
-          </Card>
+          <DynamicAdvancedAnalytics
+            evaluations={evaluations}
+            assignments={assignments}
+            loading={evaluationsLoading || assignmentsLoading}
+          />
         </TabsContent>
 
         <TabsContent value="reports" className="space-y-4">
-          <ReportGenerator 
+          <DynamicReportGenerator 
             selectedAssignmentId={selectedAssignmentId}
             assignmentTitle={
               selectedAssignmentId === 'all' 
