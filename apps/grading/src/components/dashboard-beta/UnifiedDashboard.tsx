@@ -5,15 +5,17 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Loader2, Plus, Download, FileText, Users, CheckCircle, XCircle } from 'lucide-react'
+import { Loader2, Plus, Download, FileText, Users, CheckCircle, XCircle, Wifi, WifiOff } from 'lucide-react'
 import { AssignmentSelector } from './AssignmentSelector'
 import { EvaluationStatus } from './EvaluationStatus'
 import { StudentGrid } from './StudentGrid'
 import { EvaluationCharts } from './EvaluationCharts'
 import { ActionButtons } from './ActionButtons'
 import { ReportGenerator } from './ReportGenerator'
+import { RealtimeUpdates } from './RealtimeUpdates'
 import { useAssignments } from '@/hooks/useAssignments'
 import { useEvaluations } from '@/hooks/useEvaluations'
+import { useEvaluationStream } from '@/hooks/useEvaluationStream'
 
 export function UnifiedDashboard() {
   const [selectedAssignmentId, setSelectedAssignmentId] = useState<string>('all')
@@ -21,10 +23,25 @@ export function UnifiedDashboard() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null)
   
   const { assignments, loading: assignmentsLoading } = useAssignments()
-  const { evaluations, stats, loading: evaluationsLoading } = useEvaluations(
+  const { evaluations, stats, loading: evaluationsLoading, error: evaluationsError, refetch } = useEvaluations(
     selectedAssignmentId === 'all' ? undefined : selectedAssignmentId,
     selectedRound
   )
+  
+  // SSE 연결
+  const { updates, isConnected } = useEvaluationStream(
+    selectedAssignmentId === 'all' ? null : selectedAssignmentId
+  )
+  
+  // SSE 업데이트 시 데이터 새로고침
+  useEffect(() => {
+    if (updates.length > 0) {
+      const latestUpdate = updates[updates.length - 1]
+      if (latestUpdate.type === 'evaluation_completed' || latestUpdate.type === 'evaluation_started') {
+        refetch()
+      }
+    }
+  }, [updates, refetch])
 
   // 인증 상태 확인
   useEffect(() => {
@@ -74,13 +91,32 @@ export function UnifiedDashboard() {
           </p>
         </div>
         
-        {/* 과제 선택 */}
-        <AssignmentSelector
-          assignments={assignments}
-          selectedAssignmentId={selectedAssignmentId}
-          onAssignmentChange={setSelectedAssignmentId}
-          loading={assignmentsLoading}
-        />
+        <div className="flex items-center gap-4">
+          {/* 실시간 연결 상태 */}
+          {selectedAssignmentId !== 'all' && (
+            <div className="flex items-center gap-2 text-sm">
+              {isConnected ? (
+                <>
+                  <Wifi className="h-4 w-4 text-green-600" />
+                  <span className="text-green-600">실시간 연결됨</span>
+                </>
+              ) : (
+                <>
+                  <WifiOff className="h-4 w-4 text-gray-400" />
+                  <span className="text-gray-400">연결 끊김</span>
+                </>
+              )}
+            </div>
+          )}
+          
+          {/* 과제 선택 */}
+          <AssignmentSelector
+            assignments={assignments}
+            selectedAssignmentId={selectedAssignmentId}
+            onAssignmentChange={setSelectedAssignmentId}
+            loading={assignmentsLoading}
+          />
+        </div>
       </div>
 
       {/* 주요 액션 버튼 */}
@@ -108,10 +144,17 @@ export function UnifiedDashboard() {
         </TabsList>
 
         <TabsContent value="overview" className="space-y-4">
-          <EvaluationCharts
-            evaluations={evaluations}
-            loading={evaluationsLoading}
-          />
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <div className="lg:col-span-2">
+              <EvaluationCharts
+                evaluations={evaluations}
+                loading={evaluationsLoading}
+              />
+            </div>
+            <div className="lg:col-span-1">
+              <RealtimeUpdates updates={updates} />
+            </div>
+          </div>
         </TabsContent>
 
         <TabsContent value="students" className="space-y-4">
