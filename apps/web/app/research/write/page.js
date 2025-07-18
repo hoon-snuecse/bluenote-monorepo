@@ -113,7 +113,7 @@ function WritePageContent() {
       
       const payload = {
         ...formData,
-        readingTime: `${Math.ceil(formData.content.length / 500)}분`,
+        readingTime: Math.ceil(formData.content.length / 500), // 숫자만 전송
         images: formData.images.map(img => ({
           path: img.path,
           name: img.name,
