@@ -1,5 +1,9 @@
 import type { NextConfig } from "next";
 
+const withBundleAnalyzer = require('@next/bundle-analyzer')({
+  enabled: process.env.ANALYZE === 'true',
+})
+
 const nextConfig: NextConfig = {
   // Enable React strict mode for better development experience
   reactStrictMode: true,
@@ -23,7 +27,6 @@ const nextConfig: NextConfig = {
     domains: ['localhost'],
   },
   
-  
   // Optimize production builds
   compiler: {
     // Remove console logs in production
@@ -32,14 +35,12 @@ const nextConfig: NextConfig = {
   
   // Enable experimental features for better performance
   experimental: {
-    // optimizeCss: true, // Disabled - causing CSS issues
     optimizePackageImports: [
       'lucide-react', 
       'recharts',
       '@bluenote/ui',
       'date-fns',
-      '@prisma/client',
-      'exceljs'
+      '@prisma/client'
     ],
   },
   
@@ -105,18 +106,8 @@ const nextConfig: NextConfig = {
           },
         ],
       },
-      // Font files caching
-      {
-        source: '/fonts/:path*',
-        headers: [
-          {
-            key: 'Cache-Control',
-            value: 'public, max-age=31536000, immutable',
-          },
-        ],
-      },
     ];
   },
 };
 
-export default nextConfig;
+export default withBundleAnalyzer(nextConfig);

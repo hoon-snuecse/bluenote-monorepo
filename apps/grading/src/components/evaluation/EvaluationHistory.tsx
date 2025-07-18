@@ -2,7 +2,15 @@
 
 import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle, Badge, Button } from '@bluenote/ui'
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
+import dynamic from 'next/dynamic'
+
+const EvaluationHistoryChart = dynamic(
+  () => import('./EvaluationHistoryChart').then(mod => mod.EvaluationHistoryChart),
+  { 
+    ssr: false,
+    loading: () => <div className="h-64 flex items-center justify-center">차트 로딩 중...</div>
+  }
+)
 import { Calendar, TrendingUp, FileText, ChevronDown, ChevronUp } from 'lucide-react'
 import { format } from 'date-fns'
 import { ko } from 'date-fns/locale'
@@ -75,20 +83,6 @@ export function EvaluationHistory({ studentId, studentDbId, studentName }: Evalu
     setExpandedItems(newExpanded)
   }
 
-  const prepareChartData = () => {
-    if (!growthAnalysis.domainGrowth) return []
-
-    const domains = Object.keys(growthAnalysis.domainGrowth)
-    const maxLength = Math.max(...Object.values(growthAnalysis.domainGrowth).map(arr => arr.length))
-    
-    return Array.from({ length: maxLength }, (_, index) => {
-      const dataPoint: any = { name: `평가 ${index + 1}` }
-      domains.forEach(domain => {
-        dataPoint[domain] = growthAnalysis.domainGrowth![domain][index] || 0
-      })
-      return dataPoint
-    })
-  }
 
   const getLevelColor = (level: string) => {
     switch (level) {
@@ -100,7 +94,6 @@ export function EvaluationHistory({ studentId, studentDbId, studentName }: Evalu
     }
   }
 
-  const chartColors = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444']
 
   if (loading) {
     return (
@@ -136,41 +129,10 @@ export function EvaluationHistory({ studentId, studentDbId, studentName }: Evalu
           </CardHeader>
           {showChart && (
             <CardContent>
-              <div className="h-64">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={prepareChartData()}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" />
-                    <YAxis domain={[0, 4]} ticks={[1, 2, 3, 4]} />
-                    <Tooltip 
-                      formatter={(value: number) => {
-                        const levels = ['', '미흡', '보통', '우수', '매우 우수']
-                        return levels[Math.round(value)]
-                      }}
-                    />
-                    <Legend />
-                    {Object.keys(growthAnalysis.domainGrowth).map((domain, index) => (
-                      <Line
-                        key={domain}
-                        type="monotone"
-                        dataKey={domain}
-                        stroke={chartColors[index % chartColors.length]}
-                        strokeWidth={2}
-                      />
-                    ))}
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
-              {growthAnalysis.improvementRate !== undefined && (
-                <div className="mt-4 text-center">
-                  <p className="text-sm text-gray-600">
-                    전체 개선율: 
-                    <span className={`ml-2 font-semibold ${growthAnalysis.improvementRate > 0 ? 'text-green-600' : 'text-gray-600'}`}>
-                      {growthAnalysis.improvementRate > 0 ? '+' : ''}{(growthAnalysis.improvementRate * 25).toFixed(0)}%
-                    </span>
-                  </p>
-                </div>
-              )}
+              <EvaluationHistoryChart 
+                domainGrowth={growthAnalysis.domainGrowth}
+                improvementRate={growthAnalysis.improvementRate}
+              />
             </CardContent>
           )}
         </Card>
