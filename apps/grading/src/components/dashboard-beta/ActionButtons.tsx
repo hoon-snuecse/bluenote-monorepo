@@ -3,12 +3,7 @@
 import { Button } from '@/components/ui/button'
 import { Plus, Download, RefreshCw, FileText, Users } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
+// Temporarily removed dropdown menu import
 
 interface ActionButtonsProps {
   selectedAssignmentId: string
@@ -58,26 +53,15 @@ export function ActionButtons({ selectedAssignmentId, onRefresh }: ActionButtons
       </Button>
 
       {/* 평가하기 */}
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button 
-            variant="outline" 
-            className="gap-2"
-            disabled={selectedAssignmentId === 'all'}
-          >
-            <FileText className="h-4 w-4" />
-            평가하기
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent>
-          <DropdownMenuItem onClick={handleEvaluate}>
-            전체 평가하기
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => alert('선택 평가 기능은 개발 중입니다.')}>
-            선택 평가하기
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+      <Button 
+        onClick={handleEvaluate}
+        variant="outline" 
+        className="gap-2"
+        disabled={selectedAssignmentId === 'all'}
+      >
+        <FileText className="h-4 w-4" />
+        평가하기
+      </Button>
 
       {/* 새로고침 */}
       <Button 
