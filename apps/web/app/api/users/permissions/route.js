@@ -1,8 +1,14 @@
-import { getServerSession } from '@bluenote/auth'
-import { authOptions } from '@/lib/auth'
-import { createClient } from '@/lib/supabase'
-import { UserRole } from '@bluenote/shared-infra'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth-options'
+import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
+
+// User role constants
+const UserRole = {
+  ADMIN: 'admin',
+  USER: 'user',
+  TEACHER: 'teacher'
+}
 
 // GET: 현재 사용자의 권한 정보 조회
 export async function GET() {
@@ -15,7 +21,7 @@ export async function GET() {
       )
     }
 
-    const supabase = createClient()
+    const supabase = await createClient()
     const { data: permissions, error } = await supabase
       .from('user_permissions')
       .select('*')
@@ -84,7 +90,7 @@ export async function POST(request) {
       )
     }
 
-    const supabase = createClient()
+    const supabase = await createClient()
     
     // 기존 권한 확인
     const { data: existing } = await supabase
