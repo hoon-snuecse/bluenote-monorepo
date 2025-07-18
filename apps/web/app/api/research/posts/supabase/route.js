@@ -44,14 +44,14 @@ export async function GET(request) {
       createdAt: post.created_at,
       updatedAt: post.updated_at,
       images: post.research_post_images ? post.research_post_images
-        .filter(item => !item.file_type || item.file_type !== 'document')
+        .filter(item => (!item.file_type || item.file_type !== 'document') && item.file_path)
         .map(img => ({
           id: img.id,
           name: img.file_name,
           url: `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/research-images/${img.file_path}`
         })) : [],
       files: post.research_post_images ? post.research_post_images
-        .filter(item => item.file_type === 'document')
+        .filter(item => item.file_type === 'document' && item.file_path)
         .map(file => ({
           id: file.id,
           name: file.file_name,

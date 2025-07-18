@@ -45,11 +45,13 @@ export async function GET(request) {
       isAIGenerated: post.is_ai_generated,
       createdAt: post.created_at,
       updatedAt: post.updated_at,
-      images: post.shed_post_images ? post.shed_post_images.map(img => ({
-        id: img.id,
-        name: img.file_name,
-        url: `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/shed-images/${img.file_path}`
-      })) : []
+      images: post.shed_post_images ? post.shed_post_images
+        .filter(img => img.file_path)
+        .map(img => ({
+          id: img.id,
+          name: img.file_name,
+          url: `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/shed-images/${img.file_path}`
+        })) : []
     }));
 
     return NextResponse.json({ posts: transformedPosts });
