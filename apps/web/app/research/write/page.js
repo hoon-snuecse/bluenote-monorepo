@@ -39,10 +39,13 @@ function WritePageContent() {
 
   const loadPost = useCallback(async () => {
     try {
+      console.log('Loading post with editId:', editId);
       const response = await fetch('/api/research/posts/supabase');
       if (response.ok) {
         const data = await response.json();
-        const post = data.posts.find(p => p.id === editId);
+        console.log('Fetched posts:', data.posts);
+        const post = data.posts.find(p => p.id.toString() === editId.toString());
+        console.log('Found post:', post);
         if (post) {
           setFormData({
             title: post.title || '',
@@ -65,6 +68,8 @@ function WritePageContent() {
               desc: 'Custom category'
             }]);
           }
+        } else {
+          console.error('Post not found with id:', editId);
         }
       }
     } catch (error) {

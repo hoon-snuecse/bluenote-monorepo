@@ -41,7 +41,7 @@ function WritePageContent() {
       const response = await fetch('/api/analytics/posts/supabase');
       if (response.ok) {
         const data = await response.json();
-        const post = data.posts.find(p => p.id === editId);
+        const post = data.posts.find(p => p.id.toString() === editId.toString());
         if (post) {
           setFormData({
             title: post.title || '',
