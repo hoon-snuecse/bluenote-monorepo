@@ -39,6 +39,37 @@ export const createAuthOptions = (callbacks?: AuthCallbacks): NextAuthOptions =>
   const adminEmails = process.env.ADMIN_EMAILS?.split(',').map(email => email.trim()) || ['hoon@snuecse.org'];
 
   return {
+    // 쿠키 설정 추가
+    cookies: {
+      sessionToken: {
+        name: `${process.env.NODE_ENV === 'production' ? '__Secure-' : ''}bluenote.authjs.session-token`,
+        options: {
+          httpOnly: true,
+          sameSite: 'lax',
+          path: '/',
+          secure: process.env.NODE_ENV === 'production',
+          domain: process.env.NODE_ENV === 'production' ? '.bluenote.site' : undefined
+        }
+      },
+      callbackUrl: {
+        name: `${process.env.NODE_ENV === 'production' ? '__Secure-' : ''}bluenote.authjs.callback-url`,
+        options: {
+          sameSite: 'lax',
+          path: '/',
+          secure: process.env.NODE_ENV === 'production',
+          domain: process.env.NODE_ENV === 'production' ? '.bluenote.site' : undefined
+        }
+      },
+      csrfToken: {
+        name: `${process.env.NODE_ENV === 'production' ? '__Host-' : ''}bluenote.authjs.csrf-token`,
+        options: {
+          httpOnly: true,
+          sameSite: 'lax',
+          path: '/',
+          secure: process.env.NODE_ENV === 'production',
+        }
+      }
+    },
     providers: [
       GoogleProvider({
         clientId: process.env.GOOGLE_CLIENT_ID!,
