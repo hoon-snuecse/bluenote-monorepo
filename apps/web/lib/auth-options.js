@@ -59,30 +59,36 @@ export const authOptions = {
         }
       }
       
-      // 기존 token의 권한 값이 없으면 재확인
-      if (token.email && (token.isAdmin === undefined || token.canWrite === undefined)) {
+      // 매번 권한을 재확인하도록 수정 (임시)
+      if (token.email) {
         const adminEmails = process.env.ADMIN_EMAILS?.split(',').map(email => email.trim()) || [];
         token.isAdmin = adminEmails.includes(token.email);
         
         // Supabase에서 권한 재확인
         try {
           const supabase = createClientForServer();
-          const { data: userPermission } = await supabase
+          console.log('[Auth JWT] Checking permissions for existing token:', token.email);
+          
+          const { data: userPermission, error } = await supabase
             .from('user_permissions')
             .select('can_write, role')
             .eq('email', token.email)
             .single();
+          
+          console.log('[Auth JWT] Permission check result:', userPermission, 'Error:', error);
           
           if (userPermission) {
             token.canWrite = userPermission.can_write || false;
             if (userPermission.role === 'admin') {
               token.isAdmin = true;
             }
+            console.log('[Auth JWT] Updated token permissions:', { isAdmin: token.isAdmin, canWrite: token.canWrite });
           } else {
             token.canWrite = false;
+            console.log('[Auth JWT] No permissions found, setting canWrite to false');
           }
         } catch (error) {
-          console.error('Error fetching user permissions:', error);
+          console.error('[Auth JWT] Error fetching user permissions:', error);
           token.canWrite = false;
         }
       }
