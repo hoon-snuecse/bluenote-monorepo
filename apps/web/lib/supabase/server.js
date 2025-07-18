@@ -1,10 +1,10 @@
-import { createClient } from '@supabase/supabase-js'
+import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { cookies } from 'next/headers'
 
 export async function createClientForServer() {
   const cookieStore = cookies()
   
-  return createClient(
+  return createSupabaseClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
     {
@@ -16,3 +16,6 @@ export async function createClientForServer() {
     }
   )
 }
+
+// Legacy export for backward compatibility
+export const createClient = createClientForServer
