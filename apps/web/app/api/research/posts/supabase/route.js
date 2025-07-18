@@ -179,6 +179,14 @@ export async function PUT(request) {
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+    
+    // Debug log
+    console.log('[PUT] Session user:', {
+      email: session.user?.email,
+      isAdmin: session.user?.isAdmin,
+      canWrite: session.user?.canWrite
+    });
+    
     if (!session.user.isAdmin && !session.user.canWrite) {
       return NextResponse.json({ error: 'Forbidden - Admin access or write permission required' }, { status: 403 });
     }
