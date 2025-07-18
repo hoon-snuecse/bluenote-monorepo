@@ -9,7 +9,7 @@ import matter from 'gray-matter';
 function WritePageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const editId = searchParams.get('edit');
+  const editId = searchParams.get('id') || searchParams.get('edit'); // 'id' 파라미터도 지원
   
   const [loading, setLoading] = useState(false);
   const [showNewCategory, setShowNewCategory] = useState(false);
@@ -39,10 +39,13 @@ function WritePageContent() {
 
   const loadPost = useCallback(async () => {
     try {
+      console.log('Loading post with editId:', editId);
       const response = await fetch('/api/shed/posts/supabase');
       if (response.ok) {
         const data = await response.json();
-        const post = data.posts.find(p => p.id === editId);
+        console.log('Fetched posts:', data.posts);
+        const post = data.posts.find(p => p.id.toString() === editId.toString());
+        console.log('Found post:', post);
         if (post) {
           setFormData({
             title: post.title || '',
@@ -64,6 +67,8 @@ function WritePageContent() {
               desc: 'Custom category'
             }]);
           }
+        } else {
+          console.error('Post not found with id:', editId);
         }
       }
     } catch (error) {

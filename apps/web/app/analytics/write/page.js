@@ -9,7 +9,7 @@ import matter from 'gray-matter';
 function WritePageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const editId = searchParams.get('edit');
+  const editId = searchParams.get('id') || searchParams.get('edit'); // 'id' 파라미터도 지원
   
   const [loading, setLoading] = useState(false);
   const [showNewCategory, setShowNewCategory] = useState(false);

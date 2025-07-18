@@ -43,18 +43,22 @@ export async function GET(request) {
       isAIGenerated: post.is_ai_generated,
       createdAt: post.created_at,
       updatedAt: post.updated_at,
-      images: post.analytics_post_images ? post.analytics_post_images.map(img => ({
-        id: img.id,
-        name: img.file_name,
-        url: `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/analytics-images/${img.file_path}`
-      })) : [],
-      files: post.analytics_post_images ? post.analytics_post_images.map(file => ({
-        id: file.id,
-        name: file.file_name,
-        url: `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/analytics-images/${file.file_path}`,
-        type: file.mime_type,
-        size: file.file_size
-      })) : []
+      images: post.analytics_post_images ? post.analytics_post_images
+        .filter(item => !item.file_type || item.file_type !== 'document')
+        .map(img => ({
+          id: img.id,
+          name: img.file_name,
+          url: `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/analytics-images/${img.file_path}`
+        })) : [],
+      files: post.analytics_post_images ? post.analytics_post_images
+        .filter(item => item.file_type === 'document')
+        .map(file => ({
+          id: file.id,
+          name: file.file_name,
+          url: `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/analytics-images/${file.file_path}`,
+          type: file.mime_type,
+          size: file.file_size
+        })) : []
     }));
 
     return NextResponse.json({ posts: transformedPosts });
