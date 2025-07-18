@@ -219,7 +219,7 @@ export default function TeachingPostClient({ params }) {
         {/* AI Generated Notice */}
         {post.isAIGenerated && (
           <p className="mt-4 text-sm text-blue-600 font-sans">
-            • AI • 이 글은 AI와 함께 작성되었습니다.
+            .AI. 이 글은 AI와 함께 작성되었습니다.
           </p>
         )}
 

@@ -179,7 +179,7 @@ export default function ResearchPostClient({ params }) {
                 {/* AI 생성 표시 */}
                 {post.isAIGenerated && (
                   <p className="mt-4 text-sm text-blue-600 font-sans">
-                    • AI • 이 글은 AI와 함께 작성되었습니다.
+                    .AI. 이 글은 AI와 함께 작성되었습니다.
                   </p>
                 )}
               </header>
