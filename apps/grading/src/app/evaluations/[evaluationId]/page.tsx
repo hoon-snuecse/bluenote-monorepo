@@ -32,11 +32,11 @@ export default function EvaluationDetailPage() {
 
   useEffect(() => {
     fetchEvaluation()
-  }, [params.id])
+  }, [params.evaluationId])
 
   const fetchEvaluation = async () => {
     try {
-      const response = await fetch(`/api/evaluations/${params.id}`)
+      const response = await fetch(`/api/evaluations/${params.evaluationId}`)
       if (response.ok) {
         const data = await response.json()
         setEvaluation(data)

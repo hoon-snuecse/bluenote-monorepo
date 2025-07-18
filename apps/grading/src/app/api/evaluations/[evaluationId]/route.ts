@@ -12,12 +12,9 @@ export async function GET(
       },
       include: {
         submission: {
-          select: {
-            studentName: true,
-            studentId: true,
-            content: true,
-            submittedAt: true,
-            assignmentId: true
+          include: {
+            assignment: true,
+            student: true
           }
         }
       }
@@ -30,17 +27,22 @@ export async function GET(
       );
     }
 
-    // JSON 문자열 파싱
-    const formattedEvaluation = {
-      ...evaluation,
-      improvementSuggestions: JSON.parse(evaluation.improvementSuggestions),
-      strengths: JSON.parse(evaluation.strengths),
+    // JSON 문자열 파싱 및 평가 데이터 구성
+    const evaluationData = {
+      id: evaluation.id,
+      studentId: evaluation.studentId,
+      studentName: evaluation.submission.student?.name || evaluation.submission.studentName || 'Unknown',
+      studentDbId: evaluation.studentDbId,
+      assignmentTitle: evaluation.submission.assignment.title,
+      evaluatedAt: evaluation.evaluatedAt,
+      overallLevel: evaluation.overallLevel,
+      domainEvaluations: evaluation.domainEvaluations,
+      overallFeedback: evaluation.overallFeedback,
+      strengths: typeof evaluation.strengths === 'string' ? JSON.parse(evaluation.strengths) : evaluation.strengths,
+      improvementSuggestions: typeof evaluation.improvementSuggestions === 'string' ? JSON.parse(evaluation.improvementSuggestions) : evaluation.improvementSuggestions
     };
 
-    return NextResponse.json({ 
-      success: true, 
-      evaluation: formattedEvaluation 
-    });
+    return NextResponse.json(evaluationData);
   } catch (error) {
     console.error('평가 결과 조회 오류:', error);
     return NextResponse.json(
