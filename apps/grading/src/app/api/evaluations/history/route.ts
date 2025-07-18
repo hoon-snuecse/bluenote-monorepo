@@ -36,17 +36,17 @@ export async function GET(request: NextRequest) {
     })
 
     // 평가 이력 데이터 구성
-    const history = evaluations.map(eval => ({
-      id: eval.id,
-      evaluatedAt: eval.evaluatedAt,
-      assignmentTitle: eval.submission.assignment.title,
-      assignmentId: eval.submission.assignment.id,
-      writingType: eval.submission.assignment.writingType,
-      gradeLevel: eval.submission.assignment.gradeLevel,
-      overallLevel: eval.overallLevel,
-      domainEvaluations: eval.domainEvaluations,
-      strengths: eval.strengths,
-      improvementSuggestions: eval.improvementSuggestions
+    const history = evaluations.map(evaluation => ({
+      id: evaluation.id,
+      evaluatedAt: evaluation.evaluatedAt,
+      assignmentTitle: evaluation.submission.assignment.title,
+      assignmentId: evaluation.submission.assignment.id,
+      writingType: evaluation.submission.assignment.writingType,
+      gradeLevel: evaluation.submission.assignment.gradeLevel,
+      overallLevel: evaluation.overallLevel,
+      domainEvaluations: evaluation.domainEvaluations,
+      strengths: evaluation.strengths,
+      improvementSuggestions: evaluation.improvementSuggestions
     }))
 
     // 성장 추이 분석
@@ -76,10 +76,10 @@ function analyzeGrowth(evaluations: any[]) {
   const domainGrowth: Record<string, number[]> = {}
   const overallLevels: string[] = []
 
-  evaluations.reverse().forEach(eval => {
-    overallLevels.push(eval.overallLevel)
+  evaluations.reverse().forEach(evaluation => {
+    overallLevels.push(evaluation.overallLevel)
     
-    const domains = eval.domainEvaluations as any[]
+    const domains = evaluation.domainEvaluations as any[]
     domains.forEach((domain: any) => {
       if (!domainGrowth[domain.domain]) {
         domainGrowth[domain.domain] = []
