@@ -66,8 +66,8 @@ export async function POST(request) {
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-    if (!session.user.isAdmin) {
-      return NextResponse.json({ error: 'Forbidden - Admin access required' }, { status: 403 });
+    if (!session.user.isAdmin && !session.user.canWrite) {
+      return NextResponse.json({ error: 'Forbidden - Admin access or write permission required' }, { status: 403 });
     }
 
     const supabase = await createClient();
@@ -145,8 +145,8 @@ export async function PUT(request) {
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-    if (!session.user.isAdmin) {
-      return NextResponse.json({ error: 'Forbidden - Admin access required' }, { status: 403 });
+    if (!session.user.isAdmin && !session.user.canWrite) {
+      return NextResponse.json({ error: 'Forbidden - Admin access or write permission required' }, { status: 403 });
     }
 
     const supabase = await createClient();
@@ -242,8 +242,8 @@ export async function DELETE(request) {
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-    if (!session.user.isAdmin) {
-      return NextResponse.json({ error: 'Forbidden - Admin access required' }, { status: 403 });
+    if (!session.user.isAdmin && !session.user.canWrite) {
+      return NextResponse.json({ error: 'Forbidden - Admin access or write permission required' }, { status: 403 });
     }
 
     const supabase = await createClient();
