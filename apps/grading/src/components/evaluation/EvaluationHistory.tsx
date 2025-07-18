@@ -1,9 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle, Badge, Button } from '@bluenote/ui'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 import { Calendar, TrendingUp, FileText, ChevronDown, ChevronUp } from 'lucide-react'
 import { format } from 'date-fns'

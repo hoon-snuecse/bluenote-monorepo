@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@bluenote/ui'
+import { Button } from '@bluenote/ui'
 import { EvaluationHistory } from '@/components/evaluation/EvaluationHistory'
 import { ArrowLeft, User, School, Calendar } from 'lucide-react'
 import { format } from 'date-fns'
