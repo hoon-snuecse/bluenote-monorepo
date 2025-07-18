@@ -129,7 +129,7 @@ export default function ShedPageClient() {
               })}
             </div>
             
-            {session?.user?.isAdmin && (
+            {(session?.user?.isAdmin || session?.user?.canWrite) && (
               <Link
                 href="/shed/write"
                 className="flex items-center gap-2 px-4 py-2 bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-lg hover:shadow-lg transition-all"
@@ -218,7 +218,7 @@ export default function ShedPageClient() {
                       ? '아직 작성된 글이 없습니다.'
                       : `${categories.find(c => c.id === selectedCategory)?.name} 카테고리에 글이 없습니다.`}
                   </p>
-                  {session?.user?.isAdmin && (
+                  {(session?.user?.isAdmin || session?.user?.canWrite) && (
                     <Link
                       href="/shed/write"
                       className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 transition-colors"

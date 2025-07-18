@@ -116,7 +116,7 @@ export default function AnalyticsPageClient() {
               })}
             </div>
             
-            {session?.user?.isAdmin && (
+            {(session?.user?.isAdmin || session?.user?.canWrite) && (
               <Link
                 href="/analytics/write"
                 className="flex items-center gap-2 px-4 py-2 bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-lg hover:shadow-lg transition-all"
@@ -201,7 +201,7 @@ export default function AnalyticsPageClient() {
                       ? '아직 작성된 분석 포스트가 없습니다.'
                       : `${categories.find(c => c.id === selectedCategory)?.name} 카테고리에 포스트가 없습니다.`}
                   </p>
-                  {session?.user?.isAdmin && (
+                  {(session?.user?.isAdmin || session?.user?.canWrite) && (
                     <Link
                       href="/analytics/write"
                       className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 transition-colors"
