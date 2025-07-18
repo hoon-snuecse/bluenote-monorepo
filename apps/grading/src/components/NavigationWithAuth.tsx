@@ -41,45 +41,60 @@ export default function NavigationWithAuth() {
 
   const menuItems = [
     { 
-      href: '/', 
+      href: 'https://bluenote.site', 
       label: '홈', 
       icon: Home,
+      external: true
     },
     { 
-      href: '/activities', 
+      href: 'https://bluenote.site/activities', 
       label: '활동', 
       icon: FlaskConical,
+      external: true
     },
     { 
-      href: '/research', 
+      href: 'https://bluenote.site/research', 
       label: '연구', 
       icon: Microscope,
+      external: true
     },
     { 
-      href: '/teaching', 
+      href: 'https://bluenote.site/teaching', 
       label: '교육', 
       icon: BookOpen,
+      external: true
     },
     { 
-      href: '/analytics', 
+      href: 'https://bluenote.site/analytics', 
       label: '분석', 
       icon: BarChart3,
+      external: true
     },
     { 
-      href: '/prg', 
+      href: 'https://bluenote.site/prg', 
       label: '프로그램', 
       icon: Laptop,
+      external: true
     },
     { 
-      href: '/shed', 
+      href: 'https://bluenote.site/shed', 
       label: '일상', 
       icon: Hammer,
+      external: true
     },
   ];
 
-  const isActive = (href: string) => {
-    if (href === '/') return pathname === '/';
-    return pathname.startsWith(href);
+  const isActive = (item: any) => {
+    // 프로그램 메뉴는 grading 사이트에서 항상 활성화
+    if (item.href === 'https://bluenote.site/prg') return true;
+    return false;
+  };
+
+  const handleNavigation = (e: React.MouseEvent<HTMLAnchorElement>, item: any) => {
+    if (item.external) {
+      e.preventDefault();
+      window.location.href = item.href;
+    }
   };
 
   const handleLogout = () => {
@@ -96,8 +111,12 @@ export default function NavigationWithAuth() {
         <div className="flex justify-between items-center h-16">
           {/* 로고/브랜드 */}
           <Link 
-            href="/" 
+            href="https://bluenote.site" 
             className="group"
+            onClick={(e) => {
+              e.preventDefault();
+              window.location.href = 'https://bluenote.site';
+            }}
             title="BlueNote Atelier"
           >
             <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center text-white font-bold text-xl shadow-md group-hover:shadow-lg transition-all duration-200 group-hover:scale-105">
@@ -109,12 +128,15 @@ export default function NavigationWithAuth() {
           <div className="hidden md:flex items-center gap-2">
             {menuItems.map((item) => {
               const IconComponent = item.icon;
+              const active = isActive(item);
+              
               return (
                 <Link
                   key={item.href}
                   href={item.href}
+                  onClick={(e) => handleNavigation(e, item)}
                   className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 whitespace-nowrap ${
-                    isActive(item.href)
+                    active
                       ? 'bg-blue-100 text-blue-700'
                       : 'text-slate-600 hover:bg-slate-100 hover:text-slate-800'
                   }`}
@@ -128,14 +150,18 @@ export default function NavigationWithAuth() {
             {/* Claude AI 채팅 버튼 (로그인한 경우만) */}
             {user && (
               <Link
-                href="/ai/chat"
+                href="https://bluenote.site/ai/chat"
+                onClick={(e) => {
+                  e.preventDefault();
+                  window.location.href = 'https://bluenote.site/ai/chat';
+                }}
                 className={`flex items-center px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 whitespace-nowrap ${
-                  isActive('/ai/chat')
+                  false
                     ? 'bg-blue-100 text-blue-700'
                     : 'text-blue-600 hover:bg-blue-50 hover:text-blue-700'
                 }`}
               >
-                <span>.AI.</span>
+                <span className="font-bold">.AI.</span>
               </Link>
             )}
             
@@ -203,13 +229,18 @@ export default function NavigationWithAuth() {
           <div className="container-custom py-4">
             {menuItems.map((item) => {
               const IconComponent = item.icon;
+              const active = isActive(item);
+              
               return (
                 <Link
                   key={item.href}
                   href={item.href}
-                  onClick={() => setIsMenuOpen(false)}
+                  onClick={(e) => {
+                    handleNavigation(e, item);
+                    setIsMenuOpen(false);
+                  }}
                   className={`flex items-center gap-3 px-4 py-3 rounded-lg text-base font-medium transition-colors whitespace-nowrap ${
-                    isActive(item.href)
+                    active
                       ? 'bg-blue-100 text-blue-700'
                       : 'text-slate-600 hover:bg-slate-50'
                   }`}
@@ -223,15 +254,19 @@ export default function NavigationWithAuth() {
             {/* 모바일 Claude 채팅 버튼 */}
             {user && (
               <Link
-                href="/ai/chat"
-                onClick={() => setIsMenuOpen(false)}
+                href="https://bluenote.site/ai/chat"
+                onClick={(e) => {
+                  e.preventDefault();
+                  window.location.href = 'https://bluenote.site/ai/chat';
+                  setIsMenuOpen(false);
+                }}
                 className={`flex items-center px-4 py-3 rounded-lg text-base font-medium transition-colors whitespace-nowrap ${
-                  isActive('/ai/chat')
+                  false
                     ? 'bg-blue-100 text-blue-700'
                     : 'text-blue-600 hover:bg-blue-50'
                 }`}
               >
-                <span>.AI.</span>
+                <span className="font-bold">.AI.</span>
               </Link>
             )}
             
