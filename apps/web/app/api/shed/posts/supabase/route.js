@@ -249,8 +249,8 @@ export async function DELETE(request) {
     }
 
     const supabase = await createClient();
-    const { searchParams } = new URL(request.url);
-    const id = searchParams.get('id');
+    const data = await request.json();
+    const { id } = data;
     
     if (!id) {
       return NextResponse.json({ error: 'Post ID required' }, { status: 400 });
