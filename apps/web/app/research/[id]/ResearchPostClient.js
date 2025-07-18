@@ -58,14 +58,23 @@ export default function ResearchPostClient({ params }) {
     if (!confirm('정말로 이 글을 삭제하시겠습니까?')) return;
     
     try {
-      const response = await fetch(`/api/research/posts/${id}`, {
+      const response = await fetch('/api/research/posts/supabase', {
         method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ id }),
       });
+      
       if (response.ok) {
         router.push('/research');
+      } else {
+        const error = await response.json();
+        alert('삭제 중 오류가 발생했습니다: ' + (error.error || '알 수 없는 오류'));
       }
     } catch (error) {
       console.error('Failed to delete post:', error);
+      alert('삭제 중 오류가 발생했습니다.');
     }
   };
 
