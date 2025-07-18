@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Sparkles, RefreshCw, Check, Edit2 } from 'lucide-react';
 import type { DomainChecklist, LevelSystem, WritingType } from '@/types/grading';
 

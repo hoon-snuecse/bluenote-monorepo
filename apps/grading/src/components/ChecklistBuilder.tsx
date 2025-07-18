@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Plus, Trash2, Edit2, Check, X } from 'lucide-react';
 import type { DomainChecklist, ChecklistItem, LevelSystem, WritingType } from '@/types/grading';
 

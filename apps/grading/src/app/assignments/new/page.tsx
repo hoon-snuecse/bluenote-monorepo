@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft, Check } from 'lucide-react';
 
 type GradeLevel = '초등학교 3학년' | '초등학교 4학년' | '초등학교 5학년' | '초등학교 6학년';

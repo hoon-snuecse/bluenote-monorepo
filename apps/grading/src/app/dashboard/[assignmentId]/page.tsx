@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft, Download, ArrowUpDown, Filter, Eye, FileSpreadsheet, FileText, PieChart, Share2 } from 'lucide-react';
 
 interface EvaluationData {

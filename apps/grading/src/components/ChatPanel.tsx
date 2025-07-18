@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useChat } from '@/hooks/useChat';
 import { useUser } from '@/contexts/UserContext';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Send, Users, MessageCircle, X } from 'lucide-react';
 
 interface ChatPanelProps {
