@@ -4,7 +4,8 @@ import { useState, useEffect, Suspense } from 'react';
 import { useParams } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@bluenote/ui';
 import { GrowthStageIndicator } from '@/components/GrowthStageIndicator';
-import { ArrowLeft, Download, Edit2, Save, X } from 'lucide-react';
+import { ArrowLeft, Download, Edit2, Save, X, History } from 'lucide-react';
+import Link from 'next/link';
 
 interface StudentData {
   id: string;
@@ -161,6 +162,13 @@ function StudentReportContent() {
               </button>
             </>
           )}
+          <Link
+            href={`/students/${studentId}`}
+            className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
+          >
+            <History className="w-4 h-4" />
+            평가 히스토리
+          </Link>
           <button
             onClick={() => window.print()}
             className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"

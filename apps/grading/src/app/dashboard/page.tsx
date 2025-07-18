@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@bluenote/ui';
-import { FileText, Download, RefreshCw, Eye, ChevronDown, ChevronUp } from 'lucide-react';
+import { FileText, Download, RefreshCw, Eye, ChevronDown, ChevronUp, History } from 'lucide-react';
+import Link from 'next/link';
 import { exportToExcel } from '@/utils/excel-export';
 
 interface Student {
@@ -325,7 +326,7 @@ export default function DashboardPage() {
                     </button>
                   </th>
                   <th className="text-center p-3">등급</th>
-                  <th className="text-center p-3">상세보기</th>
+                  <th className="text-center p-3">작업</th>
                 </tr>
               </thead>
               <tbody>
@@ -379,13 +380,23 @@ export default function DashboardPage() {
                       </span>
                     </td>
                     <td className="p-3 text-center">
-                      <button
-                        onClick={() => window.location.href = `/report/${student.id}`}
-                        className="text-blue-600 hover:text-blue-800"
-                        disabled={student.evaluationStatus !== 'completed'}
-                      >
-                        <Eye className="w-5 h-5" />
-                      </button>
+                      <div className="flex items-center justify-center gap-2">
+                        <button
+                          onClick={() => window.location.href = `/report/${student.id}`}
+                          className="text-blue-600 hover:text-blue-800 disabled:text-gray-400"
+                          disabled={student.evaluationStatus !== 'completed'}
+                          title="평가 결과 보기"
+                        >
+                          <Eye className="w-5 h-5" />
+                        </button>
+                        <Link
+                          href={`/students/${student.id}`}
+                          className="text-purple-600 hover:text-purple-800"
+                          title="평가 히스토리"
+                        >
+                          <History className="w-5 h-5" />
+                        </Link>
+                      </div>
                     </td>
                   </tr>
                 ))}
