@@ -24,7 +24,8 @@ export async function POST(request: NextRequest) {
         assignmentId: data.assignmentId,
         studentName: data.studentName,
         studentId: data.studentId,
-        content: data.content
+        studentDbId: data.studentDbId || null,
+        content: data.content || ''
       }
     });
 

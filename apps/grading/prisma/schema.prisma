@@ -41,6 +41,7 @@ model Submission {
   assignmentId String
   studentName  String
   studentId    String
+  studentDbId  String?   // Student 모델의 ID 참조
   content      String    @db.Text
   submittedAt  DateTime  @default(now())
   evaluatedAt  DateTime?
@@ -51,9 +52,11 @@ model Submission {
   // Relations
   assignment   Assignment   @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
   evaluations  Evaluation[]
+  student      Student?     @relation("StudentSubmissions", fields: [studentDbId], references: [id])
   
   @@index([assignmentId])
   @@index([studentId])
+  @@index([studentDbId])
   @@index([submittedAt])
 }
 
@@ -63,6 +66,7 @@ model Evaluation {
   submissionId          String
   assignmentId          String
   studentId             String
+  studentDbId           String?  // Student 모델의 ID 참조
   domainEvaluations     Json     // 영역별 평가 결과 JSON
   overallLevel          String
   overallFeedback       String   @db.Text
@@ -73,10 +77,12 @@ model Evaluation {
   
   // Relations
   submission            Submission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  student               Student?   @relation("StudentEvaluations", fields: [studentDbId], references: [id])
   
   @@index([submissionId])
   @@index([assignmentId])
   @@index([studentId])
+  @@index([studentDbId])
   @@index([evaluatedAt])
 }
 
@@ -98,14 +104,23 @@ model AccessToken {
 model EvaluationTemplate {
   id                String   @id @default(cuid())
   name              String
-  writingType       String
-  gradeLevel        String
+  description       String?
+  writingType       String?
+  gradeLevel        String?
   evaluationDomains Json // PostgreSQL JSON 타입
   evaluationLevels  Json // PostgreSQL JSON 타입
-  criteriaTemplate  String   @db.Text
+  levelCount        Int
+  gradingCriteria   String   @db.Text
+  isPublic          Boolean  @default(false)
+  createdBy         String
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
   
+  // Relations
+  creator           User     @relation(fields: [createdBy], references: [id])
+  
+  @@index([createdBy])
+  @@index([isPublic])
   @@index([writingType])
   @@index([gradeLevel])
 }
@@ -134,6 +149,10 @@ model User {
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
   
+  // Relations
+  templates    EvaluationTemplate[]
+  studentGroups StudentGroup[]
+  
   @@index([email])
   @@index([schoolName])
 }
@@ -142,4 +161,48 @@ enum UserRole {
   TEACHER
   ADMIN
   STUDENT
+}
+
+// 학생 그룹 모델
+model StudentGroup {
+  id            String   @id @default(cuid())
+  name          String
+  description   String?
+  schoolName    String
+  gradeLevel    String?
+  className     String?
+  schoolYear    String   // 예: "2024"
+  createdBy     String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  // Relations
+  creator       User     @relation(fields: [createdBy], references: [id])
+  students      Student[]
+  
+  @@index([createdBy])
+  @@index([schoolName])
+  @@index([gradeLevel])
+  @@index([className])
+  @@index([schoolYear])
+}
+
+// 학생 모델
+model Student {
+  id            String   @id @default(cuid())
+  studentId     String   // 학번
+  name          String
+  email         String?
+  groupId       String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  // Relations
+  group         StudentGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  submissions   Submission[] @relation("StudentSubmissions")
+  evaluations   Evaluation[] @relation("StudentEvaluations")
+  
+  @@unique([studentId, groupId])
+  @@index([groupId])
+  @@index([studentId])
 }

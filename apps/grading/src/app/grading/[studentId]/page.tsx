@@ -3,7 +3,7 @@
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { mockEvaluationResults } from '@/lib/mock-data';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
+import { Card, CardContent, CardHeader, CardTitle } from '@bluenote/ui';
 import { GrowthStageIndicator } from '@/components/GrowthStageIndicator';
 import { ArrowLeft, Printer, Download } from 'lucide-react';
 import { exportToPDF } from '@/lib/export-utils';

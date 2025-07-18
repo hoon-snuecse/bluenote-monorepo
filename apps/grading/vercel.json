@@ -1,0 +1,70 @@
+{
+  "buildCommand": "cd ../.. && pnpm build --filter=grading",
+  "outputDirectory": "apps/grading/.next",
+  "installCommand": "pnpm install",
+  "framework": "nextjs",
+  "regions": ["icn1"],
+  "env": {
+    "NEXT_TELEMETRY_DISABLED": "1"
+  },
+  "functions": {
+    "apps/grading/src/app/api/evaluations/batch/route.ts": {
+      "maxDuration": 300
+    },
+    "apps/grading/src/app/api/evaluations/[id]/route.ts": {
+      "maxDuration": 60
+    },
+    "apps/grading/src/app/api/export/excel/route.ts": {
+      "maxDuration": 60
+    }
+  },
+  "headers": [
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-store, must-revalidate"
+        }
+      ]
+    },
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "X-XSS-Protection",
+          "value": "1; mode=block"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        },
+        {
+          "key": "Permissions-Policy",
+          "value": "camera=(), microphone=(), geolocation=()"
+        }
+      ]
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/api/health",
+      "destination": "/api/health"
+    }
+  ],
+  "redirects": [
+    {
+      "source": "/home",
+      "destination": "/",
+      "permanent": false
+    }
+  ]
+}

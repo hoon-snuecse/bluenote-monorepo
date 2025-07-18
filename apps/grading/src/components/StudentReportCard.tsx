@@ -1,7 +1,7 @@
 'use client';
 
 import React, { memo } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
+import { Card, CardContent, CardHeader, CardTitle } from '@bluenote/ui';
 import { GrowthStageIndicator } from '@/components/GrowthStageIndicator';
 import type { EvaluationResult, DomainKey } from '@/types/grading';
 

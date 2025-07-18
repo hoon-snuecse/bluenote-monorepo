@@ -57,3 +57,14 @@ export function useNotifications() {
   }
   return context;
 }
+
+// 기존 코드와의 호환성을 위한 별칭
+export const useNotification = () => {
+  const { addNotification, removeNotification, notifications } = useNotifications();
+  
+  return {
+    showNotification: addNotification,
+    hideNotification: removeNotification,
+    notifications
+  };
+};

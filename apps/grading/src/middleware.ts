@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { getTokenFromCookie, verifyToken } from '@/lib/auth';
+import { getToken } from 'next-auth/jwt';
 
 // 보호된 경로 목록
 const protectedPaths = [
@@ -8,25 +8,27 @@ const protectedPaths = [
   '/grading',
   '/student-report',
   '/settings',
+  '/dashboard',
+  '/dashboard-beta',
   '/api/assignments',
   '/api/submissions',
   '/api/evaluations',
   '/api/settings',
-  '/api/templates'
+  '/api/templates',
+  '/api/users/sync',
 ];
 
 // 공개 경로 목록
 const publicPaths = [
   '/',
-  '/login',
-  '/register',
-  '/api/auth/login',
-  '/api/auth/register',
+  '/auth/signin',
+  '/auth/error',
+  '/api/auth',
   '/submit', // 학생 제출 페이지
-  '/view' // 토큰 기반 조회 페이지
+  '/view', // 토큰 기반 조회 페이지
 ];
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   
   // 공개 경로는 통과
@@ -34,26 +36,26 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
   
+  // 정적 파일은 통과
+  if (pathname.includes('.') || pathname.startsWith('/_next')) {
+    return NextResponse.next();
+  }
+  
   // 보호된 경로 확인
   const isProtectedPath = protectedPaths.some(path => pathname.startsWith(path));
   
   if (isProtectedPath) {
-    // 토큰 확인
-    const token = getTokenFromCookie(request.headers.get('cookie'));
+    // NextAuth 토큰 확인
+    const token = await getToken({ 
+      req: request,
+      secret: process.env.NEXTAUTH_SECRET 
+    });
     
     if (!token) {
       // 로그인 페이지로 리다이렉트
-      return NextResponse.redirect(new URL('/login', request.url));
-    }
-    
-    // 토큰 검증
-    const payload = verifyToken(token);
-    
-    if (!payload) {
-      // 유효하지 않은 토큰 - 로그인 페이지로 리다이렉트
-      const response = NextResponse.redirect(new URL('/login', request.url));
-      response.cookies.delete('auth-token');
-      return response;
+      const url = new URL('/auth/signin', request.url);
+      url.searchParams.set('callbackUrl', encodeURI(request.url));
+      return NextResponse.redirect(url);
     }
     
     // 인증된 사용자 - 요청 통과

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@bluenote/ui';
 import { FileText, Download, RefreshCw, Eye, ChevronDown, ChevronUp } from 'lucide-react';
 import { exportToExcel } from '@/utils/excel-export';
 

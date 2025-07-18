@@ -12,6 +12,7 @@
     "@anthropic-ai/sdk": "^0.55.1",
     "@bluenote/auth": "workspace:*",
     "@bluenote/ui": "workspace:*",
+    "@bluenote/shared-infra": "workspace:*",
     "@supabase/ssr": "^0.6.1",
     "@supabase/supabase-js": "^2.50.3",
     "date-fns": "^4.1.0",

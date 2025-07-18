@@ -1,18 +1,19 @@
 'use client';
 
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { SessionProvider, useSession } from '@bluenote/auth';
+import { createContext, useContext, ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
-
-interface User {
-  id: string;
-  email: string;
-  name: string;
-  role: string;
-  schoolName?: string;
-}
+import { signIn, signOut } from 'next-auth/react';
 
 interface UserContextType {
-  user: User | null;
+  user: {
+    id?: string;
+    email?: string | null;
+    name?: string | null;
+    role?: string;
+    isAdmin?: boolean;
+    canWrite?: boolean;
+  } | null;
   loading: boolean;
   error: string | null;
   login: (email: string, password: string) => Promise<void>;
@@ -22,92 +23,44 @@ interface UserContextType {
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
-export function UserProvider({ children }: { children: ReactNode }) {
+function UserProviderInner({ children }: { children: ReactNode }) {
   const router = useRouter();
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  // 사용자 정보 조회
-  const fetchUser = async () => {
-    try {
-      const response = await fetch('/api/auth/me');
-      const data = await response.json();
-      
-      if (data.success) {
-        setUser(data.user);
-      } else {
-        setUser(null);
-      }
-    } catch (error) {
-      console.error('사용자 정보 조회 실패:', error);
-      setUser(null);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // 초기 로드 시 사용자 정보 조회
-  useEffect(() => {
-    fetchUser();
-  }, []);
-
-  // 로그인
+  const { data: session, status, update } = useSession();
+  
+  const user = session?.user ? {
+    id: session.user.id,
+    email: session.user.email,
+    name: session.user.name,
+    role: session.user.role,
+    isAdmin: session.user.isAdmin,
+    canWrite: session.user.canWrite,
+    canGrade: session.user.isAdmin || session.user.role === 'teacher',
+  } : null;
+  
+  const loading = status === 'loading';
+  
+  // Google OAuth 로그인으로 변경
   const login = async (email: string, password: string) => {
-    setError(null);
-    setLoading(true);
-    
-    try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
-      });
-      
-      const data = await response.json();
-      
-      if (data.success) {
-        setUser(data.user);
-        router.push('/assignments');
-      } else {
-        setError(data.error || '로그인에 실패했습니다.');
-        throw new Error(data.error);
-      }
-    } catch (error) {
-      console.error('로그인 실패:', error);
-      throw error;
-    } finally {
-      setLoading(false);
-    }
+    // 기존 로그인 방식은 더 이상 사용하지 않음
+    // Google OAuth로 리다이렉트
+    await signIn('google', { callbackUrl: '/dashboard-beta' });
   };
-
-  // 로그아웃
+  
   const logout = async () => {
-    try {
-      await fetch('/api/auth/logout', {
-        method: 'POST',
-      });
-      
-      setUser(null);
-      router.push('/login');
-    } catch (error) {
-      console.error('로그아웃 실패:', error);
-    }
+    await signOut({ callbackUrl: '/auth/signin' });
   };
-
-  // 사용자 정보 새로고침
+  
   const refreshUser = async () => {
-    await fetchUser();
+    // NextAuth의 update 함수를 사용하여 세션 갱신
+    await update();
   };
-
+  
   return (
     <UserContext.Provider
       value={{
         user,
         loading,
-        error,
+        error: null,
         login,
         logout,
         refreshUser,
@@ -115,6 +68,14 @@ export function UserProvider({ children }: { children: ReactNode }) {
     >
       {children}
     </UserContext.Provider>
+  );
+}
+
+export function UserProvider({ children }: { children: ReactNode }) {
+  return (
+    <SessionProvider>
+      <UserProviderInner>{children}</UserProviderInner>
+    </SessionProvider>
   );
 }
 

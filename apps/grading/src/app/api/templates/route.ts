@@ -1,19 +1,54 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getServerSession } from '@/lib/auth';
 import prisma from '@/lib/prisma';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    const session = await getServerSession();
+    
+    if (!session?.user?.email) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const searchParams = request.nextUrl.searchParams;
+    const isPublic = searchParams.get('public') === 'true';
+    const userOnly = searchParams.get('userOnly') === 'true';
+
+    let whereClause: any = {};
+    
+    if (userOnly) {
+      whereClause.createdBy = session.user.email;
+    } else if (!isPublic) {
+      whereClause = {
+        OR: [
+          { createdBy: session.user.email },
+          { isPublic: true }
+        ]
+      };
+    } else {
+      whereClause.isPublic = true;
+    }
+
     const templates = await prisma.evaluationTemplate.findMany({
+      where: whereClause,
+      include: {
+        creator: {
+          select: {
+            name: true,
+            email: true
+          }
+        }
+      },
       orderBy: {
-        name: 'asc'
+        createdAt: 'desc'
       }
     });
     
-    // JSON 문자열 파싱
+    // PostgreSQL JSON 타입은 이미 파싱되어 있음
     const formattedTemplates = templates.map(template => ({
       ...template,
-      evaluationDomains: JSON.parse(template.evaluationDomains),
-      evaluationLevels: JSON.parse(template.evaluationLevels)
+      evaluationDomains: template.evaluationDomains as string[],
+      evaluationLevels: template.evaluationLevels as string[]
     }));
     
     return NextResponse.json({ success: true, templates: formattedTemplates });
@@ -28,6 +63,12 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
+    const session = await getServerSession();
+    
+    if (!session?.user?.email) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const data = await request.json();
     
     // 새 템플릿 생성
@@ -36,18 +77,29 @@ export async function POST(request: NextRequest) {
         name: data.name,
         description: data.description || '',
         writingType: data.writingType,
-        evaluationDomains: JSON.stringify(data.evaluationDomains),
-        evaluationLevels: JSON.stringify(data.evaluationLevels),
+        gradeLevel: data.gradeLevel,
+        evaluationDomains: data.evaluationDomains,
+        evaluationLevels: data.evaluationLevels,
         levelCount: data.levelCount,
-        gradingCriteria: data.gradingCriteria
+        gradingCriteria: data.gradingCriteria,
+        isPublic: data.isPublic || false,
+        createdBy: session.user.email
+      },
+      include: {
+        creator: {
+          select: {
+            name: true,
+            email: true
+          }
+        }
       }
     });
     
-    // JSON 문자열 파싱하여 반환
+    // PostgreSQL JSON 타입은 이미 파싱되어 있음
     const formattedTemplate = {
       ...newTemplate,
-      evaluationDomains: JSON.parse(newTemplate.evaluationDomains),
-      evaluationLevels: JSON.parse(newTemplate.evaluationLevels)
+      evaluationDomains: newTemplate.evaluationDomains as string[],
+      evaluationLevels: newTemplate.evaluationLevels as string[]
     };
     
     return NextResponse.json({ success: true, template: formattedTemplate });
@@ -62,6 +114,12 @@ export async function POST(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   try {
+    const session = await getServerSession();
+    
+    if (!session?.user?.email) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const data = await request.json();
     
     if (!data.id) {
@@ -71,6 +129,25 @@ export async function PUT(request: NextRequest) {
       );
     }
     
+    // 권한 확인
+    const existingTemplate = await prisma.evaluationTemplate.findUnique({
+      where: { id: data.id }
+    });
+
+    if (!existingTemplate) {
+      return NextResponse.json(
+        { success: false, error: '템플릿을 찾을 수 없습니다.' },
+        { status: 404 }
+      );
+    }
+
+    if (existingTemplate.createdBy !== session.user.email) {
+      return NextResponse.json(
+        { success: false, error: '수정 권한이 없습니다.' },
+        { status: 403 }
+      );
+    }
+
     // 기존 템플릿 업데이트
     const updatedTemplate = await prisma.evaluationTemplate.update({
       where: { id: data.id },
@@ -78,18 +155,28 @@ export async function PUT(request: NextRequest) {
         name: data.name,
         description: data.description,
         writingType: data.writingType,
-        evaluationDomains: JSON.stringify(data.evaluationDomains),
-        evaluationLevels: JSON.stringify(data.evaluationLevels),
+        gradeLevel: data.gradeLevel,
+        evaluationDomains: data.evaluationDomains,
+        evaluationLevels: data.evaluationLevels,
         levelCount: data.levelCount,
-        gradingCriteria: data.gradingCriteria
+        gradingCriteria: data.gradingCriteria,
+        isPublic: data.isPublic
+      },
+      include: {
+        creator: {
+          select: {
+            name: true,
+            email: true
+          }
+        }
       }
     });
     
-    // JSON 문자열 파싱하여 반환
+    // PostgreSQL JSON 타입은 이미 파싱되어 있음
     const formattedTemplate = {
       ...updatedTemplate,
-      evaluationDomains: JSON.parse(updatedTemplate.evaluationDomains),
-      evaluationLevels: JSON.parse(updatedTemplate.evaluationLevels)
+      evaluationDomains: updatedTemplate.evaluationDomains as string[],
+      evaluationLevels: updatedTemplate.evaluationLevels as string[]
     };
     
     return NextResponse.json({ success: true, template: formattedTemplate });
@@ -104,6 +191,12 @@ export async function PUT(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
+    const session = await getServerSession();
+    
+    if (!session?.user?.email) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
     
@@ -114,6 +207,25 @@ export async function DELETE(request: NextRequest) {
       );
     }
     
+    // 권한 확인
+    const existingTemplate = await prisma.evaluationTemplate.findUnique({
+      where: { id }
+    });
+
+    if (!existingTemplate) {
+      return NextResponse.json(
+        { success: false, error: '템플릿을 찾을 수 없습니다.' },
+        { status: 404 }
+      );
+    }
+
+    if (existingTemplate.createdBy !== session.user.email) {
+      return NextResponse.json(
+        { success: false, error: '삭제 권한이 없습니다.' },
+        { status: 403 }
+      );
+    }
+
     await prisma.evaluationTemplate.delete({
       where: { id }
     });

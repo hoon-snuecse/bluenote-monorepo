@@ -175,6 +175,7 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams;
     const assignmentId = searchParams.get('assignmentId');
     const studentId = searchParams.get('studentId');
+    const round = searchParams.get('round');
 
     const where: any = {};
     if (assignmentId) where.assignmentId = assignmentId;
@@ -197,12 +198,48 @@ export async function GET(request: NextRequest) {
       }
     });
 
-    // JSON 문자열 파싱
-    const formattedEvaluations = evaluations.map(evaluation => ({
-      ...evaluation,
-      improvementSuggestions: JSON.parse(evaluation.improvementSuggestions as string),
-      strengths: JSON.parse(evaluation.strengths as string),
-    }));
+    // JSON 문자열 파싱 및 통계 계산
+    const formattedEvaluations = evaluations.map(evaluation => {
+      const domainEvaluations = typeof evaluation.domainEvaluations === 'string' 
+        ? JSON.parse(evaluation.domainEvaluations) 
+        : evaluation.domainEvaluations;
+      
+      // 각 도메인의 점수 계산
+      const scores: any = {};
+      let totalScore = 0;
+      let domainCount = 0;
+
+      if (domainEvaluations && typeof domainEvaluations === 'object') {
+        Object.entries(domainEvaluations).forEach(([domain, evalData]: [string, any]) => {
+          if (evalData && evalData.score !== undefined) {
+            scores[domain] = evalData.score;
+            totalScore += evalData.score;
+            domainCount++;
+          }
+        });
+      }
+
+      const averageScore = domainCount > 0 ? Math.round(totalScore / domainCount) : 0;
+
+      return {
+        id: evaluation.id,
+        studentId: evaluation.studentId,
+        studentName: evaluation.submission?.studentName || evaluation.studentId,
+        status: evaluation.evaluatedAt ? 'completed' : 'pending',
+        averageScore,
+        scores,
+        level: evaluation.overallLevel,
+        evaluatedAt: evaluation.evaluatedAt,
+        domainEvaluations,
+        overallFeedback: evaluation.overallFeedback,
+        improvementSuggestions: typeof evaluation.improvementSuggestions === 'string'
+          ? JSON.parse(evaluation.improvementSuggestions)
+          : evaluation.improvementSuggestions,
+        strengths: typeof evaluation.strengths === 'string'
+          ? JSON.parse(evaluation.strengths)
+          : evaluation.strengths,
+      };
+    });
 
     return NextResponse.json({ 
       success: true, 

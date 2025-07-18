@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { AuthLayout } from '@/components/AuthLayout';
 import { useEvaluationStream } from '@/hooks/useEvaluationStream';
 import { ChatPanel } from '@/components/ChatPanel';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
+import { Card, CardContent, CardHeader, CardTitle } from '@bluenote/ui';
 import { 
   ArrowUpDown, 
   Download, 
