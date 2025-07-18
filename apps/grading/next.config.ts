@@ -66,6 +66,7 @@ const nextConfig: NextConfig = {
     // Fix for Prisma on Vercel
     if (isServer) {
       config.externals.push('@prisma/client');
+      config.externals.push('_http_common');
     }
 
     return config;
