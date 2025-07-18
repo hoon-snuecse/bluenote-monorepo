@@ -8,13 +8,13 @@
     "NEXT_TELEMETRY_DISABLED": "1"
   },
   "functions": {
-    "apps/grading/src/app/api/evaluations/batch/route.ts": {
+    "src/app/api/evaluations/batch/route.ts": {
       "maxDuration": 300
     },
-    "apps/grading/src/app/api/evaluations/[id]/route.ts": {
+    "src/app/api/evaluations/[id]/route.ts": {
       "maxDuration": 60
     },
-    "apps/grading/src/app/api/export/excel/route.ts": {
+    "src/app/api/export/excel/route.ts": {
       "maxDuration": 60
     }
   },

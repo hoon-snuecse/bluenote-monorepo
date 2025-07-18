@@ -9,8 +9,8 @@ export * from './components/CrossAppNavigation';
 // UI Components - grading에서 가져온 컴포넌트
 export * from './components/alert';
 export * from './components/badge';
-export * from './components/button';
-export * from './components/card';
+export * from './components/Button';
+export * from './components/Card';
 export * from './components/checkbox';
 export * from './components/dialog';
 export * from './components/input';
