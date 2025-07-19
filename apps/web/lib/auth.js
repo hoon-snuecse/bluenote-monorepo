@@ -6,6 +6,13 @@ import { createAdminClient } from '@/lib/supabase/admin';
 const authCallbacks = {
   checkUserPermission: async (email) => {
     try {
+      // First check if email is in admin list as a fallback
+      const adminEmails = process.env.ADMIN_EMAILS?.split(',').map(e => e.trim()) || [];
+      if (adminEmails.includes(email)) {
+        console.log(`User ${email} allowed via ADMIN_EMAILS`);
+        return true;
+      }
+      
       // Use admin client for auth checks (bypasses RLS)
       const supabase = process.env.SUPABASE_SERVICE_ROLE_KEY 
         ? createAdminClient() 
@@ -27,7 +34,9 @@ const authCallbacks = {
       return true;
     } catch (error) {
       console.error('Error in checkUserPermission:', error);
-      return false;
+      // Fallback to admin emails check
+      const adminEmails = process.env.ADMIN_EMAILS?.split(',').map(e => e.trim()) || [];
+      return adminEmails.includes(email);
     }
   },
   
