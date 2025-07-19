@@ -1,6 +1,14 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 
+export interface Student {
+  id: number;
+  name: string;
+  group_id: number;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface StudentGroup {
   id: number;
   name: string;
@@ -82,6 +90,21 @@ export function useStudentGroups() {
     }
   };
 
+  const fetchStudents = async (groupId: number): Promise<Student[]> => {
+    try {
+      const { data, error } = await supabase
+        .from('students')
+        .select('*')
+        .eq('group_id', groupId)
+        .order('name');
+
+      if (error) throw error;
+      return data || [];
+    } catch (err) {
+      throw new Error(err instanceof Error ? err.message : 'Failed to fetch students');
+    }
+  };
+
   return {
     groups,
     loading,
@@ -89,6 +112,7 @@ export function useStudentGroups() {
     createGroup,
     updateGroup,
     deleteGroup,
+    fetchStudents,
     refetch: fetchGroups
   };
 }
