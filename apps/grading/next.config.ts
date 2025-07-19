@@ -45,6 +45,12 @@ const nextConfig: NextConfig = {
   
   // Webpack configuration for optimizations
   webpack: (config, { isServer }) => {
+    // Ensure proper module resolution
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      '@': require('path').resolve(__dirname, './src'),
+    };
+    
     // Tree shaking optimizations
     if (!isServer) {
       config.resolve.alias = {
