@@ -42,7 +42,7 @@ export default function SimpleNav() {
               </Link>
             </>
           ) : (
-            <Link href="/login" className="hover:text-blue-600">
+            <Link href="/auth/signin" className="hover:text-blue-600">
               Login
             </Link>
           )}

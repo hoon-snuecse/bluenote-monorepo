@@ -190,7 +190,7 @@ export default function NavigationWithAuth() {
                 </div>
               ) : (
                 <Link
-                  href="/login"
+                  href="/auth/signin"
                   className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-300 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors"
                 >
                   <LogIn className="w-4 h-4" />
@@ -289,7 +289,7 @@ export default function NavigationWithAuth() {
                 </>
               ) : (
                 <Link
-                  href="/login"
+                  href="/auth/signin"
                   onClick={() => setIsMenuOpen(false)}
                   className="flex items-center gap-3 w-full px-4 py-3 bg-white border border-slate-300 rounded-lg text-slate-700 hover:bg-slate-50"
                 >
