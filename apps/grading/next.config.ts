@@ -72,6 +72,16 @@ const nextConfig: NextConfig = {
     // Fix for Prisma on Vercel
     if (isServer) {
       config.externals.push('_http_common');
+      // Ensure Prisma client is not externalized
+      config.externals = config.externals.filter((external) => {
+        if (typeof external !== 'function') return external;
+        return (context, request, callback) => {
+          if (request.includes('@prisma/client')) {
+            return callback();
+          }
+          return external(context, request, callback);
+        };
+      });
     }
 
     return config;
