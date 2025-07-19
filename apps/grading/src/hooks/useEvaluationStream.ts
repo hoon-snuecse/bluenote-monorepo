@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
-import { useNotifications } from '@/contexts/NotificationContext';
+import { useNotification } from '@/contexts/NotificationContext';
 
 interface EvaluationUpdate {
   type: 'connected' | 'evaluation_started' | 'evaluation_completed' | 'error';
@@ -17,7 +17,7 @@ export function useEvaluationStream(assignmentId: string | null) {
   const [isConnected, setIsConnected] = useState(false);
   const eventSourceRef = useRef<EventSource | null>(null);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const { addNotification } = useNotifications();
+  const { addNotification } = useNotification();
 
   const connect = useCallback(() => {
     if (!assignmentId || eventSourceRef.current) return;

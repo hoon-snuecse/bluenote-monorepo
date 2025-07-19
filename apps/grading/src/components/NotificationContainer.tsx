@@ -1,10 +1,10 @@
 'use client';
 
-import { useNotifications } from '@/contexts/NotificationContext';
+import { useNotification } from '@/contexts/NotificationContext';
 import { X, CheckCircle, XCircle, Info, AlertTriangle } from 'lucide-react';
 
 export function NotificationContainer() {
-  const { notifications, removeNotification } = useNotifications();
+  const { notifications, removeNotification } = useNotification();
 
   const getIcon = (type: string) => {
     switch (type) {
