@@ -52,3 +52,6 @@ export const authOptions = createAuthOptions(authCallbacks)
 export async function getServerSession() {
   return nextAuthGetServerSession(authOptions)
 }
+
+// Alias for backward compatibility
+export const getSession = getServerSession

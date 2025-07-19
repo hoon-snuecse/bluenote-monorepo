@@ -9,7 +9,7 @@ import { Label } from '@bluenote/ui'
 import { Textarea } from '@bluenote/ui'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@bluenote/ui'
 import { Badge } from '@bluenote/ui'
-import { Switch } from '@bluenote/ui'
+import { Switch } from '@/components/ui/Switch'
 import { Trash2, Edit, Plus, Save, X } from 'lucide-react'
 import { useTemplates, EvaluationTemplate } from '@/hooks/useTemplates'
 

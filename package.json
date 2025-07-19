@@ -15,14 +15,18 @@
   },
   "packageManager": "pnpm@9.13.2",
   "devDependencies": {
-    "turbo": "^2.3.3",
-    "prettier": "^3.3.3",
+    "@types/node": "^20.14.0",
     "eslint": "^8.57.0",
-    "typescript": "^5.5.4",
-    "@types/node": "^20.14.0"
+    "prettier": "^3.3.3",
+    "turbo": "^2.3.3",
+    "typescript": "^5.5.4"
   },
-  "packageManager": "pnpm@9.13.2",
   "engines": {
     "node": ">=18"
+  },
+  "pnpm": {
+    "patchedDependencies": {
+      "@prisma/client": "patches/@prisma__client.patch"
+    }
   }
 }

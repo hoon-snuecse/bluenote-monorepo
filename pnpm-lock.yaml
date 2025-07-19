@@ -4,6 +4,11 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+patchedDependencies:
+  '@prisma/client':
+    hash: 2q7iap2sdrpftz2vc4d5uxhyba
+    path: patches/@prisma__client.patch
+
 importers:
 
   .:
@@ -92,7 +97,7 @@ importers:
         version: 14.1.0
       '@prisma/client':
         specifier: ^6.11.1
-        version: 6.11.1(prisma@6.11.1(typescript@5.8.3))(typescript@5.8.3)
+        version: 6.11.1(patch_hash=2q7iap2sdrpftz2vc4d5uxhyba)(prisma@6.11.1(typescript@5.8.3))(typescript@5.8.3)
       '@radix-ui/react-dialog':
         specifier: ^1.1.14
         version: 1.1.14(@types/react-dom@19.1.6(@types/react@19.1.8))(@types/react@19.1.8)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -249,7 +254,7 @@ importers:
         version: 0.56.0
       '@prisma/client':
         specifier: ^6.11.1
-        version: 6.11.1(prisma@6.11.1(typescript@5.8.3))(typescript@5.8.3)
+        version: 6.11.1(patch_hash=2q7iap2sdrpftz2vc4d5uxhyba)(prisma@6.11.1(typescript@5.8.3))(typescript@5.8.3)
       '@types/bcryptjs':
         specifier: ^2.4.6
         version: 2.4.6
@@ -6044,7 +6049,7 @@ snapshots:
 
   '@polka/url@1.0.0-next.29': {}
 
-  '@prisma/client@6.11.1(prisma@6.11.1(typescript@5.8.3))(typescript@5.8.3)':
+  '@prisma/client@6.11.1(patch_hash=2q7iap2sdrpftz2vc4d5uxhyba)(prisma@6.11.1(typescript@5.8.3))(typescript@5.8.3)':
     optionalDependencies:
       prisma: 6.11.1(typescript@5.8.3)
       typescript: 5.8.3

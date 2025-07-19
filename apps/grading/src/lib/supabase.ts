@@ -21,3 +21,6 @@ export function createServerClient() {
     }
   })
 }
+
+// Default singleton instance for client-side use
+export const supabase = createClient()
