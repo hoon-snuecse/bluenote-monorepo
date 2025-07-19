@@ -8,6 +8,8 @@ export default withAuth(
     
     // 디버그 로그
     console.log('[Middleware] Path:', path);
+    console.log('[Middleware] Full URL:', req.url);
+    console.log('[Middleware] Method:', req.method);
     console.log('[Middleware] Token:', token ? {
       email: token?.email,
       isAdmin: token?.isAdmin,
@@ -15,6 +17,10 @@ export default withAuth(
       exp: token?.exp,
       iat: token?.iat
     } : 'No token');
+    console.log('[Middleware] Headers:', {
+      cookie: req.headers.get('cookie')?.substring(0, 100) + '...',
+      referer: req.headers.get('referer')
+    });
     
     // 관리자만 접근 가능한 경로
     const adminOnlyPaths = [

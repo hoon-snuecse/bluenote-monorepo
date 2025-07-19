@@ -7,22 +7,31 @@ import Link from 'next/link';
 import matter from 'gray-matter';
 import { useSession } from 'next-auth/react';
 
+// 페이지 로드 즉시 실행
+console.log('[WritePage] Page loaded at:', new Date().toISOString());
+console.log('[WritePage] Window location:', typeof window !== 'undefined' ? window.location.href : 'SSR');
+
 function WritePageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const editId = searchParams.get('id') || searchParams.get('edit'); // 'id' 파라미터도 지원
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   
   // Debug: 세션 정보 출력
   useEffect(() => {
+    console.log('[WritePage] Session status:', status);
+    console.log('[WritePage] Session data:', session);
+    console.log('[WritePage] Current URL:', window.location.href);
+    console.log('[WritePage] Edit ID:', editId);
+    
     if (session) {
-      console.log('Current session:', {
+      console.log('[WritePage] User permissions:', {
         email: session.user?.email,
         isAdmin: session.user?.isAdmin,
         canWrite: session.user?.canWrite
       });
     }
-  }, [session]);
+  }, [session, status, editId]);
   
   const [loading, setLoading] = useState(false);
   const [showNewCategory, setShowNewCategory] = useState(false);
