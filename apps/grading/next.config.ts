@@ -8,6 +8,9 @@ const nextConfig: NextConfig = {
   // Enable standalone output for Docker
   output: 'standalone',
   
+  // For Vercel deployment with pnpm monorepo
+  outputFileTracingRoot: path.join(__dirname, '../../'),
+  
   // Disable ESLint during builds (fix later)
   eslint: {
     ignoreDuringBuilds: true,
@@ -41,8 +44,6 @@ const nextConfig: NextConfig = {
       'date-fns',
       'exceljs'
     ],
-    // For Vercel deployment with pnpm
-    outputFileTracingRoot: path.join(__dirname, '../../'),
   },
   
   // Webpack configuration for optimizations

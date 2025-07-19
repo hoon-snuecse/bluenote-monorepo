@@ -22,16 +22,26 @@ rm -rf node_modules/@prisma/client/.prisma
 
 # Generate Prisma client
 echo "Generating Prisma client..."
-# Find and remove any existing prisma clients
-find ../.. -name ".prisma" -type d -exec rm -rf {} + 2>/dev/null || true
-
-# Generate fresh Prisma client
 npx prisma generate --schema=./prisma/schema.prisma
 
-# Create symlink if needed
-if [ ! -d "node_modules/@prisma/client" ] && [ -d "../../node_modules/@prisma/client" ]; then
-  mkdir -p node_modules/@prisma
-  ln -s ../../../../node_modules/@prisma/client node_modules/@prisma/client
+# Fix Prisma client location for pnpm
+echo "Fixing Prisma client location for pnpm..."
+PNPM_DIR="../../node_modules/.pnpm"
+if [ -d "$PNPM_DIR" ]; then
+  # Find the @prisma+client directory
+  PRISMA_CLIENT_DIR=$(find $PNPM_DIR -maxdepth 1 -name "@prisma+client@*" -type d | head -1)
+  
+  if [ -n "$PRISMA_CLIENT_DIR" ]; then
+    echo "Found pnpm Prisma client directory: $PRISMA_CLIENT_DIR"
+    
+    # Check if .prisma exists in the root of node_modules
+    if [ -d "$PRISMA_CLIENT_DIR/node_modules/.prisma" ]; then
+      echo "Found .prisma directory, copying to @prisma/client..."
+      mkdir -p "$PRISMA_CLIENT_DIR/node_modules/@prisma/client"
+      cp -r "$PRISMA_CLIENT_DIR/node_modules/.prisma" "$PRISMA_CLIENT_DIR/node_modules/@prisma/client/.prisma"
+      echo "✓ Copied .prisma to @prisma/client directory"
+    fi
+  fi
 fi
 
 # Verify Prisma client generation
