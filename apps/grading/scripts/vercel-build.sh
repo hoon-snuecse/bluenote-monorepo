@@ -24,14 +24,21 @@ ls -la src/components/ || echo "components directory not found"
 echo "=== src/contexts ==="
 ls -la src/contexts/ || echo "contexts directory not found"
 
+# Debug: Check TypeScript config
+echo "=== TypeScript Configuration ==="
+cat tsconfig.json
+
+# Debug: Test imports directly with TypeScript
+echo "=== Testing module resolution with TypeScript ==="
+echo 'import { useStudentGroups } from "@/hooks/useStudentGroups"; console.log("Import successful");' > test-import.ts
+npx tsc test-import.ts --noEmit --moduleResolution node --baseUrl . --paths '{"@/*":["./src/*"]}' || echo "TypeScript resolution failed"
+rm -f test-import.ts
+
 # Clean and regenerate Prisma
 echo "Regenerating Prisma client..."
 rm -rf ../../node_modules/.prisma
 pnpm prisma generate
 
-# Navigate back to monorepo root
-cd ../..
-
-# Build the grading app
-echo "Building grading app..."
-pnpm build --filter=@bluenote/grading
+# Try building directly in the grading app directory
+echo "Building grading app directly..."
+pnpm build
