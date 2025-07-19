@@ -1,5 +1,5 @@
 {
-  "buildCommand": "cd ../.. && pnpm install --force && cd apps/grading && ls -la src/hooks/ && ls -la src/utils/ && ls -la src/components/ && ls -la src/contexts/ && rm -rf ../../node_modules/.prisma && pnpm prisma generate && cd ../.. && pnpm build --filter=@bluenote/grading",
+  "buildCommand": "bash scripts/vercel-build.sh",
   "outputDirectory": ".next",
   "installCommand": "pnpm install",
   "framework": "nextjs",
