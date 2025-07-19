@@ -6,45 +6,38 @@ echo "Starting Vercel build process..."
 # Navigate to monorepo root
 cd ../..
 
-# Install dependencies with force flag
+# Install dependencies
 echo "Installing dependencies..."
-pnpm install --force
+pnpm install
 
 # Navigate to grading app
 cd apps/grading
 
-# Debug: List files in key directories
-echo "Checking file structure..."
-echo "=== src/hooks ==="
-ls -la src/hooks/ || echo "hooks directory not found"
-echo "=== src/utils ==="
-ls -la src/utils/ || echo "utils directory not found"
-echo "=== src/components ==="
-ls -la src/components/ || echo "components directory not found"
-echo "=== src/contexts ==="
-ls -la src/contexts/ || echo "contexts directory not found"
-
-# Debug: Check TypeScript config
-echo "=== TypeScript Configuration ==="
-cat tsconfig.json
-
-# Debug: Test imports directly with TypeScript
-echo "=== Testing module resolution with TypeScript ==="
-echo 'import { useStudentGroups } from "@/hooks/useStudentGroups"; console.log("Import successful");' > test-import.ts
-npx tsc test-import.ts --noEmit --moduleResolution node --baseUrl . --paths '{"@/*":["./src/*"]}' || echo "TypeScript resolution failed"
-rm -f test-import.ts
-
-# Clean and regenerate Prisma
-echo "Regenerating Prisma client..."
+# Clean any existing Prisma client
+echo "Cleaning existing Prisma client..."
 rm -rf ../../node_modules/.prisma
+rm -rf ../../node_modules/@prisma/client/.prisma
 rm -rf node_modules/.prisma
-pnpm prisma generate
+rm -rf node_modules/@prisma/client/.prisma
 
-# Debug: Check if Prisma client was generated
-echo "=== Checking Prisma client generation ==="
-ls -la ../../node_modules/@prisma/client/ || echo "Prisma client directory not found"
-ls -la ../../node_modules/.prisma/ || echo ".prisma directory not found"
+# Generate Prisma client
+echo "Generating Prisma client..."
+npx prisma generate --schema=./prisma/schema.prisma
 
-# Try building directly in the grading app directory
-echo "Building grading app directly..."
+# Verify Prisma client generation
+echo "=== Verifying Prisma client generation ==="
+if [ -d "../../node_modules/.prisma/client" ]; then
+  echo "✓ Prisma client found at monorepo root"
+  ls -la ../../node_modules/.prisma/client/
+elif [ -d "node_modules/.prisma/client" ]; then
+  echo "✓ Prisma client found in app directory"
+  ls -la node_modules/.prisma/client/
+else
+  echo "✗ Prisma client not found!"
+  echo "Attempting to locate Prisma client..."
+  find ../.. -name ".prisma" -type d 2>/dev/null | head -10
+fi
+
+# Build the app
+echo "Building Next.js app..."
 pnpm build

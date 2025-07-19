@@ -73,15 +73,6 @@ const nextConfig: NextConfig = {
     // Fix for Prisma on Vercel
     if (isServer) {
       config.externals.push('_http_common');
-      
-      // Prisma specific configuration
-      config.resolve = {
-        ...config.resolve,
-        alias: {
-          ...config.resolve.alias,
-          '.prisma/client/index': path.join(path.dirname(require.resolve('@prisma/client')), '.prisma/client/index'),
-        },
-      };
     }
 
     return config;
