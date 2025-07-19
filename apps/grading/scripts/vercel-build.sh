@@ -38,12 +38,16 @@ rm -f test-import.ts
 echo "Regenerating Prisma client..."
 rm -rf ../../node_modules/.prisma
 rm -rf node_modules/.prisma
-pnpm prisma generate
+
+# Run postinstall to handle Prisma generation
+echo "Running postinstall script..."
+node scripts/postinstall.js
 
 # Debug: Check if Prisma client was generated
 echo "=== Checking Prisma client generation ==="
 ls -la ../../node_modules/@prisma/client/ || echo "Prisma client directory not found"
 ls -la ../../node_modules/.prisma/ || echo ".prisma directory not found"
+ls -la node_modules/.prisma/ || echo "Local .prisma directory not found"
 
 # Try building directly in the grading app directory
 echo "Building grading app directly..."
