@@ -16,10 +16,16 @@ const iconMap = {
 export default function ResearchPostClient({ params }) {
   const { id } = use(params);
   const router = useRouter();
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const [post, setPost] = useState(null);
   const [loading, setLoading] = useState(true);
   const [fadeIn, setFadeIn] = useState(false);
+  
+  // 세션 디버그 로그
+  useEffect(() => {
+    console.log('Session status:', status);
+    console.log('Session data:', session);
+  }, [session, status]);
   
   // 임시 관리자 이메일 체크
   const adminEmails = ['hoon@snuecse.org', 'hoon@iw.es.kr', 'sociogram@gmail.com'];
@@ -126,12 +132,19 @@ export default function ResearchPostClient({ params }) {
                   <div className="w-12 h-12 bg-gradient-to-br from-blue-500/20 to-blue-600/20 backdrop-blur-sm border border-blue-200 rounded-lg flex items-center justify-center">
                     <Icon className="w-6 h-6 text-blue-600" />
                   </div>
-                  {hasEditPermission && (
+                  {(status === 'loading' ? false : hasEditPermission) && (
                     <div className="flex gap-2">
                       <Link
                         href={`/research/write?id=${id}`}
                         className="p-2 text-slate-600 hover:text-blue-600 transition-colors"
                         title="수정"
+                        onClick={(e) => {
+                          console.log('Edit button clicked');
+                          console.log('Session status:', status);
+                          console.log('Session data:', session);
+                          console.log('Has edit permission:', hasEditPermission);
+                          // 링크는 정상적으로 작동하도록 함
+                        }}
                       >
                         <Edit className="w-5 h-5" />
                       </Link>
