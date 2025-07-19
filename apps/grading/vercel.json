@@ -5,8 +5,7 @@
   "framework": "nextjs",
   "regions": ["icn1"],
   "env": {
-    "NEXT_TELEMETRY_DISABLED": "1",
-    "PRISMA_QUERY_ENGINE_LIBRARY": "../../node_modules/.prisma/client/libquery_engine-rhel-openssl-3.0.x.so.node"
+    "NEXT_TELEMETRY_DISABLED": "1"
   },
   "functions": {
     "src/app/api/evaluations/batch/route.ts": {
