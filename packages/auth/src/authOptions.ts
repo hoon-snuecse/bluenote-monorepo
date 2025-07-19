@@ -40,7 +40,8 @@ export const createAuthOptions = (callbacks?: AuthCallbacks): NextAuthOptions =>
 
   return {
     // 쿠키 설정 - 프로덕션에서는 서브도메인 간 공유를 위해 .bluenote.site 도메인 사용
-    useSecureCookies: process.env.NODE_ENV === 'production',
+    // useSecureCookies를 false로 설정하여 쿠키 이름이 자동으로 변경되지 않도록 함
+    useSecureCookies: false,
     cookies: {
       sessionToken: {
         name: `next-auth.session-token`,
@@ -50,6 +51,25 @@ export const createAuthOptions = (callbacks?: AuthCallbacks): NextAuthOptions =>
           path: '/',
           secure: process.env.NODE_ENV === 'production',
           // 중요: 프로덕션에서는 .bluenote.site 도메인으로 설정하여 서브도메인 간 공유
+          domain: process.env.NODE_ENV === 'production' ? '.bluenote.site' : undefined
+        }
+      },
+      callbackUrl: {
+        name: `next-auth.callback-url`,
+        options: {
+          sameSite: 'lax',
+          path: '/',
+          secure: process.env.NODE_ENV === 'production',
+          domain: process.env.NODE_ENV === 'production' ? '.bluenote.site' : undefined
+        }
+      },
+      csrfToken: {
+        name: `next-auth.csrf-token`,
+        options: {
+          httpOnly: true,
+          sameSite: 'lax',
+          path: '/',
+          secure: process.env.NODE_ENV === 'production',
           domain: process.env.NODE_ENV === 'production' ? '.bluenote.site' : undefined
         }
       }
