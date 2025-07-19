@@ -39,34 +39,18 @@ export const createAuthOptions = (callbacks?: AuthCallbacks): NextAuthOptions =>
   const adminEmails = process.env.ADMIN_EMAILS?.split(',').map(email => email.trim()) || ['hoon@snuecse.org'];
 
   return {
-    // 쿠키 설정 추가
+    // 쿠키 설정 - 프로덕션에서는 서브도메인 간 공유를 위해 .bluenote.site 도메인 사용
+    useSecureCookies: process.env.NODE_ENV === 'production',
     cookies: {
       sessionToken: {
-        name: `${process.env.NODE_ENV === 'production' ? '__Secure-' : ''}bluenote.authjs.session-token`,
+        name: `next-auth.session-token`,
         options: {
           httpOnly: true,
           sameSite: 'lax',
           path: '/',
           secure: process.env.NODE_ENV === 'production',
+          // 중요: 프로덕션에서는 .bluenote.site 도메인으로 설정하여 서브도메인 간 공유
           domain: process.env.NODE_ENV === 'production' ? '.bluenote.site' : undefined
-        }
-      },
-      callbackUrl: {
-        name: `${process.env.NODE_ENV === 'production' ? '__Secure-' : ''}bluenote.authjs.callback-url`,
-        options: {
-          sameSite: 'lax',
-          path: '/',
-          secure: process.env.NODE_ENV === 'production',
-          domain: process.env.NODE_ENV === 'production' ? '.bluenote.site' : undefined
-        }
-      },
-      csrfToken: {
-        name: `${process.env.NODE_ENV === 'production' ? '__Host-' : ''}bluenote.authjs.csrf-token`,
-        options: {
-          httpOnly: true,
-          sameSite: 'lax',
-          path: '/',
-          secure: process.env.NODE_ENV === 'production',
         }
       }
     },
