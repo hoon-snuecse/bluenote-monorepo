@@ -72,10 +72,10 @@ export const config = {
   matcher: [
     // 관리자 전용 경로
     '/admin/:path*',
-    '/research/write/:path*',
-    '/teaching/write/:path*',
-    '/analytics/write/:path*',
-    '/shed/write/:path*',
+    '/research/write',
+    '/teaching/write',
+    '/analytics/write',
+    '/shed/write',
     // 로그인 필요 경로
     '/ai/chat/:path*',
     '/auth/status/:path*',
