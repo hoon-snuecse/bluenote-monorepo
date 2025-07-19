@@ -49,7 +49,7 @@ const nextConfig: NextConfig = {
     // Ensure proper module resolution
     config.resolve.alias = {
       ...config.resolve.alias,
-      '@': require('path').resolve(__dirname, './src'),
+      '@': path.resolve(__dirname, './src'),
     };
     
     // Tree shaking optimizations
@@ -73,6 +73,11 @@ const nextConfig: NextConfig = {
     // Fix for Prisma on Vercel
     if (isServer) {
       config.externals.push('_http_common');
+      
+      // Handle Prisma in pnpm monorepo
+      config.externals.push({ 
+        '@prisma/client': 'commonjs @prisma/client' 
+      });
     }
 
     return config;

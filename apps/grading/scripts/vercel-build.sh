@@ -22,20 +22,33 @@ rm -rf node_modules/@prisma/client/.prisma
 
 # Generate Prisma client
 echo "Generating Prisma client..."
-rm -rf node_modules/.prisma
+# Find and remove any existing prisma clients
+find ../.. -name ".prisma" -type d -exec rm -rf {} + 2>/dev/null || true
+
+# Generate fresh Prisma client
 npx prisma generate --schema=./prisma/schema.prisma
+
+# Create symlink if needed
+if [ ! -d "node_modules/@prisma/client" ] && [ -d "../../node_modules/@prisma/client" ]; then
+  mkdir -p node_modules/@prisma
+  ln -s ../../../../node_modules/@prisma/client node_modules/@prisma/client
+fi
 
 # Verify Prisma client generation
 echo "=== Verifying Prisma client generation ==="
-if [ -d "node_modules/.prisma/client" ]; then
-  echo "✓ Prisma client found in app directory"
-  ls -la node_modules/.prisma/client/
+echo "Searching for .prisma directories..."
+find ../.. -name ".prisma" -type d 2>/dev/null | while read -r prisma_dir; do
+  echo "Found: $prisma_dir"
+  ls -la "$prisma_dir/client/" 2>/dev/null | head -5 || true
+done
+
+# Check if @prisma/client exists
+if [ -d "../../node_modules/@prisma/client" ]; then
+  echo "✓ @prisma/client found at monorepo root"
+elif [ -d "node_modules/@prisma/client" ]; then
+  echo "✓ @prisma/client found in app directory"
 else
-  echo "✗ Prisma client not found!"
-  echo "Creating fallback..."
-  mkdir -p node_modules/.prisma/client
-  echo "export * from '@prisma/client'" > node_modules/.prisma/client/index.js
-  echo "export { PrismaClient } from '@prisma/client'" >> node_modules/.prisma/client/index.js
+  echo "✗ @prisma/client not found!"
 fi
 
 # Build the app
