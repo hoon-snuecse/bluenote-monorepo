@@ -4,7 +4,12 @@
     "build": {
       "dependsOn": ["^build"],
       "outputs": [".next/**", "!.next/cache/**", "dist/**"],
-      "env": ["NODE_ENV", "NEXT_PUBLIC_*"]
+      "env": [
+        "NODE_ENV",
+        "NEXT_PUBLIC_*",
+        "NEXT_TELEMETRY_DISABLED",
+        "PRISMA_QUERY_ENGINE_LIBRARY"
+      ]
     },
     "dev": {
       "cache": false,
