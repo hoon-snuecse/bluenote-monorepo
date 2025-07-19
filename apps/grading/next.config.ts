@@ -39,9 +39,10 @@ const nextConfig: NextConfig = {
       'recharts',
       '@bluenote/ui',
       'date-fns',
-      '@prisma/client',
       'exceljs'
     ],
+    // For Vercel deployment with pnpm
+    outputFileTracingRoot: path.join(__dirname, '../../'),
   },
   
   // Webpack configuration for optimizations
@@ -73,11 +74,6 @@ const nextConfig: NextConfig = {
     // Fix for Prisma on Vercel
     if (isServer) {
       config.externals.push('_http_common');
-      
-      // Handle Prisma in pnpm monorepo
-      config.externals.push({ 
-        '@prisma/client': 'commonjs @prisma/client' 
-      });
     }
 
     return config;
