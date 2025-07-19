@@ -48,14 +48,14 @@ export default function AdminDashboardClient() {
       title: '사용자 관리',
       description: '등록된 사용자 목록 및 권한 관리',
       icon: Users,
-      href: '#',
+      href: '/admin/users',
       color: 'bg-blue-500'
     },
     {
       title: '콘텐츠 관리',
       description: '블로그 포스트 및 페이지 관리',
       icon: FileText,
-      href: '#',
+      href: '/admin/content',
       color: 'bg-green-500'
     },
     {
