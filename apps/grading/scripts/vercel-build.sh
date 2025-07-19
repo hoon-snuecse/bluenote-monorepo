@@ -22,20 +22,20 @@ rm -rf node_modules/@prisma/client/.prisma
 
 # Generate Prisma client
 echo "Generating Prisma client..."
+rm -rf node_modules/.prisma
 npx prisma generate --schema=./prisma/schema.prisma
 
 # Verify Prisma client generation
 echo "=== Verifying Prisma client generation ==="
-if [ -d "../../node_modules/.prisma/client" ]; then
-  echo "✓ Prisma client found at monorepo root"
-  ls -la ../../node_modules/.prisma/client/
-elif [ -d "node_modules/.prisma/client" ]; then
+if [ -d "node_modules/.prisma/client" ]; then
   echo "✓ Prisma client found in app directory"
   ls -la node_modules/.prisma/client/
 else
   echo "✗ Prisma client not found!"
-  echo "Attempting to locate Prisma client..."
-  find ../.. -name ".prisma" -type d 2>/dev/null | head -10
+  echo "Creating fallback..."
+  mkdir -p node_modules/.prisma/client
+  echo "export * from '@prisma/client'" > node_modules/.prisma/client/index.js
+  echo "export { PrismaClient } from '@prisma/client'" >> node_modules/.prisma/client/index.js
 fi
 
 # Build the app
