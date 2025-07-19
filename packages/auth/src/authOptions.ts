@@ -50,6 +50,7 @@ export const createAuthOptions = (callbacks?: AuthCallbacks): NextAuthOptions =>
           sameSite: 'lax',
           path: '/',
           secure: process.env.NODE_ENV === 'production',
+          maxAge: 30 * 24 * 60 * 60, // 30 days
           // 중요: 프로덕션에서는 .bluenote.site 도메인으로 설정하여 서브도메인 간 공유
           domain: process.env.NODE_ENV === 'production' ? '.bluenote.site' : undefined
         }
@@ -162,6 +163,7 @@ export const createAuthOptions = (callbacks?: AuthCallbacks): NextAuthOptions =>
     secret: process.env.NEXTAUTH_SECRET,
     session: {
       strategy: 'jwt',
+      maxAge: 30 * 24 * 60 * 60, // 30 days
     },
   };
 };

@@ -8,11 +8,13 @@ export default withAuth(
     
     // 디버그 로그
     console.log('[Middleware] Path:', path);
-    console.log('[Middleware] Token:', {
+    console.log('[Middleware] Token:', token ? {
       email: token?.email,
       isAdmin: token?.isAdmin,
-      canWrite: token?.canWrite
-    });
+      canWrite: token?.canWrite,
+      exp: token?.exp,
+      iat: token?.iat
+    } : 'No token');
     
     // 관리자만 접근 가능한 경로
     const adminOnlyPaths = [
