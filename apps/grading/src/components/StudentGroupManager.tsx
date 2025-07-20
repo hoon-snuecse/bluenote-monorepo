@@ -16,6 +16,40 @@ import { Users, Plus, Edit, Trash2, Upload, Download, Search, FileSpreadsheet, F
 import { useStudentGroups, StudentGroup, Student } from '@/hooks/useStudentGroups'
 import { useSession } from 'next-auth/react'
 
+// 학교명 약칭 생성 함수
+function getSchoolAbbreviation(schoolName: string): string {
+  // 일반적인 학교 접미사 제거
+  const suffixes = ['초등학교', '중학교', '고등학교', '학교']
+  let abbrev = schoolName
+  
+  for (const suffix of suffixes) {
+    if (abbrev.endsWith(suffix)) {
+      abbrev = abbrev.slice(0, -suffix.length)
+      break
+    }
+  }
+  
+  // 지역명 제거 (서울, 부산, 대구 등)
+  const regions = ['서울', '부산', '대구', '인천', '광주', '대전', '울산', '세종', '경기', '강원', '충북', '충남', '전북', '전남', '경북', '경남', '제주']
+  for (const region of regions) {
+    if (abbrev.startsWith(region)) {
+      abbrev = abbrev.slice(region.length)
+      break
+    }
+  }
+  
+  // 결과에 '초', '중', '고' 접미사 추가
+  if (schoolName.includes('초등학교')) {
+    abbrev += '초'
+  } else if (schoolName.includes('중학교')) {
+    abbrev += '중'
+  } else if (schoolName.includes('고등학교')) {
+    abbrev += '고'
+  }
+  
+  return abbrev
+}
+
 export function StudentGroupManager() {
   const { data: session } = useSession()
   const { groups, loading, createGroup, updateGroup, deleteGroup, fetchStudents, addStudents, deleteStudents, updateStudent } = useStudentGroups()
@@ -48,6 +82,29 @@ export function StudentGroupManager() {
     className: '',
     schoolYear: new Date().getFullYear().toString()
   })
+
+  // 그룹 이름 자동 생성
+  const generateGroupName = () => {
+    const { schoolYear, schoolName, gradeLevel, className } = formData
+    if (schoolYear && schoolName && gradeLevel && className) {
+      const schoolAbbrev = getSchoolAbbreviation(schoolName)
+      return `${schoolYear}${schoolAbbrev}${gradeLevel}-${className}`
+    }
+    return ''
+  }
+
+  // 폼 데이터 변경 시 그룹 이름 자동 생성
+  const updateFormData = (updates: Partial<typeof formData>) => {
+    const newFormData = { ...formData, ...updates }
+    
+    // 학교명, 학년, 반이 모두 입력되었고, 사용자가 직접 이름을 입력하지 않았다면 자동 생성
+    if (newFormData.schoolName && newFormData.gradeLevel && newFormData.className && 
+        (newFormData.name === '' || newFormData.name === generateGroupName())) {
+      newFormData.name = `${newFormData.schoolYear}${getSchoolAbbreviation(newFormData.schoolName)}${newFormData.gradeLevel}-${newFormData.className}`
+    }
+    
+    setFormData(newFormData)
+  }
 
   const [studentFormData, setStudentFormData] = useState<{
     students: Array<{ studentId: string; name: string; grade?: string; class?: string; number?: number; email?: string }>
@@ -408,7 +465,7 @@ export function StudentGroupManager() {
                     <Input
                       id="name"
                       value={formData.name}
-                      onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                      onChange={(e) => updateFormData({ name: e.target.value })}
                       placeholder="예: 2024학년도 1학년 1반"
                     />
                   </div>
@@ -418,7 +475,7 @@ export function StudentGroupManager() {
                     <Textarea
                       id="description"
                       value={formData.description}
-                      onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                      onChange={(e) => updateFormData({ description: e.target.value })}
                       placeholder="그룹에 대한 간단한 설명"
                     />
                   </div>
@@ -428,7 +485,7 @@ export function StudentGroupManager() {
                     <Input
                       id="schoolName"
                       value={formData.schoolName}
-                      onChange={(e) => setFormData(prev => ({ ...prev, schoolName: e.target.value }))}
+                      onChange={(e) => updateFormData({ schoolName: e.target.value })}
                       placeholder="예: 서울고등학교"
                     />
                   </div>
@@ -439,7 +496,7 @@ export function StudentGroupManager() {
                       <Input
                         id="schoolYear"
                         value={formData.schoolYear}
-                        onChange={(e) => setFormData(prev => ({ ...prev, schoolYear: e.target.value }))}
+                        onChange={(e) => updateFormData({ schoolYear: e.target.value })}
                         placeholder="2024"
                       />
                     </div>
@@ -448,7 +505,7 @@ export function StudentGroupManager() {
                       <Label htmlFor="gradeLevel">학년</Label>
                       <Select
                         value={formData.gradeLevel}
-                        onValueChange={(value) => setFormData(prev => ({ ...prev, gradeLevel: value }))}
+                        onValueChange={(value) => updateFormData({ gradeLevel: value })}
                       >
                         <SelectTrigger id="gradeLevel">
                           <SelectValue placeholder="선택" />
@@ -457,6 +514,9 @@ export function StudentGroupManager() {
                           <SelectItem value="1">1학년</SelectItem>
                           <SelectItem value="2">2학년</SelectItem>
                           <SelectItem value="3">3학년</SelectItem>
+                          <SelectItem value="4">4학년</SelectItem>
+                          <SelectItem value="5">5학년</SelectItem>
+                          <SelectItem value="6">6학년</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -466,7 +526,7 @@ export function StudentGroupManager() {
                       <Input
                         id="className"
                         value={formData.className}
-                        onChange={(e) => setFormData(prev => ({ ...prev, className: e.target.value }))}
+                        onChange={(e) => updateFormData({ className: e.target.value })}
                         placeholder="1"
                       />
                     </div>

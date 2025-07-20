@@ -1,15 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from '@/lib/auth'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
 import prisma from '@/lib/prisma'
 
 export async function GET(request: NextRequest) {
   try {
     console.log('[StudentGroups API] Starting GET request')
     
-    const session = await getServerSession()
+    const session = await getServerSession(authOptions)
     console.log('[StudentGroups API] Session:', session?.user?.email)
     
-    if (!session?.user?.email) {
+    if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -19,7 +20,7 @@ export async function GET(request: NextRequest) {
     const className = searchParams.get('className')
 
     const whereClause: any = {
-      createdBy: session.user.email
+      createdBy: session.user.id
     }
 
     if (schoolYear) whereClause.schoolYear = schoolYear
@@ -74,9 +75,9 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession()
+    const session = await getServerSession(authOptions)
     
-    if (!session?.user?.email) {
+    if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -109,7 +110,7 @@ export async function POST(request: NextRequest) {
           gradeLevel,
           className,
           schoolYear,
-          createdBy: session.user.email
+          createdBy: session.user.id
         }
       })
 
@@ -154,9 +155,9 @@ export async function POST(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   try {
-    const session = await getServerSession()
+    const session = await getServerSession(authOptions)
     
-    if (!session?.user?.email) {
+    if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -182,7 +183,7 @@ export async function PUT(request: NextRequest) {
       )
     }
 
-    if (existingGroup.createdBy !== session.user.email) {
+    if (existingGroup.createdBy !== session.user.id) {
       return NextResponse.json(
         { error: '수정 권한이 없습니다.' },
         { status: 403 }
@@ -222,9 +223,9 @@ export async function PUT(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
-    const session = await getServerSession()
+    const session = await getServerSession(authOptions)
     
-    if (!session?.user?.email) {
+    if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -250,7 +251,7 @@ export async function DELETE(request: NextRequest) {
       )
     }
 
-    if (existingGroup.createdBy !== session.user.email) {
+    if (existingGroup.createdBy !== session.user.id) {
       return NextResponse.json(
         { error: '삭제 권한이 없습니다.' },
         { status: 403 }
