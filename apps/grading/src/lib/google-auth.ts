@@ -1,6 +1,6 @@
 import { google } from 'googleapis'
 import { OAuth2Client } from 'google-auth-library'
-import { createAdminClient } from '@/lib/supabase-admin'
+import { createAdminClient } from '@/lib/supabase'
 
 export async function getGoogleClient(userEmail: string): Promise<OAuth2Client | null> {
   try {
