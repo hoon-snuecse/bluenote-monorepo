@@ -14,8 +14,10 @@ import {
   MessageSquare,
   PenTool,
   Save,
-  AlertCircle
+  AlertCircle,
+  ArrowLeft
 } from 'lucide-react';
+import Link from 'next/link';
 
 export default function AdminUsersClient() {
   const { data: session, status } = useSession();
@@ -150,13 +152,22 @@ export default function AdminUsersClient() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-white">사용자 관리</h1>
-        <button
-          onClick={() => setShowAddForm(!showAddForm)}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-        >
-          <Plus className="w-4 h-4" />
-          새 사용자 추가
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setShowAddForm(!showAddForm)}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            <Plus className="w-4 h-4" />
+            새 사용자 추가
+          </button>
+          <Link
+            href="/admin/dashboard"
+            className="flex items-center text-slate-300 hover:text-white transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            대시보드로
+          </Link>
+        </div>
       </div>
 
       {/* Messages */}

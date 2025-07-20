@@ -62,7 +62,7 @@ export default function AdminDashboardClient() {
       title: '통계 및 분석',
       description: '사이트 사용 통계 및 분석 데이터',
       icon: BarChart3,
-      href: '#',
+      href: '/admin/analytics',
       color: 'bg-purple-500'
     },
     {
