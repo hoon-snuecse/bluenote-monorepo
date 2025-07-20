@@ -27,6 +27,9 @@ export default function SubmitPage({ params }: { params: { assignmentId: string 
   const [formData, setFormData] = useState({
     studentName: '',
     studentId: '',
+    grade: '',
+    class: '',
+    number: '',
     content: '',
   });
 
@@ -64,7 +67,7 @@ export default function SubmitPage({ params }: { params: { assignmentId: string 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.studentName || !formData.studentId || !formData.content.trim()) {
+    if (!formData.studentName || !formData.grade || !formData.class || !formData.number || !formData.content.trim()) {
       alert('모든 필드를 입력해주세요.');
       return;
     }
@@ -77,11 +80,15 @@ export default function SubmitPage({ params }: { params: { assignmentId: string 
     setSubmitting(true);
     
     try {
+      // 학번 자동 생성 (연도 + 학년 + 반 + 번호)
+      const currentYear = new Date().getFullYear();
+      const generatedStudentId = `${currentYear}${formData.grade.padStart(2, '0')}${formData.class.padStart(2, '0')}${formData.number.padStart(2, '0')}`;
+      
       const submissionData = {
         assignmentId: params.assignmentId,
         assignmentTitle: assignment?.title,
         studentName: formData.studentName,
-        studentId: formData.studentId,
+        studentId: generatedStudentId,
         content: formData.content,
         schoolName: assignment?.schoolName,
         gradeLevel: assignment?.gradeLevel,
@@ -187,8 +194,57 @@ export default function SubmitPage({ params }: { params: { assignmentId: string 
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="md:col-span-1">
+                  <label htmlFor="grade" className="block text-base font-medium text-gray-700 mb-2">
+                    학년
+                  </label>
+                  <input
+                    type="number"
+                    id="grade"
+                    name="grade"
+                    value={formData.grade}
+                    onChange={handleChange}
+                    required
+                    min="1"
+                    max="6"
+                    className="w-full px-4 py-3 border border-slate-200/50 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/30 bg-white/70 backdrop-blur-sm text-base"
+                    placeholder="1"
+                  />
+                </div>
+                <div className="md:col-span-1">
+                  <label htmlFor="class" className="block text-base font-medium text-gray-700 mb-2">
+                    반
+                  </label>
+                  <input
+                    type="number"
+                    id="class"
+                    name="class"
+                    value={formData.class}
+                    onChange={handleChange}
+                    required
+                    min="1"
+                    className="w-full px-4 py-3 border border-slate-200/50 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/30 bg-white/70 backdrop-blur-sm text-base"
+                    placeholder="1"
+                  />
+                </div>
+                <div className="md:col-span-1">
+                  <label htmlFor="number" className="block text-base font-medium text-gray-700 mb-2">
+                    번호
+                  </label>
+                  <input
+                    type="number"
+                    id="number"
+                    name="number"
+                    value={formData.number}
+                    onChange={handleChange}
+                    required
+                    min="1"
+                    className="w-full px-4 py-3 border border-slate-200/50 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/30 bg-white/70 backdrop-blur-sm text-base"
+                    placeholder="1"
+                  />
+                </div>
+                <div className="md:col-span-1">
                   <label htmlFor="studentName" className="block text-base font-medium text-gray-700 mb-2">
                     이름
                   </label>
@@ -201,21 +257,6 @@ export default function SubmitPage({ params }: { params: { assignmentId: string 
                     required
                     className="w-full px-4 py-3 border border-slate-200/50 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/30 bg-white/70 backdrop-blur-sm text-base"
                     placeholder="홍길동"
-                  />
-                </div>
-                <div>
-                  <label htmlFor="studentId" className="block text-base font-medium text-gray-700 mb-2">
-                    학번
-                  </label>
-                  <input
-                    type="text"
-                    id="studentId"
-                    name="studentId"
-                    value={formData.studentId}
-                    onChange={handleChange}
-                    required
-                    className="w-full px-4 py-3 border border-slate-200/50 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/30 bg-white/70 backdrop-blur-sm text-base"
-                    placeholder="20241234"
                   />
                 </div>
               </div>

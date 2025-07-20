@@ -507,10 +507,10 @@ export function StudentGroupManager() {
                         value={formData.gradeLevel}
                         onValueChange={(value) => updateFormData({ gradeLevel: value })}
                       >
-                        <SelectTrigger id="gradeLevel">
+                        <SelectTrigger id="gradeLevel" style={{ backgroundColor: 'white', border: '1px solid #e5e5e5' }}>
                           <SelectValue placeholder="선택" />
                         </SelectTrigger>
-                        <SelectContent>
+                        <SelectContent style={{ backgroundColor: 'white', zIndex: 9999 }}>
                           <SelectItem value="1">1학년</SelectItem>
                           <SelectItem value="2">2학년</SelectItem>
                           <SelectItem value="3">3학년</SelectItem>

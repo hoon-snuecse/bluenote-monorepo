@@ -8,9 +8,17 @@ export async function GET(request: NextRequest) {
     console.log('[StudentGroups API] Starting GET request')
     
     const session = await getServerSession(authOptions)
-    console.log('[StudentGroups API] Session:', session?.user?.email)
+    console.log('[StudentGroups API] Session:', JSON.stringify(session))
     
-    if (!session?.user?.id) {
+    if (!session || !session.user) {
+      console.log('[StudentGroups API] No session or user found')
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+    
+    // Use email as identifier if id is not available
+    const userId = session.user.id || session.user.email
+    if (!userId) {
+      console.log('[StudentGroups API] No user identifier found')
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -20,7 +28,7 @@ export async function GET(request: NextRequest) {
     const className = searchParams.get('className')
 
     const whereClause: any = {
-      createdBy: session.user.id
+      createdBy: userId
     }
 
     if (schoolYear) whereClause.schoolYear = schoolYear
@@ -77,7 +85,14 @@ export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
     
-    if (!session?.user?.id) {
+    if (!session || !session.user) {
+      console.log('[StudentGroups API POST] No session or user found')
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+    
+    const userId = session.user.id || session.user.email
+    if (!userId) {
+      console.log('[StudentGroups API POST] No user identifier found')
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -110,7 +125,7 @@ export async function POST(request: NextRequest) {
           gradeLevel,
           className,
           schoolYear,
-          createdBy: session.user.id
+          createdBy: userId
         }
       })
 
@@ -157,7 +172,14 @@ export async function PUT(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
     
-    if (!session?.user?.id) {
+    if (!session || !session.user) {
+      console.log('[StudentGroups API POST] No session or user found')
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+    
+    const userId = session.user.id || session.user.email
+    if (!userId) {
+      console.log('[StudentGroups API POST] No user identifier found')
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -183,7 +205,7 @@ export async function PUT(request: NextRequest) {
       )
     }
 
-    if (existingGroup.createdBy !== session.user.id) {
+    if (existingGroup.createdBy !== userId) {
       return NextResponse.json(
         { error: '수정 권한이 없습니다.' },
         { status: 403 }
@@ -225,7 +247,14 @@ export async function DELETE(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
     
-    if (!session?.user?.id) {
+    if (!session || !session.user) {
+      console.log('[StudentGroups API POST] No session or user found')
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+    
+    const userId = session.user.id || session.user.email
+    if (!userId) {
+      console.log('[StudentGroups API POST] No user identifier found')
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -251,7 +280,7 @@ export async function DELETE(request: NextRequest) {
       )
     }
 
-    if (existingGroup.createdBy !== session.user.id) {
+    if (existingGroup.createdBy !== userId) {
       return NextResponse.json(
         { error: '삭제 권한이 없습니다.' },
         { status: 403 }
