@@ -51,6 +51,17 @@ CREATE POLICY "Admins can update system settings" ON system_settings
     )
   );
 
+CREATE POLICY "Admins can insert system settings" ON system_settings
+  FOR INSERT
+  TO authenticated
+  WITH CHECK (
+    EXISTS (
+      SELECT 1 FROM user_permissions
+      WHERE email = auth.jwt() ->> 'email'
+      AND role = 'admin'
+    )
+  );
+
 -- Insert default row if not exists
 INSERT INTO system_settings (id) 
 VALUES (1) 

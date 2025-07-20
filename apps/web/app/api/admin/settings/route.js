@@ -83,6 +83,15 @@ export async function POST(request) {
     }
 
     const { settings } = await request.json();
+    
+    // Verify Service Role Key is set
+    if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      return NextResponse.json({ 
+        error: 'Server configuration error', 
+        details: 'SUPABASE_SERVICE_ROLE_KEY is not configured' 
+      }, { status: 500 });
+    }
+    
     const supabase = createAdminClient();
     
     // Convert camelCase to snake_case for database
@@ -111,14 +120,67 @@ export async function POST(request) {
       updated_by: session.user.email
     };
     
-    // Upsert settings
-    const { error } = await supabase
+    // Debug: Log that we're using admin client
+    console.log('Using Service Role client for system_settings');
+    
+    // First, check if the table exists and we have access
+    const { data: existingSettings, error: selectError } = await supabase
       .from('system_settings')
-      .upsert(dbSettings);
+      .select('*')
+      .eq('id', 1)
+      .single();
 
-    if (error) {
-      console.error('Supabase error:', error);
-      throw error;
+    console.log('Existing settings:', existingSettings);
+    console.log('Select error:', selectError);
+
+    if (selectError && selectError.code !== 'PGRST116') {
+      console.error('Select error details:', {
+        code: selectError.code,
+        message: selectError.message,
+        details: selectError.details,
+        hint: selectError.hint
+      });
+      return NextResponse.json({ 
+        error: 'Database access error',
+        details: `Cannot access system_settings table: ${selectError.message}`,
+        errorCode: selectError.code,
+        hint: selectError.hint || 'Please ensure the table exists and migrations have been run'
+      }, { status: 500 });
+    }
+
+    // If no row exists, insert first
+    if (!existingSettings) {
+      console.log('No existing settings found, inserting new row');
+      const { error: insertError } = await supabase
+        .from('system_settings')
+        .insert(dbSettings);
+      
+      if (insertError) {
+        console.error('Insert error:', insertError);
+        return NextResponse.json({ 
+          error: 'Failed to create settings',
+          details: insertError.message,
+          errorCode: insertError.code,
+          hint: insertError.hint
+        }, { status: 500 });
+      }
+    } else {
+      // Update existing settings
+      console.log('Updating existing settings');
+      const { error: updateError } = await supabase
+        .from('system_settings')
+        .update(dbSettings)
+        .eq('id', 1);
+      
+      if (updateError) {
+        console.error('Update error:', updateError);
+        return NextResponse.json({ 
+          error: 'Failed to update settings',
+          details: updateError.message,
+          errorCode: updateError.code,
+          hint: updateError.hint
+        }, { status: 500 });
+      }
     }
 
     return NextResponse.json({ success: true });
