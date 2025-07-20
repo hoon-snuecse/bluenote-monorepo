@@ -41,7 +41,7 @@ export default function AdminSettingsClient() {
     postsPerPage: 12,
     enableComments: false,
     enableSearch: true,
-    defaultCategories: ['일반', '공지사항', '연구노트', '강의자료'],
+    defaultCategories: ['연구', '교육', '분석', '일상'],
     
     // 보안 설정
     sessionTimeout: 24, // hours
@@ -241,9 +241,10 @@ export default function AdminSettingsClient() {
                     onChange={(e) => setSettings({ ...settings, claudeModel: e.target.value })}
                     className="w-full px-3 py-2 bg-slate-700 border border-slate-600 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
-                    <option value="claude-3-sonnet-20240229">Claude 3 Sonnet</option>
-                    <option value="claude-3-opus-20240229">Claude 3 Opus</option>
-                    <option value="claude-3-haiku-20240307">Claude 3 Haiku</option>
+                    <option value="claude-3.5-sonnet-20241022">Claude 3.5 Sonnet</option>
+                    <option value="claude-3.5-haiku-20241022">Claude 3.5 Haiku</option>
+                    <option value="claude-sonnet-4-20250514">Claude Sonnet 4</option>
+                    <option value="claude-opus-4-20250514">Claude Opus 4</option>
                   </select>
                 </div>
               </div>
