@@ -35,7 +35,7 @@ export default function AdminSettingsClient() {
     claudeEnabled: true,
     claudeDefaultDailyLimit: 10,
     claudeSystemPrompt: '당신은 교육과 연구를 돕는 AI 어시스턴트입니다.',
-    claudeModel: 'claude-3-sonnet-20240229',
+    claudeModel: 'claude-sonnet-4-20250514',
     
     // 콘텐츠 설정
     postsPerPage: 12,
@@ -72,17 +72,40 @@ export default function AdminSettingsClient() {
       return;
     }
 
-    // 실제로는 API에서 설정을 가져와야 함
-    setLoading(false);
+    // Fetch settings from API
+    fetchSettings();
   }, [session, status, router]);
+
+  const fetchSettings = async () => {
+    try {
+      const res = await fetch('/api/admin/settings');
+      if (res.ok) {
+        const data = await res.json();
+        setSettings(data.settings);
+      }
+    } catch (error) {
+      console.error('Failed to fetch settings:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSave = async () => {
     setSaving(true);
     setMessage({ type: '', text: '' });
     
     try {
-      // 실제로는 API로 설정을 저장해야 함
-      await new Promise(resolve => setTimeout(resolve, 1000)); // 시뮬레이션
+      const res = await fetch('/api/admin/settings', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ settings }),
+      });
+      
+      if (!res.ok) {
+        throw new Error('Failed to save settings');
+      }
       
       setMessage({ type: 'success', text: '설정이 저장되었습니다.' });
     } catch (error) {
@@ -241,8 +264,6 @@ export default function AdminSettingsClient() {
                     onChange={(e) => setSettings({ ...settings, claudeModel: e.target.value })}
                     className="w-full px-3 py-2 bg-slate-700 border border-slate-600 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
-                    <option value="claude-3.5-sonnet-20241022">Claude 3.5 Sonnet</option>
-                    <option value="claude-3.5-haiku-20241022">Claude 3.5 Haiku</option>
                     <option value="claude-sonnet-4-20250514">Claude Sonnet 4</option>
                     <option value="claude-opus-4-20250514">Claude Opus 4</option>
                   </select>

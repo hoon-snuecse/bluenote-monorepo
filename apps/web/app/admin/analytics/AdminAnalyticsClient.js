@@ -216,7 +216,12 @@ export default function AdminAnalyticsClient() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {Object.entries(stats.contentStats).map(([section, count]) => (
             <div key={section} className="text-center">
-              <p className="text-slate-400 text-sm capitalize">{section === 'shed' ? '일상' : section}</p>
+              <p className="text-slate-400 text-sm">{
+                section === 'research' ? '연구' : 
+                section === 'teaching' ? '교육' : 
+                section === 'analytics' ? '분석' : 
+                section === 'shed' ? '일상' : section
+              }</p>
               <p className="text-2xl font-bold text-white mt-1">{count}</p>
               <div className="mt-2 h-2 bg-slate-700 rounded-full overflow-hidden">
                 <div 
@@ -303,7 +308,12 @@ export default function AdminAnalyticsClient() {
               <div className="flex-1">
                 <p className="text-white font-medium">{post.title}</p>
                 <div className="flex items-center gap-4 mt-1">
-                  <span className="text-slate-400 text-xs">{post.section}</span>
+                  <span className="text-slate-400 text-xs">{
+                    post.section === 'research' ? '연구' : 
+                    post.section === 'teaching' ? '교육' : 
+                    post.section === 'analytics' ? '분석' : 
+                    post.section === 'shed' ? '일상' : post.section
+                  }</span>
                   <span className="text-slate-400 text-xs flex items-center gap-1">
                     <Calendar className="w-3 h-3" />
                     {new Date(post.created_at || post.date).toLocaleDateString('ko-KR')}
