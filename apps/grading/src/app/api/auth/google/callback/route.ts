@@ -2,7 +2,7 @@ import { google } from 'googleapis';
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { getServerSession } from '@/lib/auth';
-import { createClient } from '@/lib/supabase';
+import { createAdminClient } from '@/lib/supabase';
 
 const redirectUri = process.env.NODE_ENV === 'production' 
   ? process.env.GOOGLE_REDIRECT_URI || 'https://grading.bluenote.site/api/auth/google/callback'
@@ -78,9 +78,11 @@ export async function GET(request: NextRequest) {
       hasRefreshToken: !!tokens.refresh_token
     });
     
-    // Store tokens in database associated with user
-    const supabase = createClient();
+    // Store tokens in database associated with user using admin client
+    const supabase = createAdminClient();
     const expiresAt = tokens.expiry_date ? new Date(tokens.expiry_date) : null;
+    
+    console.log('Storing tokens in database for:', session.user.email);
     
     const { error: dbError } = await supabase
       .from('google_tokens')
@@ -98,10 +100,11 @@ export async function GET(request: NextRequest) {
     if (dbError) {
       console.error('Failed to store tokens:', dbError);
       return NextResponse.redirect(
-        `${baseUrl}/import?error=token_storage_failed${assignmentIdParam}`
+        `${baseUrl}/import?error=token_storage_failed&details=${encodeURIComponent(dbError.message)}${assignmentIdParam}`
       );
     }
 
+    console.log('Tokens stored successfully, redirecting...');
     return NextResponse.redirect(
       `${baseUrl}/import?success=true${assignmentIdParam}`
     );

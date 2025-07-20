@@ -1,7 +1,7 @@
 import { google } from 'googleapis';
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from '@/lib/auth';
-import { createClient } from '@/lib/supabase';
+import { createAdminClient } from '@/lib/supabase';
 
 export async function GET(request: NextRequest) {
   console.log('[Drive Documents API] Request received');
@@ -21,16 +21,28 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
     }
 
-    // Get user's Google token from database
-    const supabase = createClient();
+    console.log('[Drive Documents API] Getting tokens for user:', session.user.email);
+    
+    // Get user's Google token from database using admin client
+    const supabase = createAdminClient();
     const { data: tokenData, error: tokenError } = await supabase
       .from('google_tokens')
       .select('access_token, refresh_token, expires_at')
       .eq('user_email', session.user.email)
       .single();
+    
+    console.log('[Drive Documents API] Token query result:', {
+      hasData: !!tokenData,
+      hasAccessToken: !!tokenData?.access_token,
+      error: tokenError?.message
+    });
 
     if (tokenError || !tokenData?.access_token) {
-      return NextResponse.json({ error: 'Google authentication required' }, { status: 401 });
+      console.error('[Drive Documents API] Token error:', tokenError);
+      return NextResponse.json({ 
+        error: 'Google authentication required',
+        details: tokenError?.message || 'No access token found'
+      }, { status: 401 });
     }
 
     const accessToken = tokenData.access_token;
