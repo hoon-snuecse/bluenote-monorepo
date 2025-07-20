@@ -35,11 +35,8 @@ export default function StudentsPage() {
           </CardHeader>
         </Card>
 
-        {/* Student Group Manager - Simple Version for Testing */}
-        <StudentGroupManagerSimple />
-        
-        {/* Original Student Group Manager - Hidden for now */}
-        {/* <StudentGroupManager /> */}
+        {/* Original Student Group Manager */}
+        <StudentGroupManager />
       </div>
     </div>
   )
