@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Card, CardContent } from '@bluenote/ui';
-import { ArrowLeft, FileText, User, Calendar, CheckCircle, Clock, PlayCircle, FileInput, Link, LinkOff } from 'lucide-react';
+import { ArrowLeft, FileText, User, Calendar, CheckCircle, Clock, PlayCircle, FileInput, Link, Unlink } from 'lucide-react';
 
 interface Submission {
   id: string;
@@ -51,9 +51,16 @@ export default function SubmissionsPage() {
       
       if (data.success) {
         setSubmissions(data.submissions.map((sub: any) => ({
-          ...sub,
+          id: sub.id || '',
+          studentId: sub.studentId || '',
+          studentName: sub.studentName || '이름 없음',
+          studentDbId: sub.studentDbId || null,
+          content: sub.content || null,
+          status: sub.status || 'submitted',
           submittedAt: sub.submittedAt ? new Date(sub.submittedAt) : null,
           evaluatedAt: sub.evaluatedAt ? new Date(sub.evaluatedAt) : null,
+          evaluation: sub.evaluation || null,
+          student: sub.student || null
         })));
         console.log('[Submissions Page] Set submissions:', data.submissions.length);
       } else {
@@ -366,16 +373,16 @@ export default function SubmissionsPage() {
                           <div className="flex items-center gap-2">
                             <User className="w-4 h-4 text-slate-400" />
                             <span className="text-base font-medium text-slate-700">
-                              {submission.student?.name || submission.studentName}
+                              {submission.student?.name || submission.studentName || '이름 없음'}
                             </span>
                             {submission.studentDbId ? (
                               <Link className="w-4 h-4 text-green-600" title="학생 데이터 연결됨" />
                             ) : (
-                              <LinkOff className="w-4 h-4 text-amber-600" title="학생 데이터 미연결" />
+                              <Unlink className="w-4 h-4 text-amber-600" title="학생 데이터 미연결" />
                             )}
                           </div>
                         </td>
-                        <td className="p-4 text-base text-slate-600">{submission.studentId}</td>
+                        <td className="p-4 text-base text-slate-600">{submission.studentId || '-'}</td>
                         <td className="p-4 text-base text-slate-600">
                           {submission.student?.group ? (
                             <span>
@@ -390,7 +397,7 @@ export default function SubmissionsPage() {
                           {submission.submittedAt ? (
                             <div className="flex items-center gap-2 text-base text-slate-600">
                               <Calendar className="w-4 h-4" />
-                              {submission.submittedAt.toLocaleString('ko-KR')}
+                              {submission.submittedAt instanceof Date ? submission.submittedAt.toLocaleString('ko-KR') : '제출 시간 없음'}
                             </div>
                           ) : (
                             <span className="text-base text-slate-400">-</span>
