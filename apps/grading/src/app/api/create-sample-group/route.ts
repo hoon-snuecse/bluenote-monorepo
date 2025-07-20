@@ -27,11 +27,11 @@ export async function POST(request: NextRequest) {
 
     // 샘플 학생들 생성
     const students = [
-      { studentId: '20240301', name: '김민준', email: 'minjun.kim@example.com' },
-      { studentId: '20240302', name: '이서연', email: 'seoyeon.lee@example.com' },
-      { studentId: '20240303', name: '박지호', email: 'jiho.park@example.com' },
-      { studentId: '20240304', name: '최유진', email: 'yujin.choi@example.com' },
-      { studentId: '20240305', name: '정하늘', email: 'haneul.jung@example.com' }
+      { studentId: '20240301', name: '김민준', grade: '3', class: '1', number: 1, email: 'minjun.kim@example.com' },
+      { studentId: '20240302', name: '이서연', grade: '3', class: '1', number: 2, email: 'seoyeon.lee@example.com' },
+      { studentId: '20240303', name: '박지호', grade: '3', class: '1', number: 3, email: 'jiho.park@example.com' },
+      { studentId: '20240304', name: '최유진', grade: '3', class: '1', number: 4, email: 'yujin.choi@example.com' },
+      { studentId: '20240305', name: '정하늘', grade: '3', class: '1', number: 5, email: 'haneul.jung@example.com' }
     ]
 
     await prisma.student.createMany({

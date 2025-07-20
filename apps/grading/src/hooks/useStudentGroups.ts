@@ -5,6 +5,9 @@ export interface Student {
   id: string;
   studentId: string;
   name: string;
+  grade?: string;
+  class?: string;
+  number?: number;
   email?: string;
   groupId: string;
   createdAt: string;
@@ -147,6 +150,9 @@ export function useStudentGroups() {
   const addStudents = async (groupId: string, students: Array<{
     studentId: string;
     name: string;
+    grade?: string;
+    class?: string;
+    number?: number;
     email?: string;
   }>) => {
     try {
@@ -189,6 +195,9 @@ export function useStudentGroups() {
   const updateStudent = async (groupId: string, studentId: string, updates: {
     studentId?: string;
     name?: string;
+    grade?: string;
+    class?: string;
+    number?: number;
     email?: string;
   }) => {
     try {

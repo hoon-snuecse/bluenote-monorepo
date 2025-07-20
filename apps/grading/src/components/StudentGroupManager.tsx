@@ -50,9 +50,9 @@ export function StudentGroupManager() {
   })
 
   const [studentFormData, setStudentFormData] = useState<{
-    students: Array<{ studentId: string; name: string; email?: string }>
+    students: Array<{ studentId: string; name: string; grade?: string; class?: string; number?: number; email?: string }>
   }>({
-    students: [{ studentId: '', name: '', email: '' }]
+    students: [{ studentId: '', name: '', grade: '', class: '', number: undefined, email: '' }]
   })
 
   const handleSubmit = async () => {
@@ -124,17 +124,24 @@ export function StudentGroupManager() {
   const handleAddStudents = async () => {
     if (!selectedGroup) return
     
-    const validStudents = studentFormData.students.filter(s => s.studentId && s.name)
-    if (validStudents.length === 0) return
+    // 학번이 없으면 자동 생성
+    const processedStudents = studentFormData.students
+      .filter(s => s.name)
+      .map((s, index) => ({
+        ...s,
+        studentId: s.studentId || `${new Date().getFullYear()}${selectedGroup.gradeLevel || '0'}${selectedGroup.className || '0'}${String(s.number || index + 1).padStart(2, '0')}`
+      }))
+    
+    if (processedStudents.length === 0) return
 
     try {
-      await addStudents(selectedGroup.id, validStudents)
+      await addStudents(selectedGroup.id, processedStudents)
       // 학생 목록 새로고침
       const fetchedStudents = await fetchStudents(selectedGroup.id)
       setStudents(fetchedStudents)
       // 폼 초기화
       setStudentFormData({
-        students: [{ studentId: '', name: '', email: '' }]
+        students: [{ studentId: '', name: '', grade: '', class: '', number: undefined, email: '' }]
       })
     } catch (error) {
       // Error is handled by the hook
@@ -640,9 +647,9 @@ export function StudentGroupManager() {
                               }}
                             />
                           </TableHead>
-                          <TableHead>학번</TableHead>
+                          <TableHead>학년</TableHead>
+                          <TableHead>반</TableHead>
                           <TableHead>이름</TableHead>
-                          <TableHead>이메일</TableHead>
                           <TableHead className="w-20">작업</TableHead>
                         </TableRow>
                       </TableHeader>
@@ -668,9 +675,9 @@ export function StudentGroupManager() {
                                   }}
                                 />
                               </TableCell>
-                              <TableCell>{student.studentId}</TableCell>
+                              <TableCell>{student.grade || '-'}학년</TableCell>
+                              <TableCell>{student.class || '-'}반</TableCell>
                               <TableCell>{student.name}</TableCell>
-                              <TableCell>{student.email || '-'}</TableCell>
                               <TableCell>
                                 <Button
                                   size="sm"
@@ -691,13 +698,32 @@ export function StudentGroupManager() {
                 <TabsContent value="add" className="space-y-4">
                   <div className="space-y-4">
                     {studentFormData.students.map((student, index) => (
-                      <div key={index} className="grid grid-cols-3 gap-2">
+                      <div key={index} className="grid grid-cols-5 gap-2">
                         <Input
-                          placeholder="학번"
-                          value={student.studentId}
+                          placeholder="학년"
+                          value={student.grade || ''}
                           onChange={(e) => {
                             const newStudents = [...studentFormData.students]
-                            newStudents[index].studentId = e.target.value
+                            newStudents[index].grade = e.target.value
+                            setStudentFormData({ students: newStudents })
+                          }}
+                        />
+                        <Input
+                          placeholder="반"
+                          value={student.class || ''}
+                          onChange={(e) => {
+                            const newStudents = [...studentFormData.students]
+                            newStudents[index].class = e.target.value
+                            setStudentFormData({ students: newStudents })
+                          }}
+                        />
+                        <Input
+                          placeholder="번호"
+                          type="number"
+                          value={student.number || ''}
+                          onChange={(e) => {
+                            const newStudents = [...studentFormData.students]
+                            newStudents[index].number = e.target.value ? parseInt(e.target.value) : undefined
                             setStudentFormData({ students: newStudents })
                           }}
                         />
@@ -728,7 +754,7 @@ export function StudentGroupManager() {
                         variant="outline"
                         onClick={() => {
                           setStudentFormData({
-                            students: [...studentFormData.students, { studentId: '', name: '', email: '' }]
+                            students: [...studentFormData.students, { studentId: '', name: '', grade: '', class: '', number: undefined, email: '' }]
                           })
                         }}
                       >

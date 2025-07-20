@@ -133,6 +133,9 @@ export async function POST(
       data: students.map((student: any) => ({
         studentId: student.studentId,
         name: student.name,
+        grade: student.grade || null,
+        class: student.class || null,
+        number: student.number || null,
         email: student.email || null,
         groupId: params.groupId
       }))
@@ -231,6 +234,9 @@ export async function PUT(
       data: {
         studentId: updates.studentId || existingStudent.studentId,
         name: updates.name || existingStudent.name,
+        grade: updates.grade !== undefined ? updates.grade : existingStudent.grade,
+        class: updates.class !== undefined ? updates.class : existingStudent.class,
+        number: updates.number !== undefined ? updates.number : existingStudent.number,
         email: updates.email !== undefined ? updates.email : existingStudent.email
       }
     })
