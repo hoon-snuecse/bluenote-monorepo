@@ -6,14 +6,21 @@ export async function GET(
   { params }: { params: { assignmentId: string } }
 ) {
   try {
-    console.log('[Submissions API] Fetching for assignmentId:', params.assignmentId);
+    console.log('[Submissions API] GET request for assignmentId:', params.assignmentId);
     
     // First check if assignment exists
     const assignment = await prisma.assignment.findUnique({
       where: { id: params.assignmentId }
     });
     
-    console.log('[Submissions API] Assignment exists:', !!assignment);
+    console.log('[Submissions API] Assignment found:', !!assignment);
+    if (!assignment) {
+      return NextResponse.json({
+        success: false,
+        error: 'Assignment not found',
+        submissions: []
+      });
+    }
     
     const submissions = await prisma.submission.findMany({
       where: {
@@ -31,12 +38,18 @@ export async function GET(
       },
     });
     
-    console.log('[Submissions API] Found submissions:', submissions.length);
-    console.log('[Submissions API] Submission details:', submissions.map(s => ({
-      id: s.id,
-      studentName: s.studentName,
-      createdAt: s.createdAt
-    })));
+    console.log('[Submissions API] Query result:', {
+      totalFound: submissions.length,
+      assignmentId: params.assignmentId,
+      submissions: submissions.map(s => ({
+        id: s.id,
+        studentName: s.studentName,
+        studentId: s.studentId,
+        createdAt: s.createdAt,
+        hasContent: !!s.content,
+        contentLength: s.content?.length || 0
+      }))
+    });
 
     return NextResponse.json({
       success: true,
@@ -54,9 +67,9 @@ export async function GET(
       }))
     });
   } catch (error) {
-    console.error('Error fetching submissions:', error);
+    console.error('[Submissions API] Error fetching submissions:', error);
     return NextResponse.json(
-      { success: false, error: 'Failed to fetch submissions' },
+      { success: false, error: 'Failed to fetch submissions', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     );
   }

@@ -5,6 +5,12 @@ import prisma from '@/lib/prisma';
 export async function POST(request: NextRequest) {
   try {
     const data = await request.json();
+    console.log('[Submission API] POST request received:', {
+      assignmentId: data.assignmentId,
+      studentName: data.studentName,
+      studentId: data.studentId,
+      contentLength: data.content?.length || 0
+    });
     
     // 과제 존재 여부 확인
     const assignment = await prisma.assignment.findUnique({
@@ -28,6 +34,18 @@ export async function POST(request: NextRequest) {
         content: data.content || ''
       }
     });
+    
+    console.log('[Submission API] Created submission:', {
+      id: submission.id,
+      assignmentId: submission.assignmentId,
+      studentName: submission.studentName
+    });
+    
+    // 생성된 제출물 확인
+    const verifySubmission = await prisma.submission.findUnique({
+      where: { id: submission.id }
+    });
+    console.log('[Submission API] Verification - submission exists:', !!verifySubmission);
 
     return NextResponse.json({ 
       success: true, 
