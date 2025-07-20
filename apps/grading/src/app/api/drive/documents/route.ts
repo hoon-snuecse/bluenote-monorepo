@@ -1,6 +1,7 @@
 import { google } from 'googleapis';
 import { NextRequest, NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
+import { getServerSession } from '@/lib/auth';
+import { createClient } from '@/lib/supabase';
 
 export async function GET(request: NextRequest) {
   try {
@@ -12,12 +13,25 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Folder ID required' }, { status: 400 });
     }
 
-    const cookieStore = await cookies();
-    const accessToken = cookieStore.get('google_access_token')?.value;
-
-    if (!accessToken) {
+    // Get current session
+    const session = await getServerSession();
+    if (!session?.user?.email) {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
     }
+
+    // Get user's Google token from database
+    const supabase = createClient();
+    const { data: tokenData, error: tokenError } = await supabase
+      .from('google_tokens')
+      .select('access_token, refresh_token, expires_at')
+      .eq('user_email', session.user.email)
+      .single();
+
+    if (tokenError || !tokenData?.access_token) {
+      return NextResponse.json({ error: 'Google authentication required' }, { status: 401 });
+    }
+
+    const accessToken = tokenData.access_token;
 
     const oauth2Client = new google.auth.OAuth2(
       process.env.GOOGLE_CLIENT_ID,

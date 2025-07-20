@@ -1,6 +1,8 @@
 import { google } from 'googleapis';
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
+import { getServerSession } from '@/lib/auth';
+import { createClient } from '@/lib/supabase';
 
 const redirectUri = process.env.NODE_ENV === 'production' 
   ? process.env.GOOGLE_REDIRECT_URI || 'https://grading.bluenote.site/api/auth/google/callback'
@@ -48,30 +50,43 @@ export async function GET(request: NextRequest) {
   }
 
   try {
+    // Get current session
+    const session = await getServerSession();
+    if (!session?.user?.email) {
+      return NextResponse.redirect(
+        `${baseUrl}/import?error=not_authenticated${assignmentIdParam}`
+      );
+    }
+
     const { tokens } = await oauth2Client.getToken(code);
     
-    console.log('Received tokens:', {
+    console.log('Received tokens for user:', session.user.email, {
       hasAccessToken: !!tokens.access_token,
       hasRefreshToken: !!tokens.refresh_token
     });
     
-    const cookieStore = await cookies();
-    cookieStore.set('google_access_token', tokens.access_token || '', {
-      httpOnly: true,
-      secure: false, // Allow HTTP in development
-      sameSite: 'lax',
-      maxAge: 60 * 60 * 24, // 24 hours
-      path: '/',
-    });
-
-    if (tokens.refresh_token) {
-      cookieStore.set('google_refresh_token', tokens.refresh_token, {
-        httpOnly: true,
-        secure: false, // Allow HTTP in development
-        sameSite: 'lax',
-        maxAge: 60 * 60 * 24 * 30, // 30 days
-        path: '/',
+    // Store tokens in database associated with user
+    const supabase = createClient();
+    const expiresAt = tokens.expiry_date ? new Date(tokens.expiry_date) : null;
+    
+    const { error: dbError } = await supabase
+      .from('google_tokens')
+      .upsert({
+        user_email: session.user.email,
+        access_token: tokens.access_token || '',
+        refresh_token: tokens.refresh_token,
+        token_type: tokens.token_type || 'Bearer',
+        expires_at: expiresAt,
+        updated_at: new Date().toISOString()
+      }, {
+        onConflict: 'user_email'
       });
+
+    if (dbError) {
+      console.error('Failed to store tokens:', dbError);
+      return NextResponse.redirect(
+        `${baseUrl}/import?error=token_storage_failed${assignmentIdParam}`
+      );
     }
 
     return NextResponse.redirect(
