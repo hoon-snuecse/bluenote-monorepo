@@ -380,12 +380,20 @@ export function StudentGroupManager() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <CardTitle className="text-lg">학생 그룹</CardTitle>
+            <Button 
+              size="sm" 
+              onClick={() => {
+                resetForm()
+                setDialogOpen(true)
+              }}
+              style={{ backgroundColor: '#3b82f6', color: 'white', padding: '8px 16px', borderRadius: '6px', display: 'flex', alignItems: 'center', gap: '8px' }}
+            >
+              <Plus className="h-4 w-4" />
+              새 그룹
+            </Button>
             <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
               <DialogTrigger asChild>
-                <Button size="sm" onClick={() => resetForm()}>
-                  <Plus className="mr-2 h-4 w-4" />
-                  새 그룹
-                </Button>
+                <span />
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
@@ -607,16 +615,18 @@ export function StudentGroupManager() {
                     variant="outline"
                     onClick={handleExportCSV}
                     disabled={students.length === 0}
+                    style={{ border: '1px solid #e5e5e5', padding: '8px 16px', borderRadius: '6px', display: 'flex', alignItems: 'center', gap: '8px' }}
                   >
-                    <Download className="mr-2 h-4 w-4" />
+                    <Download className="h-4 w-4" />
                     내보내기
                   </Button>
                   <Button
                     size="sm"
                     variant="outline"
                     onClick={() => setImportDialogOpen(true)}
+                    style={{ border: '1px solid #e5e5e5', padding: '8px 16px', borderRadius: '6px', display: 'flex', alignItems: 'center', gap: '8px' }}
                   >
-                    <Upload className="mr-2 h-4 w-4" />
+                    <Upload className="h-4 w-4" />
                     가져오기
                   </Button>
                 </div>
