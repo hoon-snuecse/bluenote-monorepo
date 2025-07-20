@@ -1,10 +1,12 @@
 import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { createAuthOptions } from '@bluenote/auth';
+import { getServerSession } from '@/lib/auth';
 
 export async function GET(request: Request) {
+  console.log('[Auth Check] Checking session...');
+  
   try {
-    const session = await getServerSession(createAuthOptions());
+    const session = await getServerSession();
+    console.log('[Auth Check] Session:', session ? 'Found' : 'Not found');
     
     return NextResponse.json({
       authenticated: !!session,
