@@ -104,7 +104,8 @@ export default function PublicSubmissionsPage() {
             {assignment?.title || '글쓰기 제출 현황'}
           </h1>
           <p className="text-lg text-slate-600">
-            {assignment && `${assignment.schoolName} • ${assignment.gradeLevel} • ${assignment.writingType}`}
+            {assignment && assignment.schoolName && assignment.gradeLevel && assignment.writingType && 
+              `${assignment.schoolName} • ${assignment.gradeLevel} • ${assignment.writingType}`}
           </p>
           <p className="text-slate-600 mt-2">총 {submissions.length}개의 제출물</p>
         </div>
@@ -162,10 +163,10 @@ export default function PublicSubmissionsPage() {
                         <div className="flex items-center gap-1">
                           <Calendar className="w-4 h-4" />
                           {submission.submittedAt
-                            ? new Date(submission.submittedAt).toLocaleString('ko-KR')
+                            ? submission.submittedAt.toLocaleString('ko-KR')
                             : '제출 시간 없음'}
                         </div>
-                        {submission.content && (
+                        {submission.content && submission.content.length > 0 && (
                           <span className="text-slate-500">
                             {submission.content.length}자
                           </span>

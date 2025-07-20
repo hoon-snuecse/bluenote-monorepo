@@ -51,10 +51,10 @@ export async function GET(
         studentId: sub.studentId,
         studentName: sub.studentName,
         studentDbId: sub.studentDbId,
-        content: sub.content,
-        submittedAt: sub.createdAt,
-        evaluatedAt: sub.evaluatedAt,
-        evaluation: sub.evaluation,
+        content: sub.content || null,
+        submittedAt: sub.createdAt || null,
+        evaluatedAt: sub.evaluatedAt || null,
+        evaluation: sub.evaluation || null,
         status: sub.evaluatedAt ? 'evaluated' : 'submitted',
         student: null // 학생 그룹과 연결되지 않은 제출물
       }))
