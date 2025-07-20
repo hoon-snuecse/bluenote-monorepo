@@ -1,54 +1,42 @@
-import { NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
+import { NextRequest, NextResponse } from 'next/server'
+import prisma from '@/lib/prisma'
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    // Test database connection
-    const assignmentCount = await prisma.assignment.count();
-    const submissionCount = await prisma.submission.count();
+    console.log('[Test DB] Starting test')
     
-    // Get recent submissions
-    const recentSubmissions = await prisma.submission.findMany({
-      take: 5,
-      orderBy: { createdAt: 'desc' },
-      include: {
-        assignment: {
-          select: {
-            id: true,
-            title: true
-          }
-        }
-      }
-    });
+    // 1. Prisma 연결 테스트
+    const dbTest = await prisma.$queryRaw`SELECT 1 as test`
+    console.log('[Test DB] Raw query success:', dbTest)
+    
+    // 2. StudentGroup 테이블 존재 확인
+    const groupCount = await prisma.studentGroup.count()
+    console.log('[Test DB] StudentGroup count:', groupCount)
+    
+    // 3. 첫 번째 그룹 조회 테스트
+    const firstGroup = await prisma.studentGroup.findFirst()
+    console.log('[Test DB] First group:', firstGroup?.id)
     
     return NextResponse.json({
       success: true,
-      database: 'connected',
-      counts: {
-        assignments: assignmentCount,
-        submissions: submissionCount
-      },
-      recentSubmissions: recentSubmissions.map(s => ({
-        id: s.id,
-        studentName: s.studentName,
-        assignmentId: s.assignmentId,
-        assignmentTitle: s.assignment.title,
-        createdAt: s.createdAt
-      })),
-      environment: {
-        hasDbUrl: !!process.env.DATABASE_URL,
-        nodeEnv: process.env.NODE_ENV
+      message: 'Database connection successful',
+      results: {
+        rawQuery: 'OK',
+        groupCount: groupCount,
+        firstGroupId: firstGroup?.id || 'No groups found'
       }
-    });
+    })
   } catch (error) {
-    console.error('Database test error:', error);
+    console.error('[Test DB] Error:', error)
+    
     return NextResponse.json({
       success: false,
-      error: error instanceof Error ? error.message : 'Unknown error',
-      environment: {
-        hasDbUrl: !!process.env.DATABASE_URL,
-        nodeEnv: process.env.NODE_ENV
+      error: 'Database test failed',
+      details: {
+        message: error instanceof Error ? error.message : 'Unknown error',
+        type: error?.constructor?.name,
+        code: (error as any)?.code
       }
-    }, { status: 500 });
+    }, { status: 500 })
   }
 }
