@@ -19,6 +19,9 @@ import { useSession } from 'next-auth/react'
 export function StudentGroupManager() {
   const { data: session } = useSession()
   const { groups, loading, createGroup, updateGroup, deleteGroup, fetchStudents, addStudents, deleteStudents, updateStudent } = useStudentGroups()
+  
+  // 디버깅용 로그
+  console.log('[StudentGroupManager] Render:', { groups: groups.length, loading, session: !!session })
   const [dialogOpen, setDialogOpen] = useState(false)
   const [importDialogOpen, setImportDialogOpen] = useState(false)
   const [selectedGroup, setSelectedGroup] = useState<StudentGroup | null>(null)
@@ -363,7 +366,11 @@ export function StudentGroupManager() {
   })
 
   if (loading && groups.length === 0) {
-    return <div className="animate-pulse">학생 그룹을 불러오는 중...</div>
+    return (
+      <div className="flex items-center justify-center p-8">
+        <div className="animate-pulse text-muted-foreground">학생 그룹을 불러오는 중...</div>
+      </div>
+    )
   }
 
   return (
