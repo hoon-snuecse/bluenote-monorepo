@@ -12,12 +12,15 @@ import { Badge } from '@bluenote/ui'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@bluenote/ui'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@bluenote/ui'
 import { Checkbox } from '@bluenote/ui'
-import { Users, Plus, Edit, Trash2, Upload, Download, Search } from 'lucide-react'
+import { Users, Plus, Edit, Trash2, Upload, Download, Search, FileSpreadsheet, FileText, Sheet, FileDown } from 'lucide-react'
 import { useStudentGroups, StudentGroup, Student } from '@/hooks/useStudentGroups'
+import { useSession } from 'next-auth/react'
 
 export function StudentGroupManager() {
-  const { groups, loading, createGroup, updateGroup, deleteGroup, fetchStudents, addStudents, deleteStudents } = useStudentGroups()
+  const { data: session } = useSession()
+  const { groups, loading, createGroup, updateGroup, deleteGroup, fetchStudents, addStudents, deleteStudents, updateStudent } = useStudentGroups()
   const [dialogOpen, setDialogOpen] = useState(false)
+  const [importDialogOpen, setImportDialogOpen] = useState(false)
   const [selectedGroup, setSelectedGroup] = useState<StudentGroup | null>(null)
   const [editingGroup, setEditingGroup] = useState<StudentGroup | null>(null)
   const [students, setStudents] = useState<Student[]>([])
@@ -26,6 +29,16 @@ export function StudentGroupManager() {
   const [filterYear, setFilterYear] = useState<string>('')
   const [filterGrade, setFilterGrade] = useState<string>('')
   const [filterClass, setFilterClass] = useState<string>('')
+  const [importLoading, setImportLoading] = useState(false)
+  const [importType, setImportType] = useState<'excel' | 'csv' | 'googlesheets'>('excel')
+  const [googleSheetId, setGoogleSheetId] = useState('')
+  const [editingStudent, setEditingStudent] = useState<Student | null>(null)
+  const [studentEditData, setStudentEditData] = useState({
+    studentId: '',
+    name: '',
+    email: ''
+  })
+  const [studentEditDialogOpen, setStudentEditDialogOpen] = useState(false)
   
   const [formData, setFormData] = useState({
     name: '',
@@ -138,45 +151,156 @@ export function StudentGroupManager() {
     }
   }
 
+  const handleImportExcel = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file || !selectedGroup) return
+
+    setImportLoading(true)
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      formData.append('groupId', selectedGroup.id)
+
+      const response = await fetch('/api/students/import/excel', {
+        method: 'POST',
+        body: formData
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || '엑셀 파일 가져오기 실패')
+      }
+
+      if (data.students && data.students.length > 0) {
+        await addStudents(selectedGroup.id, data.students)
+        const fetchedStudents = await fetchStudents(selectedGroup.id)
+        setStudents(fetchedStudents)
+        setImportDialogOpen(false)
+        alert(`${data.students.length}명의 학생을 성공적으로 가져왔습니다.`)
+      }
+    } catch (error) {
+      alert(error instanceof Error ? error.message : '엑셀 파일 가져오기 중 오류가 발생했습니다.')
+    } finally {
+      setImportLoading(false)
+    }
+  }
+
   const handleImportCSV = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     if (!file || !selectedGroup) return
 
-    const reader = new FileReader()
-    reader.onload = async (e) => {
-      const text = e.target?.result as string
-      const rows = text.split('\n').filter(row => row.trim())
-      const headers = rows[0].split(',').map(h => h.trim())
-      
-      const studentIdIndex = headers.findIndex(h => h.includes('학번') || h.toLowerCase() === 'id')
-      const nameIndex = headers.findIndex(h => h.includes('이름') || h.toLowerCase() === 'name')
-      const emailIndex = headers.findIndex(h => h.includes('이메일') || h.toLowerCase() === 'email')
+    setImportLoading(true)
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      formData.append('groupId', selectedGroup.id)
 
-      if (studentIdIndex === -1 || nameIndex === -1) {
-        alert('CSV 파일에 학번과 이름 열이 필요합니다.')
-        return
+      const response = await fetch('/api/students/import/csv', {
+        method: 'POST',
+        body: formData
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'CSV 파일 가져오기 실패')
       }
 
-      const students = rows.slice(1).map(row => {
-        const cols = row.split(',').map(c => c.trim())
-        return {
-          studentId: cols[studentIdIndex],
-          name: cols[nameIndex],
-          email: emailIndex !== -1 ? cols[emailIndex] : undefined
-        }
-      }).filter(s => s.studentId && s.name)
-
-      if (students.length > 0) {
-        try {
-          await addStudents(selectedGroup.id, students)
-          const fetchedStudents = await fetchStudents(selectedGroup.id)
-          setStudents(fetchedStudents)
-        } catch (error) {
-          // Error is handled by the hook
-        }
+      if (data.students && data.students.length > 0) {
+        await addStudents(selectedGroup.id, data.students)
+        const fetchedStudents = await fetchStudents(selectedGroup.id)
+        setStudents(fetchedStudents)
+        setImportDialogOpen(false)
+        alert(`${data.students.length}명의 학생을 성공적으로 가져왔습니다.`)
       }
+    } catch (error) {
+      alert(error instanceof Error ? error.message : 'CSV 파일 가져오기 중 오류가 발생했습니다.')
+    } finally {
+      setImportLoading(false)
     }
-    reader.readAsText(file)
+  }
+
+  const handleImportGoogleSheets = async () => {
+    if (!googleSheetId || !selectedGroup) return
+
+    setImportLoading(true)
+    try {
+      const response = await fetch('/api/students/import/google-sheets', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          spreadsheetId: googleSheetId,
+          groupId: selectedGroup.id
+        })
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Google Sheets 가져오기 실패')
+      }
+
+      if (data.students && data.students.length > 0) {
+        await addStudents(selectedGroup.id, data.students)
+        const fetchedStudents = await fetchStudents(selectedGroup.id)
+        setStudents(fetchedStudents)
+        setImportDialogOpen(false)
+        setGoogleSheetId('')
+        alert(`${data.students.length}명의 학생을 성공적으로 가져왔습니다.`)
+      }
+    } catch (error) {
+      alert(error instanceof Error ? error.message : 'Google Sheets 가져오기 중 오류가 발생했습니다.')
+    } finally {
+      setImportLoading(false)
+    }
+  }
+
+  const handleDownloadTemplate = async (format: 'excel' | 'csv') => {
+    try {
+      const response = await fetch(`/api/students/template?format=${format}&lang=ko`)
+      
+      if (!response.ok) {
+        throw new Error('템플릿 다운로드 실패')
+      }
+
+      const blob = await response.blob()
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `student_template_ko.${format === 'excel' ? 'xlsx' : 'csv'}`
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      URL.revokeObjectURL(url)
+    } catch (error) {
+      alert('템플릿 다운로드 중 오류가 발생했습니다.')
+    }
+  }
+
+  const handleEditStudent = (student: Student) => {
+    setEditingStudent(student)
+    setStudentEditData({
+      studentId: student.studentId,
+      name: student.name,
+      email: student.email || ''
+    })
+    setStudentEditDialogOpen(true)
+  }
+
+  const handleUpdateStudent = async () => {
+    if (!editingStudent || !selectedGroup) return
+
+    try {
+      await updateStudent(selectedGroup.id, editingStudent.id, studentEditData)
+      // 학생 목록 새로고침
+      const fetchedStudents = await fetchStudents(selectedGroup.id)
+      setStudents(fetchedStudents)
+      setStudentEditDialogOpen(false)
+      setEditingStudent(null)
+    } catch (error) {
+      alert(error instanceof Error ? error.message : '학생 정보 수정 중 오류가 발생했습니다.')
+    }
   }
 
   const handleExportCSV = () => {
@@ -429,21 +553,14 @@ export function StudentGroupManager() {
                     <Download className="mr-2 h-4 w-4" />
                     내보내기
                   </Button>
-                  <label htmlFor="csv-upload">
-                    <Button size="sm" variant="outline" asChild>
-                      <span>
-                        <Upload className="mr-2 h-4 w-4" />
-                        가져오기
-                      </span>
-                    </Button>
-                  </label>
-                  <input
-                    id="csv-upload"
-                    type="file"
-                    accept=".csv"
-                    className="hidden"
-                    onChange={handleImportCSV}
-                  />
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setImportDialogOpen(true)}
+                  >
+                    <Upload className="mr-2 h-4 w-4" />
+                    가져오기
+                  </Button>
                 </div>
               </div>
             </CardHeader>
@@ -491,12 +608,13 @@ export function StudentGroupManager() {
                           <TableHead>학번</TableHead>
                           <TableHead>이름</TableHead>
                           <TableHead>이메일</TableHead>
+                          <TableHead className="w-20">작업</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         {filteredStudents.length === 0 ? (
                           <TableRow>
-                            <TableCell colSpan={4} className="text-center">
+                            <TableCell colSpan={5} className="text-center">
                               등록된 학생이 없습니다.
                             </TableCell>
                           </TableRow>
@@ -518,6 +636,15 @@ export function StudentGroupManager() {
                               <TableCell>{student.studentId}</TableCell>
                               <TableCell>{student.name}</TableCell>
                               <TableCell>{student.email || '-'}</TableCell>
+                              <TableCell>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() => handleEditStudent(student)}
+                                >
+                                  <Edit className="h-4 w-4" />
+                                </Button>
+                              </TableCell>
                             </TableRow>
                           ))
                         )}
@@ -594,6 +721,195 @@ export function StudentGroupManager() {
           </Card>
         )}
       </div>
+
+      {/* 가져오기 다이얼로그 */}
+      <Dialog open={importDialogOpen} onOpenChange={setImportDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>학생 자료 가져오기</DialogTitle>
+            <DialogDescription>
+              Excel, CSV 파일 또는 Google Sheets에서 학생 정보를 가져올 수 있습니다.
+            </DialogDescription>
+          </DialogHeader>
+
+          <Tabs value={importType} onValueChange={(value) => setImportType(value as any)}>
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="excel">
+                <FileSpreadsheet className="mr-2 h-4 w-4" />
+                Excel
+              </TabsTrigger>
+              <TabsTrigger value="csv">
+                <FileText className="mr-2 h-4 w-4" />
+                CSV
+              </TabsTrigger>
+              <TabsTrigger value="googlesheets">
+                <Sheet className="mr-2 h-4 w-4" />
+                Google Sheets
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="excel" className="space-y-4">
+              <div className="text-sm text-muted-foreground">
+                Excel 파일(.xlsx, .xls)에서 학생 정보를 가져옵니다. 
+                파일의 첫 번째 행은 헤더여야 하며, 학번과 이름 열이 필수입니다.
+              </div>
+              <div className="flex items-center justify-between">
+                <Button variant="outline" size="sm" onClick={() => handleDownloadTemplate('excel')}>
+                  <FileDown className="mr-2 h-4 w-4" />
+                  템플릿 다운로드
+                </Button>
+                <label htmlFor="excel-upload">
+                  <Button asChild disabled={importLoading}>
+                    <span>
+                      <Upload className="mr-2 h-4 w-4" />
+                      {importLoading ? '가져오는 중...' : 'Excel 파일 선택'}
+                    </span>
+                  </Button>
+                </label>
+                <input
+                  id="excel-upload"
+                  type="file"
+                  accept=".xlsx,.xls"
+                  className="hidden"
+                  onChange={handleImportExcel}
+                  disabled={importLoading}
+                />
+              </div>
+            </TabsContent>
+
+            <TabsContent value="csv" className="space-y-4">
+              <div className="text-sm text-muted-foreground">
+                CSV 파일에서 학생 정보를 가져옵니다. 
+                파일의 첫 번째 행은 헤더여야 하며, 학번과 이름 열이 필수입니다.
+              </div>
+              <div className="flex items-center justify-between">
+                <Button variant="outline" size="sm" onClick={() => handleDownloadTemplate('csv')}>
+                  <FileDown className="mr-2 h-4 w-4" />
+                  템플릿 다운로드
+                </Button>
+                <label htmlFor="csv-upload">
+                  <Button asChild disabled={importLoading}>
+                    <span>
+                      <Upload className="mr-2 h-4 w-4" />
+                      {importLoading ? '가져오는 중...' : 'CSV 파일 선택'}
+                    </span>
+                  </Button>
+                </label>
+                <input
+                  id="csv-upload"
+                  type="file"
+                  accept=".csv"
+                  className="hidden"
+                  onChange={handleImportCSV}
+                  disabled={importLoading}
+                />
+              </div>
+            </TabsContent>
+
+            <TabsContent value="googlesheets" className="space-y-4">
+              <div className="text-sm text-muted-foreground">
+                Google Sheets에서 학생 정보를 가져옵니다. 
+                스프레드시트의 첫 번째 행은 헤더여야 하며, 학번과 이름 열이 필수입니다.
+              </div>
+              {!session?.user?.email && (
+                <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3 text-sm">
+                  Google Sheets를 사용하려면 먼저 로그인해야 합니다.
+                </div>
+              )}
+              <div className="space-y-2">
+                <Label htmlFor="sheet-id">스프레드시트 ID 또는 URL</Label>
+                <Input
+                  id="sheet-id"
+                  placeholder="예: 1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms"
+                  value={googleSheetId}
+                  onChange={(e) => {
+                    const value = e.target.value
+                    // URL에서 ID 추출
+                    const match = value.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/)
+                    setGoogleSheetId(match ? match[1] : value)
+                  }}
+                  disabled={importLoading}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Google Sheets URL에서 /d/ 다음에 오는 부분이 스프레드시트 ID입니다.
+                </p>
+              </div>
+              <Button 
+                onClick={handleImportGoogleSheets} 
+                disabled={importLoading || !googleSheetId || !session?.user?.email}
+                className="w-full"
+              >
+                <Upload className="mr-2 h-4 w-4" />
+                {importLoading ? '가져오는 중...' : 'Google Sheets에서 가져오기'}
+              </Button>
+            </TabsContent>
+          </Tabs>
+
+          <div className="bg-gray-50 rounded-md p-4">
+            <h4 className="font-medium mb-2">필수 열 정보</h4>
+            <ul className="text-sm text-muted-foreground space-y-1">
+              <li>• <strong>학번</strong> (필수): 학번, 번호, ID, Student ID</li>
+              <li>• <strong>이름</strong> (필수): 이름, 성명, Name, Student Name</li>
+              <li>• <strong>이메일</strong> (선택): 이메일, 메일, Email, E-mail</li>
+              <li>• <strong>학년</strong> (선택): 학년, Grade, Year</li>
+              <li>• <strong>반</strong> (선택): 반, Class, Classroom</li>
+              <li>• <strong>번호</strong> (선택): 번호, Number, No</li>
+            </ul>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* 학생 편집 다이얼로그 */}
+      <Dialog open={studentEditDialogOpen} onOpenChange={setStudentEditDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>학생 정보 수정</DialogTitle>
+            <DialogDescription>
+              학생의 정보를 수정할 수 있습니다.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="edit-studentId">학번</Label>
+              <Input
+                id="edit-studentId"
+                value={studentEditData.studentId}
+                onChange={(e) => setStudentEditData(prev => ({ ...prev, studentId: e.target.value }))}
+              />
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="edit-name">이름</Label>
+              <Input
+                id="edit-name"
+                value={studentEditData.name}
+                onChange={(e) => setStudentEditData(prev => ({ ...prev, name: e.target.value }))}
+              />
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="edit-email">이메일</Label>
+              <Input
+                id="edit-email"
+                type="email"
+                value={studentEditData.email}
+                onChange={(e) => setStudentEditData(prev => ({ ...prev, email: e.target.value }))}
+                placeholder="선택사항"
+              />
+            </div>
+          </div>
+
+          <div className="flex justify-end space-x-2">
+            <Button variant="outline" onClick={() => setStudentEditDialogOpen(false)}>
+              취소
+            </Button>
+            <Button onClick={handleUpdateStudent}>
+              수정
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

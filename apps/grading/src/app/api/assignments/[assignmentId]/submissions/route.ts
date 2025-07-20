@@ -19,6 +19,13 @@ export async function GET(
       where: {
         assignmentId: params.assignmentId,
       },
+      include: {
+        student: {
+          include: {
+            group: true
+          }
+        }
+      },
       orderBy: {
         createdAt: 'desc',
       },
@@ -37,11 +44,13 @@ export async function GET(
         id: sub.id,
         studentId: sub.studentId,
         studentName: sub.studentName,
+        studentDbId: sub.studentDbId,
         content: sub.content,
         submittedAt: sub.createdAt,
         evaluatedAt: sub.evaluatedAt,
         evaluation: sub.evaluation,
-        status: sub.evaluatedAt ? 'evaluated' : 'submitted'
+        status: sub.evaluatedAt ? 'evaluated' : 'submitted',
+        student: sub.student
       }))
     });
   } catch (error) {

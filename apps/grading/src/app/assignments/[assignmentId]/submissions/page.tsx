@@ -3,17 +3,31 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Card, CardContent } from '@bluenote/ui';
-import { ArrowLeft, FileText, User, Calendar, CheckCircle, Clock, PlayCircle, FileInput } from 'lucide-react';
+import { ArrowLeft, FileText, User, Calendar, CheckCircle, Clock, PlayCircle, FileInput, Link, LinkOff } from 'lucide-react';
 
 interface Submission {
   id: string;
   studentId: string;
   studentName: string;
+  studentDbId?: string;
   submittedAt: Date | null;
   content: string | null;
   status: 'submitted' | 'evaluated';
   evaluatedAt?: Date | null;
   evaluation?: any;
+  student?: {
+    id: string;
+    studentId: string;
+    name: string;
+    email?: string;
+    group?: {
+      id: string;
+      name: string;
+      gradeLevel?: string;
+      className?: string;
+      schoolYear: string;
+    };
+  };
 }
 
 export default function SubmissionsPage() {
@@ -61,6 +75,7 @@ export default function SubmissionsPage() {
     total: submissions.length,
     submitted: submissions.filter(s => s.status === 'submitted').length,
     evaluated: submissions.filter(s => s.status === 'evaluated').length,
+    unmapped: submissions.filter(s => !s.studentDbId).length,
   };
 
   const handleViewSubmission = (submissionId: string) => {
@@ -142,6 +157,31 @@ export default function SubmissionsPage() {
     }
   };
 
+  const handleBatchMapping = async () => {
+    if (!confirm('매핑되지 않은 모든 제출물을 학생 데이터베이스와 연결하시겠습니까?')) return;
+    
+    try {
+      const response = await fetch('/api/students/mapping', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        alert(`매핑 완료: ${data.results.mapped}개 성공, ${data.results.failed}개 실패`);
+        fetchSubmissions(); // 목록 새로고침
+      } else {
+        alert('일괄 매핑 실패: ' + data.error);
+      }
+    } catch (error) {
+      console.error('Error in batch mapping:', error);
+      alert('일괄 매핑 중 오류가 발생했습니다.');
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -192,6 +232,15 @@ export default function SubmissionsPage() {
             )}
             {submissions.length > 0 && (
               <>
+                {stats.unmapped > 0 && (
+                  <button
+                    onClick={handleBatchMapping}
+                    className="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2"
+                  >
+                    <Link className="w-5 h-5" />
+                    학생 데이터 연결 ({stats.unmapped}개)
+                  </button>
+                )}
                 {selectedSubmissions.size > 0 && (
                   <button
                     onClick={handleEvaluateSelected}
@@ -279,6 +328,7 @@ export default function SubmissionsPage() {
                     </th>
                     <th className="text-left p-4 font-medium text-base">학생 이름</th>
                     <th className="text-left p-4 font-medium text-base">학번</th>
+                    <th className="text-left p-4 font-medium text-base">학년/반</th>
                     <th className="text-left p-4 font-medium text-base">제출 일시</th>
                     <th className="text-center p-4 font-medium text-base">상태</th>
                     <th className="text-center p-4 font-medium text-base">작업</th>
@@ -287,7 +337,7 @@ export default function SubmissionsPage() {
                 <tbody>
                   {filteredSubmissions.length === 0 ? (
                     <tr>
-                      <td colSpan={5} className="text-center py-12">
+                      <td colSpan={6} className="text-center py-12">
                         <div className="text-slate-500">
                           <FileText className="w-12 h-12 mx-auto mb-3 text-slate-300" />
                           <p className="text-lg">제출된 글이 없습니다.</p>
@@ -315,10 +365,27 @@ export default function SubmissionsPage() {
                         <td className="p-4">
                           <div className="flex items-center gap-2">
                             <User className="w-4 h-4 text-slate-400" />
-                            <span className="text-base font-medium text-slate-700">{submission.studentName}</span>
+                            <span className="text-base font-medium text-slate-700">
+                              {submission.student?.name || submission.studentName}
+                            </span>
+                            {submission.studentDbId ? (
+                              <Link className="w-4 h-4 text-green-600" title="학생 데이터 연결됨" />
+                            ) : (
+                              <LinkOff className="w-4 h-4 text-amber-600" title="학생 데이터 미연결" />
+                            )}
                           </div>
                         </td>
                         <td className="p-4 text-base text-slate-600">{submission.studentId}</td>
+                        <td className="p-4 text-base text-slate-600">
+                          {submission.student?.group ? (
+                            <span>
+                              {submission.student.group.gradeLevel && `${submission.student.group.gradeLevel}학년`}
+                              {submission.student.group.className && ` ${submission.student.group.className}반`}
+                            </span>
+                          ) : (
+                            <span className="text-slate-400">-</span>
+                          )}
+                        </td>
                         <td className="p-4">
                           {submission.submittedAt ? (
                             <div className="flex items-center gap-2 text-base text-slate-600">

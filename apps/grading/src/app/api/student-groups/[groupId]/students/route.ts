@@ -137,6 +137,102 @@ export async function POST(
   }
 }
 
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: { groupId: string } }
+) {
+  try {
+    const session = await getServerSession()
+    
+    if (!session?.user?.email) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const body = await request.json()
+    const { studentId, updates } = body
+
+    if (!studentId || !updates) {
+      return NextResponse.json(
+        { error: '학생 ID와 수정 데이터가 필요합니다.' },
+        { status: 400 }
+      )
+    }
+
+    // 권한 확인
+    const group = await prisma.studentGroup.findUnique({
+      where: { id: params.groupId },
+      select: { createdBy: true }
+    })
+
+    if (!group) {
+      return NextResponse.json(
+        { error: '그룹을 찾을 수 없습니다.' },
+        { status: 404 }
+      )
+    }
+
+    if (group.createdBy !== session.user.email) {
+      return NextResponse.json(
+        { error: '수정 권한이 없습니다.' },
+        { status: 403 }
+      )
+    }
+
+    // 학생 확인
+    const existingStudent = await prisma.student.findFirst({
+      where: {
+        id: studentId,
+        groupId: params.groupId
+      }
+    })
+
+    if (!existingStudent) {
+      return NextResponse.json(
+        { error: '학생을 찾을 수 없습니다.' },
+        { status: 404 }
+      )
+    }
+
+    // 학번 변경 시 중복 체크
+    if (updates.studentId && updates.studentId !== existingStudent.studentId) {
+      const duplicate = await prisma.student.findFirst({
+        where: {
+          studentId: updates.studentId,
+          groupId: params.groupId,
+          id: { not: studentId }
+        }
+      })
+
+      if (duplicate) {
+        return NextResponse.json(
+          { error: '해당 학번이 이미 존재합니다.' },
+          { status: 400 }
+        )
+      }
+    }
+
+    const updatedStudent = await prisma.student.update({
+      where: { id: studentId },
+      data: {
+        studentId: updates.studentId || existingStudent.studentId,
+        name: updates.name || existingStudent.name,
+        email: updates.email !== undefined ? updates.email : existingStudent.email
+      }
+    })
+
+    return NextResponse.json({ 
+      success: true, 
+      student: updatedStudent 
+    })
+  } catch (error) {
+    console.error('Error updating student:', error)
+    return NextResponse.json(
+      { error: '학생 정보 수정 중 오류가 발생했습니다.' },
+      { status: 500 }
+    )
+  }
+}
+
 export async function DELETE(
   request: NextRequest,
   { params }: { params: { groupId: string } }

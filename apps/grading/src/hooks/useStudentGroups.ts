@@ -1,107 +1,229 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabase';
+import { useSession } from 'next-auth/react';
 
 export interface Student {
-  id: number;
+  id: string;
+  studentId: string;
   name: string;
-  group_id: number;
-  created_at: string;
-  updated_at: string;
+  email?: string;
+  groupId: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface StudentGroup {
-  id: number;
+  id: string;
   name: string;
   description?: string;
-  created_at: string;
-  updated_at: string;
+  schoolName: string;
+  gradeLevel?: string;
+  className?: string;
+  schoolYear: string;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+  _count?: {
+    students: number;
+  };
 }
 
 export function useStudentGroups() {
+  const { data: session } = useSession();
   const [groups, setGroups] = useState<StudentGroup[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchGroups();
-  }, []);
+    if (session) {
+      fetchGroups();
+    } else {
+      setLoading(false);
+    }
+  }, [session]);
 
   const fetchGroups = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
-        .from('student_groups')
-        .select('*')
-        .order('name');
-
-      if (error) throw error;
-      setGroups(data || []);
+      const response = await fetch('/api/student-groups');
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to fetch groups');
+      }
+      
+      setGroups(data.groups || []);
+      setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch groups');
+      setGroups([]);
     } finally {
       setLoading(false);
     }
   };
 
-  const createGroup = async (name: string, description?: string) => {
+  const createGroup = async (groupData: {
+    name: string;
+    description?: string;
+    schoolName: string;
+    gradeLevel?: string;
+    className?: string;
+    schoolYear: string;
+  }) => {
     try {
-      const { data, error } = await supabase
-        .from('student_groups')
-        .insert({ name, description })
-        .select()
-        .single();
-
-      if (error) throw error;
-      setGroups([...groups, data]);
-      return data;
+      const response = await fetch('/api/student-groups', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(groupData),
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to create group');
+      }
+      
+      await fetchGroups(); // Refresh the list
+      return data.group;
     } catch (err) {
       throw new Error(err instanceof Error ? err.message : 'Failed to create group');
     }
   };
 
-  const updateGroup = async (id: number, updates: Partial<StudentGroup>) => {
+  const updateGroup = async (id: string, updates: Partial<StudentGroup>) => {
     try {
-      const { data, error } = await supabase
-        .from('student_groups')
-        .update(updates)
-        .eq('id', id)
-        .select()
-        .single();
-
-      if (error) throw error;
-      setGroups(groups.map(g => g.id === id ? data : g));
-      return data;
+      const response = await fetch(`/api/student-groups/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updates),
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to update group');
+      }
+      
+      setGroups(groups.map(g => g.id === id ? data.group : g));
+      return data.group;
     } catch (err) {
       throw new Error(err instanceof Error ? err.message : 'Failed to update group');
     }
   };
 
-  const deleteGroup = async (id: number) => {
+  const deleteGroup = async (id: string) => {
     try {
-      const { error } = await supabase
-        .from('student_groups')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
+      const response = await fetch(`/api/student-groups/${id}`, {
+        method: 'DELETE',
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to delete group');
+      }
+      
       setGroups(groups.filter(g => g.id !== id));
     } catch (err) {
       throw new Error(err instanceof Error ? err.message : 'Failed to delete group');
     }
   };
 
-  const fetchStudents = async (groupId: number): Promise<Student[]> => {
+  const fetchStudents = async (groupId: string): Promise<Student[]> => {
     try {
-      const { data, error } = await supabase
-        .from('students')
-        .select('*')
-        .eq('group_id', groupId)
-        .order('name');
-
-      if (error) throw error;
-      return data || [];
+      const response = await fetch(`/api/student-groups/${groupId}/students`);
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to fetch students');
+      }
+      
+      return data.students || [];
     } catch (err) {
       throw new Error(err instanceof Error ? err.message : 'Failed to fetch students');
+    }
+  };
+
+  const addStudents = async (groupId: string, students: Array<{
+    studentId: string;
+    name: string;
+    email?: string;
+  }>) => {
+    try {
+      const response = await fetch(`/api/student-groups/${groupId}/students`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ students }),
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to add students');
+      }
+      
+      return data.students;
+    } catch (err) {
+      throw new Error(err instanceof Error ? err.message : 'Failed to add students');
+    }
+  };
+
+  const deleteStudents = async (groupId: string, studentIds: string[]) => {
+    try {
+      const response = await fetch(`/api/student-groups/${groupId}/students?studentIds=${studentIds.join(',')}`, {
+        method: 'DELETE',
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to delete students');
+      }
+      
+      return data;
+    } catch (err) {
+      throw new Error(err instanceof Error ? err.message : 'Failed to delete students');
+    }
+  };
+
+  const updateStudent = async (groupId: string, studentId: string, updates: {
+    studentId?: string;
+    name?: string;
+    email?: string;
+  }) => {
+    try {
+      const response = await fetch(`/api/student-groups/${groupId}/students`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ studentId, updates }),
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to update student');
+      }
+      
+      return data.student;
+    } catch (err) {
+      throw new Error(err instanceof Error ? err.message : 'Failed to update student');
+    }
+  };
+
+  const fetchStudent = async (groupId: string, studentId: string): Promise<Student & { 
+    submissions: any[];
+    evaluations: any[];
+  }> => {
+    try {
+      const response = await fetch(`/api/student-groups/${groupId}/students/${studentId}`);
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to fetch student');
+      }
+      
+      return data.student;
+    } catch (err) {
+      throw new Error(err instanceof Error ? err.message : 'Failed to fetch student');
     }
   };
 
@@ -113,6 +235,10 @@ export function useStudentGroups() {
     updateGroup,
     deleteGroup,
     fetchStudents,
+    fetchStudent,
+    addStudents,
+    updateStudent,
+    deleteStudents,
     refetch: fetchGroups
   };
 }
