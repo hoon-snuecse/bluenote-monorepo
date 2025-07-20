@@ -104,12 +104,14 @@ export default function AdminSettingsClient() {
       });
       
       if (!res.ok) {
-        throw new Error('Failed to save settings');
+        const errorData = await res.json();
+        throw new Error(errorData.details || 'Failed to save settings');
       }
       
       setMessage({ type: 'success', text: '설정이 저장되었습니다.' });
     } catch (error) {
-      setMessage({ type: 'error', text: '설정 저장에 실패했습니다.' });
+      console.error('Settings save error:', error);
+      setMessage({ type: 'error', text: `설정 저장에 실패했습니다: ${error.message}` });
     } finally {
       setSaving(false);
     }
