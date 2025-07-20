@@ -1,18 +1,31 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 
 export default function GradingRedirectClient() {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
+  const router = useRouter();
+  const [redirecting, setRedirecting] = useState(false);
 
   useEffect(() => {
-    // 세션 정보를 쿠키로 전달하면서 리다이렉트
-    if (session) {
-      // grading 앱 페이지로 이동
+    // 세션 로딩이 완료되었을 때
+    if (status === 'loading') return;
+    
+    // 세션이 있으면 바로 리다이렉트
+    if (status === 'authenticated' && session && !redirecting) {
+      setRedirecting(true);
       window.location.href = 'https://grading.bluenote.site/assignments';
     }
-  }, [session]);
+    
+    // 세션이 없으면 로그인 페이지로
+    if (status === 'unauthenticated' && !redirecting) {
+      setRedirecting(true);
+      // 로그인 후 grading 시스템으로 바로 이동하도록 callbackUrl 설정
+      router.push('/auth/signin?callbackUrl=' + encodeURIComponent('https://grading.bluenote.site/assignments'));
+    }
+  }, [session, status, router, redirecting]);
 
   return (
     <div className="min-h-screen flex items-center justify-center">
@@ -22,7 +35,9 @@ export default function GradingRedirectClient() {
           글쓰기 평가 시스템으로 이동 중...
         </h2>
         <p className="text-slate-600">
-          {session ? '인증 정보를 확인했습니다.' : '로그인 정보를 확인 중입니다.'}
+          {status === 'loading' && '로그인 정보를 확인 중입니다...'}
+          {status === 'authenticated' && '인증 정보를 확인했습니다. 잠시만 기다려주세요...'}
+          {status === 'unauthenticated' && '로그인 페이지로 이동합니다...'}
         </p>
       </div>
     </div>
