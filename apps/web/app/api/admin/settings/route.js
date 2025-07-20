@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
-import { createClient } from '@/lib/supabase/server';
+import { createClientForServer } from '@/lib/supabase/server';
 
 export async function GET(request) {
   try {
@@ -11,7 +11,7 @@ export async function GET(request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const supabase = createClient();
+    const supabase = await createClientForServer();
     
     // Fetch settings from database
     const { data, error } = await supabase
@@ -82,7 +82,7 @@ export async function POST(request) {
     }
 
     const { settings } = await request.json();
-    const supabase = createClient();
+    const supabase = await createClientForServer();
     
     // Convert camelCase to snake_case for database
     const dbSettings = {
