@@ -1,85 +1,68 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
   binaryTargets = ["native", "rhel-openssl-3.0.x", "debian-openssl-3.0.x"]
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
 }
 
-// 과제 모델
 model Assignment {
-  id                String   @id @default(cuid())
+  id                String       @id @default(cuid())
   title             String
   schoolName        String
   gradeLevel        String
   writingType       String
-  evaluationDomains Json // PostgreSQL JSON 타입
-  evaluationLevels  Json // PostgreSQL JSON 타입
+  evaluationDomains Json
+  evaluationLevels  Json
   levelCount        Int
-  gradingCriteria   String   @db.Text
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
-  
-  // Relations
+  gradingCriteria   String
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
   submissions       Submission[]
-  
+
   @@index([schoolName])
   @@index([createdAt])
 }
 
-// 제출물 모델
 model Submission {
-  id           String    @id @default(cuid())
+  id           String       @id @default(cuid())
   assignmentId String
   studentName  String
   studentId    String
-  studentDbId  String?   // Student 모델의 ID 참조
-  content      String    @db.Text
-  submittedAt  DateTime  @default(now())
+  content      String
+  submittedAt  DateTime     @default(now())
   evaluatedAt  DateTime?
-  evaluation   Json?     // 평가 결과 JSON
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
-  
-  // Relations
-  assignment   Assignment   @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  evaluation   Json?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  studentDbId  String?
   evaluations  Evaluation[]
-  student      Student?     @relation("StudentSubmissions", fields: [studentDbId], references: [id])
-  
+  assignment   Assignment   @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+
   @@index([assignmentId])
   @@index([studentId])
   @@index([studentDbId])
   @@index([submittedAt])
 }
 
-// 평가 결과 모델
 model Evaluation {
-  id                     String   @id @default(cuid())
-  submissionId          String
-  assignmentId          String
-  studentId             String
-  studentDbId           String?  // Student 모델의 ID 참조
-  domainEvaluations     Json     // 영역별 평가 결과 JSON
-  overallLevel          String
-  overallFeedback       String   @db.Text
-  improvementSuggestions Json // PostgreSQL JSON 타입
-  strengths             Json // PostgreSQL JSON 타입
-  evaluatedAt           DateTime @default(now())
-  evaluatedBy           String?  // AI 모델 또는 교사 ID
-  
-  // Relations
-  submission            Submission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
-  student               Student?   @relation("StudentEvaluations", fields: [studentDbId], references: [id])
-  
+  id                     String     @id @default(cuid())
+  submissionId           String
+  assignmentId           String
+  studentId              String
+  domainEvaluations      Json
+  overallLevel           String
+  overallFeedback        String
+  improvementSuggestions Json
+  strengths              Json
+  evaluatedAt            DateTime   @default(now())
+  evaluatedBy            String?
+  studentDbId            String?
+  submission             Submission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+
   @@index([submissionId])
   @@index([assignmentId])
   @@index([studentId])
@@ -87,7 +70,6 @@ model Evaluation {
   @@index([evaluatedAt])
 }
 
-// 접근 토큰 모델
 model AccessToken {
   id           String   @id @default(cuid())
   token        String   @unique
@@ -96,91 +78,65 @@ model AccessToken {
   expiresAt    DateTime
   used         Boolean  @default(false)
   createdAt    DateTime @default(now())
-  
+
   @@index([token])
   @@index([expiresAt])
 }
 
-// 평가 템플릿 모델
 model EvaluationTemplate {
   id                String   @id @default(cuid())
   name              String
-  description       String?
-  writingType       String?
-  gradeLevel        String?
-  evaluationDomains Json // PostgreSQL JSON 타입
-  evaluationLevels  Json // PostgreSQL JSON 타입
-  levelCount        Int
-  gradingCriteria   String   @db.Text
-  isPublic          Boolean  @default(false)
-  createdBy         String
+  writingType       String
+  gradeLevel        String
+  evaluationDomains Json
+  evaluationLevels  Json
+  criteriaTemplate  String
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
-  
-  // Relations
-  creator           User     @relation(fields: [createdBy], references: [id])
-  
-  @@index([createdBy])
-  @@index([isPublic])
+
   @@index([writingType])
   @@index([gradeLevel])
 }
 
-// 시스템 설정 모델
 model SystemSettings {
-  id                 String   @id @default(cuid())
-  key                String   @unique
-  value              Json
-  encrypted          Boolean  @default(false)
-  updatedAt          DateTime @updatedAt
-  
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     Json
+  encrypted Boolean  @default(false)
+  updatedAt DateTime @updatedAt
+
   @@index([key])
 }
 
-// 사용자 모델
 model User {
-  id           String    @id @default(cuid())
-  email        String    @unique
-  password     String
-  name         String
-  role         UserRole  @default(TEACHER)
-  schoolName   String?
-  isActive     Boolean   @default(true)
-  lastLoginAt  DateTime?
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
-  
-  // Relations
-  templates    EvaluationTemplate[]
-  studentGroups StudentGroup[]
-  
+  id          String    @id @default(cuid())
+  email       String    @unique
+  password    String
+  name        String
+  role        UserRole  @default(TEACHER)
+  schoolName  String?
+  isActive    Boolean   @default(true)
+  lastLoginAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
   @@index([email])
   @@index([schoolName])
 }
 
-enum UserRole {
-  TEACHER
-  ADMIN
-  STUDENT
-}
-
-// 학생 그룹 모델
 model StudentGroup {
-  id            String   @id @default(cuid())
-  name          String
-  description   String?
-  schoolName    String
-  gradeLevel    String?
-  className     String?
-  schoolYear    String   // 예: "2024"
-  createdBy     String
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-  
-  // Relations
-  creator       User     @relation(fields: [createdBy], references: [id])
-  students      Student[]
-  
+  id          String    @id @default(cuid())
+  name        String
+  description String?
+  schoolName  String
+  gradeLevel  String?
+  className   String?
+  schoolYear  String
+  createdBy   String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  students    Student[]
+
   @@index([createdBy])
   @@index([schoolName])
   @@index([gradeLevel])
@@ -188,22 +144,220 @@ model StudentGroup {
   @@index([schoolYear])
 }
 
-// 학생 모델
 model Student {
-  id            String   @id @default(cuid())
-  studentId     String   // 학번
-  name          String
-  email         String?
-  groupId       String
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-  
-  // Relations
-  group         StudentGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
-  submissions   Submission[] @relation("StudentSubmissions")
-  evaluations   Evaluation[] @relation("StudentEvaluations")
-  
+  id        String       @id @default(cuid())
+  studentId String
+  name      String
+  email     String?
+  groupId   String
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+  group     StudentGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
   @@unique([studentId, groupId])
   @@index([groupId])
   @@index([studentId])
+}
+
+model analytics_post_images {
+  id              Int              @id @default(autoincrement())
+  post_id         Int?
+  file_path       String
+  file_name       String
+  file_size       Int?             @default(0)
+  mime_type       String?          @default("image/jpeg")
+  display_order   Int?             @default(0)
+  created_at      DateTime?        @default(now()) @db.Timestamptz(6)
+  analytics_posts analytics_posts? @relation(fields: [post_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([post_id], map: "idx_analytics_post_images_post_id")
+}
+
+model analytics_posts {
+  id                    Int                     @id @default(autoincrement())
+  title                 String
+  content               String
+  category              String
+  tags                  String[]
+  created_at            DateTime?               @default(now()) @db.Timestamptz(6)
+  updated_at            DateTime?               @default(now()) @db.Timestamptz(6)
+  summary               String?
+  reading_time          Int?                    @default(5)
+  is_ai_generated       Boolean?                @default(false)
+  analytics_post_images analytics_post_images[]
+
+  @@index([category], map: "idx_analytics_posts_category")
+  @@index([created_at(sort: Desc)], map: "idx_analytics_posts_created_at")
+}
+
+model google_tokens {
+  user_email    String    @id
+  access_token  String
+  refresh_token String?
+  token_type    String?   @default("Bearer")
+  expires_at    DateTime? @db.Timestamptz(6)
+  scope         String?
+  created_at    DateTime? @default(now()) @db.Timestamptz(6)
+  updated_at    DateTime? @default(now()) @db.Timestamptz(6)
+
+  @@index([user_email], map: "idx_google_tokens_user_email")
+}
+
+model research_files {
+  id             Int             @id @default(autoincrement())
+  post_id        Int?
+  file_name      String
+  file_url       String
+  file_type      String
+  file_size      Int?
+  created_at     DateTime?       @default(now()) @db.Timestamptz(6)
+  research_posts research_posts? @relation(fields: [post_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model research_post_images {
+  id             Int             @id @default(autoincrement())
+  post_id        Int?
+  file_path      String
+  file_name      String
+  file_size      Int?            @default(0)
+  mime_type      String?         @default("image/jpeg")
+  display_order  Int?            @default(0)
+  created_at     DateTime?       @default(now()) @db.Timestamptz(6)
+  research_posts research_posts? @relation(fields: [post_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([post_id], map: "idx_research_post_images_post_id")
+}
+
+model research_posts {
+  id                   Int                    @id @default(autoincrement())
+  title                String
+  content              String
+  category             String
+  tags                 String[]
+  created_at           DateTime?              @default(now()) @db.Timestamptz(6)
+  updated_at           DateTime?              @default(now()) @db.Timestamptz(6)
+  summary              String?
+  reading_time         Int?                   @default(5)
+  is_ai_generated      Boolean?               @default(false)
+  research_files       research_files[]
+  research_post_images research_post_images[]
+
+  @@index([category], map: "idx_research_posts_category")
+  @@index([created_at(sort: Desc)], map: "idx_research_posts_created_at")
+}
+
+model shed_post_images {
+  id            Int         @id @default(autoincrement())
+  post_id       Int?
+  file_path     String
+  file_name     String
+  file_size     Int?        @default(0)
+  mime_type     String?     @default("image/jpeg")
+  display_order Int?        @default(0)
+  created_at    DateTime?   @default(now()) @db.Timestamptz(6)
+  shed_posts    shed_posts? @relation(fields: [post_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([post_id], map: "idx_shed_post_images_post_id")
+}
+
+model shed_posts {
+  id               Int                @id @default(autoincrement())
+  title            String
+  content          String
+  mood             String?            @default("평온한")
+  weather          String?            @default("맑음")
+  music            String?
+  created_at       DateTime?          @default(now()) @db.Timestamptz(6)
+  updated_at       DateTime?          @default(now()) @db.Timestamptz(6)
+  summary          String?
+  tags             String[]
+  category         String?            @default("daily")
+  reading_time     Int?               @default(5)
+  is_ai_generated  Boolean?           @default(false)
+  shed_post_images shed_post_images[]
+
+  @@index([created_at(sort: Desc)], map: "idx_shed_posts_created_at")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model system_settings {
+  id                         Int       @id @default(1)
+  site_name                  String?   @default("BlueNote Atelier")
+  site_description           String?   @default("박교수의 연구실 - 교육과 연구의 공간")
+  admin_email                String?   @default("admin@bluenote.site")
+  claude_enabled             Boolean?  @default(true)
+  claude_default_daily_limit Int?      @default(10)
+  claude_system_prompt       String?   @default("당신은 교육과 연구를 돕는 AI 어시스턴트입니다.")
+  claude_model               String?   @default("claude-sonnet-4-20250514")
+  posts_per_page             Int?      @default(12)
+  enable_comments            Boolean?  @default(false)
+  enable_search              Boolean?  @default(true)
+  default_categories         Json?     @default("[\"연구\", \"교육\", \"분석\", \"일상\"]")
+  session_timeout            Int?      @default(24)
+  max_login_attempts         Int?      @default(5)
+  enable_ip_whitelist        Boolean?  @default(false)
+  ip_whitelist               Json?     @default("[]")
+  auto_backup                Boolean?  @default(true)
+  backup_frequency           String?   @default("daily")
+  log_retention_days         Int?      @default(30)
+  enable_maintenance_mode    Boolean?  @default(false)
+  updated_at                 DateTime? @default(now()) @db.Timestamptz(6)
+  updated_by                 String?
+}
+
+model teaching_post_images {
+  id             Int             @id @default(autoincrement())
+  post_id        Int?
+  file_path      String
+  file_name      String
+  file_size      Int?            @default(0)
+  mime_type      String?         @default("image/jpeg")
+  display_order  Int?            @default(0)
+  created_at     DateTime?       @default(now()) @db.Timestamptz(6)
+  teaching_posts teaching_posts? @relation(fields: [post_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([post_id], map: "idx_teaching_post_images_post_id")
+}
+
+model teaching_posts {
+  id                   Int                    @id @default(autoincrement())
+  title                String
+  content              String
+  category             String
+  tags                 String[]
+  created_at           DateTime?              @default(now()) @db.Timestamptz(6)
+  updated_at           DateTime?              @default(now()) @db.Timestamptz(6)
+  summary              String?
+  reading_time         Int?                   @default(5)
+  is_ai_generated      Boolean?               @default(false)
+  teaching_post_images teaching_post_images[]
+
+  @@index([category], map: "idx_teaching_posts_category")
+  @@index([created_at(sort: Desc)], map: "idx_teaching_posts_created_at")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model usage_logs {
+  id               String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_email       String?
+  action_type      String?
+  created_at       DateTime?         @default(now()) @db.Timestamptz(6)
+  user_permissions user_permissions? @relation(fields: [user_email], references: [email], onDelete: Cascade, onUpdate: NoAction)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model user_permissions {
+  email              String       @id
+  role               String?      @default("user")
+  claude_daily_limit Int?         @default(3)
+  can_write          Boolean?     @default(false)
+  created_at         DateTime?    @default(now()) @db.Timestamptz(6)
+  updated_at         DateTime?    @default(now()) @db.Timestamptz(6)
+  usage_logs         usage_logs[]
+}
+
+enum UserRole {
+  TEACHER
+  ADMIN
+  STUDENT
 }

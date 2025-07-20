@@ -474,10 +474,39 @@ export function StudentGroupManager() {
 
             {/* 그룹 목록 */}
             <div className="space-y-2">
-              {filteredGroups.length === 0 ? (
+              {loading ? (
                 <p className="text-center text-muted-foreground py-4">
-                  등록된 그룹이 없습니다.
+                  그룹 목록을 불러오는 중...
                 </p>
+              ) : filteredGroups.length === 0 ? (
+                <div className="text-center py-8">
+                  <p className="text-muted-foreground mb-4">
+                    등록된 그룹이 없습니다.
+                  </p>
+                  {groups.length === 0 && (
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={async () => {
+                        try {
+                          const response = await fetch('/api/create-sample-group', {
+                            method: 'POST'
+                          })
+                          const result = await response.json()
+                          if (result.success) {
+                            window.location.reload()
+                          } else {
+                            alert('샘플 데이터 생성 실패: ' + result.error)
+                          }
+                        } catch (error) {
+                          alert('샘플 데이터 생성 중 오류: ' + (error instanceof Error ? error.message : '알 수 없는 오류'))
+                        }
+                      }}
+                    >
+                      샘플 데이터 생성하기
+                    </Button>
+                  )}
+                </div>
               ) : (
                 filteredGroups.map(group => (
                   <div
