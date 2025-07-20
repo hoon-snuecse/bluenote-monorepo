@@ -164,14 +164,26 @@ export default function CollectSubmissionsPage() {
                 </div>
               </div>
 
-              <div className="mt-8 text-center">
+              <div className="mt-8 text-center space-y-3">
                 <button
                   onClick={() => router.push(`/assignments/${params.assignmentId}/submissions`)}
                   className="px-6 py-3 bg-green-500/20 text-slate-700 rounded-lg hover:bg-green-500/30 transition-colors inline-flex items-center gap-2 border border-green-200/30 text-base font-medium"
                 >
                   <Users className="w-5 h-5" />
-                  제출 현황 확인
+                  제출 현황 확인 (관리자)
                 </button>
+                <div>
+                  <button
+                    onClick={() => window.open(`/submissions/${params.assignmentId}`, '_blank')}
+                    className="px-6 py-3 bg-blue-500/20 text-slate-700 rounded-lg hover:bg-blue-500/30 transition-colors inline-flex items-center gap-2 border border-blue-200/30 text-base font-medium"
+                  >
+                    <Users className="w-5 h-5" />
+                    공개 제출 현황 보기
+                  </button>
+                  <p className="text-sm text-slate-500 mt-2">
+                    로그인 없이 볼 수 있는 페이지
+                  </p>
+                </div>
               </div>
             </CardContent>
           </Card>
