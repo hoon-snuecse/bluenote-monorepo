@@ -65,10 +65,10 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // 필수 필드 확인
-    if (fieldMapping.studentId === -1 || fieldMapping.name === -1) {
+    // 필수 필드 확인 (이름만 필수)
+    if (fieldMapping.name === -1) {
       return NextResponse.json(
-        { error: '학번과 이름 열을 찾을 수 없습니다. 엑셀 파일의 첫 번째 행에 "학번"과 "이름" 헤더가 있는지 확인해주세요.' },
+        { error: '이름 열을 찾을 수 없습니다. 엑셀 파일의 첫 번째 행에 "이름" 헤더가 있는지 확인해주세요.' },
         { status: 400 }
       )
     }
@@ -79,18 +79,26 @@ export async function POST(request: NextRequest) {
       const row = jsonData[i]
       if (!row || row.length === 0) continue
 
-      const studentId = String(row[fieldMapping.studentId] || '').trim()
       const name = String(row[fieldMapping.name] || '').trim()
       
-      if (!studentId || !name) continue
+      if (!name) continue
+
+      const grade = fieldMapping.grade !== -1 ? String(row[fieldMapping.grade] || '').trim() : undefined
+      const classValue = fieldMapping.class !== -1 ? String(row[fieldMapping.class] || '').trim() : undefined
+      const number = fieldMapping.number !== -1 ? parseInt(String(row[fieldMapping.number] || '').trim()) || undefined : undefined
+      
+      // 학번이 없으면 자동 생성
+      const studentId = fieldMapping.studentId !== -1 && row[fieldMapping.studentId] 
+        ? String(row[fieldMapping.studentId]).trim()
+        : `${new Date().getFullYear()}${grade || '0'}${classValue || '0'}${String(number || i).padStart(2, '0')}`
 
       const student = {
         studentId,
         name,
         email: fieldMapping.email !== -1 ? String(row[fieldMapping.email] || '').trim() : undefined,
-        grade: fieldMapping.grade !== -1 ? String(row[fieldMapping.grade] || '').trim() : undefined,
-        class: fieldMapping.class !== -1 ? String(row[fieldMapping.class] || '').trim() : undefined,
-        number: fieldMapping.number !== -1 ? String(row[fieldMapping.number] || '').trim() : undefined
+        grade,
+        class: classValue,
+        number
       }
 
       students.push(student)

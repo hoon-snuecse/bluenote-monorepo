@@ -319,12 +319,20 @@ export function StudentGroupManager() {
   const handleExportCSV = () => {
     if (students.length === 0) return
 
-    const headers = ['학번', '이름', '이메일']
-    const rows = students.map(s => [s.studentId, s.name, s.email || ''])
+    const headers = ['학년', '반', '번호', '이름', '이메일']
+    const rows = students.map(s => [
+      s.grade || '',
+      s.class || '',
+      s.number || '',
+      s.name,
+      s.email || ''
+    ])
     
-    const csvContent = [
+    // BOM 추가로 한글 인코딩 문제 해결
+    const BOM = '\uFEFF'
+    const csvContent = BOM + [
       headers.join(','),
-      ...rows.map(row => row.join(','))
+      ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
     ].join('\n')
 
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
@@ -349,8 +357,9 @@ export function StudentGroupManager() {
     if (!searchTerm) return true
     const term = searchTerm.toLowerCase()
     return student.name.toLowerCase().includes(term) || 
-           student.studentId.toLowerCase().includes(term) ||
-           (student.email && student.email.toLowerCase().includes(term))
+           (student.grade && student.grade.toLowerCase().includes(term)) ||
+           (student.class && student.class.toLowerCase().includes(term)) ||
+           (student.number && student.number.toString().includes(term))
   })
 
   if (loading && groups.length === 0) {
@@ -618,7 +627,7 @@ export function StudentGroupManager() {
                   <div className="flex items-center space-x-2">
                     <Search className="h-4 w-4 text-muted-foreground" />
                     <Input
-                      placeholder="이름, 학번, 이메일로 검색..."
+                      placeholder="학년, 반, 이름으로 검색..."
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
                       className="flex-1"
@@ -812,7 +821,7 @@ export function StudentGroupManager() {
             <TabsContent value="excel" className="space-y-4">
               <div className="text-sm text-muted-foreground">
                 Excel 파일(.xlsx, .xls)에서 학생 정보를 가져옵니다. 
-                파일의 첫 번째 행은 헤더여야 하며, 학번과 이름 열이 필수입니다.
+                파일의 첫 번째 행은 헤더여야 하며, 학년/반/이름 정보를 포함해야 합니다.
               </div>
               <div className="flex items-center justify-between">
                 <Button variant="outline" size="sm" onClick={() => handleDownloadTemplate('excel')}>
@@ -841,7 +850,7 @@ export function StudentGroupManager() {
             <TabsContent value="csv" className="space-y-4">
               <div className="text-sm text-muted-foreground">
                 CSV 파일에서 학생 정보를 가져옵니다. 
-                파일의 첫 번째 행은 헤더여야 하며, 학번과 이름 열이 필수입니다.
+                파일의 첫 번째 행은 헤더여야 하며, 학년/반/이름 정보를 포함해야 합니다.
               </div>
               <div className="flex items-center justify-between">
                 <Button variant="outline" size="sm" onClick={() => handleDownloadTemplate('csv')}>
@@ -870,7 +879,7 @@ export function StudentGroupManager() {
             <TabsContent value="googlesheets" className="space-y-4">
               <div className="text-sm text-muted-foreground">
                 Google Sheets에서 학생 정보를 가져옵니다. 
-                스프레드시트의 첫 번째 행은 헤더여야 하며, 학번과 이름 열이 필수입니다.
+                스프레드시트의 첫 번째 행은 헤더여야 하며, 학년/반/이름 정보를 포함해야 합니다.
               </div>
               {!session?.user?.email && (
                 <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3 text-sm">
@@ -907,14 +916,14 @@ export function StudentGroupManager() {
           </Tabs>
 
           <div className="bg-gray-50 rounded-md p-4">
-            <h4 className="font-medium mb-2">필수 열 정보</h4>
+            <h4 className="font-medium mb-2">템플릿 파일 형식</h4>
             <ul className="text-sm text-muted-foreground space-y-1">
-              <li>• <strong>학번</strong> (필수): 학번, 번호, ID, Student ID</li>
-              <li>• <strong>이름</strong> (필수): 이름, 성명, Name, Student Name</li>
-              <li>• <strong>이메일</strong> (선택): 이메일, 메일, Email, E-mail</li>
-              <li>• <strong>학년</strong> (선택): 학년, Grade, Year</li>
-              <li>• <strong>반</strong> (선택): 반, Class, Classroom</li>
-              <li>• <strong>번호</strong> (선택): 번호, Number, No</li>
+              <li>• <strong>학년</strong> (권장): 학년, Grade, Year</li>
+              <li>• <strong>반</strong> (권장): 반, Class, Classroom</li>
+              <li>• <strong>번호</strong> (권장): 번호, Number, No</li>
+              <li>• <strong>이름</strong> (필수): 이름, 성명, Name</li>
+              <li>• <strong>이메일</strong> (선택): 이메일, Email</li>
+              <li className="text-xs pt-2">※ 학번은 자동으로 생성됩니다 (학년+반+번호)</li>
             </ul>
           </div>
         </DialogContent>
