@@ -20,12 +20,14 @@ export async function GET(request: NextRequest) {
   const error = searchParams.get('error');
   const state = searchParams.get('state');
 
-  // state에서 assignmentId 추출
+  // state에서 assignmentId와 userEmail 추출
   let assignmentId: string | null = null;
+  let expectedUserEmail: string | null = null;
   if (state) {
     try {
       const stateData = JSON.parse(state);
       assignmentId = stateData.assignmentId;
+      expectedUserEmail = stateData.userEmail;
     } catch (e) {
       console.error('Failed to parse state:', e);
     }
@@ -55,6 +57,17 @@ export async function GET(request: NextRequest) {
     if (!session?.user?.email) {
       return NextResponse.redirect(
         `${baseUrl}/import?error=not_authenticated${assignmentIdParam}`
+      );
+    }
+
+    // Verify the user is the same as expected
+    if (expectedUserEmail && session.user.email !== expectedUserEmail) {
+      console.error('User mismatch:', {
+        expected: expectedUserEmail,
+        actual: session.user.email
+      });
+      return NextResponse.redirect(
+        `${baseUrl}/import?error=user_mismatch${assignmentIdParam}`
       );
     }
 
