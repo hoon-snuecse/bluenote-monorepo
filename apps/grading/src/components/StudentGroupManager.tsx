@@ -57,15 +57,18 @@ export function StudentGroupManager() {
 
   const handleSubmit = async () => {
     try {
+      console.log('Submitting form data:', formData)
       if (editingGroup) {
         await updateGroup(editingGroup.id, formData)
       } else {
-        await createGroup(formData)
+        const result = await createGroup(formData)
+        console.log('Group created:', result)
       }
       setDialogOpen(false)
       resetForm()
     } catch (error) {
-      // Error is handled by the hook
+      console.error('Error submitting form:', error)
+      alert('그룹 생성/수정 중 오류가 발생했습니다: ' + (error instanceof Error ? error.message : '알 수 없는 오류'))
     }
   }
 
