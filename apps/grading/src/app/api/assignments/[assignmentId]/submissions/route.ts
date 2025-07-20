@@ -47,10 +47,10 @@ export async function GET(
     return NextResponse.json({
       success: true,
       submissions: submissions.map(sub => ({
-        id: sub.id,
-        studentId: sub.studentId,
-        studentName: sub.studentName,
-        studentDbId: sub.studentDbId,
+        id: sub.id || '',
+        studentId: sub.studentId || '',
+        studentName: sub.studentName || '이름 없음',
+        studentDbId: sub.studentDbId || null,
         content: sub.content || null,
         submittedAt: sub.createdAt || null,
         evaluatedAt: sub.evaluatedAt || null,

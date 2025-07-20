@@ -53,7 +53,11 @@ export default function PublicSubmissionsPage() {
       if (submissionsData.success) {
         console.log('[Public Submissions] Found submissions:', submissionsData.submissions.length);
         setSubmissions(submissionsData.submissions.map((sub: any) => ({
-          ...sub,
+          id: sub.id || '',
+          studentId: sub.studentId || '',
+          studentName: sub.studentName || '',
+          content: sub.content || null,
+          status: sub.status || 'submitted',
           submittedAt: sub.submittedAt ? new Date(sub.submittedAt) : null,
           evaluatedAt: sub.evaluatedAt ? new Date(sub.evaluatedAt) : null,
         })));
@@ -103,10 +107,11 @@ export default function PublicSubmissionsPage() {
           <h1 className="text-4xl font-bold text-slate-900 mb-2">
             {assignment?.title || '글쓰기 제출 현황'}
           </h1>
-          <p className="text-lg text-slate-600">
-            {assignment && assignment.schoolName && assignment.gradeLevel && assignment.writingType && 
-              `${assignment.schoolName} • ${assignment.gradeLevel} • ${assignment.writingType}`}
-          </p>
+          {assignment && assignment.schoolName && assignment.gradeLevel && assignment.writingType && (
+            <p className="text-lg text-slate-600">
+              {`${assignment.schoolName} • ${assignment.gradeLevel} • ${assignment.writingType}`}
+            </p>
+          )}
           <p className="text-slate-600 mt-2">총 {submissions.length}개의 제출물</p>
         </div>
 
@@ -153,11 +158,13 @@ export default function PublicSubmissionsPage() {
                       <div className="flex items-center gap-3 mb-2">
                         <User className="w-5 h-5 text-slate-500" />
                         <h3 className="text-lg font-medium text-slate-800">
-                          {submission.studentName}
+                          {submission.studentName || '이름 없음'}
                         </h3>
-                        <span className="text-sm text-slate-500">
-                          (학번: {submission.studentId})
-                        </span>
+                        {submission.studentId && (
+                          <span className="text-sm text-slate-500">
+                            (학번: {submission.studentId})
+                          </span>
+                        )}
                       </div>
                       <div className="flex items-center gap-4 text-sm text-slate-600">
                         <div className="flex items-center gap-1">
