@@ -1,0 +1,23 @@
+name: Deploy Grading App
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'apps/grading/**'
+      - 'packages/**'
+      - 'pnpm-lock.yaml'
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Vercel Deployment
+        run: |
+          curl -X POST ${{ secrets.VERCEL_DEPLOY_HOOK_GRADING }} \
+            -H "Content-Type: application/json" \
+            -d '{}'
+      
+      - name: Deployment Status
+        run: echo "🚀 Deployment triggered successfully!"
