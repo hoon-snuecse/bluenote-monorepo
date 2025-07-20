@@ -22,6 +22,11 @@ export function StudentGroupManager() {
   
   // 디버깅용 로그
   console.log('[StudentGroupManager] Render:', { groups: groups.length, loading, session: !!session })
+  
+  // 에러 체크
+  if (!groups) {
+    return <div>그룹 데이터를 불러올 수 없습니다.</div>
+  }
   const [dialogOpen, setDialogOpen] = useState(false)
   const [importDialogOpen, setImportDialogOpen] = useState(false)
   const [selectedGroup, setSelectedGroup] = useState<StudentGroup | null>(null)

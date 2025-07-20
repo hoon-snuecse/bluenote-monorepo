@@ -5,6 +5,7 @@ import { Button } from '@bluenote/ui'
 import { ArrowLeft } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { StudentGroupManager } from '@/components/StudentGroupManager'
+import { StudentGroupManagerSimple } from '@/components/StudentGroupManagerSimple'
 
 export default function StudentsPage() {
   const router = useRouter()
@@ -34,8 +35,11 @@ export default function StudentsPage() {
           </CardHeader>
         </Card>
 
-        {/* Student Group Manager */}
-        <StudentGroupManager />
+        {/* Student Group Manager - Simple Version for Testing */}
+        <StudentGroupManagerSimple />
+        
+        {/* Original Student Group Manager - Hidden for now */}
+        {/* <StudentGroupManager /> */}
       </div>
     </div>
   )
