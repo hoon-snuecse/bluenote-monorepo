@@ -30,17 +30,23 @@ export default function SubmissionsPage() {
 
   const fetchSubmissions = async () => {
     try {
+      console.log('[Submissions Page] Fetching for assignmentId:', params.assignmentId);
       const response = await fetch(`/api/assignments/${params.assignmentId}/submissions`);
       const data = await response.json();
+      console.log('[Submissions Page] Response:', data);
+      
       if (data.success) {
         setSubmissions(data.submissions.map((sub: any) => ({
           ...sub,
           submittedAt: sub.submittedAt ? new Date(sub.submittedAt) : null,
           evaluatedAt: sub.evaluatedAt ? new Date(sub.evaluatedAt) : null,
         })));
+        console.log('[Submissions Page] Set submissions:', data.submissions.length);
+      } else {
+        console.error('[Submissions Page] Failed to fetch:', data.error);
       }
     } catch (error) {
-      console.error('Error fetching submissions:', error);
+      console.error('[Submissions Page] Error fetching submissions:', error);
     } finally {
       setLoading(false);
     }

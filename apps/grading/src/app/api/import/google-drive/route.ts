@@ -1,8 +1,9 @@
 import { google } from 'googleapis';
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from '@/lib/auth';
-import { createClient } from '@/lib/supabase';
+import { createAdminClient } from '@/lib/supabase';
 import prisma from '@/lib/prisma';
+import { cookies } from 'next/headers';
 
 export async function POST(request: NextRequest) {
   try {
@@ -21,13 +22,19 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
     }
 
-    // Get user's Google token from database
-    const supabase = createClient();
+    // Get user's Google token from database using admin client
+    const supabase = createAdminClient();
     const { data: tokenData, error: tokenError } = await supabase
       .from('google_tokens')
       .select('access_token')
       .eq('user_email', session.user.email)
       .single();
+
+    console.log('[Import] Token lookup for:', session.user.email, {
+      hasData: !!tokenData,
+      hasAccessToken: !!tokenData?.access_token,
+      error: tokenError?.message
+    });
 
     if (tokenError || !tokenData?.access_token) {
       return NextResponse.json({ error: 'Google authentication required' }, { status: 401 });
@@ -106,22 +113,39 @@ export async function POST(request: NextRequest) {
 
     // If assignmentId is provided, save submissions directly
     if (assignmentId) {
-      console.log('Creating submissions with assignmentId:', assignmentId);
-      console.log('Documents to process:', processedDocuments.length);
+      console.log('[Import] Creating submissions with assignmentId:', assignmentId);
+      console.log('[Import] Documents to process:', processedDocuments.length);
+      console.log('[Import] Document details:', processedDocuments.map(d => ({
+        studentName: d.studentName,
+        fileName: d.fileName,
+        contentLength: d.content?.length || 0
+      })));
       
       const submissions = [];
       for (const doc of processedDocuments) {
         try {
-          console.log(`Creating submission for ${doc.studentName}`);
+          console.log(`[Import] Creating submission for ${doc.studentName}`);
+          
+          // Ensure content is string
+          const contentStr = typeof doc.content === 'string' ? doc.content : JSON.stringify(doc.content);
+          
           const submission = await prisma.submission.create({
             data: {
               assignmentId: assignmentId,
               studentName: doc.studentName,
               studentId: `google_${doc.googleDriveFileId}`, // Use Google Drive file ID as studentId
-              content: doc.content
+              content: contentStr,
+              submittedAt: new Date(),
+              createdAt: new Date() // Explicitly set createdAt
             }
           });
-          console.log('Created submission:', submission.id);
+          console.log('[Import] Created submission:', {
+            id: submission.id,
+            studentName: submission.studentName,
+            assignmentId: submission.assignmentId,
+            createdAt: submission.createdAt,
+            submittedAt: submission.submittedAt
+          });
           submissions.push(submission);
         } catch (error) {
           console.error(`Failed to create submission for ${doc.studentName}:`, error);
@@ -139,6 +163,7 @@ export async function POST(request: NextRequest) {
       });
     } else {
       // Store in session/cookie temporarily (in production, use database)
+      const cookieStore = await cookies();
       cookieStore.set('imported_documents', JSON.stringify(processedDocuments), {
         httpOnly: true,
         secure: false,

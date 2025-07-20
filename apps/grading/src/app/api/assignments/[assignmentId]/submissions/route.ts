@@ -6,7 +6,14 @@ export async function GET(
   { params }: { params: { assignmentId: string } }
 ) {
   try {
-    console.log('Fetching submissions for assignmentId:', params.assignmentId);
+    console.log('[Submissions API] Fetching for assignmentId:', params.assignmentId);
+    
+    // First check if assignment exists
+    const assignment = await prisma.assignment.findUnique({
+      where: { id: params.assignmentId }
+    });
+    
+    console.log('[Submissions API] Assignment exists:', !!assignment);
     
     const submissions = await prisma.submission.findMany({
       where: {
@@ -17,7 +24,12 @@ export async function GET(
       },
     });
     
-    console.log('Found submissions:', submissions.length);
+    console.log('[Submissions API] Found submissions:', submissions.length);
+    console.log('[Submissions API] Submission details:', submissions.map(s => ({
+      id: s.id,
+      studentName: s.studentName,
+      createdAt: s.createdAt
+    })));
 
     return NextResponse.json({
       success: true,
