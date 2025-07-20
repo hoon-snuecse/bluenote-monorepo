@@ -28,6 +28,11 @@ export default function NavigationWithAuth() {
   const { user, loading, logout } = useUser();
   const pathname = usePathname();
 
+  // 제출 페이지에서는 네비게이션 바를 숨김
+  if (pathname?.startsWith('/submit') || pathname?.startsWith('/public-submissions')) {
+    return null;
+  }
+
   // 스크롤 감지
   useEffect(() => {
     const handleScroll = () => {

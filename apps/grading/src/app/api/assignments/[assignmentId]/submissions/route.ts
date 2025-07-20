@@ -26,13 +26,6 @@ export async function GET(
       where: {
         assignmentId: params.assignmentId,
       },
-      include: {
-        student: {
-          include: {
-            group: true
-          }
-        }
-      },
       orderBy: {
         createdAt: 'desc',
       },
@@ -63,7 +56,7 @@ export async function GET(
         evaluatedAt: sub.evaluatedAt,
         evaluation: sub.evaluation,
         status: sub.evaluatedAt ? 'evaluated' : 'submitted',
-        student: sub.student
+        student: null // 학생 그룹과 연결되지 않은 제출물
       }))
     });
   } catch (error) {
