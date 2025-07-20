@@ -108,7 +108,7 @@ export default function SubmitPage({ params }: { params: { assignmentId: string 
       if (result.success) {
         alert('과제가 성공적으로 제출되었습니다!');
         // 공개 제출 현황 페이지로 이동
-        router.push(`/submissions/${params.assignmentId}`);
+        router.push(`/public-submissions/${params.assignmentId}`);
       } else {
         alert('과제 제출 중 오류가 발생했습니다.');
       }

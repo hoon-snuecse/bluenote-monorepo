@@ -174,7 +174,7 @@ export default function CollectSubmissionsPage() {
                 </button>
                 <div>
                   <button
-                    onClick={() => window.open(`/submissions/${params.assignmentId}`, '_blank')}
+                    onClick={() => window.open(`/public-submissions/${params.assignmentId}`, '_blank')}
                     className="px-6 py-3 bg-blue-500/20 text-slate-700 rounded-lg hover:bg-blue-500/30 transition-colors inline-flex items-center gap-2 border border-blue-200/30 text-base font-medium"
                   >
                     <Users className="w-5 h-5" />
