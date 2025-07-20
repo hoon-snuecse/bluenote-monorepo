@@ -69,7 +69,7 @@ export default function AdminDashboardClient() {
       title: '시스템 설정',
       description: '사이트 설정 및 환경 구성',
       icon: Settings,
-      href: '#',
+      href: '/admin/settings',
       color: 'bg-gray-500'
     }
   ];

@@ -28,7 +28,8 @@ export default function AdminContentClient() {
     research: 0,
     teaching: 0,
     analytics: 0,
-    shed: 0
+    shed: 0,
+    total: 0
   });
 
   const sections = [
@@ -77,9 +78,10 @@ export default function AdminContentClient() {
       });
 
       const results = await Promise.all(statsPromises);
-      const newStats = {};
+      const newStats = { total: 0 };
       results.forEach(result => {
         newStats[result.id] = result.count;
+        newStats.total += result.count;
       });
       setStats(newStats);
     } catch (error) {
@@ -155,27 +157,43 @@ export default function AdminContentClient() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {sections.map((section) => {
-          const Icon = section.icon;
-          return (
-            <button
-              key={section.id}
-              onClick={() => setActiveSection(section.id)}
-              className={`p-4 rounded-lg border transition-all ${
-                activeSection === section.id
-                  ? 'bg-blue-600 border-blue-600 text-white'
-                  : 'bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-700'
-              }`}
-            >
-              <div className="flex items-center justify-between">
-                <Icon className="w-5 h-5" />
-                <span className="text-2xl font-bold">{stats[section.id]}</span>
-              </div>
-              <p className="text-sm mt-2">{section.label}</p>
-            </button>
-          );
-        })}
+      <div className="bg-slate-800 border border-slate-700 rounded-lg p-6 mb-6">
+        <h3 className="text-lg font-semibold text-white mb-4">콘텐츠 현황</h3>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {sections.map((section) => {
+            const Icon = section.icon;
+            const isActive = activeSection === section.id;
+            const percentage = stats.total > 0 ? (stats[section.id] / stats.total * 100).toFixed(1) : 0;
+            return (
+              <button
+                key={section.id}
+                onClick={() => setActiveSection(section.id)}
+                className={`p-4 rounded-lg border transition-all ${
+                  isActive
+                    ? 'bg-blue-600 border-blue-600 text-white'
+                    : 'bg-slate-700 border-slate-600 text-slate-300 hover:bg-slate-600'
+                }`}
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <Icon className="w-5 h-5" />
+                  <span className="text-2xl font-bold">{stats[section.id]}</span>
+                </div>
+                <p className="text-sm mb-1">{section.label}</p>
+                <div className="h-1 bg-slate-600 rounded-full overflow-hidden">
+                  <div 
+                    className={`h-full transition-all duration-300 ${isActive ? 'bg-white' : 'bg-blue-500'}`}
+                    style={{ width: `${percentage}%` }}
+                  />
+                </div>
+                <p className="text-xs mt-1 opacity-70">{percentage}%</p>
+              </button>
+            );
+          })}
+        </div>
+        <div className="mt-4 pt-4 border-t border-slate-700 flex items-center justify-between">
+          <p className="text-slate-400">전체 콘텐츠</p>
+          <p className="text-xl font-bold text-white">{stats.total || 0}개</p>
+        </div>
       </div>
 
       {/* Search and Actions */}
