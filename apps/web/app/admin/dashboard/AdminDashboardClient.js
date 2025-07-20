@@ -7,6 +7,11 @@ import { Shield, Users, FileText, Settings, BarChart3, ArrowLeft } from 'lucide-
 export default function AdminDashboardClient() {
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState({
+    totalUsers: 0,
+    totalPosts: 0,
+    todayLogs: 0
+  });
 
   useEffect(() => {
     fetch('/api/auth/session-check')
@@ -14,11 +19,50 @@ export default function AdminDashboardClient() {
       .then(data => {
         if (data.authenticated && data.session?.user?.isAdmin) {
           setSession(data.session);
+          fetchStats();
         }
         setLoading(false);
       })
       .catch(() => setLoading(false));
   }, []);
+
+  const fetchStats = async () => {
+    try {
+      // Fetch users count
+      const usersRes = await fetch('/api/admin/users');
+      const usersData = await usersRes.json();
+      
+      // Fetch posts from all sections
+      const sections = ['research', 'teaching', 'analytics', 'shed'];
+      const postsPromises = sections.map(section => 
+        fetch(`/api/${section}`).then(res => res.json())
+      );
+      const postsResults = await Promise.all(postsPromises);
+      
+      // Count total posts
+      const totalPosts = postsResults.reduce((sum, result) => 
+        sum + (result.posts?.length || 0), 0
+      );
+      
+      // Fetch usage logs
+      const logsRes = await fetch('/api/admin/usage-logs');
+      const logsData = await logsRes.json();
+      
+      // Count today's logs
+      const today = new Date().toDateString();
+      const todayLogs = logsData.logs?.filter(log => 
+        new Date(log.created_at).toDateString() === today
+      ).length || 0;
+      
+      setStats({
+        totalUsers: usersData.users?.length || 0,
+        totalPosts,
+        todayLogs
+      });
+    } catch (error) {
+      console.error('Failed to fetch stats:', error);
+    }
+  };
 
   if (loading) {
     return (
@@ -75,17 +119,21 @@ export default function AdminDashboardClient() {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50">
-        <div className="bg-white shadow">
+    <div className="space-y-6 pt-6">
+      {/* Header */}
+      <div className="bg-slate-800 border-b border-slate-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-6">
             <div className="flex items-center">
-              <Shield className="w-8 h-8 text-gray-800 mr-3" />
-              <h1 className="text-2xl font-bold text-gray-900">관리자 대시보드</h1>
+              <Shield className="w-8 h-8 text-white mr-3" />
+              <div>
+                <h1 className="text-2xl font-bold text-white">관리자 대시보드</h1>
+                <p className="text-slate-400 text-sm">BlueNote Atelier 시스템 관리</p>
+              </div>
             </div>
             <Link
               href="/"
-              className="flex items-center text-gray-600 hover:text-gray-900"
+              className="flex items-center text-slate-300 hover:text-white transition-colors"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
               홈으로
@@ -94,10 +142,10 @@ export default function AdminDashboardClient() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mb-8">
-          <h2 className="text-lg font-medium text-gray-900 mb-2">환영합니다, {session.user.name}님</h2>
-          <p className="text-gray-600">BlueNote Atelier 관리자 대시보드입니다.</p>
+          <h2 className="text-lg font-medium text-white mb-2">환영합니다, {session.user.name}님</h2>
+          <p className="text-slate-400">BlueNote Atelier 관리자 대시보드입니다.</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -107,15 +155,15 @@ export default function AdminDashboardClient() {
               <Link
                 key={feature.href}
                 href={feature.href}
-                className="bg-white rounded-lg shadow hover:shadow-lg transition-shadow p-6"
+                className="bg-slate-800 border border-slate-700 rounded-lg hover:border-slate-600 transition-all p-6"
               >
                 <div className={`w-12 h-12 ${feature.color} rounded-lg flex items-center justify-center mb-4`}>
                   <Icon className="w-6 h-6 text-white" />
                 </div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                <h3 className="text-lg font-semibold text-white mb-2">
                   {feature.title}
                 </h3>
-                <p className="text-gray-600 text-sm">
+                <p className="text-slate-400 text-sm">
                   {feature.description}
                 </p>
               </Link>
@@ -123,20 +171,20 @@ export default function AdminDashboardClient() {
           })}
         </div>
 
-        <div className="mt-12 bg-white rounded-lg shadow p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">빠른 상태</h3>
+        <div className="mt-12 bg-slate-800 border border-slate-700 rounded-lg p-6">
+          <h3 className="text-lg font-semibold text-white mb-4">빠른 상태</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="border rounded-lg p-4">
-              <p className="text-sm text-gray-600">총 사용자</p>
-              <p className="text-2xl font-bold text-gray-900">-</p>
+            <div className="bg-slate-700 rounded-lg p-4">
+              <p className="text-sm text-slate-400">총 사용자</p>
+              <p className="text-2xl font-bold text-white">{stats.totalUsers}</p>
             </div>
-            <div className="border rounded-lg p-4">
-              <p className="text-sm text-gray-600">총 포스트</p>
-              <p className="text-2xl font-bold text-gray-900">-</p>
+            <div className="bg-slate-700 rounded-lg p-4">
+              <p className="text-sm text-slate-400">총 포스트</p>
+              <p className="text-2xl font-bold text-white">{stats.totalPosts}</p>
             </div>
-            <div className="border rounded-lg p-4">
-              <p className="text-sm text-gray-600">오늘 방문자</p>
-              <p className="text-2xl font-bold text-gray-900">-</p>
+            <div className="bg-slate-700 rounded-lg p-4">
+              <p className="text-sm text-slate-400">오늘 활동</p>
+              <p className="text-2xl font-bold text-white">{stats.todayLogs}</p>
             </div>
           </div>
         </div>
