@@ -378,7 +378,7 @@ export function StudentGroupManager() {
       {/* 그룹 목록 */}
       <div className="lg:col-span-1">
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
+          <CardHeader className="flex flex-row items-center justify-between" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <CardTitle className="text-lg">학생 그룹</CardTitle>
             <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
               <DialogTrigger asChild>
