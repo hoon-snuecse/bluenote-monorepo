@@ -7,7 +7,10 @@ export async function GET(
   { params }: { params: { groupId: string } }
 ) {
   try {
+    console.log('[Students API] Starting GET request for groupId:', params.groupId)
+    
     const session = await getServerSession()
+    console.log('[Students API] Session:', session?.user?.email)
     
     if (!session?.user?.email) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -26,6 +29,8 @@ export async function GET(
       }
     })
 
+    console.log('[Students API] Group found:', !!group)
+
     if (!group) {
       return NextResponse.json(
         { error: '그룹을 찾을 수 없습니다.' },
@@ -34,20 +39,30 @@ export async function GET(
     }
 
     if (group.createdBy !== session.user.email) {
+      console.log('[Students API] Access denied. Group owner:', group.createdBy, 'Current user:', session.user.email)
       return NextResponse.json(
         { error: '접근 권한이 없습니다.' },
         { status: 403 }
       )
     }
 
+    console.log('[Students API] Found students:', group.students.length)
+
     return NextResponse.json({ 
       success: true, 
       students: group.students
     })
   } catch (error) {
-    console.error('Error fetching students:', error)
+    console.error('[Students API] Error details:', {
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
+      error: error
+    })
     return NextResponse.json(
-      { error: '학생 목록 조회 중 오류가 발생했습니다.' },
+      { 
+        error: '학생 목록 조회 중 오류가 발생했습니다.',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      },
       { status: 500 }
     )
   }

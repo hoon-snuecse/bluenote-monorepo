@@ -4,7 +4,10 @@ import prisma from '@/lib/prisma'
 
 export async function GET(request: NextRequest) {
   try {
+    console.log('[StudentGroups API] Starting GET request')
+    
     const session = await getServerSession()
+    console.log('[StudentGroups API] Session:', session?.user?.email)
     
     if (!session?.user?.email) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -23,31 +26,47 @@ export async function GET(request: NextRequest) {
     if (gradeLevel) whereClause.gradeLevel = gradeLevel
     if (className) whereClause.className = className
 
-    const groups = await prisma.studentGroup.findMany({
-      where: whereClause,
-      include: {
-        _count: {
-          select: { students: true }
-        }
-      },
-      orderBy: [
-        { schoolYear: 'desc' },
-        { gradeLevel: 'asc' },
-        { className: 'asc' }
-      ]
-    })
+    console.log('[StudentGroups API] Where clause:', whereClause)
 
-    return NextResponse.json({ 
-      success: true, 
-      groups: groups.map(group => ({
-        ...group,
-        studentCount: group._count.students
-      }))
-    })
+    try {
+      const groups = await prisma.studentGroup.findMany({
+        where: whereClause,
+        include: {
+          _count: {
+            select: { students: true }
+          }
+        },
+        orderBy: [
+          { schoolYear: 'desc' },
+          { gradeLevel: 'asc' },
+          { className: 'asc' }
+        ]
+      })
+
+      console.log('[StudentGroups API] Found groups:', groups.length)
+
+      return NextResponse.json({ 
+        success: true, 
+        groups: groups.map(group => ({
+          ...group,
+          studentCount: group._count.students
+        }))
+      })
+    } catch (dbError) {
+      console.error('[StudentGroups API] Database error:', dbError)
+      throw dbError
+    }
   } catch (error) {
-    console.error('Error fetching student groups:', error)
+    console.error('[StudentGroups API] Error details:', {
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
+      error: error
+    })
     return NextResponse.json(
-      { error: 'Failed to fetch student groups' },
+      { 
+        error: 'Failed to fetch student groups',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      },
       { status: 500 }
     )
   }
