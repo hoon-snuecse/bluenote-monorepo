@@ -12,7 +12,7 @@
 # 2. 아래 DEPLOY_HOOK_URL에 복사한 URL 붙여넣기
 # 3. 실행: bash scripts/deploy-hook.sh
 
-DEPLOY_HOOK_URL="YOUR_VERCEL_DEPLOY_HOOK_URL_HERE"
+DEPLOY_HOOK_URL=https://api.vercel.com/v1/integrations/deploy/prj_LUYLJYzfsffFv0n7mAAjfyFwJqeQ/3b9fJTGqo5
 
 # Deploy Hook URL이 설정되었는지 확인
 if [ "$DEPLOY_HOOK_URL" = "YOUR_VERCEL_DEPLOY_HOOK_URL_HERE" ]; then

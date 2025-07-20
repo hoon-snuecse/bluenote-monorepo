@@ -13,11 +13,33 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
+      - name: Check if Deploy Hook is configured
+        run: |
+          if [ -z "${{ secrets.VERCEL_DEPLOY_HOOK_GRADING }}" ]; then
+            echo "❌ Error: VERCEL_DEPLOY_HOOK_GRADING secret is not set"
+            echo "Please add the Deploy Hook URL as a GitHub secret"
+            exit 1
+          fi
+          echo "✅ Deploy Hook is configured"
+      
       - name: Trigger Vercel Deployment
         run: |
-          curl -X POST ${{ secrets.VERCEL_DEPLOY_HOOK_GRADING }} \
+          echo "🚀 Triggering Vercel deployment..."
+          response=$(curl -X POST "${{ secrets.VERCEL_DEPLOY_HOOK_GRADING }}" \
             -H "Content-Type: application/json" \
-            -d '{}'
-      
-      - name: Deployment Status
-        run: echo "🚀 Deployment triggered successfully!"
+            -d '{}' \
+            -w "\n%{http_code}" \
+            -s)
+          
+          http_code=$(echo "$response" | tail -n1)
+          body=$(echo "$response" | head -n-1)
+          
+          echo "Response code: $http_code"
+          echo "Response body: $body"
+          
+          if [ "$http_code" != "201" ]; then
+            echo "❌ Deployment failed with HTTP $http_code"
+            exit 1
+          fi
+          
+          echo "✅ Deployment triggered successfully!"
