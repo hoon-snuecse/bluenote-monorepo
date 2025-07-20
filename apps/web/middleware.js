@@ -62,12 +62,9 @@ export async function middleware(req) {
     '/shed/write'
   ];
   
-  // 임시 관리자 이메일 체크
-  const adminEmails = ['hoon@snuecse.org', 'hoon@iw.es.kr', 'sociogram@gmail.com'];
-  const isAdminEmail = token.email && adminEmails.includes(token.email);
-  
+  // 글쓰기 권한 체크 - 데이터베이스 기반으로만
   const isWritePath = writePermissionPaths.some(writePath => path.startsWith(writePath));
-  if (isWritePath && !token.isAdmin && !token.canWrite && !isAdminEmail) {
+  if (isWritePath && !token.isAdmin && !token.canWrite) {
     return NextResponse.redirect(new URL('/unauthorized', req.url));
   }
   
