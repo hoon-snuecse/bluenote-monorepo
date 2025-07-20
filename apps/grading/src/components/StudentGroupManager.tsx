@@ -385,22 +385,14 @@ export function StudentGroupManager() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <CardTitle className="text-lg">학생 그룹</CardTitle>
-            <Button 
-              size="sm" 
-              onClick={() => {
-                resetForm()
-                setDialogOpen(true)
-              }}
-              style={{ backgroundColor: '#3b82f6', color: 'white', padding: '8px 16px', borderRadius: '6px', display: 'flex', alignItems: 'center', gap: '8px' }}
-            >
-              <Plus className="h-4 w-4" />
-              새 그룹
-            </Button>
             <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
               <DialogTrigger asChild>
-                <span />
+                <Button size="sm" onClick={() => resetForm()}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  새 그룹
+                </Button>
               </DialogTrigger>
-              <DialogContent>
+              <DialogContent style={{ backgroundColor: 'white', zIndex: 9999 }}>
                 <DialogHeader>
                   <DialogTitle>
                     {editingGroup ? '그룹 수정' : '새 그룹 만들기'}
@@ -816,7 +808,7 @@ export function StudentGroupManager() {
 
       {/* 가져오기 다이얼로그 */}
       <Dialog open={importDialogOpen} onOpenChange={setImportDialogOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl" style={{ backgroundColor: 'white', zIndex: 9999 }}>
           <DialogHeader>
             <DialogTitle>학생 자료 가져오기</DialogTitle>
             <DialogDescription>
@@ -953,7 +945,7 @@ export function StudentGroupManager() {
 
       {/* 학생 편집 다이얼로그 */}
       <Dialog open={studentEditDialogOpen} onOpenChange={setStudentEditDialogOpen}>
-        <DialogContent>
+        <DialogContent style={{ backgroundColor: 'white', zIndex: 9999 }}>
           <DialogHeader>
             <DialogTitle>학생 정보 수정</DialogTitle>
             <DialogDescription>
