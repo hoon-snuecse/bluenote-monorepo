@@ -18,7 +18,7 @@ interface DriveFile {
 }
 
 function ImportPageContent() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null); // null = checking, true/false = checked
   const [files, setFiles] = useState<DriveFile[]>([]);
   const [selectedFolder, setSelectedFolder] = useState<DriveFile | null>(null);
   const [loading, setLoading] = useState(false);
@@ -54,9 +54,11 @@ function ImportPageContent() {
         setFiles(data.files);
       } else {
         console.log('Not authenticated or error:', response.status);
+        setIsAuthenticated(false);
       }
     } catch (error) {
       console.error('Auth check failed:', error);
+      setIsAuthenticated(false);
     }
   };
 
@@ -199,7 +201,15 @@ function ImportPageContent() {
     <div className="container mx-auto py-8 px-4">
       <h1 className="text-3xl font-bold mb-8">Google 드라이브에서 문서 가져오기</h1>
 
-      {!isAuthenticated ? (
+      {isAuthenticated === null ? (
+        // 인증 상태 확인 중
+        <div className="flex items-center justify-center py-8">
+          <div className="text-center">
+            <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p className="text-gray-600">인증 상태를 확인하는 중...</p>
+          </div>
+        </div>
+      ) : !isAuthenticated ? (
         <Card>
           <CardHeader>
             <CardTitle>Google 계정 연결</CardTitle>
