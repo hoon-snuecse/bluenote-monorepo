@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@bluenote/ui';
-import { ArrowLeft, Send, BookOpen, School, FileText } from 'lucide-react';
+import { Send, FileText } from 'lucide-react';
 
 interface AssignmentData {
   id: string;
@@ -106,9 +106,8 @@ export default function SubmitPage({ params }: { params: { assignmentId: string 
       const result = await response.json();
       
       if (result.success) {
-        alert('과제가 성공적으로 제출되었습니다!');
-        // 공개 제출 현황 페이지로 이동
-        router.push(`/public-submissions/${params.assignmentId}`);
+        // 제출 성공 화면으로 이동
+        router.push(`/submit/${params.assignmentId}/success?title=${encodeURIComponent(assignment?.title || '')}`);
       } else {
         alert('과제 제출 중 오류가 발생했습니다.');
       }
@@ -145,48 +144,13 @@ export default function SubmitPage({ params }: { params: { assignmentId: string 
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-50">
-      <div className="container mx-auto py-8 px-4 max-w-4xl">
-        {/* Navigation */}
-        <div className="mb-8">
-          <button
-            onClick={() => router.push('/')}
-            className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
-          >
-            <ArrowLeft className="w-5 h-5" />
-            돌아가기
-          </button>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-50 flex items-center justify-center">
+      <div className="w-full max-w-2xl px-4">
+        {/* Simple Title */}
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold text-slate-800 mb-2">{assignment.title}</h1>
+          <p className="text-lg text-slate-600">{assignment.schoolName} · {assignment.gradeLevel}</p>
         </div>
-
-        {/* Assignment Info */}
-        <Card className="bg-white/70 backdrop-blur-sm border border-slate-200/50 mb-6">
-          <CardHeader className="bg-gradient-to-r from-blue-500/10 to-blue-600/10">
-            <CardTitle className="text-2xl text-center">{assignment.title}</CardTitle>
-          </CardHeader>
-          <CardContent className="pt-6">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-              <div className="flex items-center gap-2">
-                <School className="w-4 h-4 text-slate-500" />
-                <span className="text-slate-600">{assignment.schoolName}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <FileText className="w-4 h-4 text-slate-500" />
-                <span className="text-slate-600">{assignment.gradeLevel}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <BookOpen className="w-4 h-4 text-slate-500" />
-                <span className="text-slate-600">{assignment.writingType}</span>
-              </div>
-              <div className="text-slate-600">
-                <span className="font-medium">평가: </span>{assignment.levelCount}단계
-              </div>
-            </div>
-            <div className="mt-4 p-4 bg-blue-50/50 rounded-lg">
-              <p className="text-sm font-medium text-slate-700 mb-1">평가 영역</p>
-              <p className="text-sm text-slate-600">{assignment.evaluationDomains.join(', ')}</p>
-            </div>
-          </CardContent>
-        </Card>
 
         {/* Submission Form */}
         <Card className="bg-white/70 backdrop-blur-sm border border-slate-200/50">

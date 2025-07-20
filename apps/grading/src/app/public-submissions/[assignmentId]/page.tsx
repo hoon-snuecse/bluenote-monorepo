@@ -45,15 +45,20 @@ export default function PublicSubmissionsPage() {
       }
 
       // 제출물 가져오기
+      console.log('[Public Submissions] Fetching from:', `/api/assignments/${params.assignmentId}/submissions`);
       const submissionsRes = await fetch(`/api/assignments/${params.assignmentId}/submissions`);
       const submissionsData = await submissionsRes.json();
+      console.log('[Public Submissions] Response:', submissionsData);
       
       if (submissionsData.success) {
+        console.log('[Public Submissions] Found submissions:', submissionsData.submissions.length);
         setSubmissions(submissionsData.submissions.map((sub: any) => ({
           ...sub,
           submittedAt: sub.submittedAt ? new Date(sub.submittedAt) : null,
           evaluatedAt: sub.evaluatedAt ? new Date(sub.evaluatedAt) : null,
         })));
+      } else {
+        console.error('[Public Submissions] Failed to fetch:', submissionsData.error);
       }
     } catch (error) {
       console.error('Error fetching data:', error);
