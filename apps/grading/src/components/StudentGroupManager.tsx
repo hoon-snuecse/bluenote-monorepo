@@ -105,13 +105,16 @@ export function StudentGroupManager() {
   }
 
   const handleGroupSelect = async (group: StudentGroup) => {
+    console.log('Group selected:', group)
     setSelectedGroup(group)
     try {
       const fetchedStudents = await fetchStudents(group.id)
+      console.log('Fetched students:', fetchedStudents)
       setStudents(fetchedStudents)
       setSelectedStudents([])
     } catch (error) {
-      // Error is handled by the hook
+      console.error('Error fetching students:', error)
+      alert('학생 목록을 불러오는 중 오류가 발생했습니다: ' + (error instanceof Error ? error.message : '알 수 없는 오류'))
     }
   }
 
@@ -495,7 +498,7 @@ export function StudentGroupManager() {
                         <div className="flex items-center gap-2 mt-2">
                           <Badge variant="secondary">
                             <Users className="mr-1 h-3 w-3" />
-                            {group.studentCount || 0}명
+                            {group._count?.students || group.studentCount || 0}명
                           </Badge>
                           <Badge variant="outline">{group.schoolYear}</Badge>
                         </div>

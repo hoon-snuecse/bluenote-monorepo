@@ -25,6 +25,7 @@ export interface StudentGroup {
   _count?: {
     students: number;
   };
+  studentCount?: number;
 }
 
 export function useStudentGroups() {
