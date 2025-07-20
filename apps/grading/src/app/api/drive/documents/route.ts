@@ -4,6 +4,8 @@ import { getServerSession } from '@/lib/auth';
 import { createClient } from '@/lib/supabase';
 
 export async function GET(request: NextRequest) {
+  console.log('[Drive Documents API] Request received');
+  
   try {
     const searchParams = request.nextUrl.searchParams;
     const folderId = searchParams.get('folderId');
@@ -74,6 +76,9 @@ export async function GET(request: NextRequest) {
       query = `'${folderId}' in parents and trashed=false`;
     }
 
+    console.log('[Drive Documents API] Query:', query);
+    console.log('[Drive Documents API] Options:', { includeTeamDrives, corpora, driveType });
+    
     const response = await drive.files.list({
       q: query,
       fields: 'files(id, name, mimeType, modifiedTime, owners, parents)',
@@ -86,6 +91,8 @@ export async function GET(request: NextRequest) {
         driveId: folderId
       }),
     });
+    
+    console.log('[Drive Documents API] Response received, files count:', response.data.files?.length || 0);
 
     // Add metadata to files
     const files = (response.data.files || []).map(file => ({
@@ -94,9 +101,14 @@ export async function GET(request: NextRequest) {
       driveType: driveType || 'unknown',
     }));
 
+    console.log('[Drive Documents API] Returning', files.length, 'files');
     return NextResponse.json({ files });
   } catch (error) {
-    console.error('Error fetching documents:', error);
+    console.error('[Drive Documents API] Error:', error);
+    if (error instanceof Error) {
+      console.error('[Drive Documents API] Error message:', error.message);
+      console.error('[Drive Documents API] Error stack:', error.stack);
+    }
     return NextResponse.json(
       { error: 'Failed to fetch documents' },
       { status: 500 }
