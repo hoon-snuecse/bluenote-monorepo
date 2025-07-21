@@ -79,8 +79,9 @@ export default function CollectFromGroupPage() {
         const response = await fetch(`/api/assignments/${params.assignmentId}/submissions`, {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
           },
+          credentials: 'include', // 쿠키 포함
           body: JSON.stringify({
             studentName: student.name,
             studentId: student.studentId,
