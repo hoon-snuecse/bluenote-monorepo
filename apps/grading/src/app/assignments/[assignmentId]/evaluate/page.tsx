@@ -566,7 +566,32 @@ ${submission.content?.substring(0, 100)}...
                 {/* AI 프롬프트 미리보기 */}
                 <div className="mt-6 border-t border-slate-200/50 pt-4">
                   <button
-                    onClick={() => setShowPromptPreview(!showPromptPreview)}
+                    onClick={async () => {
+                      if (!showPromptPreview) {
+                        // 프롬프트 미리보기를 열 때 최신 assignment 데이터 가져오기
+                        try {
+                          const assignmentRes = await fetch(`/api/assignments/${params.assignmentId}`);
+                          const assignmentData = await assignmentRes.json();
+                          if (assignmentData.success) {
+                            const updatedAssignment = {
+                              ...assignmentData.assignment,
+                              evaluationDomains: Array.isArray(assignmentData.assignment.evaluationDomains) 
+                                ? assignmentData.assignment.evaluationDomains 
+                                : JSON.parse(assignmentData.assignment.evaluationDomains || '[]'),
+                              evaluationLevels: Array.isArray(assignmentData.assignment.evaluationLevels)
+                                ? assignmentData.assignment.evaluationLevels
+                                : JSON.parse(assignmentData.assignment.evaluationLevels || '[]')
+                            };
+                            setAssignment(updatedAssignment);
+                            const prompt = generateEvaluationPromptPreview(updatedAssignment, submissions);
+                            setEvaluationPrompt(prompt);
+                          }
+                        } catch (error) {
+                          console.error('최신 assignment 데이터 가져오기 실패:', error);
+                        }
+                      }
+                      setShowPromptPreview(!showPromptPreview);
+                    }}
                     className="flex items-center gap-2 text-slate-700 hover:text-slate-900 transition-colors"
                   >
                     <Eye className="w-5 h-5" />
