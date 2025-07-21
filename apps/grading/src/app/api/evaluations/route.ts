@@ -76,7 +76,7 @@ export async function POST(request: NextRequest) {
     const evaluator = createEvaluator(
       evaluatorType as 'claude' | 'mock',
       apiKey,
-      aiModel as 'claude-3-sonnet' | 'claude-3-opus',
+      aiModel,
       {
         title: title || assignment?.title,
         schoolName: schoolName || assignment?.schoolName,

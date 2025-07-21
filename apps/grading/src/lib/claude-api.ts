@@ -17,6 +17,7 @@ export interface EvaluationRequest {
   studentText: string;
   studentName: string;
   temperature?: number;
+  aiModel?: string;
 }
 
 export interface EvaluationResult {
@@ -85,16 +86,22 @@ ${request.studentText}
 
 위 글을 평가해주세요.`;
 
-    // 요청에서 모델 정보 확인
-    const modelMap: { [key: string]: string } = {
-      'claude-sonnet-4-20250514': 'claude-3-5-sonnet-20241022',
-      'claude-opus-4-20250514': 'claude-3-opus-20240229',
-      'claude-3-sonnet': 'claude-3-5-sonnet-20241022',
-      'claude-3-opus': 'claude-3-opus-20240229'
-    };
+    // 모델 선택 - 전달된 모델을 사용하거나 기본값 사용
+    let actualModel = 'claude-sonnet-4'; // 기본 모델
     
-    // 기본값은 sonnet
-    const actualModel = modelMap['claude-sonnet-4-20250514']; // 기본 모델
+    if (request.aiModel) {
+      // 전달된 모델명을 그대로 사용
+      if (request.aiModel.includes('sonnet')) {
+        actualModel = 'claude-sonnet-4';
+      } else if (request.aiModel.includes('opus')) {
+        actualModel = 'claude-opus-4';
+      }
+    }
+    
+    console.log('Claude API 모델 선택:', {
+      요청모델: request.aiModel,
+      사용모델: actualModel
+    });
     
     const message = await anthropic.messages.create({
       model: actualModel,
