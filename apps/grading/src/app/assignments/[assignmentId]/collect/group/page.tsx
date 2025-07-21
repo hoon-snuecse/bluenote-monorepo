@@ -43,10 +43,7 @@ export default function CollectFromGroupPage() {
 
     try {
       await deleteGroup(groupId)
-      showNotification({
-        type: 'success',
-        message: '그룹이 삭제되었습니다.'
-      })
+      showNotification('그룹이 삭제되었습니다.', 'success')
       
       // 선택된 그룹이 삭제된 경우 선택 해제
       if (selectedGroup?.id === groupId) {
@@ -55,10 +52,7 @@ export default function CollectFromGroupPage() {
         setSelectedStudents([])
       }
     } catch (error) {
-      showNotification({
-        type: 'error',
-        message: '그룹 삭제 중 오류가 발생했습니다.'
-      })
+      showNotification('그룹 삭제 중 오류가 발생했습니다.', 'error')
     }
   }
 
@@ -71,10 +65,7 @@ export default function CollectFromGroupPage() {
 
   const handleSubmit = async () => {
     if (selectedStudents.length === 0) {
-      showNotification({
-        type: 'error',
-        message: '최소 1명 이상의 학생을 선택해주세요.'
-      })
+      showNotification('최소 1명 이상의 학생을 선택해주세요.', 'error')
       return
     }
 
@@ -108,18 +99,12 @@ export default function CollectFromGroupPage() {
         }
       }
 
-      showNotification({
-        type: 'success',
-        message: `${selectedStudents.length}명의 학생 제출물이 생성되었습니다.`
-      })
+      showNotification(`${selectedStudents.length}명의 학생 제출물이 생성되었습니다.`, 'success')
 
       router.push(`/assignments/${params.assignmentId}/submissions`)
     } catch (error) {
       console.error('Error creating submissions:', error)
-      showNotification({
-        type: 'error',
-        message: '제출물 생성 중 오류가 발생했습니다.'
-      })
+      showNotification('제출물 생성 중 오류가 발생했습니다.', 'error')
     } finally {
       setSubmitting(false)
     }

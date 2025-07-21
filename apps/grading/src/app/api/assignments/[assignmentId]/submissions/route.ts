@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { getServerSession } from 'next-auth/next';
-import { authOptions } from '@/lib/auth';
+import { getServerSession } from '@/lib/auth';
 
 export async function GET(
   request: NextRequest,
@@ -78,7 +77,7 @@ export async function POST(
     console.log('[Submissions API] POST request for assignmentId:', params.assignmentId);
     
     // 인증 확인
-    const session = await getServerSession(authOptions);
+    const session = await getServerSession();
     if (!session?.user?.id) {
       console.log('[Submissions API] Unauthorized - no session');
       return NextResponse.json(
