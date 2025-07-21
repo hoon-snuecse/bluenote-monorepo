@@ -137,8 +137,16 @@ export default function EditAssignmentPage() {
       console.log('Assignment update result:', result);
       
       if (result.success) {
-        // 성공 시 과제 목록 페이지로 이동
-        router.push('/assignments');
+        // 성공 메시지 표시
+        alert('과제가 성공적으로 수정되었습니다.\n\n채점기준을 수정하셨다면, 평가 시 변경된 내용이 반영됩니다.');
+        
+        // 평가 페이지로 이동할지 묻기
+        const goToEvaluate = confirm('수정된 채점기준으로 바로 평가하시겠습니까?');
+        if (goToEvaluate) {
+          router.push(`/assignments/${assignmentId}/submissions`);
+        } else {
+          router.push('/assignments');
+        }
       } else {
         const errorMessage = result.error || '과제 수정 중 오류가 발생했습니다.';
         console.error('Assignment update failed:', result);

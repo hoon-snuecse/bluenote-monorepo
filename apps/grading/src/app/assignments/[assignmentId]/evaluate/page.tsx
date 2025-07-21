@@ -50,6 +50,33 @@ export default function EvaluatePage() {
       setEvaluationPrompt(prompt);
     }
   }, [assignment, submissions]);
+  
+  // 프롬프트 미리보기를 열 때마다 최신 데이터로 업데이트
+  const refreshPromptPreview = async () => {
+    try {
+      const assignmentRes = await fetch(`/api/assignments/${params.assignmentId}`);
+      const assignmentData = await assignmentRes.json();
+      if (assignmentData.success) {
+        const updatedAssignment = {
+          ...assignmentData.assignment,
+          evaluationDomains: Array.isArray(assignmentData.assignment.evaluationDomains) 
+            ? assignmentData.assignment.evaluationDomains 
+            : JSON.parse(assignmentData.assignment.evaluationDomains || '[]'),
+          evaluationLevels: Array.isArray(assignmentData.assignment.evaluationLevels)
+            ? assignmentData.assignment.evaluationLevels
+            : JSON.parse(assignmentData.assignment.evaluationLevels || '[]')
+        };
+        setAssignment(updatedAssignment);
+        const prompt = generateEvaluationPromptPreview(updatedAssignment, submissions);
+        setEvaluationPrompt(prompt);
+        console.log('프롬프트 미리보기 업데이트 성공:', {
+          gradingCriteriaLength: updatedAssignment.gradingCriteria?.length || 0
+        });
+      }
+    } catch (error) {
+      console.error('프롬프트 미리보기 업데이트 실패:', error);
+    }
+  };
 
   const checkApiKey = async () => {
     try {
@@ -568,27 +595,8 @@ ${submission.content?.substring(0, 100)}...
                   <button
                     onClick={async () => {
                       if (!showPromptPreview) {
-                        // 프롬프트 미리보기를 열 때 최신 assignment 데이터 가져오기
-                        try {
-                          const assignmentRes = await fetch(`/api/assignments/${params.assignmentId}`);
-                          const assignmentData = await assignmentRes.json();
-                          if (assignmentData.success) {
-                            const updatedAssignment = {
-                              ...assignmentData.assignment,
-                              evaluationDomains: Array.isArray(assignmentData.assignment.evaluationDomains) 
-                                ? assignmentData.assignment.evaluationDomains 
-                                : JSON.parse(assignmentData.assignment.evaluationDomains || '[]'),
-                              evaluationLevels: Array.isArray(assignmentData.assignment.evaluationLevels)
-                                ? assignmentData.assignment.evaluationLevels
-                                : JSON.parse(assignmentData.assignment.evaluationLevels || '[]')
-                            };
-                            setAssignment(updatedAssignment);
-                            const prompt = generateEvaluationPromptPreview(updatedAssignment, submissions);
-                            setEvaluationPrompt(prompt);
-                          }
-                        } catch (error) {
-                          console.error('최신 assignment 데이터 가져오기 실패:', error);
-                        }
+                        // 프롬프트 미리보기를 열 때 최신 데이터 가져오기
+                        await refreshPromptPreview();
                       }
                       setShowPromptPreview(!showPromptPreview);
                     }}
@@ -617,6 +625,11 @@ ${submission.content?.substring(0, 100)}...
                           ⚠️ 경고: 평가 기준(gradingCriteria)이 설정되지 않았습니다. 과제 설정을 확인해주세요.
                         </p>
                       )}
+                      <div className="mt-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                        <p className="text-sm text-blue-700">
+                          💡 채점기준을 수정하셨나요? 프롬프트 미리보기를 닫았다가 다시 열면 최신 내용이 반영됩니다.
+                        </p>
+                      </div>
                       {process.env.NODE_ENV === 'development' && (
                         <div className="mt-4 p-3 bg-gray-100 rounded text-xs">
                           <p className="font-bold mb-1">Debug Info (Assignment Data):</p>
