@@ -7,7 +7,7 @@ import { Button } from '@bluenote/ui'
 import { Badge } from '@bluenote/ui'
 import { Checkbox } from '@bluenote/ui'
 import { Input } from '@bluenote/ui'
-import { ArrowLeft, Users, Search, UserCheck, Plus, Upload, Download } from 'lucide-react'
+import { ArrowLeft, Users, Search, UserCheck, Plus, Upload, Download, Trash2 } from 'lucide-react'
 import { useStudentGroups, StudentGroup, Student } from '@/hooks/useStudentGroups'
 import { useNotification } from '@/contexts/NotificationContext'
 import { StudentGroupManager } from '@/components/StudentGroupManager'
@@ -15,7 +15,7 @@ import { StudentGroupManager } from '@/components/StudentGroupManager'
 export default function CollectFromGroupPage() {
   const params = useParams()
   const router = useRouter()
-  const { groups, loading, fetchStudents, refetch } = useStudentGroups()
+  const { groups, loading, fetchStudents, refetch, deleteGroup } = useStudentGroups()
   const { showNotification } = useNotification()
   
   const [selectedGroup, setSelectedGroup] = useState<StudentGroup | null>(null)
@@ -33,6 +33,32 @@ export default function CollectFromGroupPage() {
       setStudents(fetchedStudents)
     } catch (error) {
       // Error is handled by the hook
+    }
+  }
+
+  const handleDeleteGroup = async (groupId: string, groupName: string) => {
+    if (!confirm(`정말로 "${groupName}" 그룹을 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.`)) {
+      return
+    }
+
+    try {
+      await deleteGroup(groupId)
+      showNotification({
+        type: 'success',
+        message: '그룹이 삭제되었습니다.'
+      })
+      
+      // 선택된 그룹이 삭제된 경우 선택 해제
+      if (selectedGroup?.id === groupId) {
+        setSelectedGroup(null)
+        setStudents([])
+        setSelectedStudents([])
+      }
+    } catch (error) {
+      showNotification({
+        type: 'error',
+        message: '그룹 삭제 중 오류가 발생했습니다.'
+      })
     }
   }
 
@@ -183,24 +209,38 @@ export default function CollectFromGroupPage() {
                     {groups.map(group => (
                       <div
                         key={group.id}
-                        className={`p-3 rounded-lg border cursor-pointer transition-colors ${
+                        className={`p-3 rounded-lg border transition-colors relative group ${
                           selectedGroup?.id === group.id 
                             ? 'border-primary bg-primary/10' 
                             : 'border-border hover:bg-accent'
                         }`}
-                        onClick={() => handleGroupSelect(group)}
                       >
-                        <h4 className="font-medium">{group.name}</h4>
-                        <p className="text-sm text-muted-foreground">
-                          {group.schoolName} {group.gradeLevel && `${group.gradeLevel}학년`} {group.className && `${group.className}반`}
-                        </p>
-                        <div className="flex items-center gap-2 mt-2">
-                          <Badge variant="secondary">
-                            <Users className="mr-1 h-3 w-3" />
-                            {group.studentCount || 0}명
-                          </Badge>
-                          <Badge variant="outline">{group.schoolYear}</Badge>
+                        <div
+                          onClick={() => handleGroupSelect(group)}
+                          className="cursor-pointer"
+                        >
+                          <h4 className="font-medium pr-8">{group.name}</h4>
+                          <p className="text-sm text-muted-foreground">
+                            {group.schoolName} {group.gradeLevel && `${group.gradeLevel}학년`} {group.className && `${group.className}반`}
+                          </p>
+                          <div className="flex items-center gap-2 mt-2">
+                            <Badge variant="secondary">
+                              <Users className="mr-1 h-3 w-3" />
+                              {group.studentCount || 0}명
+                            </Badge>
+                            <Badge variant="outline">{group.schoolYear}</Badge>
+                          </div>
                         </div>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleDeleteGroup(group.id, group.name)
+                          }}
+                          className="absolute top-3 right-3 p-1 rounded hover:bg-red-100 hover:text-red-600 transition-colors opacity-0 group-hover:opacity-100"
+                          title="그룹 삭제"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
                       </div>
                     ))}
                   </div>
