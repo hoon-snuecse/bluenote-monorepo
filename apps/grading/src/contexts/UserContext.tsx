@@ -47,7 +47,8 @@ function UserProviderInner({ children }: { children: ReactNode }) {
   };
   
   const logout = async () => {
-    await signOut({ callbackUrl: '/auth/signin' });
+    // 메인 사이트 홈으로 리다이렉트
+    await signOut({ callbackUrl: 'https://bluenote.site' });
   };
   
   const refreshUser = async () => {

@@ -207,13 +207,15 @@ export default function NavigationWithAuth() {
                   </button>
                 </div>
               ) : (
-                <Link
-                  href="/login"
+                <button
+                  onClick={() => {
+                    window.location.href = 'https://bluenote.site'
+                  }}
                   className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-300 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors"
                 >
                   <LogIn className="w-4 h-4" />
                   <span>로그인</span>
-                </Link>
+                </button>
               )}
             </div>
           </div>
@@ -315,14 +317,16 @@ export default function NavigationWithAuth() {
                   </button>
                 </>
               ) : (
-                <Link
-                  href="/login"
-                  onClick={() => setIsMenuOpen(false)}
+                <button
+                  onClick={() => {
+                    window.location.href = 'https://bluenote.site'
+                    setIsMenuOpen(false)
+                  }}
                   className="flex items-center gap-3 w-full px-4 py-3 bg-white border border-slate-300 rounded-lg text-slate-700 hover:bg-slate-50"
                 >
                   <LogIn className="w-5 h-5" />
                   <span>Google로 로그인</span>
-                </Link>
+                </button>
               )}
             </div>
           </div>
