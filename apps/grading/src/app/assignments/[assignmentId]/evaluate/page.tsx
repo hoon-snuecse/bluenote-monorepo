@@ -198,6 +198,31 @@ ${submission.content?.substring(0, 100)}...
   const handleStartEvaluation = async () => {
     setIsEvaluating(true);
     
+    // 평가 직전에 최신 assignment 데이터 다시 가져오기 (교사가 수정한 채점기준 반영)
+    let updatedAssignment = assignment;
+    try {
+      const assignmentRes = await fetch(`/api/assignments/${params.assignmentId}`);
+      const assignmentData = await assignmentRes.json();
+      if (assignmentData.success) {
+        updatedAssignment = {
+          ...assignmentData.assignment,
+          evaluationDomains: Array.isArray(assignmentData.assignment.evaluationDomains) 
+            ? assignmentData.assignment.evaluationDomains 
+            : JSON.parse(assignmentData.assignment.evaluationDomains || '[]'),
+          evaluationLevels: Array.isArray(assignmentData.assignment.evaluationLevels)
+            ? assignmentData.assignment.evaluationLevels
+            : JSON.parse(assignmentData.assignment.evaluationLevels || '[]')
+        };
+        console.log('평가 직전 업데이트된 assignment:', {
+          title: updatedAssignment.title,
+          gradingCriteriaLength: updatedAssignment.gradingCriteria?.length || 0,
+          gradingCriteriaPreview: updatedAssignment.gradingCriteria?.substring(0, 100) || 'NO CRITERIA'
+        });
+      }
+    } catch (error) {
+      console.error('Assignment 업데이트 오류:', error);
+    }
+    
     // 평가 직전에 최신 제출물 데이터 다시 가져오기
     let updatedSubmissions = submissions;
     try {
@@ -246,29 +271,29 @@ ${submission.content?.substring(0, 100)}...
         console.log('제출물 내용 길이:', submission.content?.length || 0);
         console.log('제출물 내용 미리보기:', submission.content?.substring(0, 100) || 'NO CONTENT');
         console.log('=== Assignment 전체 데이터 ===');
-        console.log('Title:', assignment?.title);
-        console.log('School Name:', assignment?.schoolName);
-        console.log('Grade Level:', assignment?.gradeLevel);
-        console.log('Writing Type:', assignment?.writingType);
-        console.log('Level Count:', assignment?.levelCount);
-        console.log('평가 영역:', assignment?.evaluationDomains);
-        console.log('평가 수준:', assignment?.evaluationLevels);
-        console.log('채점 기준 존재 여부:', !!assignment?.gradingCriteria);
-        console.log('채점 기준 길이:', assignment?.gradingCriteria?.length || 0);
-        console.log('채점 기준 미리보기:', assignment?.gradingCriteria?.substring(0, 200));
+        console.log('Title:', updatedAssignment?.title);
+        console.log('School Name:', updatedAssignment?.schoolName);
+        console.log('Grade Level:', updatedAssignment?.gradeLevel);
+        console.log('Writing Type:', updatedAssignment?.writingType);
+        console.log('Level Count:', updatedAssignment?.levelCount);
+        console.log('평가 영역:', updatedAssignment?.evaluationDomains);
+        console.log('평가 수준:', updatedAssignment?.evaluationLevels);
+        console.log('채점 기준 존재 여부:', !!updatedAssignment?.gradingCriteria);
+        console.log('채점 기준 길이:', updatedAssignment?.gradingCriteria?.length || 0);
+        console.log('채점 기준 미리보기:', updatedAssignment?.gradingCriteria?.substring(0, 200));
         
         const requestData = {
           submissionId: tasks[i].id,
           assignmentId: params.assignmentId,
           content: submission.content,
-          gradingCriteria: assignment?.gradingCriteria || '',
-          evaluationDomains: assignment?.evaluationDomains || [],
-          evaluationLevels: assignment?.evaluationLevels || [],
-          levelCount: assignment?.levelCount || assignment?.evaluationLevels?.length || 4,
-          title: assignment?.title || '',
-          schoolName: assignment?.schoolName || '',
-          gradeLevel: assignment?.gradeLevel || '',
-          writingType: assignment?.writingType || '',
+          gradingCriteria: updatedAssignment?.gradingCriteria || '',
+          evaluationDomains: updatedAssignment?.evaluationDomains || [],
+          evaluationLevels: updatedAssignment?.evaluationLevels || [],
+          levelCount: updatedAssignment?.levelCount || updatedAssignment?.evaluationLevels?.length || 4,
+          title: updatedAssignment?.title || '',
+          schoolName: updatedAssignment?.schoolName || '',
+          gradeLevel: updatedAssignment?.gradeLevel || '',
+          writingType: updatedAssignment?.writingType || '',
           aiModel: selectedModel,
           studentId: submission.studentId,
           studentName: submission.studentName,

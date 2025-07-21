@@ -179,7 +179,7 @@ export default function SubmissionDetailPage() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <p className="text-gray-600">제출물을 찾을 수 없습니다.</p>
+          <p className="text-gray-600">평가 결과를 찾을 수 없습니다.</p>
           <button
             onClick={() => router.back()}
             className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
@@ -201,7 +201,7 @@ export default function SubmissionDetailPage() {
             className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
           >
             <ArrowLeft className="w-5 h-5" />
-            제출 현황으로 돌아가기
+            평가 목록으로 돌아가기
           </button>
         </div>
 
@@ -209,7 +209,7 @@ export default function SubmissionDetailPage() {
         <div className="mb-8">
           <div className="flex justify-between items-start">
             <div>
-              <h1 className="text-4xl font-bold text-slate-900 mb-2">제출물 상세보기</h1>
+              <h1 className="text-4xl font-bold text-slate-900 mb-2">평가결과 보고서</h1>
               <div className="flex items-center gap-4 text-slate-600">
                 <div className="flex items-center gap-2">
                   <User className="w-5 h-5" />
@@ -271,7 +271,7 @@ export default function SubmissionDetailPage() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <FileText className="w-5 h-5" />
-                  제출된 글
+                  학생 작성 글
                 </CardTitle>
               </CardHeader>
               <CardContent>
