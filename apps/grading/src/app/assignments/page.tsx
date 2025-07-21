@@ -81,6 +81,13 @@ function AssignmentsContent() {
     alert('제출 링크가 클립보드에 복사되었습니다!');
   };
 
+  const handleViewSubmissions = (assignmentId: string) => {
+    router.push(`/assignments/${assignmentId}/submissions`);
+  };
+
+  const handleRunEvaluation = (assignmentId: string) => {
+    router.push(`/assignments/${assignmentId}/evaluate`);
+  };
 
   const handleViewDashboard = (assignmentId: string) => {
     router.push(`/assignments/${assignmentId}/dashboard`);
@@ -194,22 +201,28 @@ function AssignmentsContent() {
                   학생 글 가져오기
                 </button>
 
+                <div className="grid grid-cols-2 gap-2 mb-2">
+                  <button
+                    onClick={() => handleViewSubmissions(assignment.id)}
+                    className="px-3 py-2 bg-white/60 text-slate-700 rounded-lg hover:bg-white/80 transition-colors flex items-center justify-center gap-2 border border-slate-200/50 text-sm"
+                  >
+                    <Users className="w-4 h-4" />
+                    제출 현황
+                  </button>
+                  <button
+                    onClick={() => handleRunEvaluation(assignment.id)}
+                    className="px-3 py-2 bg-blue-500/20 text-slate-700 rounded-lg hover:bg-blue-500/30 transition-colors flex items-center justify-center gap-2 border border-blue-200/30 text-sm font-medium"
+                  >
+                    AI 평가
+                  </button>
+                </div>
                 <button
                   onClick={() => handleViewDashboard(assignment.id)}
-                  className="w-full px-3 py-2 bg-purple-500/20 text-slate-700 rounded-lg hover:bg-purple-500/30 transition-colors flex items-center justify-center gap-2 border border-purple-200/30 text-sm font-medium mb-2"
+                  className="w-full px-3 py-2 bg-purple-500/20 text-slate-700 rounded-lg hover:bg-purple-500/30 transition-colors flex items-center justify-center gap-2 border border-purple-200/30 text-sm font-medium"
                 >
                   <BarChart3 className="w-4 h-4" />
                   평가 대시보드
                 </button>
-                <div className="text-xs text-slate-500 text-center">
-                  <button
-                    onClick={() => handleGetSubmissionLink(assignment.id)}
-                    className="hover:text-slate-700 inline-flex items-center gap-1"
-                  >
-                    <Link className="w-3 h-3" />
-                    학생 제출 링크 복사
-                  </button>
-                </div>
               </CardContent>
             </Card>
           ))}
