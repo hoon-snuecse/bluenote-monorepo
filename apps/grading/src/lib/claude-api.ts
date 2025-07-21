@@ -92,14 +92,18 @@ ${request.studentText}
 위 글을 평가해주세요.`;
 
     // 모델 선택 - 전달된 모델을 사용하거나 기본값 사용
-    let actualModel = 'claude-sonnet-4'; // 기본 모델
+    let actualModel = 'claude-sonnet-4-20250514'; // 기본 모델 (권장)
     
     if (request.aiModel) {
       // 전달된 모델명을 그대로 사용
-      if (request.aiModel.includes('sonnet')) {
-        actualModel = 'claude-sonnet-4';
+      if (request.aiModel === 'claude-opus-4-20250514') {
+        actualModel = 'claude-opus-4-20250514';
+      } else if (request.aiModel === 'claude-sonnet-4-20250514') {
+        actualModel = 'claude-sonnet-4-20250514';
       } else if (request.aiModel.includes('opus')) {
-        actualModel = 'claude-opus-4';
+        actualModel = 'claude-opus-4-20250514';
+      } else if (request.aiModel.includes('sonnet')) {
+        actualModel = 'claude-sonnet-4-20250514';
       }
     }
     

@@ -34,9 +34,13 @@ export default function EvaluatePage() {
   const [evaluationPrompt, setEvaluationPrompt] = useState('');
   const [temperature, setTemperature] = useState(0.1);
   const [showAdvancedSettings, setShowAdvancedSettings] = useState(false);
+  const [apiErrorDetected, setApiErrorDetected] = useState(false);
+  const [mockUsageCount, setMockUsageCount] = useState(0);
+  const [apiKeyStatus, setApiKeyStatus] = useState<any>(null);
 
   useEffect(() => {
     fetchData();
+    checkApiKey();
   }, [params.assignmentId, searchParams]);
   
   // assignment나 submissions가 변경될 때마다 프롬프트 미리보기 업데이트
@@ -47,6 +51,16 @@ export default function EvaluatePage() {
     }
   }, [assignment, submissions]);
 
+  const checkApiKey = async () => {
+    try {
+      const response = await fetch('/api/check-env');
+      const data = await response.json();
+      setApiKeyStatus(data.apiKeyStatus);
+    } catch (error) {
+      console.error('API 키 상태 확인 실패:', error);
+    }
+  };
+  
   const fetchData = async () => {
     try {
       // Get submission IDs from query params
@@ -293,6 +307,34 @@ ${submission.content?.substring(0, 100)}...
         if (!result.success) {
           throw new Error(result.details || result.error || 'Evaluation failed');
         }
+        
+        // Mock 평가 사용 감지
+        if (result.evaluation && 
+            (result.evaluation.detailedFeedback?.includes('[Mock 처리: 주의]') ||
+             result.evaluation.strengths?.some((s: string) => s.includes('[Mock 처리: 주의]')) ||
+             result.evaluation.improvements?.some((i: string) => i.includes('[Mock 처리: 주의]')))) {
+          setMockUsageCount(prev => {
+            const newCount = prev + 1;
+            if (newCount === 1) {
+              // 첫 번째 Mock 평가 감지 시 사용자에게 알림
+              setApiErrorDetected(true);
+              alert('⚠️ Claude API 호출에 실패했습니다!\n\n임시 Mock 평가가 사용되고 있습니다.\n실제 AI 평가가 아니므로 주의하세요.\n\nClaude API 키를 확인해주세요.');
+            }
+            return newCount;
+          });
+          
+          // 태스크에 Mock 평가 경고 메시지 추가
+          setEvaluationTasks(prev => 
+            prev.map((task, index) => 
+              index === i 
+                ? { 
+                    ...task, 
+                    message: '⚠️ Mock 평가 사용됨 - API 오류'
+                  } 
+                : task
+            )
+          );
+        }
       } catch (error) {
         console.error('Evaluation error:', error);
         // Mark as failed
@@ -382,6 +424,26 @@ ${submission.content?.substring(0, 100)}...
                 </div>
               ) : (
               <div className="space-y-4">
+                {/* API 키 상태 경고 */}
+                {apiKeyStatus && (!apiKeyStatus.hasClaudeKey || apiKeyStatus.isDefaultKey) && (
+                  <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                    <div className="flex items-start gap-3">
+                      <AlertCircle className="w-5 h-5 text-yellow-600 mt-0.5" />
+                      <div>
+                        <p className="font-medium text-yellow-800">
+                          ⚠️ Claude API 키가 설정되지 않았습니다
+                        </p>
+                        <p className="text-sm text-yellow-700 mt-1">
+                          실제 AI 평가를 위해서는 Claude API 키가 필요합니다.
+                        </p>
+                        <p className="text-sm text-yellow-600 mt-2">
+                          현재 Mock 평가기가 사용됩니다. 이는 테스트용이며 실제 AI 평가가 아닙니다.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
                 <div>
                   <label className="block text-base font-medium text-gray-700 mb-2">
                     AI 모델 선택
@@ -589,6 +651,27 @@ ${submission.content?.substring(0, 100)}...
                   </div>
                 ))}
               </div>
+              
+              {/* API 오류 감지 경고 */}
+              {apiErrorDetected && (
+                <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+                  <div className="flex items-start gap-3">
+                    <AlertCircle className="w-5 h-5 text-red-600 mt-0.5" />
+                    <div>
+                      <p className="font-medium text-red-800">
+                        Claude API 호출 실패 감지됨
+                      </p>
+                      <p className="text-sm text-red-700 mt-1">
+                        총 {mockUsageCount}개의 평가가 Mock 처리되었습니다.
+                      </p>
+                      <p className="text-sm text-red-600 mt-2">
+                        이는 실제 AI 평가가 아닌 테스트 데이터입니다.
+                        Claude API 키 설정을 확인해주세요.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
         )}
