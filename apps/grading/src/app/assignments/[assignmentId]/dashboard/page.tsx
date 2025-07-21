@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@bluenote/ui';
-import { ArrowLeft, Download, Filter, BarChart3, TrendingUp, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Download, Filter, BarChart3, TrendingUp, AlertCircle, FileSearch, PlayCircle, Users, CheckCircle, Clock } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
 interface DomainScore {
@@ -43,6 +43,7 @@ export default function DashboardPage() {
   const [filterDomain, setFilterDomain] = useState<string>('all');
   const [filterRound, setFilterRound] = useState<string>('latest'); // latest, all, 1, 2, 3...
   const [availableRounds, setAvailableRounds] = useState<number[]>([]);
+  const [activeTab, setActiveTab] = useState<'submission' | 'analysis'>('submission'); // 탭 상태 추가
 
   useEffect(() => {
     fetchDashboardData();
@@ -364,7 +365,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Header */}
-        <div className="mb-8 flex justify-between items-start">
+        <div className="mb-6 flex justify-between items-start">
           <div>
             <h1 className="text-4xl font-bold text-slate-900 mb-2">평가 대시보드</h1>
             <p className="text-slate-600">{assignment?.title}</p>
@@ -378,8 +379,50 @@ export default function DashboardPage() {
           </button>
         </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+        {/* Tab Navigation */}
+        <div className="mb-8">
+          <div className="flex gap-1 p-1 bg-slate-100 rounded-lg w-fit">
+            <button
+              onClick={() => setActiveTab('submission')}
+              className={`px-6 py-2.5 rounded-md font-medium text-sm transition-all flex items-center gap-2 ${
+                activeTab === 'submission'
+                  ? 'bg-white text-slate-900 shadow-sm'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <FileSearch className="w-4 h-4" />
+              제출 및 평가 관리
+            </button>
+            <button
+              onClick={() => setActiveTab('analysis')}
+              className={`px-6 py-2.5 rounded-md font-medium text-sm transition-all flex items-center gap-2 ${
+                activeTab === 'analysis'
+                  ? 'bg-white text-slate-900 shadow-sm'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <BarChart3 className="w-4 h-4" />
+              평가 결과 분석
+            </button>
+          </div>
+        </div>
+
+        {/* Tab Content */}
+        {activeTab === 'submission' ? (
+          // 제출 및 평가 관리 탭
+          <>
+            <SubmissionManagementTab 
+              assignment={assignment}
+              students={students}
+              params={params}
+              router={router}
+            />
+          </>
+        ) : (
+          // 평가 결과 분석 탭
+          <>
+            {/* Stats Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
           <Card className="glass">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
@@ -613,7 +656,262 @@ export default function DashboardPage() {
             </div>
           </CardContent>
         </Card>
+          </>
+        )}
       </div>
+    </div>
+  );
+}
+
+// 제출 및 평가 관리 탭 컴포넌트
+function SubmissionManagementTab({ assignment, students, params, router }: any) {
+  const [selectedSubmissions, setSelectedSubmissions] = useState<Set<string>>(new Set());
+  const [filterStatus, setFilterStatus] = useState<'all' | 'evaluated' | 'unevaluated'>('all');
+  
+  // 전체 제출물 데이터 가져오기
+  const [submissions, setSubmissions] = useState<any[]>([]);
+  const [loadingSubmissions, setLoadingSubmissions] = useState(true);
+
+  useEffect(() => {
+    fetchSubmissions();
+  }, [params.assignmentId]);
+
+  const fetchSubmissions = async () => {
+    try {
+      const response = await fetch(`/api/assignments/${params.assignmentId}/submissions`);
+      const data = await response.json();
+      if (data.success) {
+        setSubmissions(data.submissions);
+      }
+    } catch (error) {
+      console.error('Error fetching submissions:', error);
+    } finally {
+      setLoadingSubmissions(false);
+    }
+  };
+
+  const handleSelectAll = () => {
+    if (selectedSubmissions.size === filteredSubmissions.length) {
+      setSelectedSubmissions(new Set());
+    } else {
+      setSelectedSubmissions(new Set(filteredSubmissions.map(s => s.id)));
+    }
+  };
+
+  const handleSelectSubmission = (id: string) => {
+    const newSelection = new Set(selectedSubmissions);
+    if (newSelection.has(id)) {
+      newSelection.delete(id);
+    } else {
+      newSelection.add(id);
+    }
+    setSelectedSubmissions(newSelection);
+  };
+
+  const handleBatchEvaluate = () => {
+    if (selectedSubmissions.size === 0) {
+      alert('평가할 학생을 선택해주세요.');
+      return;
+    }
+    
+    const submissionIds = Array.from(selectedSubmissions);
+    router.push(`/assignments/${params.assignmentId}/evaluate?submissions=${submissionIds.join(',')}`);
+  };
+
+  const handleCollectMore = () => {
+    router.push(`/assignments/${params.assignmentId}/collect`);
+  };
+
+  // 상태별 필터링
+  const filteredSubmissions = submissions.filter(sub => {
+    if (filterStatus === 'all') return true;
+    if (filterStatus === 'evaluated') return sub.status === 'evaluated';
+    if (filterStatus === 'unevaluated') return sub.status === 'submitted';
+    return true;
+  });
+
+  const stats = {
+    total: submissions.length,
+    evaluated: submissions.filter(s => s.status === 'evaluated').length,
+    unevaluated: submissions.filter(s => s.status === 'submitted').length
+  };
+
+  if (loadingSubmissions) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">제출 현황을 불러오는 중...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* 통계 카드 */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card className="bg-white/70 backdrop-blur-sm border border-slate-200/50">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-slate-600">전체 제출</p>
+                <p className="text-2xl font-bold text-slate-800">{stats.total}</p>
+              </div>
+              <Users className="w-8 h-8 text-blue-500" />
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card className="bg-white/70 backdrop-blur-sm border border-slate-200/50">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-slate-600">평가 완료</p>
+                <p className="text-2xl font-bold text-green-600">{stats.evaluated}</p>
+              </div>
+              <CheckCircle className="w-8 h-8 text-green-500" />
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card className="bg-white/70 backdrop-blur-sm border border-slate-200/50">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-slate-600">미평가</p>
+                <p className="text-2xl font-bold text-amber-600">{stats.unevaluated}</p>
+              </div>
+              <Clock className="w-8 h-8 text-amber-500" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* 액션 버튼들 */}
+      <div className="flex justify-between items-center">
+        <div className="flex gap-2">
+          {['all', 'unevaluated', 'evaluated'].map((status) => (
+            <button
+              key={status}
+              onClick={() => setFilterStatus(status as any)}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                filterStatus === status
+                  ? 'bg-blue-500 text-white'
+                  : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-50'
+              }`}
+            >
+              {status === 'all' && '전체'}
+              {status === 'unevaluated' && `미평가 (${stats.unevaluated})`}
+              {status === 'evaluated' && `평가완료 (${stats.evaluated})`}
+            </button>
+          ))}
+        </div>
+        
+        <div className="flex gap-3">
+          <button
+            onClick={handleCollectMore}
+            className="px-4 py-2 bg-white text-slate-700 rounded-lg hover:bg-slate-50 transition-all flex items-center gap-2 border border-slate-200"
+          >
+            <FileSearch className="w-4 h-4" />
+            글 가져오기
+          </button>
+          
+          {selectedSubmissions.size > 0 && (
+            <button
+              onClick={handleBatchEvaluate}
+              className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-all flex items-center gap-2"
+            >
+              <PlayCircle className="w-4 h-4" />
+              선택 평가 ({selectedSubmissions.size}명)
+            </button>
+          )}
+          
+          {stats.unevaluated > 0 && selectedSubmissions.size === 0 && (
+            <button
+              onClick={() => {
+                const unevaluatedIds = filteredSubmissions
+                  .filter(s => s.status === 'submitted')
+                  .map(s => s.id);
+                router.push(`/assignments/${params.assignmentId}/evaluate?submissions=${unevaluatedIds.join(',')}`);
+              }}
+              className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-all flex items-center gap-2"
+            >
+              <PlayCircle className="w-4 h-4" />
+              전체 평가 ({stats.unevaluated}명)
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* 제출 현황 테이블 */}
+      <Card className="bg-white/70 backdrop-blur-sm border border-slate-200/50">
+        <CardContent className="p-0">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b bg-slate-50/50">
+                  <th className="text-center p-4 w-12">
+                    <input
+                      type="checkbox"
+                      checked={selectedSubmissions.size === filteredSubmissions.length && filteredSubmissions.length > 0}
+                      onChange={handleSelectAll}
+                      className="w-4 h-4 rounded border-gray-300"
+                    />
+                  </th>
+                  <th className="text-left p-4 font-medium">학생 이름</th>
+                  <th className="text-left p-4 font-medium">학번</th>
+                  <th className="text-left p-4 font-medium">제출 일시</th>
+                  <th className="text-center p-4 font-medium">상태</th>
+                  <th className="text-center p-4 font-medium">작업</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredSubmissions.map((submission: any) => (
+                  <tr key={submission.id} className="border-b hover:bg-slate-50/50">
+                    <td className="text-center p-4">
+                      <input
+                        type="checkbox"
+                        checked={selectedSubmissions.has(submission.id)}
+                        onChange={() => handleSelectSubmission(submission.id)}
+                        className="w-4 h-4 rounded border-gray-300"
+                      />
+                    </td>
+                    <td className="p-4 font-medium">{submission.studentName}</td>
+                    <td className="p-4 text-slate-600">{submission.studentId}</td>
+                    <td className="p-4 text-slate-600">
+                      {submission.submittedAt 
+                        ? new Date(submission.submittedAt).toLocaleString('ko-KR')
+                        : '-'}
+                    </td>
+                    <td className="p-4 text-center">
+                      {submission.status === 'evaluated' ? (
+                        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-green-100 text-green-700 text-sm">
+                          <CheckCircle className="w-3 h-3" />
+                          평가완료
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-amber-100 text-amber-700 text-sm">
+                          <Clock className="w-3 h-3" />
+                          미평가
+                        </span>
+                      )}
+                    </td>
+                    <td className="p-4 text-center">
+                      <button
+                        onClick={() => router.push(`/assignments/${params.assignmentId}/submissions/${submission.id}`)}
+                        className="px-3 py-1.5 bg-white text-slate-700 rounded-md hover:bg-slate-50 text-sm border border-slate-200"
+                      >
+                        상세보기
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

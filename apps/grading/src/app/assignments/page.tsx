@@ -81,9 +81,6 @@ function AssignmentsContent() {
     alert('제출 링크가 클립보드에 복사되었습니다!');
   };
 
-  const handleViewSubmissions = (assignmentId: string) => {
-    router.push(`/assignments/${assignmentId}/submissions`);
-  };
 
   const handleViewDashboard = (assignmentId: string) => {
     router.push(`/assignments/${assignmentId}/dashboard`);
@@ -188,28 +185,23 @@ function AssignmentsContent() {
                   </div>
                 </div>
 
-                <button
-                  onClick={() => handleCollectSubmissions(assignment.id)}
-                  className="w-full btn-primary flex items-center justify-center gap-2 text-sm"
-                >
-                  <Upload className="w-4 h-4" />
-                  학생 글 가져오기
-                </button>
+                <div className="space-y-2">
+                  <button
+                    onClick={() => handleCollectSubmissions(assignment.id)}
+                    className="w-full px-4 py-2.5 bg-white text-slate-700 rounded-lg hover:bg-slate-50 transition-all flex items-center justify-center gap-2 text-sm font-medium border border-slate-200 shadow-sm hover:shadow"
+                  >
+                    <Upload className="w-4 h-4" />
+                    학생 글 가져오기
+                  </button>
 
-                <button
-                  onClick={() => handleViewSubmissions(assignment.id)}
-                  className="w-full px-3 py-2 bg-white/60 text-slate-700 rounded-lg hover:bg-white/80 transition-colors flex items-center justify-center gap-2 border border-slate-200/50 text-sm mb-2"
-                >
-                  <FileSearch className="w-4 h-4" />
-                  제출 현황
-                </button>
-                <button
-                  onClick={() => handleViewDashboard(assignment.id)}
-                  className="w-full px-3 py-2 bg-purple-500/20 text-slate-700 rounded-lg hover:bg-purple-500/30 transition-colors flex items-center justify-center gap-2 border border-purple-200/30 text-sm font-medium"
-                >
-                  <ChartBar className="w-4 h-4" />
-                  평가 대시보드
-                </button>
+                  <button
+                    onClick={() => handleViewDashboard(assignment.id)}
+                    className="w-full px-4 py-2.5 bg-slate-50 text-slate-700 rounded-lg hover:bg-slate-100 transition-all flex items-center justify-center gap-2 text-sm font-medium border border-slate-200"
+                  >
+                    <ChartBar className="w-4 h-4" />
+                    평가 대시보드
+                  </button>
+                </div>
                 
                 <div className="text-xs text-slate-500 text-center mt-3 pt-3 border-t border-slate-100">
                   <button
