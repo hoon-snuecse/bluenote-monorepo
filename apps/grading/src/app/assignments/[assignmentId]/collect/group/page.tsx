@@ -7,14 +7,15 @@ import { Button } from '@bluenote/ui'
 import { Badge } from '@bluenote/ui'
 import { Checkbox } from '@bluenote/ui'
 import { Input } from '@bluenote/ui'
-import { ArrowLeft, Users, Search, UserCheck } from 'lucide-react'
+import { ArrowLeft, Users, Search, UserCheck, Plus, Upload, Download } from 'lucide-react'
 import { useStudentGroups, StudentGroup, Student } from '@/hooks/useStudentGroups'
 import { useNotification } from '@/contexts/NotificationContext'
+import { StudentGroupManager } from '@/components/StudentGroupManager'
 
 export default function CollectFromGroupPage() {
   const params = useParams()
   const router = useRouter()
-  const { groups, loading, fetchStudents } = useStudentGroups()
+  const { groups, loading, fetchStudents, refetch } = useStudentGroups()
   const { showNotification } = useNotification()
   
   const [selectedGroup, setSelectedGroup] = useState<StudentGroup | null>(null)
@@ -22,6 +23,7 @@ export default function CollectFromGroupPage() {
   const [selectedStudents, setSelectedStudents] = useState<string[]>([])
   const [searchTerm, setSearchTerm] = useState('')
   const [submitting, setSubmitting] = useState(false)
+  const [showGroupManager, setShowGroupManager] = useState(false)
 
   const handleGroupSelect = async (group: StudentGroup) => {
     setSelectedGroup(group)
@@ -128,18 +130,52 @@ export default function CollectFromGroupPage() {
           <div className="lg:col-span-1">
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">학생 그룹</CardTitle>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-lg">학생 그룹</CardTitle>
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setShowGroupManager(true)}
+                    >
+                      <Plus className="w-4 h-4 mr-1" />
+                      새 그룹
+                    </Button>
+                  </div>
+                </div>
               </CardHeader>
               <CardContent>
+                {/* 액션 버튼들 */}
+                <div className="flex gap-2 mb-4">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="flex-1"
+                    onClick={() => window.open('/students', '_blank')}
+                  >
+                    <Upload className="w-4 h-4 mr-1" />
+                    가져오기
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="flex-1"
+                    onClick={() => window.open('/students', '_blank')}
+                  >
+                    <Download className="w-4 h-4 mr-1" />
+                    내보내기
+                  </Button>
+                </div>
+
                 {groups.length === 0 ? (
                   <div className="text-center py-8">
                     <Users className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
                     <p className="text-muted-foreground">등록된 학생 그룹이 없습니다.</p>
                     <Button
                       className="mt-4"
-                      onClick={() => router.push('/students')}
+                      onClick={() => setShowGroupManager(true)}
                     >
-                      학생 그룹 관리
+                      첫 그룹 만들기
                     </Button>
                   </div>
                 ) : (
@@ -269,6 +305,29 @@ export default function CollectFromGroupPage() {
             )}
           </div>
         </div>
+
+        {/* Student Group Manager Modal */}
+        {showGroupManager && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+            <div className="bg-white rounded-lg shadow-xl w-full max-w-6xl max-h-[90vh] overflow-auto m-4">
+              <div className="p-6">
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-2xl font-bold">학생 그룹 관리</h2>
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setShowGroupManager(false)
+                      refetch() // 그룹 목록 새로고침
+                    }}
+                  >
+                    닫기
+                  </Button>
+                </div>
+                <StudentGroupManager />
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )
