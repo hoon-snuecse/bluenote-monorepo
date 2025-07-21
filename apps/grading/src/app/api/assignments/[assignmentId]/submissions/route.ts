@@ -75,9 +75,12 @@ export async function POST(
   { params }: { params: { assignmentId: string } }
 ) {
   try {
+    console.log('[Submissions API] POST request for assignmentId:', params.assignmentId);
+    
     // 인증 확인
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
+      console.log('[Submissions API] Unauthorized - no session');
       return NextResponse.json(
         { success: false, error: 'Unauthorized' },
         { status: 401 }

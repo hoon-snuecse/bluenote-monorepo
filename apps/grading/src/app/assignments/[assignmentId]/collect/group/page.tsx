@@ -102,7 +102,9 @@ export default function CollectFromGroupPage() {
         })
 
         if (!response.ok) {
-          throw new Error(`Failed to create submission for ${student.name}`)
+          const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
+          console.error('Submission creation failed:', errorData)
+          throw new Error(`Failed to create submission for ${student.name}: ${errorData.error || response.statusText}`)
         }
       }
 
@@ -196,7 +198,7 @@ export default function CollectFromGroupPage() {
                 {groups.length === 0 ? (
                   <div className="text-center py-8">
                     <Users className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-                    <p className="text-muted-foreground">등록된 학생 그룹이 없습니다.</p>
+                    <div className="text-muted-foreground">등록된 학생 그룹이 없습니다.</div>
                     <Button
                       className="mt-4"
                       onClick={() => setShowGroupManager(true)}
@@ -220,9 +222,9 @@ export default function CollectFromGroupPage() {
                           className="cursor-pointer"
                         >
                           <h4 className="font-medium pr-8">{group.name}</h4>
-                          <p className="text-sm text-muted-foreground">
+                          <div className="text-sm text-muted-foreground">
                             {group.schoolName} {group.gradeLevel && `${group.gradeLevel}학년`} {group.className && `${group.className}반`}
-                          </p>
+                          </div>
                           <div className="flex items-center gap-2 mt-2">
                             <Badge variant="secondary">
                               <Users className="mr-1 h-3 w-3" />
@@ -297,9 +299,9 @@ export default function CollectFromGroupPage() {
                   {/* 학생 목록 */}
                   <div className="space-y-2 max-h-[500px] overflow-y-auto">
                     {filteredStudents.length === 0 ? (
-                      <p className="text-center text-muted-foreground py-4">
+                      <div className="text-center text-muted-foreground py-4">
                         학생이 없습니다.
-                      </p>
+                      </div>
                     ) : (
                       filteredStudents.map(student => (
                         <div
@@ -321,8 +323,8 @@ export default function CollectFromGroupPage() {
                             }}
                           />
                           <div className="flex-1">
-                            <p className="font-medium">{student.name}</p>
-                            <p className="text-sm text-muted-foreground">{student.studentId}</p>
+                            <div className="font-medium">{student.name}</div>
+                            <div className="text-sm text-muted-foreground">{student.studentId}</div>
                           </div>
                           {selectedStudents.includes(student.id) && (
                             <UserCheck className="h-4 w-4 text-primary" />
@@ -337,9 +339,9 @@ export default function CollectFromGroupPage() {
               <Card>
                 <CardContent className="text-center py-12">
                   <Users className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-                  <p className="text-muted-foreground">
+                  <div className="text-muted-foreground">
                     왼쪽에서 학생 그룹을 선택하세요.
-                  </p>
+                  </div>
                 </CardContent>
               </Card>
             )}
