@@ -33,13 +33,18 @@ export interface EvaluationResult {
 export async function evaluateWithClaude(request: EvaluationRequest): Promise<EvaluationResult> {
   // API 키가 설정되지 않은 경우 Mock 데이터 반환
   if (!process.env.CLAUDE_API_KEY || process.env.CLAUDE_API_KEY === 'YOUR_CLAUDE_API_KEY_HERE') {
-    console.warn('Claude API key not set, returning mock data');
+    console.error('❌ Claude API 키가 설정되지 않았습니다!');
+    console.error('환경변수 CLAUDE_API_KEY를 확인해주세요.');
     console.warn('API Key 상태:', {
       exists: !!process.env.CLAUDE_API_KEY,
       isDefault: process.env.CLAUDE_API_KEY === 'YOUR_CLAUDE_API_KEY_HERE',
-      firstChars: process.env.CLAUDE_API_KEY?.substring(0, 10)
+      length: process.env.CLAUDE_API_KEY?.length || 0
     });
-    return generateMockEvaluation(request);
+    
+    // Mock 평가 반환 (테스트 목적)
+    const mockResult = generateMockEvaluation(request);
+    mockResult.detailedFeedback = `⚠️ [Mock 처리: 주의] 이것은 실제 AI 평가가 아닌 테스트 데이터입니다!\n\n${mockResult.detailedFeedback}\n\n⚠️ [Mock 처리: 주의] Claude API 키가 설정되지 않아 임시 평가가 표시됩니다.`;
+    return mockResult;
   }
   
   console.log('Claude API 호출 시작:', {
@@ -143,8 +148,18 @@ ${request.studentText}
     return generateFallbackEvaluation(request, content.type === 'text' ? content.text : '');
 
   } catch (error) {
-    console.error('Claude API error:', error);
-    return generateMockEvaluation(request);
+    console.error('❌ Claude API 호출 실패:', error);
+    console.error('오류 상세:', {
+      message: error instanceof Error ? error.message : 'Unknown error',
+      type: error instanceof Error ? error.constructor.name : typeof error,
+      studentName: request.studentName,
+      model: actualModel
+    });
+    
+    // API 오류 시 Mock 평가 반환
+    const mockResult = generateMockEvaluation(request);
+    mockResult.detailedFeedback = `⚠️ [Mock 처리: 주의] API 오류로 인한 임시 평가입니다!\n\n${mockResult.detailedFeedback}\n\n⚠️ [Mock 처리: 주의] 오류 내용: ${error instanceof Error ? error.message : 'Unknown error'}\n\n이 평가는 실제 AI 평가가 아니므로 참고용으로만 사용하세요.`;
+    return mockResult;
   }
 }
 
@@ -237,7 +252,7 @@ function generateFallbackEvaluation(request: EvaluationRequest, responseText: st
 
 // Mock 평가 결과 생성 (API 키가 없을 때)
 function generateMockEvaluation(request: EvaluationRequest): EvaluationResult {
-  console.warn('⚠️ Mock 평가기 사용 중 - 실제 AI 평가가 아닙니다!');
+  console.warn('⚠️ [Mock 처리: 주의] Mock 평가기 사용 중 - 실제 AI 평가가 아닙니다!');
   
   // 학생 텍스트의 해시값을 기반으로 일관된 결과 생성
   const textHash = request.studentText.split('').reduce((acc, char) => {
@@ -259,16 +274,16 @@ function generateMockEvaluation(request: EvaluationRequest): EvaluationResult {
     domainScores: {},
     domainGrades: {},
     strengths: [
-      '주제에 대한 명확한 이해를 보여줌',
-      '자신의 생각을 논리적으로 표현함',
-      '적절한 어휘를 사용하여 글을 작성함'
+      '[Mock 처리: 주의] 주제에 대한 명확한 이해를 보여줌',
+      '[Mock 처리: 주의] 자신의 생각을 논리적으로 표현함',
+      '[Mock 처리: 주의] 적절한 어휘를 사용하여 글을 작성함'
     ],
     improvements: [
-      '더 구체적인 예시를 들어 설명하면 좋겠음',
-      '문단 간 연결을 더 자연스럽게 만들 필요가 있음',
-      '결론 부분을 더 강화하면 좋겠음'
+      '[Mock 처리: 주의] 더 구체적인 예시를 들어 설명하면 좋겠음',
+      '[Mock 처리: 주의] 문단 간 연결을 더 자연스럽게 만들 필요가 있음',
+      '[Mock 처리: 주의] 결론 부분을 더 강화하면 좋겠음'
     ],
-    detailedFeedback: `[Mock 평가] ${request.studentName} 학생은 ${request.writingType}의 기본 구조를 잘 이해하고 있으며, 자신의 생각을 명확하게 표현하려고 노력했습니다. 특히 주제에 대한 이해도가 높고, 글의 전체적인 구성이 안정적입니다. 앞으로 더 구체적인 예시와 근거를 제시하면서 글을 작성한다면 더욱 설득력 있는 글을 쓸 수 있을 것입니다.`
+    detailedFeedback: `${request.studentName} 학생은 ${request.writingType}의 기본 구조를 잘 이해하고 있으며, 자신의 생각을 명확하게 표현하려고 노력했습니다. 특히 주제에 대한 이해도가 높고, 글의 전체적인 구성이 안정적입니다. 앞으로 더 구체적인 예시와 근거를 제시하면서 글을 작성한다면 더욱 설득력 있는 글을 쓸 수 있을 것입니다.`
   };
 
   // 각 영역별 점수와 등급 생성 (일관된 방식으로)

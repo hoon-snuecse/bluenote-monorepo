@@ -89,7 +89,7 @@ export class MockEvaluator implements AIEvaluator {
     domains: string[], 
     levels: string[]
   ): Promise<EvaluationResult> {
-    console.warn('⚠️ MockEvaluator 사용 중 - 실제 AI 평가가 아닙니다!');
+    console.warn('⚠️ [Mock 처리: 주의] MockEvaluator 사용 중 - 실제 AI 평가가 아닙니다!');
     
     // 콘텐츠 기반 해시를 사용하여 일관된 결과 생성
     const textHash = content.split('').reduce((acc, char) => {
@@ -115,7 +115,7 @@ export class MockEvaluator implements AIEvaluator {
       domainEvaluations[domain] = {
         level,
         score,
-        feedback: `[Mock] ${domain}에 대한 평가: 학생의 글은 ${level} 수준을 보여주고 있습니다. 더 발전하기 위해서는 구체적인 예시를 추가하고 문장 구조를 다양화하면 좋겠습니다.`
+        feedback: `[Mock 처리: 주의] ${domain}에 대한 평가: 학생의 글은 ${level} 수준을 보여주고 있습니다. 더 발전하기 위해서는 구체적인 예시를 추가하고 문장 구조를 다양화하면 좋겠습니다.`
       };
       
       totalScore += score;
@@ -128,15 +128,15 @@ export class MockEvaluator implements AIEvaluator {
     return {
       domainEvaluations,
       overallLevel,
-      overallFeedback: `[Mock 평가] 전체적으로 ${overallLevel} 수준의 글쓰기 능력을 보여주고 있습니다. 주제를 명확하게 표현하려는 노력이 보이며, 자신의 생각을 전달하려는 의지가 느껴집니다. 앞으로도 꾸준히 글쓰기 연습을 하면 더욱 발전할 수 있을 것입니다.`,
+      overallFeedback: `[Mock 처리: 주의] 이것은 실제 AI 평가가 아닌 테스트 결과입니다!\n\n전체적으로 ${overallLevel} 수준의 글쓰기 능력을 보여주고 있습니다. 주제를 명확하게 표현하려는 노력이 보이며, 자신의 생각을 전달하려는 의지가 느껴집니다. 앞으로도 꾸준히 글쓰기 연습을 하면 더욱 발전할 수 있을 것입니다.\n\n⚠️ [Mock 처리: 주의] 이 평가는 테스트용이므로 실제 평가 결과로 사용하지 마세요.`,
       improvementSuggestions: [
-        '문장과 문장 사이의 연결을 더 자연스럽게 만들어보세요.',
-        '구체적인 예시나 경험을 추가하면 글이 더 생생해집니다.',
-        '다양한 어휘를 사용하여 표현력을 높여보세요.'
+        '[Mock 처리: 주의] 문장과 문장 사이의 연결을 더 자연스럽게 만들어보세요.',
+        '[Mock 처리: 주의] 구체적인 예시나 경험을 추가하면 글이 더 생생해집니다.',
+        '[Mock 처리: 주의] 다양한 어휘를 사용하여 표현력을 높여보세요.'
       ],
       strengths: [
-        '주제에 맞는 내용을 일관성 있게 전개했습니다.',
-        '자신의 생각을 솔직하게 표현하려고 노력했습니다.'
+        '[Mock 처리: 주의] 주제에 맞는 내용을 일관성 있게 전개했습니다.',
+        '[Mock 처리: 주의] 자신의 생각을 솔직하게 표현하려고 노력했습니다.'
       ]
     };
   }
