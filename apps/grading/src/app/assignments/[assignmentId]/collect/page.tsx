@@ -34,11 +34,11 @@ export default function CollectSubmissionsPage() {
         {/* Navigation */}
         <div className="mb-8">
           <button
-            onClick={() => router.push(`/assignments/${params.assignmentId}/submissions`)}
+            onClick={() => router.push('/assignments')}
             className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
           >
             <ArrowLeft className="w-5 h-5" />
-            제출 현황으로 돌아가기
+            과제 관리로 돌아가기
           </button>
         </div>
 

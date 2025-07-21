@@ -109,11 +109,11 @@ export default function CollectFromGroupPage() {
         {/* Navigation */}
         <div className="mb-8">
           <button
-            onClick={() => router.push(`/assignments/${params.assignmentId}/collect`)}
+            onClick={() => router.push('/assignments')}
             className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
           >
             <ArrowLeft className="w-5 h-5" />
-            제출물 수집으로 돌아가기
+            과제 관리로 돌아가기
           </button>
         </div>
 

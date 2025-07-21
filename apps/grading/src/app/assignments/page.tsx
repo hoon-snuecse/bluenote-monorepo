@@ -202,16 +202,6 @@ function AssignmentsContent() {
                     평가 대시보드
                   </button>
                 </div>
-                
-                <div className="text-xs text-slate-500 text-center mt-3 pt-3 border-t border-slate-100">
-                  <button
-                    onClick={() => handleGetSubmissionLink(assignment.id)}
-                    className="hover:text-slate-700 inline-flex items-center gap-1 transition-colors"
-                  >
-                    <Link className="w-3 h-3" />
-                    학생 제출 링크 복사
-                  </button>
-                </div>
               </CardContent>
             </Card>
           ))}
