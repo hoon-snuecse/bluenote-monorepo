@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Card, CardContent } from '@bluenote/ui';
-import { ArrowLeft, FileText, User, Calendar, CheckCircle, Clock, PlayCircle, FileInput, Link, Unlink } from 'lucide-react';
+import { ArrowLeft, FileText, User, Calendar, CheckCircle, Clock, PlayCircle, FileInput, Link, Unlink, Trash2 } from 'lucide-react';
 
 interface Submission {
   id: string;
@@ -189,6 +189,47 @@ export default function SubmissionsPage() {
     }
   };
 
+  const handleDeleteSelected = async () => {
+    if (selectedSubmissions.size === 0) {
+      alert('삭제할 제출물을 선택해주세요.');
+      return;
+    }
+
+    const selectedCount = selectedSubmissions.size;
+    const selectedNames = Array.from(selectedSubmissions).map(id => {
+      const submission = submissions.find(s => s.id === id);
+      return submission?.student?.name || submission?.studentName || '이름 없음';
+    }).join(', ');
+
+    if (!confirm(`선택한 ${selectedCount}개의 제출물을 삭제하시겠습니까?\n\n삭제할 학생: ${selectedNames}`)) {
+      return;
+    }
+
+    try {
+      const submissionIds = Array.from(selectedSubmissions);
+      const response = await fetch(`/api/assignments/${params.assignmentId}/submissions`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ submissionIds }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        alert(`${data.deletedCount}개의 제출물이 삭제되었습니다.`);
+        setSelectedSubmissions(new Set()); // 선택 초기화
+        fetchSubmissions(); // 목록 새로고침
+      } else {
+        alert('삭제 실패: ' + data.error);
+      }
+    } catch (error) {
+      console.error('Error deleting submissions:', error);
+      alert('제출물 삭제 중 오류가 발생했습니다.');
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -249,15 +290,24 @@ export default function SubmissionsPage() {
                   </button>
                 )}
                 {selectedSubmissions.size > 0 && (
-                  <button
-                    onClick={handleEvaluateSelected}
-                    className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
-                  >
-                    <PlayCircle className="w-5 h-5" />
-                    선택한 학생 {Array.from(selectedSubmissions).some(id => 
-                      submissions.find(s => s.id === id)?.status === 'evaluated'
-                    ) ? '재평가' : '평가'}하기 ({selectedSubmissions.size}명)
-                  </button>
+                  <>
+                    <button
+                      onClick={handleEvaluateSelected}
+                      className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+                    >
+                      <PlayCircle className="w-5 h-5" />
+                      선택한 학생 {Array.from(selectedSubmissions).some(id => 
+                        submissions.find(s => s.id === id)?.status === 'evaluated'
+                      ) ? '재평가' : '평가'}하기 ({selectedSubmissions.size}명)
+                    </button>
+                    <button
+                      onClick={handleDeleteSelected}
+                      className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2"
+                    >
+                      <Trash2 className="w-5 h-5" />
+                      선택 삭제 ({selectedSubmissions.size}개)
+                    </button>
+                  </>
                 )}
                 {selectedSubmissions.size === 0 && stats.submitted > 0 && (
                   <button
@@ -376,9 +426,13 @@ export default function SubmissionsPage() {
                               {submission.student?.name || submission.studentName || '이름 없음'}
                             </span>
                             {submission.studentDbId ? (
-                              <Link className="w-4 h-4 text-green-600" title="학생 데이터 연결됨" />
+                              <span title="학생 데이터 연결됨">
+                                <Link className="w-4 h-4 text-green-600" />
+                              </span>
                             ) : (
-                              <Unlink className="w-4 h-4 text-amber-600" title="학생 데이터 미연결" />
+                              <span title="학생 데이터 미연결">
+                                <Unlink className="w-4 h-4 text-amber-600" />
+                              </span>
                             )}
                           </div>
                         </td>

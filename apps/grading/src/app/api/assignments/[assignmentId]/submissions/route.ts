@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { getServerSession } from '@/lib/auth';
 
 export async function GET(
   request: NextRequest,
@@ -94,10 +93,7 @@ export async function POST(
       studentName,
       studentId,
       studentDbId,
-      content = '',
-      schoolName,
-      gradeLevel,
-      className
+      content = ''
     } = body;
 
     // 필수 필드 검증
@@ -144,8 +140,7 @@ export async function POST(
         data: {
           studentName,
           studentDbId,
-          submittedAt: new Date(),
-          status: 'submitted'
+          submittedAt: new Date()
         }
       });
     } else {
@@ -157,8 +152,7 @@ export async function POST(
           studentId,
           studentDbId,
           content,
-          submittedAt: new Date(),
-          status: 'submitted'
+          submittedAt: new Date()
         }
       });
     }
@@ -179,7 +173,7 @@ export async function POST(
         studentDbId: submission.studentDbId,
         content: submission.content,
         submittedAt: submission.submittedAt,
-        status: submission.status
+        status: submission.evaluatedAt ? 'evaluated' : 'submitted'
       }
     });
   } catch (error) {
@@ -188,6 +182,70 @@ export async function POST(
       { 
         success: false, 
         error: 'Failed to create submission', 
+        details: error instanceof Error ? error.message : 'Unknown error' 
+      },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: { assignmentId: string } }
+) {
+  try {
+    console.log('[Submissions API] DELETE request for assignmentId:', params.assignmentId);
+    
+    const body = await request.json();
+    const { submissionIds } = body;
+
+    if (!submissionIds || !Array.isArray(submissionIds) || submissionIds.length === 0) {
+      return NextResponse.json(
+        { success: false, error: 'No submission IDs provided' },
+        { status: 400 }
+      );
+    }
+
+    // 삭제할 submission들이 해당 assignment에 속하는지 확인
+    const submissionsToDelete = await prisma.submission.findMany({
+      where: {
+        id: { in: submissionIds },
+        assignmentId: params.assignmentId
+      }
+    });
+
+    if (submissionsToDelete.length === 0) {
+      return NextResponse.json(
+        { success: false, error: 'No valid submissions found to delete' },
+        { status: 404 }
+      );
+    }
+
+    // 삭제 실행
+    const deleteResult = await prisma.submission.deleteMany({
+      where: {
+        id: { in: submissionIds },
+        assignmentId: params.assignmentId
+      }
+    });
+
+    console.log('[Submissions API] Deleted submissions:', {
+      requestedCount: submissionIds.length,
+      deletedCount: deleteResult.count,
+      assignmentId: params.assignmentId
+    });
+
+    return NextResponse.json({
+      success: true,
+      deletedCount: deleteResult.count,
+      message: `${deleteResult.count}개의 제출물이 삭제되었습니다.`
+    });
+  } catch (error) {
+    console.error('[Submissions API] Error deleting submissions:', error);
+    return NextResponse.json(
+      { 
+        success: false, 
+        error: 'Failed to delete submissions', 
         details: error instanceof Error ? error.message : 'Unknown error' 
       },
       { status: 500 }
