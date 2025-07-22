@@ -54,7 +54,12 @@ export default function AdminContentClient() {
   const fetchPosts = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/${activeSection}`);
+      // 각 섹션별로 올바른 API 경로 사용
+      const apiPath = activeSection === 'shed' 
+        ? `/api/shed/posts/supabase`
+        : `/api/${activeSection}/posts/supabase`;
+        
+      const res = await fetch(apiPath);
       if (res.ok) {
         const data = await res.json();
         setPosts(data.posts || []);
@@ -69,7 +74,12 @@ export default function AdminContentClient() {
   const fetchStats = async () => {
     try {
       const statsPromises = sections.map(async (section) => {
-        const res = await fetch(`/api/${section.id}`);
+        // 각 섹션별로 올바른 API 경로 사용
+        const apiPath = section.id === 'shed' 
+          ? `/api/shed/posts/supabase`
+          : `/api/${section.id}/posts/supabase`;
+          
+        const res = await fetch(apiPath);
         if (res.ok) {
           const data = await res.json();
           return { id: section.id, count: data.posts?.length || 0 };
