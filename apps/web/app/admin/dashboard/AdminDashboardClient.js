@@ -119,20 +119,16 @@ export default function AdminDashboardClient() {
   ];
 
   return (
-    <div className="space-y-6 pt-6">
-      {/* Header */}
-      <div className="bg-slate-800 border-b border-slate-700">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-end items-center py-6">
-            <Link
-              href="/"
-              className="flex items-center text-slate-300 hover:text-white transition-colors"
-            >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              홈으로
-            </Link>
-          </div>
-        </div>
+    <div className="space-y-6">
+      {/* Home Link */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
+        <Link
+          href="/"
+          className="inline-flex items-center text-slate-300 hover:text-white transition-colors"
+        >
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          홈으로
+        </Link>
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

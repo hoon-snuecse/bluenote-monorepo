@@ -150,7 +150,7 @@ export default function AdminUsersClient() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between mt-1.5">
         <h1 className="text-2xl font-bold text-white">사용자 관리</h1>
         <div className="flex items-center gap-3">
           <button
@@ -185,21 +185,6 @@ export default function AdminUsersClient() {
         </div>
       )}
 
-      {/* OAuth Status Notice */}
-      <div className="bg-yellow-900/20 border border-yellow-800 rounded-lg p-4">
-        <div className="flex items-start gap-3">
-          <AlertCircle className="w-5 h-5 text-yellow-400 mt-0.5" />
-          <div className="text-sm text-yellow-400">
-            <p className="font-semibold mb-1">Google OAuth 테스트 모드 안내</p>
-            <p className="mb-2">현재 Google OAuth가 테스트 모드로 운영 중입니다. 새로운 사용자가 로그인하려면:</p>
-            <ol className="list-decimal list-inside space-y-1 ml-2">
-              <li>먼저 아래에서 사용자 이메일을 등록하세요</li>
-              <li>Google Cloud Console에서 테스트 사용자로 추가해야 합니다</li>
-              <li>또는 Google 앱 인증을 완료하면 모든 사용자가 로그인 가능합니다</li>
-            </ol>
-          </div>
-        </div>
-      </div>
 
       {/* Add User Form */}
       {showAddForm && (
@@ -407,6 +392,22 @@ export default function AdminUsersClient() {
                 등록된 사용자가 없습니다.
               </div>
             )}
+        </div>
+      </div>
+
+      {/* OAuth Status Notice */}
+      <div className="bg-yellow-900/20 border border-yellow-800 rounded-lg p-4">
+        <div className="flex items-start gap-3">
+          <AlertCircle className="w-5 h-5 text-yellow-400 mt-0.5" />
+          <div className="text-sm text-yellow-400">
+            <p className="font-semibold mb-1">Google OAuth 테스트 모드 안내</p>
+            <p className="mb-2">현재 Google OAuth가 테스트 모드로 운영 중입니다. 새로운 사용자가 로그인하려면:</p>
+            <ol className="list-decimal list-inside space-y-1 ml-2">
+              <li>먼저 아래에서 사용자 이메일을 등록하세요</li>
+              <li>Google Cloud Console에서 테스트 사용자로 추가해야 합니다</li>
+              <li>또는 Google 앱 인증을 완료하면 모든 사용자가 로그인 가능합니다</li>
+            </ol>
+          </div>
         </div>
       </div>
     </div>
