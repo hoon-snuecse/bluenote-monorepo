@@ -34,9 +34,13 @@ export default function AdminDashboardClient() {
       
       // Fetch posts from all sections
       const sections = ['research', 'teaching', 'analytics', 'shed'];
-      const postsPromises = sections.map(section => 
-        fetch(`/api/${section}`).then(res => res.json())
-      );
+      const postsPromises = sections.map(section => {
+        // 각 섹션별로 올바른 API 경로 사용
+        const apiPath = section === 'shed' 
+          ? `/api/shed/posts/supabase`
+          : `/api/${section}/posts/supabase`;
+        return fetch(apiPath).then(res => res.json());
+      });
       const postsResults = await Promise.all(postsPromises);
       
       // Count total posts
