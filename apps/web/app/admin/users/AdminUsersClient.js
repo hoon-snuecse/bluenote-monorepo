@@ -165,7 +165,7 @@ export default function AdminUsersClient() {
             className="flex items-center text-slate-300 hover:text-white transition-colors"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
-            대시보드로
+            관리자 대시보드로
           </Link>
         </div>
       </div>
