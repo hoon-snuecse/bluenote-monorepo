@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@bluenote/ui';
-import { ArrowLeft, Download, Filter, BarChart3, TrendingUp, AlertCircle, FileSearch, PlayCircle, Users, CheckCircle, Clock } from 'lucide-react';
+import { ArrowLeft, Download, Filter, BarChart3, TrendingUp, AlertCircle, FileSearch, PlayCircle, Users, CheckCircle, Clock, Trash2 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
 interface DomainScore {
@@ -722,6 +722,47 @@ function SubmissionManagementTab({ assignment, students, params, router }: any) 
     router.push(`/assignments/${params.assignmentId}/collect`);
   };
 
+  const handleDeleteSelected = async () => {
+    if (selectedSubmissions.size === 0) {
+      alert('삭제할 제출물을 선택해주세요.');
+      return;
+    }
+
+    const selectedCount = selectedSubmissions.size;
+    const selectedNames = Array.from(selectedSubmissions).map(id => {
+      const submission = submissions.find(s => s.id === id);
+      return submission?.studentName || '이름 없음';
+    }).join(', ');
+
+    if (!confirm(`선택한 ${selectedCount}개의 제출물을 삭제하시겠습니까?\n\n삭제할 학생: ${selectedNames}`)) {
+      return;
+    }
+
+    try {
+      const submissionIds = Array.from(selectedSubmissions);
+      const response = await fetch(`/api/assignments/${params.assignmentId}/submissions`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ submissionIds }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        alert(`${data.deletedCount}개의 제출물이 삭제되었습니다.`);
+        setSelectedSubmissions(new Set()); // 선택 초기화
+        fetchSubmissions(); // 목록 새로고침
+      } else {
+        alert('삭제 실패: ' + data.error);
+      }
+    } catch (error) {
+      console.error('Error deleting submissions:', error);
+      alert('제출물 삭제 중 오류가 발생했습니다.');
+    }
+  };
+
   // 상태별 필터링
   const filteredSubmissions = submissions.filter(sub => {
     if (filterStatus === 'all') return true;
@@ -818,13 +859,22 @@ function SubmissionManagementTab({ assignment, students, params, router }: any) 
           </button>
           
           {selectedSubmissions.size > 0 && (
-            <button
-              onClick={handleBatchEvaluate}
-              className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-all flex items-center gap-2"
-            >
-              <PlayCircle className="w-4 h-4" />
-              선택 평가 ({selectedSubmissions.size}명)
-            </button>
+            <>
+              <button
+                onClick={handleBatchEvaluate}
+                className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-all flex items-center gap-2"
+              >
+                <PlayCircle className="w-4 h-4" />
+                선택 평가 ({selectedSubmissions.size}명)
+              </button>
+              <button
+                onClick={handleDeleteSelected}
+                className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-all flex items-center gap-2"
+              >
+                <Trash2 className="w-4 h-4" />
+                선택 삭제 ({selectedSubmissions.size}개)
+              </button>
+            </>
           )}
           
           {stats.unevaluated > 0 && selectedSubmissions.size === 0 && (
