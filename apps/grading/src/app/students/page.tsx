@@ -12,14 +12,6 @@ export default function StudentsPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-50">
-      {/* Header */}
-      <div className="bg-slate-800 text-white">
-        <div className="container mx-auto py-6 px-4 max-w-7xl">
-          <h1 className="text-3xl font-bold">관리자 대시보드</h1>
-          <p className="text-slate-300 mt-1">BlueNote Atelier 시스템 관리</p>
-        </div>
-      </div>
-
       <div className="container mx-auto py-8 px-4 max-w-7xl">
         {/* Navigation */}
         <div className="mb-8">
@@ -28,7 +20,7 @@ export default function StudentsPage() {
             className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
           >
             <ArrowLeft className="w-5 h-5" />
-            관리자 대시보드로 돌아가기
+            대시보드로 돌아가기
           </button>
         </div>
 
