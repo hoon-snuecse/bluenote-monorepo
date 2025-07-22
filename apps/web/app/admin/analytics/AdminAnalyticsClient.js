@@ -62,7 +62,12 @@ export default function AdminAnalyticsClient() {
       
       // Fetch content stats
       const contentPromises = ['research', 'teaching', 'analytics', 'shed'].map(async (section) => {
-        const res = await fetch(`/api/${section}`);
+        // 각 섹션별로 올바른 API 경로 사용
+        const apiPath = section === 'shed' 
+          ? `/api/shed/posts/supabase`
+          : `/api/${section}/posts/supabase`;
+          
+        const res = await fetch(apiPath);
         const data = await res.json();
         return { section, count: data.posts?.length || 0, posts: data.posts || [] };
       });
@@ -156,14 +161,14 @@ export default function AdminAnalyticsClient() {
   return (
     <div className="space-y-6 pt-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between mt-1.5">
         <h1 className="text-2xl font-bold text-white">통계 및 분석</h1>
         <Link
           href="/admin/dashboard"
           className="flex items-center text-slate-300 hover:text-white transition-colors"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
-          대시보드로
+          관리자 대시보드로
         </Link>
       </div>
 
