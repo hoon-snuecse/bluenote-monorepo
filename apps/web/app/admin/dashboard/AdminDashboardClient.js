@@ -123,14 +123,7 @@ export default function AdminDashboardClient() {
       {/* Header */}
       <div className="bg-slate-800 border-b border-slate-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-6">
-            <div className="flex items-center">
-              <Shield className="w-8 h-8 text-white mr-3" />
-              <div>
-                <h1 className="text-2xl font-bold text-white">관리자 대시보드</h1>
-                <p className="text-slate-400 text-sm">BlueNote Atelier 시스템 관리</p>
-              </div>
-            </div>
+          <div className="flex justify-end items-center py-6">
             <Link
               href="/"
               className="flex items-center text-slate-300 hover:text-white transition-colors"
