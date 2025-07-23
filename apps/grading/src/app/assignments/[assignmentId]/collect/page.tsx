@@ -166,11 +166,11 @@ export default function CollectSubmissionsPage() {
 
               <div className="mt-8 text-center space-y-3">
                 <button
-                  onClick={() => router.push(`/assignments/${params.assignmentId}/submissions`)}
+                  onClick={() => router.push(`/assignments/${params.assignmentId}/dashboard`)}
                   className="px-6 py-3 bg-green-500/20 text-slate-700 rounded-lg hover:bg-green-500/30 transition-colors inline-flex items-center gap-2 border border-green-200/30 text-base font-medium"
                 >
                   <Users className="w-5 h-5" />
-                  제출 현황 확인 (관리자)
+                  평가 대시보드 (관리자)
                 </button>
                 <div>
                   <button
