@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@bluenote/ui';
-import { ArrowLeft, Download, Filter, BarChart3, TrendingUp, AlertCircle, FileSearch, PlayCircle, Users, CheckCircle, Clock, Trash2 } from 'lucide-react';
+import { ArrowLeft, Download, Filter, BarChart3, TrendingUp, AlertCircle, FileSearch, PlayCircle, Users, CheckCircle, Clock, Trash2, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
 interface DomainScore {
@@ -576,7 +576,7 @@ export default function DashboardPage() {
                     ))}
                     <th className="text-center p-4 font-medium">종합 평가</th>
                     <th className="text-center p-4 font-medium">평가 차수</th>
-                    <th className="text-center p-4 font-medium">작업</th>
+                    <th className="text-center p-4 font-medium">보기</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -645,8 +645,9 @@ export default function DashboardPage() {
                         <button
                           onClick={() => router.push(`/assignments/${params.assignmentId}/submissions/${student.id}`)}
                           className="px-3 py-1 bg-white/60 text-slate-700 rounded-lg hover:bg-white/80 transition-colors text-sm border border-slate-200/50"
+                          title={student.evaluatedAt ? '보고서' : '학생글'}
                         >
-                          상세보기
+                          보기
                         </button>
                       </td>
                     </tr>
@@ -667,6 +668,8 @@ export default function DashboardPage() {
 function SubmissionManagementTab({ assignment, students, params, router }: any) {
   const [selectedSubmissions, setSelectedSubmissions] = useState<Set<string>>(new Set());
   const [filterStatus, setFilterStatus] = useState<'all' | 'evaluated' | 'unevaluated'>('all');
+  const [sortField, setSortField] = useState<'name' | 'studentId' | 'submittedAt' | 'status'>('submittedAt');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   
   // 전체 제출물 데이터 가져오기
   const [submissions, setSubmissions] = useState<any[]>([]);
@@ -691,10 +694,10 @@ function SubmissionManagementTab({ assignment, students, params, router }: any) 
   };
 
   const handleSelectAll = () => {
-    if (selectedSubmissions.size === filteredSubmissions.length) {
+    if (selectedSubmissions.size === filteredAndSortedSubmissions.length) {
       setSelectedSubmissions(new Set());
     } else {
-      setSelectedSubmissions(new Set(filteredSubmissions.map(s => s.id)));
+      setSelectedSubmissions(new Set(filteredAndSortedSubmissions.map(s => s.id)));
     }
   };
 
@@ -763,13 +766,65 @@ function SubmissionManagementTab({ assignment, students, params, router }: any) 
     }
   };
 
-  // 상태별 필터링
-  const filteredSubmissions = submissions.filter(sub => {
-    if (filterStatus === 'all') return true;
-    if (filterStatus === 'evaluated') return sub.status === 'evaluated';
-    if (filterStatus === 'unevaluated') return sub.status === 'submitted';
-    return true;
-  });
+  // 정렬 핸들러
+  const handleSort = (field: 'name' | 'studentId' | 'submittedAt' | 'status') => {
+    if (sortField === field) {
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortOrder('asc');
+    }
+  };
+
+  // 정렬 아이콘 컴포넌트
+  const SortIcon = ({ field }: { field: 'name' | 'studentId' | 'submittedAt' | 'status' }) => {
+    if (sortField !== field) {
+      return <ArrowUpDown className="h-4 w-4 text-gray-400" />;
+    }
+    return sortOrder === 'asc' ? 
+      <ArrowUp className="h-4 w-4" /> : 
+      <ArrowDown className="h-4 w-4" />;
+  };
+
+  // 상태별 필터링 및 정렬
+  const filteredAndSortedSubmissions = submissions
+    .filter(sub => {
+      if (filterStatus === 'all') return true;
+      if (filterStatus === 'evaluated') return sub.status === 'evaluated';
+      if (filterStatus === 'unevaluated') return sub.status === 'submitted';
+      return true;
+    })
+    .sort((a, b) => {
+      let aValue: any;
+      let bValue: any;
+
+      switch (sortField) {
+        case 'name':
+          aValue = a.studentName || '';
+          bValue = b.studentName || '';
+          break;
+        case 'studentId':
+          aValue = a.studentId || '';
+          bValue = b.studentId || '';
+          break;
+        case 'submittedAt':
+          aValue = a.submittedAt ? new Date(a.submittedAt).getTime() : 0;
+          bValue = b.submittedAt ? new Date(b.submittedAt).getTime() : 0;
+          break;
+        case 'status':
+          aValue = a.status === 'evaluated' ? 1 : 0;
+          bValue = b.status === 'evaluated' ? 1 : 0;
+          break;
+        default:
+          return 0;
+      }
+
+      if (sortOrder === 'asc') {
+        return aValue > bValue ? 1 : aValue < bValue ? -1 : 0;
+      } else {
+        return aValue < bValue ? 1 : aValue > bValue ? -1 : 0;
+      }
+    });
 
   const stats = {
     total: submissions.length,
@@ -880,7 +935,7 @@ function SubmissionManagementTab({ assignment, students, params, router }: any) 
           {stats.unevaluated > 0 && selectedSubmissions.size === 0 && (
             <button
               onClick={() => {
-                const unevaluatedIds = filteredSubmissions
+                const unevaluatedIds = filteredAndSortedSubmissions
                   .filter(s => s.status === 'submitted')
                   .map(s => s.id);
                 router.push(`/assignments/${params.assignmentId}/evaluate?submissions=${unevaluatedIds.join(',')}`);
@@ -904,20 +959,52 @@ function SubmissionManagementTab({ assignment, students, params, router }: any) 
                   <th className="text-center p-4 w-12">
                     <input
                       type="checkbox"
-                      checked={selectedSubmissions.size === filteredSubmissions.length && filteredSubmissions.length > 0}
+                      checked={selectedSubmissions.size === filteredAndSortedSubmissions.length && filteredAndSortedSubmissions.length > 0}
                       onChange={handleSelectAll}
                       className="w-4 h-4 rounded border-gray-300"
                     />
                   </th>
-                  <th className="text-left p-4 font-medium">학생 이름</th>
-                  <th className="text-left p-4 font-medium">학번</th>
-                  <th className="text-left p-4 font-medium">제출 일시</th>
-                  <th className="text-center p-4 font-medium">상태</th>
-                  <th className="text-center p-4 font-medium">작업</th>
+                  <th 
+                    className="text-left p-4 font-medium cursor-pointer hover:text-gray-700"
+                    onClick={() => handleSort('name')}
+                  >
+                    <div className="flex items-center gap-1">
+                      학생 이름
+                      <SortIcon field="name" />
+                    </div>
+                  </th>
+                  <th 
+                    className="text-left p-4 font-medium cursor-pointer hover:text-gray-700"
+                    onClick={() => handleSort('studentId')}
+                  >
+                    <div className="flex items-center gap-1">
+                      학번
+                      <SortIcon field="studentId" />
+                    </div>
+                  </th>
+                  <th 
+                    className="text-left p-4 font-medium cursor-pointer hover:text-gray-700"
+                    onClick={() => handleSort('submittedAt')}
+                  >
+                    <div className="flex items-center gap-1">
+                      제출 일시
+                      <SortIcon field="submittedAt" />
+                    </div>
+                  </th>
+                  <th 
+                    className="text-center p-4 font-medium cursor-pointer hover:text-gray-700"
+                    onClick={() => handleSort('status')}
+                  >
+                    <div className="flex items-center justify-center gap-1">
+                      상태
+                      <SortIcon field="status" />
+                    </div>
+                  </th>
+                  <th className="text-center p-4 font-medium">보기</th>
                 </tr>
               </thead>
               <tbody>
-                {filteredSubmissions.map((submission: any) => (
+                {filteredAndSortedSubmissions.map((submission: any) => (
                   <tr key={submission.id} className="border-b hover:bg-slate-50/50">
                     <td className="text-center p-4">
                       <input
@@ -951,8 +1038,9 @@ function SubmissionManagementTab({ assignment, students, params, router }: any) 
                       <button
                         onClick={() => router.push(`/assignments/${params.assignmentId}/submissions/${submission.id}`)}
                         className="px-3 py-1.5 bg-white text-slate-700 rounded-md hover:bg-slate-50 text-sm border border-slate-200"
+                        title={submission.status === 'evaluated' ? '보고서' : '학생글'}
                       >
-                        상세보기
+                        보기
                       </button>
                     </td>
                   </tr>
