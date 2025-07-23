@@ -124,45 +124,6 @@ model User {
   @@index([schoolName])
 }
 
-model StudentGroup {
-  id          String    @id @default(cuid())
-  name        String
-  description String?
-  schoolName  String
-  gradeLevel  String?
-  className   String?
-  schoolYear  String
-  createdBy   String
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  students    Student[]
-
-  @@index([createdBy])
-  @@index([schoolName])
-  @@index([gradeLevel])
-  @@index([className])
-  @@index([schoolYear])
-}
-
-model Student {
-  id        String       @id @default(cuid())
-  studentId String       // 학번 (옵션)
-  name      String       // 이름
-  grade     String?      // 학년
-  class     String?      // 반
-  number    Int?         // 번호
-  email     String?
-  groupId   String
-  createdAt DateTime     @default(now())
-  updatedAt DateTime     @updatedAt
-  group     StudentGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
-
-  @@unique([studentId, groupId])
-  @@index([groupId])
-  @@index([studentId])
-  @@index([grade])
-  @@index([class])
-}
 
 model analytics_post_images {
   id              Int              @id @default(autoincrement())

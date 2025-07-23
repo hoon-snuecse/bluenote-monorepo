@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@bluenote/ui';
-import { ArrowLeft, FolderOpen, QrCode, Users, UserCheck } from 'lucide-react';
+import { ArrowLeft, FolderOpen, QrCode, Users } from 'lucide-react';
 import dynamic from 'next/dynamic';
 
 const QRCode = dynamic(() => import('react-qr-code'), {
@@ -13,7 +13,7 @@ const QRCode = dynamic(() => import('react-qr-code'), {
 export default function CollectSubmissionsPage() {
   const params = useParams();
   const router = useRouter();
-  const [selectedMethod, setSelectedMethod] = useState<'direct' | 'googleDrive' | 'studentGroup'>('direct');
+  const [selectedMethod, setSelectedMethod] = useState<'direct' | 'googleDrive'>('direct');
   const [submissionUrl, setSubmissionUrl] = useState('');
 
   useEffect(() => {
@@ -49,7 +49,7 @@ export default function CollectSubmissionsPage() {
         </div>
 
         {/* Method Selection */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8 max-w-4xl mx-auto">
           <button
             onClick={() => setSelectedMethod('direct')}
             className={`p-6 rounded-xl border-2 transition-all ${
@@ -77,21 +77,6 @@ export default function CollectSubmissionsPage() {
             <h3 className="text-xl font-medium text-slate-800 mb-2">구글 드라이브 폴더</h3>
             <p className="text-base text-slate-600">
               공유 폴더에서 여러 파일 선택
-            </p>
-          </button>
-
-          <button
-            onClick={() => setSelectedMethod('studentGroup')}
-            className={`p-6 rounded-xl border-2 transition-all ${
-              selectedMethod === 'studentGroup'
-                ? 'border-blue-400 bg-blue-50/50 shadow-lg'
-                : 'border-slate-200/50 hover:border-slate-300/50 bg-white/70'
-            }`}
-          >
-            <UserCheck className="w-12 h-12 mb-4 mx-auto text-blue-600" />
-            <h3 className="text-xl font-medium text-slate-800 mb-2">학생 그룹에서 선택</h3>
-            <p className="text-base text-slate-600">
-              등록된 학생 그룹에서 학생 선택
             </p>
           </button>
         </div>
@@ -202,32 +187,6 @@ export default function CollectSubmissionsPage() {
               <p className="text-sm text-slate-500 mt-4">
                 * bluenote.site 구글 계정 연동 필요
               </p>
-            </CardContent>
-          </Card>
-        )}
-
-        {selectedMethod === 'studentGroup' && (
-          <Card className="bg-white/70 backdrop-blur-sm border border-slate-200/50">
-            <CardHeader>
-              <CardTitle className="text-2xl text-center">학생 그룹에서 선택</CardTitle>
-            </CardHeader>
-            <CardContent className="text-center py-8">
-              <UserCheck className="w-16 h-16 text-slate-400 mx-auto mb-4" />
-              <p className="text-lg text-slate-600 mb-6">
-                미리 등록한 학생 그룹에서 학생들을 선택하여 제출물을 생성할 수 있습니다.
-              </p>
-              <div className="bg-green-50/50 rounded-lg p-4 border border-green-200/30 max-w-lg mx-auto mb-6">
-                <p className="text-base text-green-800">
-                  학생 그룹에서 선택하면 빠르게 여러 학생의 제출물을 준비할 수 있습니다.
-                </p>
-              </div>
-              <button
-                onClick={() => router.push(`/assignments/${params.assignmentId}/collect/group`)}
-                className="px-6 py-3 bg-green-500/20 text-slate-700 rounded-lg hover:bg-green-500/30 transition-colors inline-flex items-center gap-2 border border-green-200/30 text-base font-medium"
-              >
-                <UserCheck className="w-5 h-5" />
-                학생 그룹 선택하기
-              </button>
             </CardContent>
           </Card>
         )}
