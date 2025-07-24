@@ -1026,14 +1026,9 @@ function SubmissionManagementTab({ assignment, students, params, router }: any) 
                     <td className="p-4 font-medium">{submission.studentName}</td>
                     <td className="p-4 text-slate-600">
                       {submission.sourceType === 'GOOGLE_DRIVE' && submission.documentPath ? (
-                        <a 
-                          href={submission.documentPath} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="text-blue-600 hover:text-blue-800 underline text-sm"
-                        >
+                        <span className="text-slate-600">
                           Google 문서
-                        </a>
+                        </span>
                       ) : (
                         submission.studentId?.startsWith('DRIVE_') ? '' : submission.studentId
                       )}
