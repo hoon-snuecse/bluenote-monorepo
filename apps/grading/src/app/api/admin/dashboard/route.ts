@@ -15,19 +15,22 @@ export async function GET() {
     }
 
     // Get statistics for the dashboard
+    // Note: Using email as user identifier since id is not in session
+    const userEmail = session.user.email || '';
+    
     const [groupCount, studentCount, recentGroups] = await Promise.all([
       prisma.studentGroup.count({
-        where: { createdBy: session.user.id }
+        where: { createdBy: userEmail }
       }),
       prisma.student.count({
         where: {
           group: {
-            createdBy: session.user.id
+            createdBy: userEmail
           }
         }
       }),
       prisma.studentGroup.findMany({
-        where: { createdBy: session.user.id },
+        where: { createdBy: userEmail },
         orderBy: { createdAt: 'desc' },
         take: 5,
         include: {

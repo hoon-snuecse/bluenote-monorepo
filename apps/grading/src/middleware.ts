@@ -4,6 +4,7 @@ import { getToken } from 'next-auth/jwt';
 
 // 보호된 경로 목록
 const protectedPaths = [
+  '/admin',
   '/assignments',
   '/grading',
   '/student-report',
