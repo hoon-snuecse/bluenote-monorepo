@@ -53,6 +53,10 @@ export default function DashboardPage() {
     try {
       // Fetch assignment
       const assignmentRes = await fetch(`/api/assignments/${params.assignmentId}`);
+      if (!assignmentRes.ok) {
+        console.error('Assignment fetch failed:', assignmentRes.status, assignmentRes.statusText);
+        return;
+      }
       const assignmentData = await assignmentRes.json();
       console.log('Assignment data:', assignmentData);
       if (assignmentData.success) {
@@ -71,6 +75,10 @@ export default function DashboardPage() {
 
       // Fetch submissions with evaluations
       const submissionsRes = await fetch(`/api/assignments/${params.assignmentId}/evaluations`);
+      if (!submissionsRes.ok) {
+        console.error('Evaluations fetch failed:', submissionsRes.status, submissionsRes.statusText);
+        return;
+      }
       const submissionsData = await submissionsRes.json();
       console.log('Evaluations data:', submissionsData);
       if (submissionsData.success) {
