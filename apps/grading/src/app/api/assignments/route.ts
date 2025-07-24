@@ -79,7 +79,7 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    const teacherId = session.user.email || 'default-teacher-id';
+    const teacherId = session.user.id || 'default-teacher-id';
     
     // 필수 필드 검증
     if (!data.title || !data.schoolName || !data.gradeLevel || !data.writingType) {

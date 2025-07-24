@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
       startedAt: null,
       completedAt: null,
       errors: [],
-      createdBy: session.user?.email || 'unknown',
+      createdBy: session.user?.id || 'unknown',
       createdAt: new Date()
     }
 
@@ -133,7 +133,7 @@ export async function GET(request: NextRequest) {
     } else {
       // 모든 작업 목록 조회
       const jobs = Array.from(jobStatus.values())
-        .filter(job => job.createdBy === session.user?.email)
+        .filter(job => job.createdBy === session.user?.id)
         .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
 
       return NextResponse.json({ jobs })

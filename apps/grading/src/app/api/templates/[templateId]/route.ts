@@ -9,7 +9,7 @@ export async function GET(
   try {
     const session = await getServerSession()
     
-    if (!session?.user?.email) {
+    if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -33,7 +33,7 @@ export async function GET(
     }
 
     // 비공개 템플릿인 경우 소유자만 접근 가능
-    if (!template.isPublic && template.createdBy !== session.user.email) {
+    if (!template.isPublic && template.createdBy !== session.user.id) {
       return NextResponse.json(
         { error: '접근 권한이 없습니다.' },
         { status: 403 }

@@ -5,7 +5,7 @@ import type { JWT } from 'next-auth/jwt';
 // 확장된 세션 타입 정의
 export interface ExtendedSession extends Session {
   user: {
-    id?: string;
+    id: string;  // 이제 필수 필드로 변경
     name?: string | null;
     email?: string | null;
     image?: string | null;
@@ -142,6 +142,11 @@ export const createAuthOptions = (callbacks?: AuthCallbacks): NextAuthOptions =>
       async session({ session, token }) {
         const extendedToken = token as ExtendedJWT;
         const extendedSession = session as ExtendedSession;
+        
+        // user.id 추가 (Google OAuth의 고유 ID)
+        if (token.sub) {
+          extendedSession.user.id = token.sub;
+        }
         
         extendedSession.user.isAdmin = extendedToken.isAdmin || false;
         extendedSession.user.canWrite = extendedToken.canWrite || false;

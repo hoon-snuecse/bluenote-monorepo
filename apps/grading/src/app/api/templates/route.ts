@@ -6,7 +6,7 @@ export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession();
     
-    if (!session?.user?.email) {
+    if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -17,11 +17,11 @@ export async function GET(request: NextRequest) {
     let whereClause: any = {};
     
     if (userOnly) {
-      whereClause.createdBy = session.user.email;
+      whereClause.createdBy = session.user.id;
     } else if (!isPublic) {
       whereClause = {
         OR: [
-          { createdBy: session.user.email },
+          { createdBy: session.user.id },
           { isPublic: true }
         ]
       };
@@ -65,7 +65,7 @@ export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession();
     
-    if (!session?.user?.email) {
+    if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -83,7 +83,7 @@ export async function POST(request: NextRequest) {
         levelCount: data.levelCount,
         gradingCriteria: data.gradingCriteria,
         isPublic: data.isPublic || false,
-        createdBy: session.user.email
+        createdBy: session.user.id
       },
       include: {
         creator: {
@@ -116,7 +116,7 @@ export async function PUT(request: NextRequest) {
   try {
     const session = await getServerSession();
     
-    if (!session?.user?.email) {
+    if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -141,7 +141,7 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    if (existingTemplate.createdBy !== session.user.email) {
+    if (existingTemplate.createdBy !== session.user.id) {
       return NextResponse.json(
         { success: false, error: '수정 권한이 없습니다.' },
         { status: 403 }
@@ -193,7 +193,7 @@ export async function DELETE(request: NextRequest) {
   try {
     const session = await getServerSession();
     
-    if (!session?.user?.email) {
+    if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -219,7 +219,7 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    if (existingTemplate.createdBy !== session.user.email) {
+    if (existingTemplate.createdBy !== session.user.id) {
       return NextResponse.json(
         { success: false, error: '삭제 권한이 없습니다.' },
         { status: 403 }
