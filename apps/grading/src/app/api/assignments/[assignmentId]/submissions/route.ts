@@ -26,6 +26,18 @@ export async function GET(
       where: {
         assignmentId: params.assignmentId,
       },
+      include: {
+        evaluations: {
+          select: {
+            id: true,
+            evaluatedAt: true
+          },
+          orderBy: {
+            evaluatedAt: 'desc'
+          },
+          take: 1
+        }
+      },
       orderBy: {
         createdAt: 'desc',
       },
@@ -40,7 +52,8 @@ export async function GET(
         studentId: s.studentId,
         createdAt: s.createdAt,
         hasContent: !!s.content,
-        contentLength: s.content?.length || 0
+        contentLength: s.content?.length || 0,
+        hasEvaluation: s.evaluations.length > 0
       }))
     });
 
@@ -53,9 +66,9 @@ export async function GET(
         studentDbId: sub.studentDbId || null,
         content: sub.content || null,
         submittedAt: sub.createdAt || null,
-        evaluatedAt: sub.evaluatedAt || null,
+        evaluatedAt: sub.evaluations[0]?.evaluatedAt || null,
         evaluation: sub.evaluation || null,
-        status: sub.evaluatedAt ? 'evaluated' : 'submitted',
+        status: sub.evaluations.length > 0 ? 'evaluated' : 'submitted',
         student: null // 학생 그룹과 연결되지 않은 제출물
       }))
     });
@@ -164,6 +177,16 @@ export async function POST(
       assignmentId: submission.assignmentId
     });
 
+    // Check if submission has evaluations
+    const submissionWithEvaluations = await prisma.submission.findUnique({
+      where: { id: submission.id },
+      include: {
+        evaluations: {
+          select: { id: true }
+        }
+      }
+    });
+
     return NextResponse.json({
       success: true,
       submission: {
@@ -173,7 +196,7 @@ export async function POST(
         studentDbId: submission.studentDbId,
         content: submission.content,
         submittedAt: submission.submittedAt,
-        status: submission.evaluatedAt ? 'evaluated' : 'submitted'
+        status: submissionWithEvaluations?.evaluations.length ? 'evaluated' : 'submitted'
       }
     });
   } catch (error) {
