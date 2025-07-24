@@ -16,8 +16,8 @@ export async function GET() {
     
     console.log('[Drive Folders API] Current user:', session.user.email);
 
-    // First try to use NextAuth session token
-    let accessToken = session.accessToken;
+    // Skip NextAuth token for now - it doesn't have proper Drive permissions
+    let accessToken = null;
     
     console.log('[Drive Folders API] Session info:', {
       hasSession: !!session,
@@ -25,8 +25,8 @@ export async function GET() {
       userEmail: session.user?.email
     });
     
-    // If no token in session, try to get from database
-    if (!accessToken) {
+    // Always get token from database
+    {
       const supabase = createClient();
       const { data: tokenData, error: tokenError } = await supabase
         .from('google_tokens')

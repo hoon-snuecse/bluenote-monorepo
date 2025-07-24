@@ -23,12 +23,12 @@ export async function GET(request: NextRequest) {
 
     console.log('[Drive Documents API] Getting tokens for user:', session.user.email);
     
-    // First try to use NextAuth session token
-    let accessToken = session.accessToken;
+    // Skip NextAuth token for now - it doesn't have proper Drive permissions
+    let accessToken = null;
     let tokenData = null;
     
-    // If no token in session, try to get from database
-    if (!accessToken) {
+    // Always get token from database
+    {
       const supabase = createAdminClient();
       const { data, error: tokenError } = await supabase
         .from('google_tokens')
