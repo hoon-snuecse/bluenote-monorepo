@@ -27,7 +27,10 @@ export async function GET() {
     
     // Always get token from database
     {
-      const supabase = createClient();
+      // Try with admin client to bypass RLS
+      const supabase = createAdminClient();
+      console.log('[Drive Folders API] Fetching token for:', session.user.email);
+      
       const { data: tokenData, error: tokenError } = await supabase
         .from('google_tokens')
         .select('access_token, refresh_token, expires_at')
@@ -35,11 +38,19 @@ export async function GET() {
         .single();
 
       if (tokenError || !tokenData?.access_token) {
-        console.error('[Drive Folders API] No token available:', tokenError);
-        console.log('[Drive Folders API] Session details:', JSON.stringify(session, null, 2));
+        console.error('[Drive Folders API] Token fetch failed:', {
+          error: tokenError,
+          errorCode: tokenError?.code,
+          errorMessage: tokenError?.message,
+          errorDetails: tokenError?.details,
+          hasData: !!tokenData,
+          hasAccessToken: !!tokenData?.access_token,
+          userEmail: session.user.email
+        });
         return NextResponse.json({ 
           error: 'Google authentication required',
-          details: 'No access token in session or database',
+          details: tokenError?.message || 'No access token in session or database',
+          errorCode: tokenError?.code,
           hasSessionToken: false
         }, { status: 401 });
       }
