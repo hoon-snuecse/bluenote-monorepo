@@ -1,7 +1,7 @@
 {
   "buildCommand": "cd ../.. && pnpm install && cd apps/web && pnpm build",
   "installCommand": "echo 'Skipping install'",
-  "outputDirectory": ".next",
+  "outputDirectory": "apps/web/.next",
   "framework": "nextjs",
   "regions": ["icn1"]
 }
