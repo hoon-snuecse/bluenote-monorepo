@@ -30,7 +30,7 @@ export async function GET() {
       const supabase = createClient();
       const { data: tokenData, error: tokenError } = await supabase
         .from('google_tokens')
-        .select('access_token')
+        .select('access_token, refresh_token, expires_at')
         .eq('user_email', session.user.email)
         .single();
 
@@ -40,6 +40,16 @@ export async function GET() {
         return NextResponse.json({ 
           error: 'Google authentication required',
           details: 'No access token in session or database',
+          hasSessionToken: false
+        }, { status: 401 });
+      }
+      
+      // Check if token is expired
+      if (tokenData.expires_at && new Date(tokenData.expires_at) <= new Date()) {
+        console.log('[Drive Folders API] Token expired, needs refresh');
+        return NextResponse.json({ 
+          error: 'Google authentication required',
+          details: 'Access token expired',
           hasSessionToken: false
         }, { status: 401 });
       }
