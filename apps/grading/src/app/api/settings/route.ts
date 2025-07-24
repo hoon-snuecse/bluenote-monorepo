@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import crypto from 'crypto';
+import { getServerSession } from '@/lib/auth';
 
 // 간단한 암호화 (실제 환경에서는 더 안전한 방법 사용)
 const encrypt = (text: string): string => {
@@ -34,6 +35,22 @@ const decrypt = (text: string): string => {
 
 export async function GET() {
   try {
+    // 인증 및 관리자 권한 체크
+    const session = await getServerSession();
+    if (!session) {
+      return NextResponse.json(
+        { success: false, error: '인증이 필요합니다.' },
+        { status: 401 }
+      );
+    }
+    
+    // 관리자 권한 체크 (필요시 활성화)
+    // if (session.user.role !== 'admin') {
+    //   return NextResponse.json(
+    //     { success: false, error: '관리자 권한이 필요합니다.' },
+    //     { status: 403 }
+    //   );
+    // }
     // 모든 설정 조회
     const settingsRecords = await prisma.systemSettings.findMany();
     
@@ -54,12 +71,14 @@ export async function GET() {
     for (const record of settingsRecords) {
       if (record.key === 'apiKeys' && record.value) {
         const apiKeys = record.value as any;
-        // API 키 복호화
+        // API 키는 마스킹 처리하여 전송
         if (apiKeys.claudeApiKey) {
-          apiKeys.claudeApiKey = decrypt(apiKeys.claudeApiKey);
+          const decrypted = decrypt(apiKeys.claudeApiKey);
+          apiKeys.claudeApiKey = decrypted ? `${decrypted.substring(0, 10)}...` : '';
         }
         if (apiKeys.openaiApiKey) {
-          apiKeys.openaiApiKey = decrypt(apiKeys.openaiApiKey);
+          const decrypted = decrypt(apiKeys.openaiApiKey);
+          apiKeys.openaiApiKey = decrypted ? `${decrypted.substring(0, 10)}...` : '';
         }
         settings.apiKeys = apiKeys;
       } else if (record.key === 'schoolInfo' && record.value) {
@@ -81,6 +100,24 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
+    // 인증 및 관리자 권한 체크
+    const session = await getServerSession();
+    if (!session) {
+      return NextResponse.json(
+        { success: false, error: '인증이 필요합니다.' },
+        { status: 401 }
+      );
+    }
+    
+    // 관리자 권한 체크
+    // TODO: session.user.role 확인 후 활성화
+    // if (session.user.role !== 'admin') {
+    //   return NextResponse.json(
+    //     { success: false, error: '관리자 권한이 필요합니다.' },
+    //     { status: 403 }
+    //   );
+    // }
+    
     const settings = await request.json();
     
     // API 키 설정 처리

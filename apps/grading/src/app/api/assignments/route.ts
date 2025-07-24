@@ -1,9 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import { getServerSession } from '@/lib/auth';
 
 // 과제 목록 조회
 export async function GET() {
   try {
+    // 인증 체크
+    const session = await getServerSession();
+    if (!session) {
+      return NextResponse.json(
+        { success: false, error: '인증이 필요합니다.' },
+        { status: 401 }
+      );
+    }
+
     // 환경 변수 확인
     if (!process.env.DATABASE_URL) {
       console.error('DATABASE_URL is not configured');
@@ -60,25 +70,16 @@ export async function POST(request: NextRequest) {
   }
   
   try {
-    // 임시: 프로덕션에서도 인증 체크를 건너뜀 (개발/테스트용)
-    // TODO: 실제 프로덕션에서는 인증 구현 필요
-    const teacherId = 'default-teacher-id';
-    
-    // 향후 인증 구현 시 활성화
-    /*
-    if (process.env.NODE_ENV === 'production') {
-      const cookieStore = request.cookies;
-      const authToken = cookieStore.get('auth-token');
-      
-      if (!authToken) {
-        return NextResponse.json(
-          { success: false, error: '인증이 필요합니다.' },
-          { status: 401 }
-        );
-      }
-      // TODO: JWT 토큰에서 teacherId 추출
+    // 인증 체크
+    const session = await getServerSession();
+    if (!session) {
+      return NextResponse.json(
+        { success: false, error: '인증이 필요합니다.' },
+        { status: 401 }
+      );
     }
-    */
+    
+    const teacherId = session.user.email || 'default-teacher-id';
     
     // 필수 필드 검증
     if (!data.title || !data.schoolName || !data.gradeLevel || !data.writingType) {

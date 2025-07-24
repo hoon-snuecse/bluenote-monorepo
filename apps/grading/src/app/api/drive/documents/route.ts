@@ -59,6 +59,22 @@ export async function GET(request: NextRequest) {
 
     const drive = google.drive({ version: 'v3', auth: oauth2Client });
 
+    // Validate folderId to prevent injection
+    const isValidFolderId = (id: string) => {
+      // Google Drive IDs are alphanumeric with hyphens and underscores
+      return /^[a-zA-Z0-9_-]+$/.test(id) || id === 'my-drive' || id === 'shared-with-me' || id === 'root';
+    };
+    
+    if (folderId && !isValidFolderId(folderId)) {
+      return NextResponse.json(
+        { success: false, error: 'Invalid folder ID format' },
+        { status: 400 }
+      );
+    }
+    
+    // Escape single quotes in folderId for safety
+    const escapedFolderId = folderId ? folderId.replace(/'/g, "\\'"): '';
+    
     let query = '';
     let includeTeamDrives = false;
     let corpora = 'user';
@@ -69,11 +85,11 @@ export async function GET(request: NextRequest) {
       if (folderId === 'my-drive') {
         query = "'root' in parents and trashed=false";
       } else {
-        query = `'${folderId}' in parents and trashed=false`;
+        query = `'${escapedFolderId}' in parents and trashed=false`;
       }
     } else if (driveType === 'shared-drive') {
       // For shared drives
-      query = `'${folderId}' in parents and trashed=false`;
+      query = `'${escapedFolderId}' in parents and trashed=false`;
       includeTeamDrives = true;
       corpora = 'drive';
     } else if (driveType === 'shared-with-me') {
@@ -81,11 +97,11 @@ export async function GET(request: NextRequest) {
       if (folderId === 'shared-with-me') {
         query = "sharedWithMe and trashed=false";
       } else {
-        query = `'${folderId}' in parents and trashed=false`;
+        query = `'${escapedFolderId}' in parents and trashed=false`;
       }
     } else {
       // Default behavior for regular folders
-      query = `'${folderId}' in parents and trashed=false`;
+      query = `'${escapedFolderId}' in parents and trashed=false`;
     }
 
     console.log('[Drive Documents API] Query:', query);

@@ -34,8 +34,6 @@ model Submission {
   studentId    String
   content      String
   submittedAt  DateTime     @default(now())
-  evaluatedAt  DateTime?
-  evaluation   Json?
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @updatedAt
   studentDbId  String?
@@ -79,7 +77,6 @@ model AccessToken {
   used         Boolean  @default(false)
   createdAt    DateTime @default(now())
 
-  @@index([token])
   @@index([expiresAt])
 }
 
@@ -104,8 +101,6 @@ model SystemSettings {
   value     Json
   encrypted Boolean  @default(false)
   updatedAt DateTime @updatedAt
-
-  @@index([key])
 }
 
 model User {
@@ -124,38 +119,6 @@ model User {
   @@index([schoolName])
 }
 
-
-model analytics_post_images {
-  id              Int              @id @default(autoincrement())
-  post_id         Int?
-  file_path       String
-  file_name       String
-  file_size       Int?             @default(0)
-  mime_type       String?          @default("image/jpeg")
-  display_order   Int?             @default(0)
-  created_at      DateTime?        @default(now()) @db.Timestamptz(6)
-  analytics_posts analytics_posts? @relation(fields: [post_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-
-  @@index([post_id], map: "idx_analytics_post_images_post_id")
-}
-
-model analytics_posts {
-  id                    Int                     @id @default(autoincrement())
-  title                 String
-  content               String
-  category              String
-  tags                  String[]
-  created_at            DateTime?               @default(now()) @db.Timestamptz(6)
-  updated_at            DateTime?               @default(now()) @db.Timestamptz(6)
-  summary               String?
-  reading_time          Int?                    @default(5)
-  is_ai_generated       Boolean?                @default(false)
-  analytics_post_images analytics_post_images[]
-
-  @@index([category], map: "idx_analytics_posts_category")
-  @@index([created_at(sort: Desc)], map: "idx_analytics_posts_created_at")
-}
-
 model google_tokens {
   user_email    String    @id
   access_token  String
@@ -167,159 +130,6 @@ model google_tokens {
   updated_at    DateTime? @default(now()) @db.Timestamptz(6)
 
   @@index([user_email], map: "idx_google_tokens_user_email")
-}
-
-model research_files {
-  id             Int             @id @default(autoincrement())
-  post_id        Int?
-  file_name      String
-  file_url       String
-  file_type      String
-  file_size      Int?
-  created_at     DateTime?       @default(now()) @db.Timestamptz(6)
-  research_posts research_posts? @relation(fields: [post_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-}
-
-model research_post_images {
-  id             Int             @id @default(autoincrement())
-  post_id        Int?
-  file_path      String
-  file_name      String
-  file_size      Int?            @default(0)
-  mime_type      String?         @default("image/jpeg")
-  display_order  Int?            @default(0)
-  created_at     DateTime?       @default(now()) @db.Timestamptz(6)
-  research_posts research_posts? @relation(fields: [post_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-
-  @@index([post_id], map: "idx_research_post_images_post_id")
-}
-
-model research_posts {
-  id                   Int                    @id @default(autoincrement())
-  title                String
-  content              String
-  category             String
-  tags                 String[]
-  created_at           DateTime?              @default(now()) @db.Timestamptz(6)
-  updated_at           DateTime?              @default(now()) @db.Timestamptz(6)
-  summary              String?
-  reading_time         Int?                   @default(5)
-  is_ai_generated      Boolean?               @default(false)
-  research_files       research_files[]
-  research_post_images research_post_images[]
-
-  @@index([category], map: "idx_research_posts_category")
-  @@index([created_at(sort: Desc)], map: "idx_research_posts_created_at")
-}
-
-model shed_post_images {
-  id            Int         @id @default(autoincrement())
-  post_id       Int?
-  file_path     String
-  file_name     String
-  file_size     Int?        @default(0)
-  mime_type     String?     @default("image/jpeg")
-  display_order Int?        @default(0)
-  created_at    DateTime?   @default(now()) @db.Timestamptz(6)
-  shed_posts    shed_posts? @relation(fields: [post_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-
-  @@index([post_id], map: "idx_shed_post_images_post_id")
-}
-
-model shed_posts {
-  id               Int                @id @default(autoincrement())
-  title            String
-  content          String
-  mood             String?            @default("평온한")
-  weather          String?            @default("맑음")
-  music            String?
-  created_at       DateTime?          @default(now()) @db.Timestamptz(6)
-  updated_at       DateTime?          @default(now()) @db.Timestamptz(6)
-  summary          String?
-  tags             String[]
-  category         String?            @default("daily")
-  reading_time     Int?               @default(5)
-  is_ai_generated  Boolean?           @default(false)
-  shed_post_images shed_post_images[]
-
-  @@index([created_at(sort: Desc)], map: "idx_shed_posts_created_at")
-}
-
-/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
-model system_settings {
-  id                         Int       @id @default(1)
-  site_name                  String?   @default("BlueNote Atelier")
-  site_description           String?   @default("박교수의 연구실 - 교육과 연구의 공간")
-  admin_email                String?   @default("admin@bluenote.site")
-  claude_enabled             Boolean?  @default(true)
-  claude_default_daily_limit Int?      @default(10)
-  claude_system_prompt       String?   @default("당신은 교육과 연구를 돕는 AI 어시스턴트입니다.")
-  claude_model               String?   @default("claude-sonnet-4-20250514")
-  posts_per_page             Int?      @default(12)
-  enable_comments            Boolean?  @default(false)
-  enable_search              Boolean?  @default(true)
-  default_categories         Json?     @default("[\"연구\", \"교육\", \"분석\", \"일상\"]")
-  session_timeout            Int?      @default(24)
-  max_login_attempts         Int?      @default(5)
-  enable_ip_whitelist        Boolean?  @default(false)
-  ip_whitelist               Json?     @default("[]")
-  auto_backup                Boolean?  @default(true)
-  backup_frequency           String?   @default("daily")
-  log_retention_days         Int?      @default(30)
-  enable_maintenance_mode    Boolean?  @default(false)
-  updated_at                 DateTime? @default(now()) @db.Timestamptz(6)
-  updated_by                 String?
-}
-
-model teaching_post_images {
-  id             Int             @id @default(autoincrement())
-  post_id        Int?
-  file_path      String
-  file_name      String
-  file_size      Int?            @default(0)
-  mime_type      String?         @default("image/jpeg")
-  display_order  Int?            @default(0)
-  created_at     DateTime?       @default(now()) @db.Timestamptz(6)
-  teaching_posts teaching_posts? @relation(fields: [post_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-
-  @@index([post_id], map: "idx_teaching_post_images_post_id")
-}
-
-model teaching_posts {
-  id                   Int                    @id @default(autoincrement())
-  title                String
-  content              String
-  category             String
-  tags                 String[]
-  created_at           DateTime?              @default(now()) @db.Timestamptz(6)
-  updated_at           DateTime?              @default(now()) @db.Timestamptz(6)
-  summary              String?
-  reading_time         Int?                   @default(5)
-  is_ai_generated      Boolean?               @default(false)
-  teaching_post_images teaching_post_images[]
-
-  @@index([category], map: "idx_teaching_posts_category")
-  @@index([created_at(sort: Desc)], map: "idx_teaching_posts_created_at")
-}
-
-/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
-model usage_logs {
-  id               String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  user_email       String?
-  action_type      String?
-  created_at       DateTime?         @default(now()) @db.Timestamptz(6)
-  user_permissions user_permissions? @relation(fields: [user_email], references: [email], onDelete: Cascade, onUpdate: NoAction)
-}
-
-/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
-model user_permissions {
-  email              String       @id
-  role               String?      @default("user")
-  claude_daily_limit Int?         @default(3)
-  can_write          Boolean?     @default(false)
-  created_at         DateTime?    @default(now()) @db.Timestamptz(6)
-  updated_at         DateTime?    @default(now()) @db.Timestamptz(6)
-  usage_logs         usage_logs[]
 }
 
 enum UserRole {
