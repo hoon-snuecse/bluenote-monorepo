@@ -1,7 +1,7 @@
 import { google } from 'googleapis';
 import { NextResponse } from 'next/server';
 import { getServerSession } from '@/lib/auth';
-import { createClient } from '@/lib/supabase';
+import { createClient, createAdminClient } from '@/lib/supabase';
 
 export async function GET() {
   console.log('[Drive Folders API] Request received');
@@ -27,7 +27,7 @@ export async function GET() {
     
     // Always get token from database
     {
-      const supabase = createClient();
+      const supabase = createAdminClient();
       const { data: tokenData, error: tokenError } = await supabase
         .from('google_tokens')
         .select('access_token, refresh_token, expires_at')
