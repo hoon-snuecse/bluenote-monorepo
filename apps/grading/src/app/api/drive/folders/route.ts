@@ -19,6 +19,12 @@ export async function GET() {
     // First try to use NextAuth session token
     let accessToken = session.accessToken;
     
+    console.log('[Drive Folders API] Session info:', {
+      hasSession: !!session,
+      hasAccessToken: !!session.accessToken,
+      userEmail: session.user?.email
+    });
+    
     // If no token in session, try to get from database
     if (!accessToken) {
       const supabase = createClient();
@@ -30,13 +36,18 @@ export async function GET() {
 
       if (tokenError || !tokenData?.access_token) {
         console.error('[Drive Folders API] No token available:', tokenError);
-        return NextResponse.json({ error: 'Google authentication required' }, { status: 401 });
+        console.log('[Drive Folders API] Session details:', JSON.stringify(session, null, 2));
+        return NextResponse.json({ 
+          error: 'Google authentication required',
+          details: 'No access token in session or database',
+          hasSessionToken: false
+        }, { status: 401 });
       }
       
       accessToken = tokenData.access_token;
     }
     
-    console.log('[Drive Folders API] Token found for user');
+    console.log('[Drive Folders API] Token found');
 
     const oauth2Client = new google.auth.OAuth2(
       process.env.GOOGLE_CLIENT_ID,
@@ -49,6 +60,8 @@ export async function GET() {
     });
 
     const drive = google.drive({ version: 'v3', auth: oauth2Client });
+    
+    console.log('[Drive Folders API] OAuth client configured');
 
     // Get shared drives
     const sharedDrives = await drive.drives.list({
