@@ -69,8 +69,8 @@ export async function GET(
         evaluatedAt: sub.evaluations[0]?.evaluatedAt || null,
         evaluation: sub.evaluation || null,
         status: sub.evaluations.length > 0 ? 'evaluated' : 'submitted',
-        documentPath: sub.documentPath || null,
-        sourceType: sub.sourceType || 'MANUAL',
+        documentPath: (sub as any).documentPath || null,
+        sourceType: (sub as any).sourceType || 'MANUAL',
         student: null // 학생 그룹과 연결되지 않은 제출물
       }))
     });
@@ -157,8 +157,8 @@ export async function POST(
         data: {
           studentName,
           studentDbId,
-          documentPath,
-          sourceType,
+          documentPath: documentPath || null,
+          sourceType: sourceType || 'MANUAL',
           submittedAt: new Date()
         }
       });
@@ -171,8 +171,8 @@ export async function POST(
           studentId,
           studentDbId,
           content,
-          documentPath,
-          sourceType,
+          documentPath: documentPath || null,
+          sourceType: sourceType || 'MANUAL',
           submittedAt: new Date()
         }
       });
