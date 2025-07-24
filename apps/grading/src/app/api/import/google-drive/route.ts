@@ -129,12 +129,17 @@ export async function POST(request: NextRequest) {
           // Ensure content is string
           const contentStr = typeof doc.content === 'string' ? doc.content : JSON.stringify(doc.content);
           
+          // Google Drive 파일 URL 생성
+          const googleDriveUrl = `https://docs.google.com/document/d/${doc.googleDriveFileId}/edit`;
+          
           const submission = await prisma.submission.create({
             data: {
               assignmentId: assignmentId,
               studentName: doc.studentName,
-              studentId: `google_${doc.googleDriveFileId}`, // Use Google Drive file ID as studentId
+              studentId: `DRIVE_${doc.studentName}`, // 학생 이름 기반 ID
               content: contentStr,
+              documentPath: googleDriveUrl, // Google Drive URL 저장
+              sourceType: 'GOOGLE_DRIVE', // 소스 타입 표시
               submittedAt: new Date(),
               createdAt: new Date() // Explicitly set createdAt
             }

@@ -592,16 +592,7 @@ export default function DashboardPage() {
                     <tr key={student.id} className="border-b hover:bg-blue-50/10 transition-colors">
                       <td className="p-4 font-medium">{student.name}</td>
                       <td className="p-4 text-slate-600">
-                        {(() => {
-                          // Google Drive URL 패턴 체크
-                          const isGoogleDriveUrl = student.studentId && (
-                            student.studentId.includes('docs.google.com') ||
-                            student.studentId.includes('drive.google.com') ||
-                            student.studentId.startsWith('http') ||
-                            student.studentId.startsWith('DRIVE_')
-                          );
-                          return isGoogleDriveUrl ? '' : student.studentId;
-                        })()}
+                        {student.studentId?.startsWith('DRIVE_') ? '' : student.studentId}
                       </td>
                       {assignment?.evaluationDomains?.map((domain: string) => {
                         const score = student.scores[domain];
@@ -1034,16 +1025,18 @@ function SubmissionManagementTab({ assignment, students, params, router }: any) 
                     </td>
                     <td className="p-4 font-medium">{submission.studentName}</td>
                     <td className="p-4 text-slate-600">
-                      {(() => {
-                        // Google Drive URL 패턴 체크
-                        const isGoogleDriveUrl = submission.studentId && (
-                          submission.studentId.includes('docs.google.com') ||
-                          submission.studentId.includes('drive.google.com') ||
-                          submission.studentId.startsWith('http') ||
-                          submission.studentId.startsWith('DRIVE_')
-                        );
-                        return isGoogleDriveUrl ? '' : submission.studentId;
-                      })()}
+                      {submission.sourceType === 'GOOGLE_DRIVE' && submission.documentPath ? (
+                        <a 
+                          href={submission.documentPath} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:text-blue-800 underline text-sm"
+                        >
+                          Google 문서
+                        </a>
+                      ) : (
+                        submission.studentId?.startsWith('DRIVE_') ? '' : submission.studentId
+                      )}
                     </td>
                     <td className="p-4 text-slate-600">
                       {submission.submittedAt 

@@ -37,6 +37,8 @@ model Submission {
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @updatedAt
   studentDbId  String?
+  documentPath String?      /// Google Drive URL 저장
+  sourceType   String       @default("MANUAL") /// "MANUAL" | "GOOGLE_DRIVE"
   evaluations  Evaluation[]
   assignment   Assignment   @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
 
