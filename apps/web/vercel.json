@@ -1,5 +1,8 @@
 {
   "framework": "nextjs",
+  "buildCommand": "pnpm build",
+  "outputDirectory": ".next",
+  "installCommand": "cd ../.. && pnpm install",
   "regions": ["icn1"],
   "env": {
     "NODE_VERSION": "20.x"
