@@ -24,13 +24,28 @@ export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const assignmentId = searchParams.get('assignmentId');
   
-  // If session has Google access token, skip OAuth flow
-  if (session.accessToken) {
-    const baseUrl = process.env.NODE_ENV === 'production' 
-      ? 'https://grading.bluenote.site'
-      : 'http://localhost:3001';
-    const assignmentIdParam = assignmentId ? `&assignmentId=${assignmentId}` : '';
-    return NextResponse.redirect(`${baseUrl}/import?success=true${assignmentIdParam}`);
+  // Check if user already has a valid Drive token in database
+  const { createAdminClient } = await import('@/lib/supabase');
+  const supabase = createAdminClient();
+  
+  const { data: existingToken } = await supabase
+    .from('google_tokens')
+    .select('access_token, expires_at')
+    .eq('user_email', session.user.email)
+    .order('created_at', { ascending: false })
+    .limit(1);
+    
+  // If valid token exists, skip OAuth flow
+  if (existingToken && existingToken.length > 0 && existingToken[0].access_token) {
+    const token = existingToken[0];
+    // Check if token is not expired
+    if (!token.expires_at || new Date(token.expires_at) > new Date()) {
+      const baseUrl = process.env.NODE_ENV === 'production' 
+        ? 'https://grading.bluenote.site'
+        : 'http://localhost:3001';
+      const assignmentIdParam = assignmentId ? `&assignmentId=${assignmentId}` : '';
+      return NextResponse.redirect(`${baseUrl}/import?success=true${assignmentIdParam}`);
+    }
   }
   
   const scopes = [
