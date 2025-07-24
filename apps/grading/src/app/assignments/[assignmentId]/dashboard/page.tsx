@@ -583,7 +583,18 @@ export default function DashboardPage() {
                   {filteredStudents.map((student) => (
                     <tr key={student.id} className="border-b hover:bg-blue-50/10 transition-colors">
                       <td className="p-4 font-medium">{student.name}</td>
-                      <td className="p-4 text-slate-600">{student.studentId}</td>
+                      <td className="p-4 text-slate-600">
+                        {(() => {
+                          // Google Drive URL 패턴 체크
+                          const isGoogleDriveUrl = student.studentId && (
+                            student.studentId.includes('docs.google.com') ||
+                            student.studentId.includes('drive.google.com') ||
+                            student.studentId.startsWith('http') ||
+                            student.studentId.startsWith('DRIVE_')
+                          );
+                          return isGoogleDriveUrl ? '' : student.studentId;
+                        })()}
+                      </td>
                       {assignment?.evaluationDomains?.map((domain: string) => {
                         const score = student.scores[domain];
                         // score가 객체인 경우 level 속성을 사용하고, 문자열인 경우 그대로 사용
@@ -1014,7 +1025,18 @@ function SubmissionManagementTab({ assignment, students, params, router }: any) 
                       />
                     </td>
                     <td className="p-4 font-medium">{submission.studentName}</td>
-                    <td className="p-4 text-slate-600">{submission.studentId}</td>
+                    <td className="p-4 text-slate-600">
+                      {(() => {
+                        // Google Drive URL 패턴 체크
+                        const isGoogleDriveUrl = submission.studentId && (
+                          submission.studentId.includes('docs.google.com') ||
+                          submission.studentId.includes('drive.google.com') ||
+                          submission.studentId.startsWith('http') ||
+                          submission.studentId.startsWith('DRIVE_')
+                        );
+                        return isGoogleDriveUrl ? '' : submission.studentId;
+                      })()}
+                    </td>
                     <td className="p-4 text-slate-600">
                       {submission.submittedAt 
                         ? new Date(submission.submittedAt).toLocaleString('ko-KR')

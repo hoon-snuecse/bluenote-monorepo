@@ -69,6 +69,8 @@ export async function GET(
         evaluatedAt: sub.evaluations[0]?.evaluatedAt || null,
         evaluation: sub.evaluation || null,
         status: sub.evaluations.length > 0 ? 'evaluated' : 'submitted',
+        documentPath: sub.documentPath || null,
+        sourceType: sub.sourceType || 'MANUAL',
         student: null // 학생 그룹과 연결되지 않은 제출물
       }))
     });
@@ -106,7 +108,9 @@ export async function POST(
       studentName,
       studentId,
       studentDbId,
-      content = ''
+      content = '',
+      documentPath,
+      sourceType = 'MANUAL'
     } = body;
 
     // 필수 필드 검증
@@ -153,6 +157,8 @@ export async function POST(
         data: {
           studentName,
           studentDbId,
+          documentPath,
+          sourceType,
           submittedAt: new Date()
         }
       });
@@ -165,6 +171,8 @@ export async function POST(
           studentId,
           studentDbId,
           content,
+          documentPath,
+          sourceType,
           submittedAt: new Date()
         }
       });
