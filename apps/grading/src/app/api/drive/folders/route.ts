@@ -27,15 +27,39 @@ export async function GET() {
     
     // Always get token from database
     {
-      // Try with admin client to bypass RLS
-      const supabase = createAdminClient();
-      console.log('[Drive Folders API] Fetching token for:', session.user.email);
+      // First, let's check if we can get token at all
+      console.log('[Drive Folders API] Attempting to fetch token for:', session.user.email);
       
-      const { data: tokenData, error: tokenError } = await supabase
-        .from('google_tokens')
-        .select('access_token, refresh_token, expires_at')
-        .eq('user_email', session.user.email)
-        .single();
+      let tokenData = null;
+      let tokenError = null;
+      
+      try {
+        // Try with admin client to bypass RLS
+        const supabase = createAdminClient();
+        console.log('[Drive Folders API] Using admin client with service role key');
+        
+        const result = await supabase
+          .from('google_tokens')
+          .select('access_token, refresh_token, expires_at')
+          .eq('user_email', session.user.email)
+          .single();
+          
+        tokenData = result.data;
+        tokenError = result.error;
+        
+        if (tokenError) {
+          console.error('[Drive Folders API] Admin client failed:', {
+            error: tokenError,
+            code: tokenError.code,
+            message: tokenError.message,
+            details: tokenError.details,
+            hint: tokenError.hint
+          });
+        }
+      } catch (e) {
+        console.error('[Drive Folders API] Exception during token fetch:', e);
+        tokenError = e;
+      }
 
       if (tokenError || !tokenData?.access_token) {
         console.error('[Drive Folders API] Token fetch failed:', {
