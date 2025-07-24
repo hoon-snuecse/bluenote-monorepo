@@ -54,6 +54,8 @@ function ImportPageContent() {
         setFiles(data.files);
       } else {
         console.log('Not authenticated or error:', response.status);
+        const errorData = await response.json().catch(() => ({}));
+        console.log('Error details:', errorData);
         setIsAuthenticated(false);
       }
     } catch (error) {
