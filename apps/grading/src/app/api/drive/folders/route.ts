@@ -7,8 +7,8 @@ export async function GET() {
   console.log('[Drive Folders API] Request received');
   
   try {
-    // Get current session
-    const session = await getServerSession();
+    // Get current session with extended type
+    const session = await getServerSession() as any;
     if (!session?.user?.email) {
       console.error('[Drive Folders API] No session found');
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
@@ -16,20 +16,26 @@ export async function GET() {
     
     console.log('[Drive Folders API] Current user:', session.user.email);
 
-    // Get user's Google token from database
-    const supabase = createClient();
-    const { data: tokenData, error: tokenError } = await supabase
-      .from('google_tokens')
-      .select('access_token')
-      .eq('user_email', session.user.email)
-      .single();
+    // First try to use NextAuth session token
+    let accessToken = session.accessToken;
+    
+    // If no token in session, try to get from database
+    if (!accessToken) {
+      const supabase = createClient();
+      const { data: tokenData, error: tokenError } = await supabase
+        .from('google_tokens')
+        .select('access_token')
+        .eq('user_email', session.user.email)
+        .single();
 
-    if (tokenError || !tokenData?.access_token) {
-      console.error('[Drive Folders API] Token error:', tokenError);
-      return NextResponse.json({ error: 'Google authentication required' }, { status: 401 });
+      if (tokenError || !tokenData?.access_token) {
+        console.error('[Drive Folders API] No token available:', tokenError);
+        return NextResponse.json({ error: 'Google authentication required' }, { status: 401 });
+      }
+      
+      accessToken = tokenData.access_token;
     }
     
-    const accessToken = tokenData.access_token;
     console.log('[Drive Folders API] Token found for user');
 
     const oauth2Client = new google.auth.OAuth2(

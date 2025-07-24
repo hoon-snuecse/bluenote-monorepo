@@ -15,37 +15,50 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Folder ID required' }, { status: 400 });
     }
 
-    // Get current session
-    const session = await getServerSession();
+    // Get current session with extended type
+    const session = await getServerSession() as any;
     if (!session?.user?.email) {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
     }
 
     console.log('[Drive Documents API] Getting tokens for user:', session.user.email);
     
-    // Get user's Google token from database using admin client
-    const supabase = createAdminClient();
-    const { data: tokenData, error: tokenError } = await supabase
-      .from('google_tokens')
-      .select('access_token, refresh_token, expires_at')
-      .eq('user_email', session.user.email)
-      .single();
+    // First try to use NextAuth session token
+    let accessToken = session.accessToken;
+    let tokenData = null;
     
-    console.log('[Drive Documents API] Token query result:', {
-      hasData: !!tokenData,
-      hasAccessToken: !!tokenData?.access_token,
-      error: tokenError?.message
-    });
+    // If no token in session, try to get from database
+    if (!accessToken) {
+      const supabase = createAdminClient();
+      const { data, error: tokenError } = await supabase
+        .from('google_tokens')
+        .select('access_token, refresh_token, expires_at')
+        .eq('user_email', session.user.email)
+        .single();
+      
+      tokenData = data;
+      
+      console.log('[Drive Documents API] Token query result:', {
+        hasData: !!tokenData,
+        hasAccessToken: !!tokenData?.access_token,
+        error: tokenError?.message
+      });
 
-    if (tokenError || !tokenData?.access_token) {
-      console.error('[Drive Documents API] Token error:', tokenError);
+      if (tokenError || !tokenData?.access_token) {
+        accessToken = null;
+      } else {
+        accessToken = tokenData.access_token;
+      }
+    }
+
+    if (!accessToken) {
+      console.error('[Drive Documents API] No token available');
       return NextResponse.json({ 
         error: 'Google authentication required',
-        details: tokenError?.message || 'No access token found'
+        details: 'No access token found'
       }, { status: 401 });
     }
 
-    const accessToken = tokenData.access_token;
 
     const oauth2Client = new google.auth.OAuth2(
       process.env.GOOGLE_CLIENT_ID,
