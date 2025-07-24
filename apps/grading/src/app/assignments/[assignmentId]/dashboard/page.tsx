@@ -645,9 +645,8 @@ export default function DashboardPage() {
                         <button
                           onClick={() => router.push(`/assignments/${params.assignmentId}/submissions/${student.id}`)}
                           className="px-3 py-1 bg-white/60 text-slate-700 rounded-lg hover:bg-white/80 transition-colors text-sm border border-slate-200/50"
-                          title={student.evaluatedAt ? '보고서' : '학생글'}
                         >
-                          보기
+                          {student.evaluatedAt ? '보고서' : '학생글'}
                         </button>
                       </td>
                     </tr>
@@ -1038,9 +1037,8 @@ function SubmissionManagementTab({ assignment, students, params, router }: any) 
                       <button
                         onClick={() => router.push(`/assignments/${params.assignmentId}/submissions/${submission.id}`)}
                         className="px-3 py-1.5 bg-white text-slate-700 rounded-md hover:bg-slate-50 text-sm border border-slate-200"
-                        title={submission.status === 'evaluated' ? '보고서' : '학생글'}
                       >
-                        보기
+                        {submission.status === 'evaluated' ? '보고서' : '학생글'}
                       </button>
                     </td>
                   </tr>
