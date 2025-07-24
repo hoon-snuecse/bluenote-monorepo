@@ -38,14 +38,26 @@ export async function GET() {
         const supabase = createAdminClient();
         console.log('[Drive Folders API] Using admin client with service role key');
         
-        const result = await supabase
+        // First check if any tokens exist
+        const { data: allTokens, error: checkError } = await supabase
           .from('google_tokens')
-          .select('access_token, refresh_token, expires_at')
+          .select('access_token, refresh_token, expires_at, created_at')
           .eq('user_email', session.user.email)
-          .single();
+          .order('created_at', { ascending: false });
           
-        tokenData = result.data;
-        tokenError = result.error;
+        console.log('[Drive Folders API] Token check:', {
+          email: session.user.email,
+          tokenCount: allTokens?.length || 0,
+          checkError
+        });
+        
+        if (checkError) {
+          throw checkError;
+        }
+        
+        // Use the most recent token if multiple exist
+        tokenData = allTokens && allTokens.length > 0 ? allTokens[0] : null;
+        tokenError = !tokenData ? new Error('No tokens found') : null;
         
         if (tokenError) {
           console.error('[Drive Folders API] Admin client failed:', {
@@ -63,19 +75,15 @@ export async function GET() {
 
       if (tokenError || !tokenData?.access_token) {
         console.error('[Drive Folders API] Token fetch failed:', {
-          error: tokenError,
-          errorCode: tokenError?.code,
-          errorMessage: tokenError?.message,
-          errorDetails: tokenError?.details,
+          error: tokenError?.message || 'No tokens found',
           hasData: !!tokenData,
           hasAccessToken: !!tokenData?.access_token,
           userEmail: session.user.email
         });
         return NextResponse.json({ 
           error: 'Google authentication required',
-          details: tokenError?.message || 'No access token in session or database',
-          errorCode: tokenError?.code,
-          hasSessionToken: false
+          details: 'No Google Drive access token found. Please authenticate with Google Drive.',
+          needsAuth: true
         }, { status: 401 });
       }
       
