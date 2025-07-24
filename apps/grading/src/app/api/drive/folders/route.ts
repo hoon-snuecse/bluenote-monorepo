@@ -27,7 +27,7 @@ export async function GET() {
     
     // Always get token from database
     {
-      const supabase = createAdminClient();
+      const supabase = createClient();
       const { data: tokenData, error: tokenError } = await supabase
         .from('google_tokens')
         .select('access_token, refresh_token, expires_at')
