@@ -1,7 +1,8 @@
 {
   "framework": "nextjs",
-  "buildCommand": "pnpm build",
+  "buildCommand": "bash scripts/vercel-build.sh",
   "outputDirectory": ".next",
+  "installCommand": "echo 'Install will be handled by build script'",
   "regions": ["icn1"],
   "env": {
     "NODE_VERSION": "20.x"
