@@ -14,7 +14,7 @@ const oauth2Client = new google.auth.OAuth2(
 
 export async function GET(request: NextRequest) {
   // Check current session first
-  const session = await getServerSession();
+  const session = await getServerSession() as any;
   if (!session?.user?.email) {
     // Redirect to main site login if not authenticated
     const returnUrl = encodeURIComponent(request.url);
@@ -23,6 +23,15 @@ export async function GET(request: NextRequest) {
 
   const searchParams = request.nextUrl.searchParams;
   const assignmentId = searchParams.get('assignmentId');
+  
+  // If session has Google access token, skip OAuth flow
+  if (session.accessToken) {
+    const baseUrl = process.env.NODE_ENV === 'production' 
+      ? 'https://grading.bluenote.site'
+      : 'http://localhost:3001';
+    const assignmentIdParam = assignmentId ? `&assignmentId=${assignmentId}` : '';
+    return NextResponse.redirect(`${baseUrl}/import?success=true${assignmentIdParam}`);
+  }
   
   const scopes = [
     'https://www.googleapis.com/auth/drive.readonly',
