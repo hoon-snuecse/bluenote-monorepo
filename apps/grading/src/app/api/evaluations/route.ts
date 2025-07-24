@@ -127,11 +127,8 @@ export async function POST(request: NextRequest) {
     
     console.log('평가 저장 완료:', evaluation.id);
     
-    // 제출물 상태 업데이트 (evaluatedAt 시간 설정)
-    await prisma.submission.update({
-      where: { id: submissionId },
-      data: { evaluatedAt: new Date() }
-    });
+    // 제출물의 updatedAt은 평가가 추가될 때 자동으로 업데이트됨
+    // evaluatedAt은 Evaluation 모델에 저장되어 있음
     
     // 평가 완료 알림
     sendEvaluationUpdate(assignmentId, {
