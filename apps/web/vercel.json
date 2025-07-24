@@ -1,9 +1,7 @@
 {
+  "buildCommand": "cd ../.. && pnpm install && cd apps/web && pnpm build",
+  "installCommand": "echo 'Skipping install'",
+  "outputDirectory": ".next",
   "framework": "nextjs",
-  "buildCommand": "bash scripts/vercel-build.sh",
-  "installCommand": "echo 'Install will be handled by build script'",
-  "regions": ["icn1"],
-  "env": {
-    "NODE_VERSION": "20.x"
-  }
+  "regions": ["icn1"]
 }
