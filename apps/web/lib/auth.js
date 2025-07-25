@@ -15,8 +15,7 @@ const authCallbacks = {
         .from('usage_logs')
         .insert({
           user_email: email,
-          action_type: 'login',
-          metadata: { timestamp: new Date().toISOString() }
+          action_type: 'login'
         })
         .select();
         

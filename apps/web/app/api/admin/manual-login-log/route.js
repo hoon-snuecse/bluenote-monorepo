@@ -18,12 +18,7 @@ export async function POST() {
       .from('usage_logs')
       .insert({
         user_email: session.user.email,
-        action_type: 'login',
-        metadata: { 
-          manual: true,
-          timestamp: new Date().toISOString(),
-          source: 'manual-test'
-        }
+        action_type: 'login'
       })
       .select();
     

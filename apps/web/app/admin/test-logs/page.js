@@ -92,11 +92,6 @@ export default function TestLogsPage() {
                     <p className="text-slate-400 text-sm">
                       {new Date(log.created_at).toLocaleString()}
                     </p>
-                    {log.metadata && (
-                      <p className="text-slate-400 text-xs">
-                        {JSON.stringify(log.metadata)}
-                      </p>
-                    )}
                   </div>
                 ))
               ) : (
