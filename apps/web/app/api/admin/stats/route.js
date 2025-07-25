@@ -25,28 +25,10 @@ export async function GET(request) {
       // Continue without usage stats
     }
     
-    // Get post counts
-    let supabase;
-    let clientType = 'unknown';
-    
-    try {
-      supabase = createAdminClient();
-      clientType = 'admin';
-      console.log('Admin client created successfully');
-    } catch (error) {
-      console.error('Failed to create admin client:', error);
-      console.error('Error details:', {
-        message: error.message,
-        hasServiceKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
-        serviceKeyLength: process.env.SUPABASE_SERVICE_ROLE_KEY?.length
-      });
-      
-      // Fallback to regular client
-      const { createClient } = await import('@/lib/supabase/server');
-      supabase = await createClient();
-      clientType = 'regular';
-      console.log('Using fallback client');
-    }
+    // Get post counts - Service Role Key 문제로 임시로 regular client 사용
+    const { createClient } = await import('@/lib/supabase/server');
+    const supabase = await createClient();
+    console.log('Using regular client due to Service Role Key issues');
     
     const [
       researchResult,
