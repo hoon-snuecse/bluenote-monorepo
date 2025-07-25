@@ -28,40 +28,19 @@ export default function AdminDashboardClient() {
 
   const fetchStats = async () => {
     try {
-      // Fetch users count
-      const usersRes = await fetch('/api/admin/users');
+      // 병렬로 필요한 데이터만 조회
+      const [usersRes, statsRes] = await Promise.all([
+        fetch('/api/admin/users'),
+        fetch('/api/admin/stats')
+      ]);
+      
       const usersData = await usersRes.json();
-      
-      // Fetch posts from all sections
-      const sections = ['research', 'teaching', 'analytics', 'shed'];
-      const postsPromises = sections.map(section => {
-        // 각 섹션별로 올바른 API 경로 사용
-        const apiPath = section === 'shed' 
-          ? `/api/shed/posts/supabase`
-          : `/api/${section}/posts/supabase`;
-        return fetch(apiPath).then(res => res.json());
-      });
-      const postsResults = await Promise.all(postsPromises);
-      
-      // Count total posts
-      const totalPosts = postsResults.reduce((sum, result) => 
-        sum + (result.posts?.length || 0), 0
-      );
-      
-      // Fetch usage logs
-      const logsRes = await fetch('/api/admin/usage-logs');
-      const logsData = await logsRes.json();
-      
-      // Count today's logs
-      const today = new Date().toDateString();
-      const todayLogs = logsData.logs?.filter(log => 
-        new Date(log.created_at).toDateString() === today
-      ).length || 0;
+      const statsData = await statsRes.json();
       
       setStats({
         totalUsers: usersData.users?.length || 0,
-        totalPosts,
-        todayLogs
+        totalPosts: statsData.totalPosts || 0,
+        todayLogs: statsData.todayUsage || 0
       });
     } catch (error) {
       console.error('Failed to fetch stats:', error);
