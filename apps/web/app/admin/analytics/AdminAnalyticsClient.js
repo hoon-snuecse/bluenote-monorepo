@@ -104,7 +104,6 @@ export default function AdminAnalyticsClient() {
       
       // Process login stats
       const loginLogs = logsData.logs?.filter(log => log.action_type === 'login') || [];
-      console.log('Login logs found:', loginLogs.length, 'out of total logs:', logsData.logs?.length);
       const todayLoginLogs = loginLogs.filter(log => 
         new Date(log.created_at).toDateString() === today
       );

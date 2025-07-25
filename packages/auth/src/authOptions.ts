@@ -106,11 +106,10 @@ export const createAuthOptions = (callbacks?: AuthCallbacks): NextAuthOptions =>
           
           // 로그인 활동 기록 (첫 로그인 시만)
           if (callbacks?.logSignIn && user.email) {
-            console.log('[JWT Callback] Recording login for:', user.email);
             try {
               await callbacks.logSignIn(user.email);
             } catch (error) {
-              console.error('[JWT Callback] Error logging sign in:', error);
+              console.error('Error logging sign in:', error);
             }
           }
           
@@ -183,17 +182,13 @@ export const createAuthOptions = (callbacks?: AuthCallbacks): NextAuthOptions =>
     },
     events: {
       async signIn(message) {
-        console.log('[NextAuth] signIn event triggered:', message.user?.email);
         // 로그인 성공 시 로그 기록
         if (callbacks?.logSignIn && message.user?.email) {
           try {
-            console.log('[NextAuth] Calling logSignIn for:', message.user.email);
             await callbacks.logSignIn(message.user.email);
           } catch (error) {
-            console.error('[NextAuth] Error logging sign in:', error);
+            console.error('Error logging sign in:', error);
           }
-        } else {
-          console.log('[NextAuth] logSignIn callback not available or no email');
         }
       },
     },

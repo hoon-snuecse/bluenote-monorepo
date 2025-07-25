@@ -6,26 +6,22 @@ import { createAdminClient } from '@/lib/supabase/admin';
 const authCallbacks = {
   // 로그인 활동 기록 함수
   logSignIn: async (email) => {
-    console.log('[Auth] logSignIn called for:', email);
     try {
       const supabase = createAdminClient();
       
       // 로그인 활동 기록
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('usage_logs')
         .insert({
           user_email: email,
           action_type: 'login'
-        })
-        .select();
+        });
         
       if (error) {
-        console.error('[Auth] Error inserting login log:', error);
-      } else {
-        console.log(`[Auth] Login activity logged for ${email}:`, data);
+        console.error('Error inserting login log:', error);
       }
     } catch (error) {
-      console.error('[Auth] Error logging login activity:', error);
+      console.error('Error logging login activity:', error);
     }
   },
   checkUserPermission: async (email) => {
