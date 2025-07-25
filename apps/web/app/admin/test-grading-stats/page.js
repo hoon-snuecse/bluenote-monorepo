@@ -61,6 +61,37 @@ export default function TestGradingStatsPage() {
     setLoading(false);
   };
 
+  const addTestData = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const url = process.env.NODE_ENV === 'production'
+        ? 'https://grading.bluenote.site/api/test/add-evaluations'
+        : 'http://localhost:3001/api/test/add-evaluations';
+        
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      const data = await res.json();
+      
+      if (!res.ok) {
+        setError(`Add test data error: ${res.status}`);
+      } else {
+        alert('Test data added successfully!');
+        // 다시 통계 가져오기
+        fetchStats();
+      }
+    } catch (error) {
+      console.error('Error adding test data:', error);
+      setError(`Add test data error: ${error.message}`);
+    }
+    setLoading(false);
+  };
+
   return (
     <div className="p-6 max-w-4xl mx-auto">
       <div className="flex justify-between items-center mb-6">
@@ -85,6 +116,13 @@ export default function TestGradingStatsPage() {
             className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded disabled:opacity-50"
           >
             Fetch Stats (Direct)
+          </button>
+          <button
+            onClick={addTestData}
+            disabled={loading}
+            className="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded disabled:opacity-50"
+          >
+            Add Test Data (Grading)
           </button>
         </div>
 

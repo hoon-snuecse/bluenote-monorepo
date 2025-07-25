@@ -113,6 +113,12 @@ export async function GET(request: NextRequest) {
       },
       students: {
         total: totalStudents
+      },
+      debug: {
+        evaluationsByModel,
+        todayEvaluationsByModel,
+        todayStart: today.toISOString(),
+        todayEnd: tomorrow.toISOString()
       }
     };
 
@@ -127,7 +133,7 @@ export async function GET(request: NextRequest) {
 }
 
 // OPTIONS 요청 처리 (CORS preflight)
-export async function OPTIONS(request: NextRequest) {
+export async function OPTIONS() {
   return new Response(null, {
     status: 200,
     headers: {
