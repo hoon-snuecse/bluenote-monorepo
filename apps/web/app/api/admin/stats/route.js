@@ -26,7 +26,18 @@ export async function GET(request) {
     }
     
     // Get post counts
-    const supabase = createAdminClient();
+    let supabase;
+    try {
+      supabase = createAdminClient();
+      console.log('Admin client created successfully');
+    } catch (error) {
+      console.error('Failed to create admin client:', error);
+      // Fallback to regular client
+      const { createClient } = await import('@/lib/supabase/server');
+      supabase = await createClient();
+      console.log('Using fallback client');
+    }
+    
     const [
       researchResult,
       teachingResult,
@@ -34,16 +45,29 @@ export async function GET(request) {
       shedResult,
       todayLogsResult
     ] = await Promise.all([
-      supabase.from('research_posts').select('id', { count: 'exact', head: true }),
-      supabase.from('teaching_posts').select('id', { count: 'exact', head: true }),
-      supabase.from('analytics_posts').select('id', { count: 'exact', head: true }),
-      supabase.from('shed_posts').select('id', { count: 'exact', head: true }),
+      supabase.from('research_posts').select('*', { count: 'exact', head: true }),
+      supabase.from('teaching_posts').select('*', { count: 'exact', head: true }),
+      supabase.from('analytics_posts').select('*', { count: 'exact', head: true }),
+      supabase.from('shed_posts').select('*', { count: 'exact', head: true }),
       // Get today's usage logs count
       supabase
         .from('usage_logs')
-        .select('id', { count: 'exact', head: true })
+        .select('*', { count: 'exact', head: true })
         .gte('created_at', new Date().toISOString().split('T')[0])
     ]);
+    
+    console.log('Environment check:', {
+      hasServiceKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
+      supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL?.substring(0, 30) + '...'
+    });
+    
+    console.log('Post counts:', {
+      research: { count: researchResult.count, error: researchResult.error },
+      teaching: { count: teachingResult.count, error: teachingResult.error },
+      analytics: { count: analyticsResult.count, error: analyticsResult.error },
+      shed: { count: shedResult.count, error: shedResult.error },
+      todayLogs: { count: todayLogsResult.count, error: todayLogsResult.error }
+    });
     
     const totalPosts = (researchResult.count || 0) + 
                       (teachingResult.count || 0) + 
