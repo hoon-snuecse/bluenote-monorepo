@@ -173,12 +173,12 @@ export default function NavigationWithAuth() {
             {/* 관리자 대시보드 버튼 (관리자만) */}
             {user?.role === 'admin' && (
               <Link
-                href="/assignments"
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 whitespace-nowrap ${
-                  pathname?.startsWith('/assignments')
-                    ? 'bg-slate-100 text-slate-900'
-                    : 'text-slate-900 hover:bg-slate-100 hover:text-black'
-                }`}
+                href="https://bluenote.site/admin"
+                onClick={(e) => {
+                  e.preventDefault();
+                  window.location.href = 'https://bluenote.site/admin';
+                }}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 whitespace-nowrap text-slate-900 hover:bg-slate-100 hover:text-black"
               >
                 <Shield className="w-4 h-4 flex-shrink-0" />
                 <span>관리자</span>
@@ -280,13 +280,13 @@ export default function NavigationWithAuth() {
             {/* 모바일 관리자 버튼 */}
             {user?.role === 'admin' && (
               <Link
-                href="/assignments"
-                onClick={() => setIsMenuOpen(false)}
-                className={`flex items-center gap-3 px-4 py-3 rounded-lg text-base font-medium transition-colors whitespace-nowrap ${
-                  pathname?.startsWith('/assignments')
-                    ? 'bg-slate-100 text-slate-900'
-                    : 'text-slate-900 hover:bg-slate-50'
-                }`}
+                href="https://bluenote.site/admin"
+                onClick={(e) => {
+                  e.preventDefault();
+                  window.location.href = 'https://bluenote.site/admin';
+                  setIsMenuOpen(false);
+                }}
+                className="flex items-center gap-3 px-4 py-3 rounded-lg text-base font-medium transition-colors whitespace-nowrap text-slate-900 hover:bg-slate-50"
               >
                 <Shield className="w-5 h-5 flex-shrink-0" />
                 <span>관리자</span>
