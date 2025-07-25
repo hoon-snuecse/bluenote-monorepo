@@ -25,11 +25,15 @@ export async function GET() {
     };
     
     try {
-      // 프로덕션 환경에서는 grading.bluenote.site 사용
-      // 개발 환경에서는 localhost:3001 사용
-      const gradingUrl = process.env.NODE_ENV === 'production' 
-        ? 'https://grading.bluenote.site/api/stats'
-        : 'http://localhost:3001/api/stats';
+      // 환경 변수로 grading 앱 URL 설정 가능
+      // 기본값: 프로덕션 - grading.bluenote.site, 개발 - localhost:3001
+      const gradingUrl = process.env.GRADING_APP_URL 
+        ? `${process.env.GRADING_APP_URL}/api/stats`
+        : process.env.NODE_ENV === 'production' 
+          ? 'https://grading.bluenote.site/api/stats'
+          : 'http://localhost:3001/api/stats';
+      
+      console.log('Fetching grading stats from:', gradingUrl);
         
       const response = await fetch(gradingUrl, {
         headers: {
@@ -41,11 +45,14 @@ export async function GET() {
       
       if (response.ok) {
         gradingStats = await response.json();
+        console.log('Grading stats fetched successfully:', gradingStats);
       } else {
         console.error('Grading stats API returned:', response.status);
+        const errorText = await response.text();
+        console.error('Error response:', errorText);
       }
     } catch (error) {
-      console.error('Failed to fetch grading stats:', error);
+      console.error('Failed to fetch grading stats:', error.message);
       // 오류가 발생해도 기본값 반환
     }
 
