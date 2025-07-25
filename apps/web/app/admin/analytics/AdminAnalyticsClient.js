@@ -40,7 +40,8 @@ export default function AdminAnalyticsClient() {
       analytics: 0,
       shed: 0
     },
-    claudeUsageByUser: [],
+    sonnetTopUsers: [],
+    opusTopUsers: [],
     dailyStats: []
   });
 
@@ -132,19 +133,20 @@ export default function AdminAnalyticsClient() {
         console.error('Failed to fetch grading stats:', error);
       }
       
-      // Claude usage by user
-      const usageByUser = {};
-      claudeUsage.forEach(log => {
-        if (!usageByUser[log.user_email]) {
-          usageByUser[log.user_email] = 0;
-        }
-        usageByUser[log.user_email]++;
-      });
+      // Fetch grading user stats (model-specific top users)
+      let gradingUserStats = {
+        sonnetTopUsers: [],
+        opusTopUsers: []
+      };
       
-      const claudeUsageByUser = Object.entries(usageByUser)
-        .map(([email, count]) => ({ email, count }))
-        .sort((a, b) => b.count - a.count)
-        .slice(0, 10);
+      try {
+        const gradingUserRes = await fetch('/api/admin/grading-user-stats');
+        if (gradingUserRes.ok) {
+          gradingUserStats = await gradingUserRes.json();
+        }
+      } catch (error) {
+        console.error('Failed to fetch grading user stats:', error);
+      }
       
       // Daily stats for the last 7 days
       const dailyStats = [];
@@ -169,7 +171,7 @@ export default function AdminAnalyticsClient() {
       // 디버깅을 위한 로그
       const recentUsersData = usersData.users?.slice(-10).reverse() || [];
       console.log('Recent users:', recentUsersData.map((u, i) => ({index: i, email: u.email})));
-      console.log('Claude usage by user:', claudeUsageByUser.map((u, i) => ({index: i, email: u.email, count: u.count})));
+      console.log('Grading user stats:', gradingUserStats);
       console.log('Recent posts:', recentPosts.map((p, i) => ({index: i, id: p.id, title: p.title})));
       
       setStats({
@@ -185,7 +187,8 @@ export default function AdminAnalyticsClient() {
         recentUsers: recentUsersData,
         recentPosts,
         contentStats,
-        claudeUsageByUser,
+        sonnetTopUsers: gradingUserStats.sonnetTopUsers || [],
+        opusTopUsers: gradingUserStats.opusTopUsers || [],
         dailyStats
       });
     } catch (error) {
@@ -360,22 +363,47 @@ export default function AdminAnalyticsClient() {
           </div>
         </div>
 
-        {/* Top Claude Users */}
+        {/* Model-specific Grading Top Users */}
         <div className="bg-slate-800 border border-slate-700 rounded-lg p-6">
-          <h3 className="text-lg font-semibold text-white mb-4">Claude 최다 사용자</h3>
-          <div className="space-y-2">
-            {stats.claudeUsageByUser.map((user, index) => (
-              <div key={`claude-user-${user.email}-${index}`} className="flex items-center justify-between p-2 hover:bg-slate-700 rounded">
-                <div className="flex items-center gap-3">
-                  <span className="text-slate-500 text-sm w-6">#{index + 1}</span>
-                  <span className="text-white text-sm">{user.email}</span>
-                </div>
-                <span className="text-slate-400 text-sm">{user.count}회</span>
+          <h3 className="text-lg font-semibold text-white mb-4">모델별 채점 최다 사용자</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Sonnet Top Users */}
+            <div>
+              <h4 className="text-md font-medium text-orange-400 mb-3">Sonnet 모델</h4>
+              <div className="space-y-2">
+                {stats.sonnetTopUsers.map((user, index) => (
+                  <div key={`sonnet-user-${user.name}-${index}`} className="flex items-center justify-between p-2 hover:bg-slate-700 rounded">
+                    <div className="flex items-center gap-3">
+                      <span className="text-slate-500 text-sm w-6">#{index + 1}</span>
+                      <span className="text-white text-sm">{user.name}</span>
+                    </div>
+                    <span className="text-slate-400 text-sm">{user.count}회</span>
+                  </div>
+                ))}
+                {stats.sonnetTopUsers.length === 0 && (
+                  <p className="text-slate-500 text-center py-4 text-sm">사용 기록이 없습니다</p>
+                )}
               </div>
-            ))}
-            {stats.claudeUsageByUser.length === 0 && (
-              <p className="text-slate-500 text-center py-4">사용 기록이 없습니다</p>
-            )}
+            </div>
+            
+            {/* Opus Top Users */}
+            <div>
+              <h4 className="text-md font-medium text-cyan-400 mb-3">Opus 모델</h4>
+              <div className="space-y-2">
+                {stats.opusTopUsers.map((user, index) => (
+                  <div key={`opus-user-${user.name}-${index}`} className="flex items-center justify-between p-2 hover:bg-slate-700 rounded">
+                    <div className="flex items-center gap-3">
+                      <span className="text-slate-500 text-sm w-6">#{index + 1}</span>
+                      <span className="text-white text-sm">{user.name}</span>
+                    </div>
+                    <span className="text-slate-400 text-sm">{user.count}회</span>
+                  </div>
+                ))}
+                {stats.opusTopUsers.length === 0 && (
+                  <p className="text-slate-500 text-center py-4 text-sm">사용 기록이 없습니다</p>
+                )}
+              </div>
+            </div>
           </div>
         </div>
       </div>
