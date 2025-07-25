@@ -25,11 +25,11 @@ export async function GET(request) {
       // Continue without usage stats
     }
     
-    // Get post counts - Service Role Key 문제로 임시로 regular client 사용
-    // TODO: Service Role Key 권한 문제 해결 필요
+    // Get post counts
+    // Service Role Key가 특정 테이블에 대해 권한 거부되므로 regular client 사용
+    // RLS가 비활성화되어 있어서 regular client로도 충분함
     const { createClient } = await import('@/lib/supabase/server');
     const supabase = await createClient();
-    console.log('Using regular client due to Service Role Key permission issues');
     
     const [
       researchResult,
