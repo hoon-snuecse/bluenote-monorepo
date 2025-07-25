@@ -27,14 +27,24 @@ export async function GET(request) {
     
     // Get post counts
     let supabase;
+    let clientType = 'unknown';
+    
     try {
       supabase = createAdminClient();
+      clientType = 'admin';
       console.log('Admin client created successfully');
     } catch (error) {
       console.error('Failed to create admin client:', error);
+      console.error('Error details:', {
+        message: error.message,
+        hasServiceKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
+        serviceKeyLength: process.env.SUPABASE_SERVICE_ROLE_KEY?.length
+      });
+      
       // Fallback to regular client
       const { createClient } = await import('@/lib/supabase/server');
       supabase = await createClient();
+      clientType = 'regular';
       console.log('Using fallback client');
     }
     
@@ -56,18 +66,65 @@ export async function GET(request) {
         .gte('created_at', new Date().toISOString().split('T')[0])
     ]);
     
+    // Enhanced debugging for Vercel deployment
     console.log('Environment check:', {
       hasServiceKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
-      supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL?.substring(0, 30) + '...'
+      serviceKeyLength: process.env.SUPABASE_SERVICE_ROLE_KEY?.length || 0,
+      supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL?.substring(0, 30) + '...',
+      nodeEnv: process.env.NODE_ENV,
+      vercel: process.env.VERCEL || 'not-vercel'
     });
     
-    console.log('Post counts:', {
-      research: { count: researchResult.count, error: researchResult.error },
-      teaching: { count: teachingResult.count, error: teachingResult.error },
-      analytics: { count: analyticsResult.count, error: analyticsResult.error },
-      shed: { count: shedResult.count, error: shedResult.error },
-      todayLogs: { count: todayLogsResult.count, error: todayLogsResult.error }
+    // Log query results with more detail
+    console.log('Query results:', {
+      research: { 
+        count: researchResult.count, 
+        error: researchResult.error?.message || null,
+        status: researchResult.status,
+        statusText: researchResult.statusText
+      },
+      teaching: { 
+        count: teachingResult.count, 
+        error: teachingResult.error?.message || null,
+        status: teachingResult.status,
+        statusText: teachingResult.statusText
+      },
+      analytics: { 
+        count: analyticsResult.count, 
+        error: analyticsResult.error?.message || null,
+        status: analyticsResult.status,
+        statusText: analyticsResult.statusText
+      },
+      shed: { 
+        count: shedResult.count, 
+        error: shedResult.error?.message || null,
+        status: shedResult.status,
+        statusText: shedResult.statusText
+      },
+      todayLogs: { 
+        count: todayLogsResult.count, 
+        error: todayLogsResult.error?.message || null,
+        status: todayLogsResult.status,
+        statusText: todayLogsResult.statusText
+      }
     });
+    
+    // Test direct query to verify connection
+    if (researchResult.error || teachingResult.error || analyticsResult.error || shedResult.error) {
+      console.error('Supabase query errors detected');
+      
+      // Try a simple test query
+      const testQuery = await supabase
+        .from('research_posts')
+        .select('id')
+        .limit(1);
+      
+      console.log('Test query result:', {
+        data: testQuery.data,
+        error: testQuery.error?.message || null,
+        status: testQuery.status
+      });
+    }
     
     const totalPosts = (researchResult.count || 0) + 
                       (teachingResult.count || 0) + 
