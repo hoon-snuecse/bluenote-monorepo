@@ -7,15 +7,14 @@ import {
   BarChart3, 
   TrendingUp, 
   Users, 
-  FileText,
-  MessageSquare,
   Calendar,
-  Activity,
   ArrowLeft,
   Clock,
   Eye,
   LogIn,
-  UserCheck
+  Bot,
+  GraduationCap,
+  Sparkles
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -25,12 +24,14 @@ export default function AdminAnalyticsClient() {
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
     totalUsers: 0,
-    totalPosts: 0,
-    totalClaudeUsage: 0,
-    todayClaudeUsage: 0,
     totalLogins: 0,
     todayLogins: 0,
-    uniqueLoginsToday: 0,
+    totalClaudeUsage: 0,
+    todayClaudeUsage: 0,
+    totalGradingSonnet: 0,
+    todayGradingSonnet: 0,
+    totalGradingOpus: 0,
+    todayGradingOpus: 0,
     recentUsers: [],
     recentPosts: [],
     contentStats: {
@@ -108,7 +109,17 @@ export default function AdminAnalyticsClient() {
         new Date(log.created_at).toDateString() === today
       );
       const todayLogins = todayLoginLogs.length;
-      const uniqueLoginsToday = new Set(todayLoginLogs.map(log => log.user_email)).size;
+      
+      // Process grading stats (placeholder - will need actual data)
+      const gradingSonnetLogs = logsData.logs?.filter(log => log.action_type === 'grading_sonnet') || [];
+      const todayGradingSonnet = gradingSonnetLogs.filter(log => 
+        new Date(log.created_at).toDateString() === today
+      ).length;
+      
+      const gradingOpusLogs = logsData.logs?.filter(log => log.action_type === 'grading_opus') || [];
+      const todayGradingOpus = gradingOpusLogs.filter(log => 
+        new Date(log.created_at).toDateString() === today
+      ).length;
       
       // Claude usage by user
       const usageByUser = {};
@@ -145,12 +156,14 @@ export default function AdminAnalyticsClient() {
       
       setStats({
         totalUsers: usersData.users?.length || 0,
-        totalPosts,
-        totalClaudeUsage: claudeUsage.length,
-        todayClaudeUsage,
         totalLogins: loginLogs.length,
         todayLogins,
-        uniqueLoginsToday,
+        totalClaudeUsage: claudeUsage.length,
+        todayClaudeUsage,
+        totalGradingSonnet: gradingSonnetLogs.length,
+        todayGradingSonnet,
+        totalGradingOpus: gradingOpusLogs.length,
+        todayGradingOpus,
         recentUsers: usersData.users?.slice(-10).reverse() || [],
         recentPosts,
         contentStats,
@@ -191,7 +204,7 @@ export default function AdminAnalyticsClient() {
       </div>
 
       {/* Summary Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
         <div className="bg-slate-800 border border-slate-700 rounded-lg p-6">
           <div className="flex items-center justify-between">
             <div>
@@ -205,51 +218,44 @@ export default function AdminAnalyticsClient() {
         <div className="bg-slate-800 border border-slate-700 rounded-lg p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-slate-400 text-sm">전체 콘텐츠</p>
-              <p className="text-3xl font-bold text-white mt-1">{stats.totalPosts}</p>
+              <p className="text-slate-400 text-sm">로그인</p>
+              <p className="text-3xl font-bold text-white mt-1">{stats.todayLogins} / {stats.totalLogins}</p>
+              <p className="text-xs text-slate-500 mt-1">오늘 / 총</p>
             </div>
-            <FileText className="w-8 h-8 text-green-400" />
+            <LogIn className="w-8 h-8 text-green-400" />
           </div>
         </div>
         
         <div className="bg-slate-800 border border-slate-700 rounded-lg p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-slate-400 text-sm">Claude 총 사용</p>
-              <p className="text-3xl font-bold text-white mt-1">{stats.totalClaudeUsage}</p>
+              <p className="text-slate-400 text-sm">AI 작성(API)</p>
+              <p className="text-3xl font-bold text-white mt-1">{stats.todayClaudeUsage} / {stats.totalClaudeUsage}</p>
+              <p className="text-xs text-slate-500 mt-1">오늘 / 총</p>
             </div>
-            <MessageSquare className="w-8 h-8 text-purple-400" />
+            <Bot className="w-8 h-8 text-purple-400" />
           </div>
         </div>
         
         <div className="bg-slate-800 border border-slate-700 rounded-lg p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-slate-400 text-sm">오늘 Claude 사용</p>
-              <p className="text-3xl font-bold text-white mt-1">{stats.todayClaudeUsage}</p>
+              <p className="text-slate-400 text-sm">AI 채점(sonnet)</p>
+              <p className="text-3xl font-bold text-white mt-1">{stats.todayGradingSonnet} / {stats.totalGradingSonnet}</p>
+              <p className="text-xs text-slate-500 mt-1">오늘 / 총</p>
             </div>
-            <Activity className="w-8 h-8 text-orange-400" />
+            <GraduationCap className="w-8 h-8 text-orange-400" />
           </div>
         </div>
         
         <div className="bg-slate-800 border border-slate-700 rounded-lg p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-slate-400 text-sm">총 로그인 횟수</p>
-              <p className="text-3xl font-bold text-white mt-1">{stats.totalLogins}</p>
+              <p className="text-slate-400 text-sm">AI 채점(opus)</p>
+              <p className="text-3xl font-bold text-white mt-1">{stats.todayGradingOpus} / {stats.totalGradingOpus}</p>
+              <p className="text-xs text-slate-500 mt-1">오늘 / 총</p>
             </div>
-            <LogIn className="w-8 h-8 text-cyan-400" />
-          </div>
-        </div>
-        
-        <div className="bg-slate-800 border border-slate-700 rounded-lg p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-slate-400 text-sm">오늘 로그인</p>
-              <p className="text-3xl font-bold text-white mt-1">{stats.todayLogins}</p>
-              <p className="text-xs text-slate-500 mt-1">{stats.uniqueLoginsToday}명 사용자</p>
-            </div>
-            <UserCheck className="w-8 h-8 text-indigo-400" />
+            <Sparkles className="w-8 h-8 text-cyan-400" />
           </div>
         </div>
       </div>
