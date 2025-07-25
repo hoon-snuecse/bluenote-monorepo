@@ -72,11 +72,11 @@ export default function DebugGradingPage() {
             <div className="mb-6">
               <h3 className="text-white font-medium mb-2">Recent Evaluations</h3>
               <div className="space-y-2">
-                {debugData.recentEvaluations?.map((eval) => (
-                  <div key={eval.id} className="bg-slate-700 p-3 rounded text-sm">
-                    <p className="text-slate-300">ID: {eval.id}</p>
-                    <p className="text-white font-medium">evaluatedBy: "{eval.evaluatedBy}"</p>
-                    <p className="text-slate-400">Date: {new Date(eval.evaluatedAt).toLocaleString()}</p>
+                {debugData.recentEvaluations?.map((evaluation) => (
+                  <div key={evaluation.id} className="bg-slate-700 p-3 rounded text-sm">
+                    <p className="text-slate-300">ID: {evaluation.id}</p>
+                    <p className="text-white font-medium">evaluatedBy: "{evaluation.evaluatedBy}"</p>
+                    <p className="text-slate-400">Date: {new Date(evaluation.evaluatedAt).toLocaleString()}</p>
                   </div>
                 ))}
               </div>
