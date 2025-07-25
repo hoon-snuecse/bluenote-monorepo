@@ -26,9 +26,10 @@ export async function GET(request) {
     }
     
     // Get post counts - Service Role Key 문제로 임시로 regular client 사용
+    // TODO: Service Role Key 권한 문제 해결 필요
     const { createClient } = await import('@/lib/supabase/server');
     const supabase = await createClient();
-    console.log('Using regular client due to Service Role Key issues');
+    console.log('Using regular client due to Service Role Key permission issues');
     
     const [
       researchResult,
