@@ -70,25 +70,43 @@ export async function GET(request: NextRequest) {
 
     // 전체 통계 처리
     evaluationsByModel.forEach(item => {
-      const model = item.evaluatedBy || '';
-      if (model.toLowerCase().includes('sonnet') || model.includes('claude-sonnet')) {
+      const model = (item.evaluatedBy || '').toLowerCase();
+      // sonnet 모델 (claude-sonnet-4-20250514 등)
+      if (model.includes('sonnet')) {
         modelStats.sonnet.total += item._count._all;
-      } else if (model.toLowerCase().includes('opus') || model.includes('claude-opus')) {
+      } 
+      // opus 모델 (claude-opus-20250514 등)
+      else if (model.includes('opus')) {
         modelStats.opus.total += item._count._all;
-      } else if (model.toLowerCase().includes('mock')) {
+      } 
+      // mock 모델
+      else if (model.includes('mock')) {
         modelStats.mock.total += item._count._all;
+      }
+      // 기본 claude도 sonnet으로 분류
+      else if (model === 'claude') {
+        modelStats.sonnet.total += item._count._all;
       }
     });
 
     // 오늘 통계 처리
     todayEvaluationsByModel.forEach(item => {
-      const model = item.evaluatedBy || '';
-      if (model.toLowerCase().includes('sonnet') || model.includes('claude-sonnet')) {
+      const model = (item.evaluatedBy || '').toLowerCase();
+      // sonnet 모델 (claude-sonnet-4-20250514 등)
+      if (model.includes('sonnet')) {
         modelStats.sonnet.today += item._count._all;
-      } else if (model.toLowerCase().includes('opus') || model.includes('claude-opus')) {
+      } 
+      // opus 모델 (claude-opus-20250514 등)
+      else if (model.includes('opus')) {
         modelStats.opus.today += item._count._all;
-      } else if (model.toLowerCase().includes('mock')) {
+      } 
+      // mock 모델
+      else if (model.includes('mock')) {
         modelStats.mock.today += item._count._all;
+      }
+      // 기본 claude도 sonnet으로 분류
+      else if (model === 'claude') {
+        modelStats.sonnet.today += item._count._all;
       }
     });
 
@@ -96,7 +114,7 @@ export async function GET(request: NextRequest) {
     const [totalAssignments, totalSubmissions, totalStudents] = await Promise.all([
       prisma.assignment.count(),
       prisma.submission.count(),
-      prisma.student.count()
+      prisma.studentGroup.count()
     ]);
 
     const stats = {
