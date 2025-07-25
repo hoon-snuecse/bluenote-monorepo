@@ -11,6 +11,7 @@ export default function DebugGradingPage() {
   const [debugData, setDebugData] = useState(null);
   const [statsData, setStatsData] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   if (status === 'loading') {
     return <div>Loading...</div>;
@@ -23,16 +24,16 @@ export default function DebugGradingPage() {
 
   const fetchDebugData = async () => {
     setLoading(true);
+    setError(null);
     try {
-      // Debug 데이터 가져오기
-      const debugUrl = process.env.NODE_ENV === 'production'
-        ? 'https://grading.bluenote.site/api/stats/debug'
-        : 'http://localhost:3001/api/stats/debug';
-        
-      const debugRes = await fetch(debugUrl);
+      // Debug 데이터를 프록시를 통해 가져오기
+      const debugRes = await fetch('/api/admin/grading-debug');
       if (debugRes.ok) {
         const data = await debugRes.json();
         setDebugData(data);
+      } else {
+        const errorText = await debugRes.text();
+        throw new Error(`Debug API failed: ${debugRes.status} - ${errorText}`);
       }
 
       // Stats 데이터도 가져오기
@@ -43,6 +44,7 @@ export default function DebugGradingPage() {
       }
     } catch (error) {
       console.error('Error fetching debug data:', error);
+      setError(error.message);
     }
     setLoading(false);
   };
@@ -64,6 +66,12 @@ export default function DebugGradingPage() {
         >
           Fetch Debug Data
         </button>
+
+        {error && (
+          <div className="bg-red-500/20 border border-red-500 text-red-300 p-4 rounded">
+            Error: {error}
+          </div>
+        )}
 
         {debugData && (
           <div className="bg-slate-800 p-6 rounded-lg">

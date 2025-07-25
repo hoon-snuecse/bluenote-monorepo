@@ -158,12 +158,19 @@ export default function AdminAnalyticsClient() {
         
         dailyStats.push({
           date: date.toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' }),
+          fullDate: date.toISOString().split('T')[0], // YYYY-MM-DD 형식으로 고유한 key 생성용
           claude: dayLogs.filter(log => log.action_type === 'claude_chat').length,
           posts: dayLogs.filter(log => log.action_type === 'post_write').length,
           logins: dayLogs.filter(log => log.action_type === 'login').length,
           uniqueLogins: new Set(dayLogs.filter(log => log.action_type === 'login').map(log => log.user_email)).size
         });
       }
+      
+      // 디버깅을 위한 로그
+      const recentUsersData = usersData.users?.slice(-10).reverse() || [];
+      console.log('Recent users:', recentUsersData.map((u, i) => ({index: i, email: u.email})));
+      console.log('Claude usage by user:', claudeUsageByUser.map((u, i) => ({index: i, email: u.email, count: u.count})));
+      console.log('Recent posts:', recentPosts.map((p, i) => ({index: i, id: p.id, title: p.title})));
       
       setStats({
         totalUsers: usersData.users?.length || 0,
@@ -175,7 +182,7 @@ export default function AdminAnalyticsClient() {
         todayGradingSonnet: gradingStats.sonnet.today,
         totalGradingOpus: gradingStats.opus.total,
         todayGradingOpus: gradingStats.opus.today,
-        recentUsers: usersData.users?.slice(-10).reverse() || [],
+        recentUsers: recentUsersData,
         recentPosts,
         contentStats,
         claudeUsageByUser,
@@ -300,8 +307,8 @@ export default function AdminAnalyticsClient() {
         <div className="bg-slate-800 border border-slate-700 rounded-lg p-6">
           <h3 className="text-lg font-semibold text-white mb-4">최근 7일 활동</h3>
           <div className="space-y-3">
-            {stats.dailyStats.map((day, index) => (
-              <div key={index}>
+            {stats.dailyStats.map((day) => (
+              <div key={day.fullDate || `day-${day.date}`}>
                 <div className="flex items-center gap-2 mb-2">
                   <span className="text-slate-400 text-sm w-16">{day.date}</span>
                   <div className="flex-1 space-y-1">
@@ -358,7 +365,7 @@ export default function AdminAnalyticsClient() {
           <h3 className="text-lg font-semibold text-white mb-4">Claude 최다 사용자</h3>
           <div className="space-y-2">
             {stats.claudeUsageByUser.map((user, index) => (
-              <div key={user.email} className="flex items-center justify-between p-2 hover:bg-slate-700 rounded">
+              <div key={`claude-user-${user.email}-${index}`} className="flex items-center justify-between p-2 hover:bg-slate-700 rounded">
                 <div className="flex items-center gap-3">
                   <span className="text-slate-500 text-sm w-6">#{index + 1}</span>
                   <span className="text-white text-sm">{user.email}</span>
@@ -379,7 +386,7 @@ export default function AdminAnalyticsClient() {
         <div className="space-y-3">
           {stats.recentPosts.map((post) => (
             <Link
-              key={post.id}
+              key={`${post.section}-${post.id}`}
               href={`/${post.section}/${post.id}`}
               className="flex items-center justify-between p-3 hover:bg-slate-700 rounded-lg transition-colors"
             >
@@ -411,8 +418,8 @@ export default function AdminAnalyticsClient() {
       <div className="bg-slate-800 border border-slate-700 rounded-lg p-6">
         <h3 className="text-lg font-semibold text-white mb-4">최근 가입 사용자</h3>
         <div className="space-y-2">
-          {stats.recentUsers.map((user) => (
-            <div key={user.email} className="flex items-center justify-between p-2">
+          {stats.recentUsers.map((user, index) => (
+            <div key={`user-${user.email}-${index}`} className="flex items-center justify-between p-2">
               <span className="text-white">{user.email}</span>
               <span className="text-slate-400 text-sm">
                 {new Date(user.created_at).toLocaleDateString('ko-KR')}

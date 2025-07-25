@@ -26,12 +26,12 @@ export async function GET() {
     
     try {
       // 환경 변수로 grading 앱 URL 설정 가능
-      // 기본값: 프로덕션 - grading.bluenote.site, 개발 - localhost:3001
+      // 기본값: 프로덕션 - grading.bluenote.site, 개발 - localhost:3002
       const gradingUrl = process.env.GRADING_APP_URL 
         ? `${process.env.GRADING_APP_URL}/api/stats`
         : process.env.NODE_ENV === 'production' 
           ? 'https://grading.bluenote.site/api/stats'
-          : 'http://localhost:3001/api/stats';
+          : 'http://localhost:3002/api/stats';
       
       const response = await fetch(gradingUrl, {
         headers: {
