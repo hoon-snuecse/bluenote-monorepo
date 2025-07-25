@@ -135,8 +135,15 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(stats, { headers });
   } catch (error) {
     console.error('통계 조회 오류:', error);
+    console.error('Error details:', {
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined
+    });
     return NextResponse.json(
-      { error: '통계 조회 중 오류가 발생했습니다.' },
+      { 
+        error: '통계 조회 중 오류가 발생했습니다.',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      },
       { status: 500 }
     );
   }
