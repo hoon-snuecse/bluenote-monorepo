@@ -119,16 +119,17 @@ export async function getUsageStats(days = 7) {
     startDate.setDate(startDate.getDate() - days);
     startDate.setHours(0, 0, 0, 0);
     
-    // Get usage summary
+    // Get usage logs directly
     const { data: usageData, error: usageError } = await supabase
-      .from('daily_usage_summary')
+      .from('usage_logs')
       .select('*')
-      .gte('usage_date', startDate.toISOString().split('T')[0])
-      .order('usage_date', { ascending: false });
+      .gte('created_at', startDate.toISOString())
+      .order('created_at', { ascending: false });
     
     if (usageError) {
       console.error('Error fetching usage stats:', usageError);
-      return { error: 'Failed to fetch usage statistics' };
+      // Continue with empty data instead of returning error
+      usageData = [];
     }
     
     // Get total users
@@ -152,20 +153,21 @@ export async function getUsageStats(days = 7) {
       }
     };
     
-    // Calculate summary
-    usageData?.forEach(record => {
-      switch(record.action_type) {
+    // Calculate summary from usage logs
+    const usageArray = usageData || [];
+    usageArray.forEach(log => {
+      switch(log.action_type) {
         case 'claude_chat':
-          stats.summary.claudeChats += record.action_count;
+          stats.summary.claudeChats += 1;
           break;
         case 'post_write':
-          stats.summary.postsWritten += record.action_count;
+          stats.summary.postsWritten += 1;
           break;
         case 'post_edit':
-          stats.summary.postsEdited += record.action_count;
+          stats.summary.postsEdited += 1;
           break;
         case 'post_delete':
-          stats.summary.postsDeleted += record.action_count;
+          stats.summary.postsDeleted += 1;
           break;
       }
     });

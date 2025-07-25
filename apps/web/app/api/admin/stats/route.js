@@ -16,8 +16,14 @@ export async function GET(request) {
       return NextResponse.json({ error: 'Forbidden - Admin access required' }, { status: 403 });
     }
 
-    // Get usage statistics
-    const usageStats = await getUsageStats(7); // Last 7 days
+    // Get usage statistics (실패해도 계속 진행)
+    let usageStats = {};
+    try {
+      usageStats = await getUsageStats(7); // Last 7 days
+    } catch (error) {
+      console.error('Error getting usage stats:', error);
+      // Continue without usage stats
+    }
     
     // Get post counts
     const supabase = createAdminClient();
@@ -44,8 +50,11 @@ export async function GET(request) {
                       (analyticsResult.count || 0) + 
                       (shedResult.count || 0);
     
+    // Remove error field if exists
+    const { error, ...cleanUsageStats } = usageStats;
+    
     return NextResponse.json({
-      ...usageStats,
+      ...cleanUsageStats,
       totalPosts,
       todayUsage: todayLogsResult.count || 0,
       postsBreakdown: {
