@@ -173,9 +173,9 @@ export default function NavigationWithAuth() {
             {/* 관리자 대시보드 버튼 (관리자만) */}
             {user?.role === 'admin' && (
               <Link
-                href="/admin/dashboard"
+                href="/assignments"
                 className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 whitespace-nowrap ${
-                  isActive('/admin')
+                  pathname?.startsWith('/assignments')
                     ? 'bg-slate-100 text-slate-900'
                     : 'text-slate-900 hover:bg-slate-100 hover:text-black'
                 }`}
@@ -280,10 +280,10 @@ export default function NavigationWithAuth() {
             {/* 모바일 관리자 버튼 */}
             {user?.role === 'admin' && (
               <Link
-                href="/admin/dashboard"
+                href="/assignments"
                 onClick={() => setIsMenuOpen(false)}
                 className={`flex items-center gap-3 px-4 py-3 rounded-lg text-base font-medium transition-colors whitespace-nowrap ${
-                  isActive('/admin')
+                  pathname?.startsWith('/assignments')
                     ? 'bg-slate-100 text-slate-900'
                     : 'text-slate-900 hover:bg-slate-50'
                 }`}
