@@ -1,14 +1,20 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { authOptions } from '@/lib/auth';
 import { createAdminClient } from '@/lib/supabase/admin';
 
 export async function GET() {
   try {
     const session = await getServerSession(authOptions);
     
-    if (!session || !session.user.isAdmin) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!session) {
+      console.log('No session found for usage-logs request');
+      return NextResponse.json({ error: 'Unauthorized - No session' }, { status: 401 });
+    }
+    
+    if (!session.user.isAdmin) {
+      console.log('User not admin:', session.user.email, 'isAdmin:', session.user.isAdmin, 'role:', session.user.role);
+      return NextResponse.json({ error: 'Unauthorized - Not admin' }, { status: 401 });
     }
 
     const supabase = createAdminClient();
