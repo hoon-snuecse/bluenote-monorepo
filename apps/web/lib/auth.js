@@ -4,6 +4,25 @@ import { createAdminClient } from '@/lib/supabase/admin';
 
 // Supabase 기반 권한 체크 함수들
 const authCallbacks = {
+  // 로그인 활동 기록 함수
+  logLoginActivity: async (email) => {
+    try {
+      const supabase = process.env.SUPABASE_SERVICE_ROLE_KEY 
+        ? createAdminClient() 
+        : await createClient();
+      
+      // 로그인 활동 기록
+      await supabase
+        .from('usage_logs')
+        .insert({
+          user_email: email,
+          action_type: 'login',
+          metadata: { timestamp: new Date().toISOString() }
+        });
+    } catch (error) {
+      console.error('Error logging login activity:', error);
+    }
+  },
   checkUserPermission: async (email) => {
     try {
       // First check if email is in admin list as a fallback
@@ -30,6 +49,9 @@ const authCallbacks = {
         console.log(`Login denied for ${email} - not in allowed users`);
         return false;
       }
+      
+      // 로그인 활동 기록
+      await authCallbacks.logLoginActivity(email);
       
       return true;
     } catch (error) {

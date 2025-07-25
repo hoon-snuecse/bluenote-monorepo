@@ -13,7 +13,9 @@ import {
   Activity,
   ArrowLeft,
   Clock,
-  Eye
+  Eye,
+  LogIn,
+  UserCheck
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -26,6 +28,9 @@ export default function AdminAnalyticsClient() {
     totalPosts: 0,
     totalClaudeUsage: 0,
     todayClaudeUsage: 0,
+    totalLogins: 0,
+    todayLogins: 0,
+    uniqueLoginsToday: 0,
     recentUsers: [],
     recentPosts: [],
     contentStats: {
@@ -90,12 +95,20 @@ export default function AdminAnalyticsClient() {
       allPosts.sort((a, b) => new Date(b.created_at || b.date) - new Date(a.created_at || a.date));
       const recentPosts = allPosts.slice(0, 5);
       
-      // Process Claude usage
+      // Process Claude usage and login stats
       const today = new Date().toDateString();
       const claudeUsage = logsData.logs?.filter(log => log.action_type === 'claude_chat') || [];
       const todayClaudeUsage = claudeUsage.filter(log => 
         new Date(log.created_at).toDateString() === today
       ).length;
+      
+      // Process login stats
+      const loginLogs = logsData.logs?.filter(log => log.action_type === 'login') || [];
+      const todayLoginLogs = loginLogs.filter(log => 
+        new Date(log.created_at).toDateString() === today
+      );
+      const todayLogins = todayLoginLogs.length;
+      const uniqueLoginsToday = new Set(todayLoginLogs.map(log => log.user_email)).size;
       
       // Claude usage by user
       const usageByUser = {};
@@ -124,7 +137,9 @@ export default function AdminAnalyticsClient() {
         dailyStats.push({
           date: date.toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' }),
           claude: dayLogs.filter(log => log.action_type === 'claude_chat').length,
-          posts: dayLogs.filter(log => log.action_type === 'post_write').length
+          posts: dayLogs.filter(log => log.action_type === 'post_write').length,
+          logins: dayLogs.filter(log => log.action_type === 'login').length,
+          uniqueLogins: new Set(dayLogs.filter(log => log.action_type === 'login').map(log => log.user_email)).size
         });
       }
       
@@ -133,7 +148,10 @@ export default function AdminAnalyticsClient() {
         totalPosts,
         totalClaudeUsage: claudeUsage.length,
         todayClaudeUsage,
-        recentUsers: usersData.users?.slice(-5).reverse() || [],
+        totalLogins: loginLogs.length,
+        todayLogins,
+        uniqueLoginsToday,
+        recentUsers: usersData.users?.slice(-10).reverse() || [],
         recentPosts,
         contentStats,
         claudeUsageByUser,
@@ -173,7 +191,7 @@ export default function AdminAnalyticsClient() {
       </div>
 
       {/* Summary Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
         <div className="bg-slate-800 border border-slate-700 rounded-lg p-6">
           <div className="flex items-center justify-between">
             <div>
@@ -213,6 +231,27 @@ export default function AdminAnalyticsClient() {
             <Activity className="w-8 h-8 text-orange-400" />
           </div>
         </div>
+        
+        <div className="bg-slate-800 border border-slate-700 rounded-lg p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-slate-400 text-sm">총 로그인 횟수</p>
+              <p className="text-3xl font-bold text-white mt-1">{stats.totalLogins}</p>
+            </div>
+            <LogIn className="w-8 h-8 text-cyan-400" />
+          </div>
+        </div>
+        
+        <div className="bg-slate-800 border border-slate-700 rounded-lg p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-slate-400 text-sm">오늘 로그인</p>
+              <p className="text-3xl font-bold text-white mt-1">{stats.todayLogins}</p>
+              <p className="text-xs text-slate-500 mt-1">{stats.uniqueLoginsToday}명 사용자</p>
+            </div>
+            <UserCheck className="w-8 h-8 text-indigo-400" />
+          </div>
+        </div>
       </div>
 
       {/* Content Distribution */}
@@ -245,25 +284,38 @@ export default function AdminAnalyticsClient() {
           <h3 className="text-lg font-semibold text-white mb-4">최근 7일 활동</h3>
           <div className="space-y-3">
             {stats.dailyStats.map((day, index) => (
-              <div key={index} className="flex items-center gap-4">
-                <span className="text-slate-400 text-sm w-16">{day.date}</span>
-                <div className="flex-1 flex items-center gap-2">
-                  <div className="flex-1 h-4 bg-slate-700 rounded-full overflow-hidden">
-                    <div 
-                      className="h-full bg-purple-500"
-                      style={{ width: `${day.claude > 0 ? (day.claude / Math.max(...stats.dailyStats.map(d => d.claude))) * 100 : 0}%` }}
-                    />
+              <div key={index}>
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-slate-400 text-sm w-16">{day.date}</span>
+                  <div className="flex-1 space-y-1">
+                    <div className="flex items-center gap-2">
+                      <div className="flex-1 h-3 bg-slate-700 rounded-full overflow-hidden">
+                        <div 
+                          className="h-full bg-purple-500"
+                          style={{ width: `${day.claude > 0 ? (day.claude / Math.max(...stats.dailyStats.map(d => d.claude), 1)) * 100 : 0}%` }}
+                        />
+                      </div>
+                      <span className="text-slate-400 text-xs w-16">Claude {day.claude}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="flex-1 h-3 bg-slate-700 rounded-full overflow-hidden">
+                        <div 
+                          className="h-full bg-green-500"
+                          style={{ width: `${day.posts > 0 ? (day.posts / Math.max(...stats.dailyStats.map(d => d.posts), 1)) * 100 : 0}%` }}
+                        />
+                      </div>
+                      <span className="text-slate-400 text-xs w-16">게시물 {day.posts}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="flex-1 h-3 bg-slate-700 rounded-full overflow-hidden">
+                        <div 
+                          className="h-full bg-cyan-500"
+                          style={{ width: `${day.logins > 0 ? (day.logins / Math.max(...stats.dailyStats.map(d => d.logins), 1)) * 100 : 0}%` }}
+                        />
+                      </div>
+                      <span className="text-slate-400 text-xs w-16">로그인 {day.logins} ({day.uniqueLogins}명)</span>
+                    </div>
                   </div>
-                  <span className="text-slate-400 text-xs w-8">{day.claude}</span>
-                </div>
-                <div className="flex-1 flex items-center gap-2">
-                  <div className="flex-1 h-4 bg-slate-700 rounded-full overflow-hidden">
-                    <div 
-                      className="h-full bg-green-500"
-                      style={{ width: `${day.posts > 0 ? (day.posts / Math.max(...stats.dailyStats.map(d => d.posts), 1)) * 100 : 0}%` }}
-                    />
-                  </div>
-                  <span className="text-slate-400 text-xs w-8">{day.posts}</span>
                 </div>
               </div>
             ))}
@@ -275,6 +327,10 @@ export default function AdminAnalyticsClient() {
               <span className="flex items-center gap-1">
                 <div className="w-3 h-3 bg-green-500 rounded" />
                 게시물 작성
+              </span>
+              <span className="flex items-center gap-1">
+                <div className="w-3 h-3 bg-cyan-500 rounded" />
+                로그인
               </span>
             </div>
           </div>
