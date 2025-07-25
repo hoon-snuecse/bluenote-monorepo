@@ -189,8 +189,8 @@ function ImportPageContent() {
           console.log('Redirecting to submissions:', `/assignments/${assignmentId}/submissions`);
           window.location.href = `/assignments/${assignmentId}/submissions`;
         } else {
-          console.log('No assignmentId, redirecting to dashboard');
-          window.location.href = '/dashboard';
+          console.log('No assignmentId, redirecting to assignments');
+          window.location.href = '/assignments';
         }
       }
     } catch (error) {
