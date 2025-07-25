@@ -34,8 +34,20 @@ export default function AdminDashboardClient() {
         fetch('/api/admin/stats')
       ]);
       
+      // 응답 상태 확인
+      if (!usersRes.ok || !statsRes.ok) {
+        console.error('API request failed:', {
+          users: usersRes.status,
+          stats: statsRes.status
+        });
+        return;
+      }
+      
       const usersData = await usersRes.json();
       const statsData = await statsRes.json();
+      
+      console.log('Admin Dashboard - Users Response:', usersData);
+      console.log('Admin Dashboard - Stats Response:', statsData);
       
       setStats({
         totalUsers: usersData.users?.length || 0,
