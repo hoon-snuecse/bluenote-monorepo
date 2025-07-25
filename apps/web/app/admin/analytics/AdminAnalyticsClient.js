@@ -110,16 +110,26 @@ export default function AdminAnalyticsClient() {
       );
       const todayLogins = todayLoginLogs.length;
       
-      // Process grading stats (placeholder - will need actual data)
-      const gradingSonnetLogs = logsData.logs?.filter(log => log.action_type === 'grading_sonnet') || [];
-      const todayGradingSonnet = gradingSonnetLogs.filter(log => 
-        new Date(log.created_at).toDateString() === today
-      ).length;
+      // Fetch grading stats from grading app via server-side API
+      let gradingStats = {
+        sonnet: { total: 0, today: 0 },
+        opus: { total: 0, today: 0 }
+      };
       
-      const gradingOpusLogs = logsData.logs?.filter(log => log.action_type === 'grading_opus') || [];
-      const todayGradingOpus = gradingOpusLogs.filter(log => 
-        new Date(log.created_at).toDateString() === today
-      ).length;
+      try {
+        const gradingRes = await fetch('/api/admin/grading-stats');
+        if (gradingRes.ok) {
+          const gradingData = await gradingRes.json();
+          if (gradingData.evaluations?.byModel) {
+            gradingStats = {
+              sonnet: gradingData.evaluations.byModel.sonnet || { total: 0, today: 0 },
+              opus: gradingData.evaluations.byModel.opus || { total: 0, today: 0 }
+            };
+          }
+        }
+      } catch (error) {
+        console.error('Failed to fetch grading stats:', error);
+      }
       
       // Claude usage by user
       const usageByUser = {};
@@ -160,10 +170,10 @@ export default function AdminAnalyticsClient() {
         todayLogins,
         totalClaudeUsage: claudeUsage.length,
         todayClaudeUsage,
-        totalGradingSonnet: gradingSonnetLogs.length,
-        todayGradingSonnet,
-        totalGradingOpus: gradingOpusLogs.length,
-        todayGradingOpus,
+        totalGradingSonnet: gradingStats.sonnet.total,
+        todayGradingSonnet: gradingStats.sonnet.today,
+        totalGradingOpus: gradingStats.opus.total,
+        todayGradingOpus: gradingStats.opus.today,
         recentUsers: usersData.users?.slice(-10).reverse() || [],
         recentPosts,
         contentStats,
