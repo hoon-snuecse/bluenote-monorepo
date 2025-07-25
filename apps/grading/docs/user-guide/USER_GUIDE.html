@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>USER_GUIDE.md</title>
+<meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+
+<style>
+/* https://github.com/microsoft/vscode/blob/master/extensions/markdown-language-features/media/markdown.css */
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
+body {
+	font-family: var(--vscode-markdown-font-family, -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", "Ubuntu", "Droid Sans", sans-serif);
+	font-size: var(--vscode-markdown-font-size, 14px);
+	padding: 0 26px;
+	line-height: var(--vscode-markdown-line-height, 22px);
+	word-wrap: break-word;
+}
+
+#code-csp-warning {
+	position: fixed;
+	top: 0;
+	right: 0;
+	color: white;
+	margin: 16px;
+	text-align: center;
+	font-size: 12px;
+	font-family: sans-serif;
+	background-color:#444444;
+	cursor: pointer;
+	padding: 6px;
+	box-shadow: 1px 1px 1px rgba(0,0,0,.25);
+}
+
+#code-csp-warning:hover {
+	text-decoration: none;
+	background-color:#007acc;
+	box-shadow: 2px 2px 2px rgba(0,0,0,.25);
+}
+
+body.scrollBeyondLastLine {
+	margin-bottom: calc(100vh - 22px);
+}
+
+body.showEditorSelection .code-line {
+	position: relative;
+}
+
+body.showEditorSelection .code-active-line:before,
+body.showEditorSelection .code-line:hover:before {
+	content: "";
+	display: block;
+	position: absolute;
+	top: 0;
+	left: -12px;
+	height: 100%;
+}
+
+body.showEditorSelection li.code-active-line:before,
+body.showEditorSelection li.code-line:hover:before {
+	left: -30px;
+}
+
+.vscode-light.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(0, 0, 0, 0.15);
+}
+
+.vscode-light.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(0, 0, 0, 0.40);
+}
+
+.vscode-light.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+.vscode-dark.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(255, 255, 255, 0.4);
+}
+
+.vscode-dark.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(255, 255, 255, 0.60);
+}
+
+.vscode-dark.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+.vscode-high-contrast.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(255, 160, 0, 0.7);
+}
+
+.vscode-high-contrast.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(255, 160, 0, 1);
+}
+
+.vscode-high-contrast.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+img {
+	max-width: 100%;
+	max-height: 100%;
+}
+
+a {
+	text-decoration: none;
+}
+
+a:hover {
+	text-decoration: underline;
+}
+
+a:focus,
+input:focus,
+select:focus,
+textarea:focus {
+	outline: 1px solid -webkit-focus-ring-color;
+	outline-offset: -1px;
+}
+
+hr {
+	border: 0;
+	height: 2px;
+	border-bottom: 2px solid;
+}
+
+h1 {
+	padding-bottom: 0.3em;
+	line-height: 1.2;
+	border-bottom-width: 1px;
+	border-bottom-style: solid;
+}
+
+h1, h2, h3 {
+	font-weight: normal;
+}
+
+table {
+	border-collapse: collapse;
+}
+
+table > thead > tr > th {
+	text-align: left;
+	border-bottom: 1px solid;
+}
+
+table > thead > tr > th,
+table > thead > tr > td,
+table > tbody > tr > th,
+table > tbody > tr > td {
+	padding: 5px 10px;
+}
+
+table > tbody > tr + tr > td {
+	border-top: 1px solid;
+}
+
+blockquote {
+	margin: 0 7px 0 5px;
+	padding: 0 16px 0 10px;
+	border-left-width: 5px;
+	border-left-style: solid;
+}
+
+code {
+	font-family: Menlo, Monaco, Consolas, "Droid Sans Mono", "Courier New", monospace, "Droid Sans Fallback";
+	font-size: 1em;
+	line-height: 1.357em;
+}
+
+body.wordWrap pre {
+	white-space: pre-wrap;
+}
+
+pre:not(.hljs),
+pre.hljs code > div {
+	padding: 16px;
+	border-radius: 3px;
+	overflow: auto;
+}
+
+pre code {
+	color: var(--vscode-editor-foreground);
+	tab-size: 4;
+}
+
+/** Theming */
+
+.vscode-light pre {
+	background-color: rgba(220, 220, 220, 0.4);
+}
+
+.vscode-dark pre {
+	background-color: rgba(10, 10, 10, 0.4);
+}
+
+.vscode-high-contrast pre {
+	background-color: rgb(0, 0, 0);
+}
+
+.vscode-high-contrast h1 {
+	border-color: rgb(0, 0, 0);
+}
+
+.vscode-light table > thead > tr > th {
+	border-color: rgba(0, 0, 0, 0.69);
+}
+
+.vscode-dark table > thead > tr > th {
+	border-color: rgba(255, 255, 255, 0.69);
+}
+
+.vscode-light h1,
+.vscode-light hr,
+.vscode-light table > tbody > tr + tr > td {
+	border-color: rgba(0, 0, 0, 0.18);
+}
+
+.vscode-dark h1,
+.vscode-dark hr,
+.vscode-dark table > tbody > tr + tr > td {
+	border-color: rgba(255, 255, 255, 0.18);
+}
+
+</style>
+
+<style>
+/* Tomorrow Theme */
+/* http://jmblog.github.com/color-themes-for-google-code-highlightjs */
+/* Original theme - https://github.com/chriskempson/tomorrow-theme */
+
+/* Tomorrow Comment */
+.hljs-comment,
+.hljs-quote {
+	color: #8e908c;
+}
+
+/* Tomorrow Red */
+.hljs-variable,
+.hljs-template-variable,
+.hljs-tag,
+.hljs-name,
+.hljs-selector-id,
+.hljs-selector-class,
+.hljs-regexp,
+.hljs-deletion {
+	color: #c82829;
+}
+
+/* Tomorrow Orange */
+.hljs-number,
+.hljs-built_in,
+.hljs-builtin-name,
+.hljs-literal,
+.hljs-type,
+.hljs-params,
+.hljs-meta,
+.hljs-link {
+	color: #f5871f;
+}
+
+/* Tomorrow Yellow */
+.hljs-attribute {
+	color: #eab700;
+}
+
+/* Tomorrow Green */
+.hljs-string,
+.hljs-symbol,
+.hljs-bullet,
+.hljs-addition {
+	color: #718c00;
+}
+
+/* Tomorrow Blue */
+.hljs-title,
+.hljs-section {
+	color: #4271ae;
+}
+
+/* Tomorrow Purple */
+.hljs-keyword,
+.hljs-selector-tag {
+	color: #8959a8;
+}
+
+.hljs {
+	display: block;
+	overflow-x: auto;
+	color: #4d4d4c;
+	padding: 0.5em;
+}
+
+.hljs-emphasis {
+	font-style: italic;
+}
+
+.hljs-strong {
+	font-weight: bold;
+}
+</style>
+
+<style>
+/*
+ * Markdown PDF CSS
+ */
+
+ body {
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", "Ubuntu", "Droid Sans", sans-serif, "Meiryo";
+	padding: 0 12px;
+}
+
+pre {
+	background-color: #f8f8f8;
+	border: 1px solid #cccccc;
+	border-radius: 3px;
+	overflow-x: auto;
+	white-space: pre-wrap;
+	overflow-wrap: break-word;
+}
+
+pre:not(.hljs) {
+	padding: 23px;
+	line-height: 19px;
+}
+
+blockquote {
+	background: rgba(127, 127, 127, 0.1);
+	border-color: rgba(0, 122, 204, 0.5);
+}
+
+.emoji {
+	height: 1.4em;
+}
+
+code {
+	font-size: 14px;
+	line-height: 19px;
+}
+
+/* for inline code */
+:not(pre):not(.hljs) > code {
+	color: #C9AE75; /* Change the old color so it seems less like an error */
+	font-size: inherit;
+}
+
+/* Page Break : use <div class="page"/> to insert page break
+-------------------------------------------------------- */
+.page {
+	page-break-after: always;
+}
+
+</style>
+
+<script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
+</head>
+<body>
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: document.body.classList.contains('vscode-dark') || document.body.classList.contains('vscode-high-contrast')
+          ? 'dark'
+          : 'default'
+    });
+  </script>
+<h1 id="ai-%EA%B8%80%EC%93%B0%EA%B8%B0-%ED%8F%89%EA%B0%80-%EC%8B%9C%EC%8A%A4%ED%85%9C-%EC%82%AC%EC%9A%A9-%EC%95%88%EB%82%B4%EC%84%9C">AI 글쓰기 평가 시스템 사용 안내서</h1>
+<p><strong>[글쓰기 평가 시스템과 안내서는 교육과 연구를 위해 만들어졌습니다. 사용을 원하시면 hoon@iw.es.kr로 연락 주십시오.]</strong></p>
+<h2 id="%EB%AA%A9%EC%B0%A8">목차</h2>
+<ol>
+<li><a href="#1-%EC%8B%9C%EC%8A%A4%ED%85%9C-%EC%86%8C%EA%B0%9C">시스템 소개</a></li>
+<li><a href="#2-%EC%8B%9C%EC%9E%91%ED%95%98%EA%B8%B0">시작하기</a></li>
+<li><a href="#3-%EA%B3%BC%EC%A0%9C-%EA%B4%80%EB%A6%AC">과제 관리</a></li>
+<li><a href="#4-%ED%95%99%EC%83%9D-%EA%B8%80-%EC%88%98%EC%A7%91">학생 글 수집</a></li>
+<li><a href="#5-ai-%ED%8F%89%EA%B0%80-%EC%8B%A4%ED%96%89">AI 평가 실행</a></li>
+<li><a href="#6-%ED%8F%89%EA%B0%80-%EA%B2%B0%EA%B3%BC-%ED%99%95%EC%9D%B8">평가 결과 확인</a></li>
+<li><a href="#7-%EB%8D%B0%EC%9D%B4%ED%84%B0-%EB%82%B4%EB%B3%B4%EB%82%B4%EA%B8%B0">데이터 내보내기</a></li>
+<li><a href="#8-%EC%B0%B8%EA%B3%A0-%ED%8F%89%EA%B0%80-%EA%B2%B0%EA%B3%BC">참고: 평가 결과</a></li>
+</ol>
+<hr>
+<h2 id="1-%EC%8B%9C%EC%8A%A4%ED%85%9C-%EC%86%8C%EA%B0%9C">1. 시스템 소개</h2>
+<h3 id="11-%EC%A3%BC%EC%9A%94-%EA%B8%B0%EB%8A%A5">1.1 주요 기능</h3>
+<p>AI 글쓰기 평가 시스템은 선생님들이 학생들의 글쓰기 과제를 효율적으로 평가하고 관리할 수 있도록 돕는 통합 플랫폼입니다.</p>
+<ul>
+<li><strong>AI 기반 자동 평가</strong>: Claude AI를 활용한 정확하고 일관된 평가</li>
+<li><strong>맞춤형 평가 기준</strong>: 과제별 루브릭 설정 가능</li>
+<li><strong>시각적 리포트</strong>: 학생별 성장 단계 표시 및 상세 피드백</li>
+<li><strong>데이터 관리</strong>: Excel, PDF 등 다양한 형식으로 내보내기</li>
+</ul>
+<h3 id="12-%EC%8B%9C%EC%8A%A4%ED%85%9C-%EC%9A%94%EA%B5%AC%EC%82%AC%ED%95%AD">1.2 시스템 요구사항</h3>
+<ul>
+<li>최신 웹 브라우저 (Chrome, Safari, Edge 권장)</li>
+<li>안정적인 인터넷 연결</li>
+<li>Google 계정 (로그인용)</li>
+</ul>
+<hr>
+<h2 id="2-%EC%8B%9C%EC%9E%91%ED%95%98%EA%B8%B0">2. 시작하기</h2>
+<h3 id="21-%EC%8B%9C%EC%8A%A4%ED%85%9C-%EC%A0%91%EC%86%8D">2.1 시스템 접속</h3>
+<p>AI 글쓰기 평가 시스템은 <strong>bluenote.site</strong>에서 이용하실 수 있습니다.</p>
+<div style="margin-left: 40px;">
+  <img src="./images/01-bluenote.png" alt="Bluenote 메인 화면" style="width: 40%; height: auto;">
+  <p style="font-size: 0.9em; color: #666; font-style: italic;">[이미지: 01-bluenote.png - Bluenote 시스템 메인 화면]</p>
+</div>
+<ol>
+<li>웹 브라우저를 열고 주소창에 <strong>bluenote.site</strong>를 입력합니다.</li>
+<li>Enter 키를 눌러 사이트에 접속합니다.</li>
+</ol>
+<blockquote>
+<p>💡 <strong>팁</strong>: 즐겨찾기에 추가하면 더 편리하게 이용할 수 있습니다.</p>
+</blockquote>
+<h3 id="22-%EB%A1%9C%EA%B7%B8%EC%9D%B8">2.2 로그인</h3>
+<ol>
+<li>bluenote.site에 접속하면 로그인 화면이 나타납니다.</li>
+<li>로그인 화면에서 <strong>&quot;Google로 로그인&quot;</strong> 버튼을 클릭합니다.</li>
+</ol>
+<div style="margin-left: 40px;">
+  <img src="./images/02-login-page.png" alt="로그인 화면" style="width: 40%; height: auto;">
+  <p style="font-size: 0.9em; color: #666; font-style: italic;">[이미지: 02-login-page.png - Google 로그인 버튼이 있는 로그인 페이지]</p>
+</div>
+<ol start="3">
+<li>Google 계정으로 로그인합니다.</li>
+</ol>
+<div style="margin-left: 40px;">
+<table style="width: 50%; border-collapse: collapse;">
+  <tr>
+    <td style="width: 50%; padding: 5px;">
+      <img src="./images/03-login-google-1.png" alt="구글 계정 선택" style="width: 100%; height: auto;">
+      <p style="font-size: 0.9em; color: #666;">① 구글 계정 선택</p>
+    </td>
+    <td style="width: 50%; padding: 5px;">
+      <img src="./images/04-login-google-2.png" alt="권한 요청" style="width: 100%; height: auto;">
+      <p style="font-size: 0.9em; color: #666;">② 권한 요청 (Continue)</p>
+    </td>
+  </tr>
+  <tr>
+    <td style="width: 50%; padding: 5px;">
+      <img src="./images/05-login-google-3.png" alt="추가 권한" style="width: 100%; height: auto;">
+      <p style="font-size: 0.9em; color: #666;">③ Drive 접근 권한</p>
+    </td>
+    <td style="width: 50%; padding: 5px;">
+      <img src="./images/06-login-google-4.png" alt="최종 확인" style="width: 100%; height: auto;">
+      <p style="font-size: 0.9em; color: #666;">④ 최종 확인</p>
+    </td>
+  </tr>
+</table>
+</div>
+<ul>
+<li>구글의 인증 기능을 활용해 로그인합니다. 현재 연구용으로 사용가능한 상황입니다.
+구글 드라이브에서 학생 자료를 가져오게 하기 위해 여러 차례 &quot;continue&quot;를 선택해야 합니다.</li>
+</ul>
+<ol start="4">
+<li>처음 로그인하는 경우, 관리자의 사전 승인이 필요합니다.</li>
+</ol>
+<h3 id="23-%EB%A9%94%EC%9D%B8-%EB%8C%80%EC%8B%9C%EB%B3%B4%EB%93%9C">2.3 메인 대시보드</h3>
+<p>로그인 후 &quot;프로그램&quot; 네뉴를 선택하고, 글쓰기 평가 시스템을 선택합니다.</p>
+<p>새 과제 만들기, 학생 글 가져오기, 평가 대시보드 등을 살펴보세요.</p>
+<p>평가 메인 대시보드로 이동하면 학생들의 글을 채점할 수 있습니다.</p>
+<div style="margin-left: 40px;">
+  <img src="./images/07-main-dashboard.png" alt="메인 대시보드" style="width: 40%; height: auto;">
+  <p style="font-size: 0.9em; color: #666; font-style: italic;">[이미지: 07-main-dashboard.png - 과제 목록이 카드 형태로 표시된 메인 화면]</p>
+</div>
+<p><strong>주요 구성 요소:</strong></p>
+<ul>
+<li>상단 네비게이션 바</li>
+<li>과제 카드 목록</li>
+<li>새 과제 만들기 버튼</li>
+</ul>
+<hr>
+<h2 id="3-%EA%B3%BC%EC%A0%9C-%EA%B4%80%EB%A6%AC-%EB%B0%8F-%EC%88%98%EC%A0%95%ED%95%98%EA%B8%B0">3. 과제 관리 및 수정하기</h2>
+<h3 id="31-%EC%83%88-%EA%B3%BC%EC%A0%9C-%EB%A7%8C%EB%93%A4%EA%B8%B0">3.1 새 과제 만들기</h3>
+<ol>
+<li>메인 대시보드에서 <strong>&quot;새 과제 만들기&quot;</strong> 버튼을 클릭합니다.</li>
+<li>과제 정보를 입력합니다:</li>
+<li>각 평가 영역에 대한 상세 기준을 설정한다.
+💡 <strong>팁</strong>: 상세 프롬프트 자동 생성 기능 활용</li>
+</ol>
+<div style="margin-left: 40px;">
+  <img src="./images/08-create-assignment.png" alt="과제 생성 화면" style="width: 40%; height: auto;">
+  <p style="font-size: 0.9em; color: #666; font-style: italic;">[이미지: 08-create-assignment.png - 과제 생성 폼]</p>
+</div>
+<p><strong>입력 항목:</strong></p>
+<ul>
+<li><strong>과제명</strong>: 예) &quot;환경보호에 대한 설득적 글쓰기&quot;</li>
+<li><strong>과제 설명</strong>: 학생들에게 보여질 상세 안내</li>
+<li><strong>제출 기한</strong>: 날짜와 시간 선택</li>
+<li><strong>평가 기준</strong>: 3~5가지 기본 평가 영역 (수정 및 추가 삭제 가능)
+<ul>
+<li>주장의 명확성</li>
+<li>근거의 타당성</li>
+<li>논리적 구조</li>
+<li>설득력 있는 표현</li>
+</ul>
+</li>
+</ul>
+<blockquote>
+<p>💡 <strong>팁</strong>: 명확한 평가 기준은 AI의 평가 정확도를 높입니다.</p>
+</blockquote>
+<hr>
+<h2 id="4-%ED%95%99%EC%83%9D-%EA%B8%80-%EC%88%98%EC%A7%91">4. 학생 글 수집</h2>
+<h3 id="41-%EC%A0%9C%EC%B6%9C-%EB%A7%81%ED%81%AC-%EA%B3%B5%EC%9C%A0">4.1 제출 링크 공유</h3>
+<ol>
+<li>과제 상세 페이지에서 <strong>&quot;제출 링크 복사&quot;</strong> 버튼을 클릭합니다.</li>
+<li>학생들에게 링크를 공유합니다.</li>
+</ol>
+<blockquote>
+<p>💡 <strong>팁</strong>: QR 코드도 활용할 수 있습니다.</p>
+</blockquote>
+<div style="margin-left: 40px;">
+  <img src="./images/09-submission-link.png" alt="제출 링크" style="width: 40%; height: auto;">
+  <p style="font-size: 0.9em; color: #666; font-style: italic;">[이미지: 09-submission-link.png - 제출 링크가 표시된 화면]</p>
+</div>
+<h3 id="42-%EC%A0%9C%EC%B6%9C-%ED%98%84%ED%99%A9-%ED%99%95%EC%9D%B8">4.2 제출 현황 확인</h3>
+<p>실시간으로 학생들의 제출 현황을 확인할 수 있습니다.</p>
+<div style="margin-left: 40px;">
+  <img src="./images/10-submission-status.png" alt="제출 현황" style="width: 40%; height: auto;">
+  <p style="font-size: 0.9em; color: #666; font-style: italic;">[이미지: 10-submission-status.png - 제출 현황 대시보드]</p>
+</div>
+<hr>
+<h2 id="5-ai-%ED%8F%89%EA%B0%80-%EC%8B%A4%ED%96%89">5. AI 평가 실행</h2>
+<h3 id="51-%ED%8F%89%EA%B0%80-%EC%8B%9C%EC%9E%91%ED%95%98%EA%B8%B0">5.1 평가 시작하기</h3>
+<ol>
+<li>과제 페이지에서 <strong>&quot;AI 평가 시작&quot;</strong> 버튼을 클릭합니다.</li>
+<li>평가할 학생을 선택합니다 (전체 선택 가능).</li>
+</ol>
+<div style="margin-left: 40px;">
+  <img src="./images/11-start-evaluation.png" alt="평가 실행" style="width: 40%; height: auto;">
+  <p style="font-size: 0.9em; color: #666; font-style: italic;">[이미지: 11-start-evaluation.png - AI 평가 시작 화면]</p>
+</div>
+<h3 id="52-%ED%8F%89%EA%B0%80-%EC%A7%84%ED%96%89-%EC%83%81%ED%99%A9">5.2 평가 진행 상황</h3>
+<p>평가가 진행되는 동안 실시간으로 진행 상황을 확인할 수 있습니다.</p>
+<div style="margin-left: 40px;">
+  <img src="./images/12-evaluation-progress.png" alt="평가 진행" style="width: 40%; height: auto;">
+  <p style="font-size: 0.9em; color: #666; font-style: italic;">[이미지: 12-evaluation-progress.png - 평가 진행 상황 표시 화면]</p>
+</div>
+<blockquote>
+<p>⚠️ <strong>주의</strong>: 평가 중에는 페이지를 닫지 마세요. 백그라운드에서 계속 진행됩니다.</p>
+</blockquote>
+<hr>
+<h2 id="6-%ED%8F%89%EA%B0%80-%EA%B2%B0%EA%B3%BC-%ED%99%95%EC%9D%B8">6. 평가 결과 확인</h2>
+<h3 id="61-%EC%A0%84%EC%B2%B4-%EA%B2%B0%EA%B3%BC-%EB%8C%80%EC%8B%9C%EB%B3%B4%EB%93%9C">6.1 전체 결과 대시보드</h3>
+<p>평가가 완료되면 전체 학생의 결과를 한눈에 볼 수 있습니다.</p>
+<div style="margin-left: 40px;">
+  <img src="./images/13-results-dashboard.png" alt="결과 대시보드" style="width: 40%; height: auto;">
+  <p style="font-size: 0.9em; color: #666; font-style: italic;">[이미지: 13-results-dashboard.png - 전체 평가 결과 대시보드]</p>
+</div>
+<p><strong>주요 기능:</strong></p>
+<ul>
+<li>학생별 점수 및 등급 확인</li>
+<li>영역별 성취도 분포</li>
+<li>정렬 및 필터링 기능</li>
+</ul>
+<h3 id="62-%EA%B0%9C%EB%B3%84-%ED%95%99%EC%83%9D-%EB%A6%AC%ED%8F%AC%ED%8A%B8">6.2 개별 학생 리포트</h3>
+<p>각 학생의 상세 평가 결과를 확인할 수 있습니다.</p>
+<div style="margin-left: 40px;">
+  <img src="./images/14-individual-report.png" alt="개별 리포트" style="width: 40%; height: auto;">
+  <p style="font-size: 0.9em; color: #666; font-style: italic;">[이미지: 14-individual-report.png - 학생 개별 평가 리포트]</p>
+</div>
+<p><strong>리포트 구성:</strong></p>
+<ul>
+<li>성장 단계 시각화 (씨앗 → 새싹 → 꽃봉오리 → 꽃 → 열매)</li>
+<li>영역별 상세 피드백</li>
+<li>AI가 생성한 종합 평가</li>
+<li>교사 코멘트 추가 기능</li>
+</ul>
+<hr>
+<h2 id="7-%EB%8D%B0%EC%9D%B4%ED%84%B0-%EB%82%B4%EB%B3%B4%EB%82%B4%EA%B8%B0">7. 데이터 내보내기</h2>
+<h3 id="71-excel-%EB%82%B4%EB%B3%B4%EB%82%B4%EA%B8%B0">7.1 Excel 내보내기</h3>
+<ol>
+<li>결과 대시보드에서 <strong>&quot;Excel 내보내기&quot;</strong> 버튼을 클릭합니다.</li>
+<li>포함할 데이터 범위를 선택합니다.</li>
+</ol>
+<div style="margin-left: 40px;">
+  <img src="./images/15-export-excel.png" alt="Excel 내보내기" style="width: 40%; height: auto;">
+  <p style="font-size: 0.9em; color: #666; font-style: italic;">[이미지: 15-export-excel.png - Excel 내보내기 옵션 화면]</p>
+</div>
+<h3 id="72-pdf-%EB%A6%AC%ED%8F%AC%ED%8A%B8-%EC%83%9D%EC%84%B1-%EC%98%88%EC%A0%95">7.2 PDF 리포트 생성 (예정)</h3>
+<p>개별 학생 리포트를 PDF로 저장할 수 있습니다.</p>
+<h3 id="73-%EC%9D%BC%EA%B4%84-%EB%8B%A4%EC%9A%B4%EB%A1%9C%EB%93%9C-%EC%98%88%EC%A0%95">7.3 일괄 다운로드 (예정)</h3>
+<p>여러 학생의 리포트를 한 번에 다운로드할 수 있습니다.</p>
+<hr>
+<h2 id="8-%ED%8F%89%EA%B0%80-%EA%B2%B0%EA%B3%BC">8. 평가 결과</h2>
+<h3 id="81-ai-%EB%AA%A8%EB%8D%B8-claude-sonnet-4-%EC%B1%84%EC%A0%90-%EC%82%AC%EB%A1%80">8.1 AI 모델: Claude Sonnet 4 채점 사례</h3>
+<p>일상적인 사용에 최적화된 스마트하고 효율적인 모델.
+권장이라고 한 까닭은 API 사용료 때문으로 일반적인 방식의 실험 과정은 Sonnet 모델로 진행하고자 함.</p>
+<div style="margin-left: 40px;">
+  <img src="./images/16-sonnet.png" alt=Claude Sonnet 4 채점 사례" style="width: 40%; height: auto;">
+  <p style="font-size: 0.9em; color: #666; font-style: italic;">[이미지: 16-sonnet.png - Sonnet 4 채점 사례 화면]</p>
+</div>
+<h3 id="82-ai-%EB%AA%A8%EB%8D%B8-claude-opus-4-%EC%B1%84%EC%A0%90-%EC%82%AC%EB%A1%80">8.2 AI 모델: Claude Opus 4  채점 사례</h3>
+<p>Anthropic의 가장 강력한 모델.
+채점후 평가 의견 작성시 글쓰기 능력이 Sonnet 보다 우수해서 학생들에게 제시하기에 적합한 모델.
+아직 프롬프트에 따른 결과의 차이를 발견하기 위해 다양한 글과 평가 상황을 만들어 결과를 검토하는 중임.</p>
+<div style="margin-left: 40px;">
+  <img src="./images/17-opus.png" alt=Claude opus 4 채점 사례" style="width: 40%; height: auto;">
+  <p style="font-size: 0.9em; color: #666; font-style: italic;">[이미지: 17-opus.png - opus 4 채점 사례 화면]</p>
+</div>
+<h3 id="83-%EC%A3%BC%EC%9E%A5%ED%95%98%EB%8A%94-%EA%B8%80%EC%9D%84-%EA%B8%B0%ED%96%89%EB%AC%B8%EC%9C%BC%EB%A1%9C-%EC%B1%84%EC%A0%90%ED%95%9C-%EA%B2%B0%EA%B3%BC">8.3 주장하는 글을 기행문으로 채점한 결과</h3>
+<p>과제의 영역이 다른 글을 다른 채점 루브릭으로 채점을 하게 되었을 때의 결과.
+채점의 타당성 등을 검토할 수 있는 사례.</p>
+<div style="margin-left: 40px;">
+  <img src="./images/18-out.png" alt=글의 종류가 다른 경우 채점 사례" style="width: 40%; height: auto;">
+  <p style="font-size: 0.9em; color: #666; font-style: italic;">[이미지: 18-out.png - 글의 종류가 다른 경우 채점 사례 화면]</p>
+</div>
+<hr>
+<p><em>최종 업데이트: 2025년 7월 25일</em></p>
+
+</body>
+</html>
