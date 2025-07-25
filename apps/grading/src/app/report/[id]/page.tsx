@@ -113,7 +113,7 @@ function StudentReportContent() {
             <p className="text-center text-gray-500">평가가 완료되지 않았습니다.</p>
             <div className="mt-4 text-center">
               <button
-                onClick={() => window.location.href = '/dashboard'}
+                onClick={() => window.location.href = '/assignments'}
                 className="text-blue-600 hover:text-blue-800"
               >
                 대시보드로 돌아가기
