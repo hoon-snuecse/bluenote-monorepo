@@ -47,6 +47,21 @@ export default function TestLogsPage() {
     setLoading(false);
   };
 
+  const testActionTypes = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch('/api/admin/test-action-types', {
+        method: 'POST'
+      });
+      const data = await res.json();
+      alert(JSON.stringify(data.results, null, 2));
+      checkLogs();
+    } catch (error) {
+      console.error('Error testing action types:', error);
+    }
+    setLoading(false);
+  };
+
   return (
     <div className="p-6 max-w-4xl mx-auto">
       <div className="flex justify-between items-center mb-6">
@@ -71,6 +86,13 @@ export default function TestLogsPage() {
             className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded disabled:opacity-50"
           >
             Add Manual Login Log
+          </button>
+          <button
+            onClick={testActionTypes}
+            disabled={loading}
+            className="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded disabled:opacity-50"
+          >
+            Test Action Types
           </button>
         </div>
 

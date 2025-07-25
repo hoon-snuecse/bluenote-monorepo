@@ -14,11 +14,26 @@ WHERE
 ORDER BY 
     ordinal_position;
 
--- 2. 테이블이 없다면 생성
+-- 2. CHECK 제약 조건 확인
+SELECT 
+    conname AS constraint_name,
+    pg_get_constraintdef(oid) AS constraint_definition
+FROM 
+    pg_constraint
+WHERE 
+    conrelid = 'usage_logs'::regclass
+    AND contype = 'c';
+
+-- 3. CHECK 제약 조건 수정 (로그인 추가)
+-- ALTER TABLE usage_logs DROP CONSTRAINT IF EXISTS usage_logs_action_type_check;
+-- ALTER TABLE usage_logs ADD CONSTRAINT usage_logs_action_type_check 
+--     CHECK (action_type IN ('claude_chat', 'post_write', 'login'));
+
+-- 4. 테이블이 없다면 생성
 -- CREATE TABLE IF NOT EXISTS usage_logs (
 --     id SERIAL PRIMARY KEY,
 --     user_email VARCHAR(255) NOT NULL,
---     action_type VARCHAR(50) NOT NULL,
+--     action_type VARCHAR(50) NOT NULL CHECK (action_type IN ('claude_chat', 'post_write', 'login')),
 --     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 -- );
 
