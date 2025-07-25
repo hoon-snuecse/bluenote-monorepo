@@ -54,6 +54,8 @@ export async function evaluateWithClaude(request: EvaluationRequest): Promise<Ev
     evaluationDomains: request.evaluationDomains
   });
 
+  let actualModel = 'claude-sonnet-4-20250514'; // 기본값 (Claude Sonnet 4)
+
   try {
     const systemPrompt = `당신은 ${request.schoolName} ${request.grade} 담임교사입니다. 
 학생의 ${request.writingType}을 평가하고 있습니다.
@@ -92,18 +94,17 @@ ${request.studentText}
 위 글을 평가해주세요.`;
 
     // 모델 선택 - 전달된 모델을 사용하거나 기본값 사용
-    let actualModel = 'claude-sonnet-4-20250514'; // 기본 모델 (권장)
+    // actualModel은 이미 위에서 정의됨 (claude-sonnet-4-20250514)
     
     if (request.aiModel) {
-      // 전달된 모델명을 그대로 사용
-      if (request.aiModel === 'claude-opus-4-20250514') {
-        actualModel = 'claude-opus-4-20250514';
-      } else if (request.aiModel === 'claude-sonnet-4-20250514') {
-        actualModel = 'claude-sonnet-4-20250514';
-      } else if (request.aiModel.includes('opus')) {
-        actualModel = 'claude-opus-4-20250514';
+      // 전달된 모델명에 따라 실제 API 모델명 매핑
+      if (request.aiModel.includes('opus')) {
+        actualModel = 'claude-opus-4-20250514'; // Claude Opus 4
       } else if (request.aiModel.includes('sonnet')) {
-        actualModel = 'claude-sonnet-4-20250514';
+        actualModel = 'claude-sonnet-4-20250514'; // Claude Sonnet 4
+      } else if (request.aiModel === 'claude-sonnet-4-20250514' || request.aiModel === 'claude-opus-4-20250514') {
+        // 정확한 모델명이 전달된 경우
+        actualModel = request.aiModel;
       }
     }
     
