@@ -10,6 +10,15 @@ export async function GET(request: NextRequest) {
       'Access-Control-Allow-Headers': 'Content-Type',
     };
 
+    // Prisma 인스턴스 확인
+    if (!prisma) {
+      throw new Error('Prisma client is not initialized');
+    }
+    
+    if (!prisma.evaluation) {
+      throw new Error('Prisma evaluation model is not available');
+    }
+
     // 오늘 날짜 계산
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -103,11 +112,17 @@ export async function GET(request: NextRequest) {
     });
 
     // 기타 통계
-    const [totalAssignments, totalSubmissions, totalStudents] = await Promise.all([
+    const [totalAssignments, totalSubmissions] = await Promise.all([
       prisma.assignment.count(),
-      prisma.submission.count(),
-      prisma.studentGroup.count()
+      prisma.submission.count()
     ]);
+    
+    // 고유 학생 수 계산
+    const uniqueStudents = await prisma.submission.findMany({
+      select: { studentId: true },
+      distinct: ['studentId']
+    });
+    const totalStudents = uniqueStudents.length;
 
     const stats = {
       evaluations: {
