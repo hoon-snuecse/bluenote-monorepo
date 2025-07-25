@@ -5,20 +5,24 @@ import { createAdminClient } from '@/lib/supabase/admin';
 // Supabase 기반 권한 체크 함수들
 const authCallbacks = {
   // 로그인 활동 기록 함수
-  logLoginActivity: async (email) => {
+  logSignIn: async (email) => {
     try {
-      const supabase = process.env.SUPABASE_SERVICE_ROLE_KEY 
-        ? createAdminClient() 
-        : await createClient();
+      const supabase = createAdminClient();
       
       // 로그인 활동 기록
-      await supabase
+      const { error } = await supabase
         .from('usage_logs')
         .insert({
           user_email: email,
           action_type: 'login',
           metadata: { timestamp: new Date().toISOString() }
         });
+        
+      if (error) {
+        console.error('Error inserting login log:', error);
+      } else {
+        console.log(`Login activity logged for ${email}`);
+      }
     } catch (error) {
       console.error('Error logging login activity:', error);
     }
@@ -49,9 +53,6 @@ const authCallbacks = {
         console.log(`Login denied for ${email} - not in allowed users`);
         return false;
       }
-      
-      // 로그인 활동 기록
-      await authCallbacks.logLoginActivity(email);
       
       return true;
     } catch (error) {

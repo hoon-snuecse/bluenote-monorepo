@@ -33,6 +33,7 @@ export interface AuthCallbacks {
     can_write: boolean;
     claude_daily_limit: number;
   } | null>;
+  logSignIn?: (email: string) => Promise<void>;
 }
 
 export const createAuthOptions = (callbacks?: AuthCallbacks): NextAuthOptions => {
@@ -169,6 +170,18 @@ export const createAuthOptions = (callbacks?: AuthCallbacks): NextAuthOptions =>
     session: {
       strategy: 'jwt',
       maxAge: 30 * 24 * 60 * 60, // 30 days
+    },
+    events: {
+      async signIn({ user }) {
+        // 로그인 성공 시 로그 기록
+        if (callbacks?.logSignIn && user.email) {
+          try {
+            await callbacks.logSignIn(user.email);
+          } catch (error) {
+            console.error('Error logging sign in:', error);
+          }
+        }
+      },
     },
   };
 };
