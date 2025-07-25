@@ -35,8 +35,20 @@ export async function GET() {
         results.checks[table] = {
           success: !error,
           count: count || 0,
-          error: error?.message || null
+          error: error?.message || null,
+          status: error?.status || null,
+          code: error?.code || null
         };
+        
+        // count가 null인 경우 대체 방법 시도
+        if (count === null && !error) {
+          const { data: countData, error: countError } = await adminClient
+            .from(table)
+            .select('id');
+          
+          results.checks[table].alternativeCount = countData ? countData.length : 0;
+          results.checks[table].alternativeError = countError?.message || null;
+        }
       } catch (e) {
         results.checks[table] = {
           success: false,

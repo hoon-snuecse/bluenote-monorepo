@@ -25,24 +25,10 @@ export function createAdminClient() {
   })
 
   try {
-    const client = createClient(
-      supabaseUrl,
-      serviceRoleKey,
-      {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false
-        },
-        db: {
-          schema: 'public'
-        },
-        global: {
-          headers: {
-            'x-supabase-service-role': 'true'
-          }
-        }
-      }
-    )
+    // Create client with minimal configuration
+    const client = createClient(supabaseUrl, serviceRoleKey)
+    
+    console.log('Admin client created successfully')
     
     return client
   } catch (error) {
