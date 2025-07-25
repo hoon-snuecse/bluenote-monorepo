@@ -120,17 +120,13 @@ export default function AdminAnalyticsClient() {
         const gradingRes = await fetch('/api/admin/grading-stats');
         if (gradingRes.ok) {
           const gradingData = await gradingRes.json();
-          console.log('Grading stats received:', gradingData);
           
           if (gradingData.evaluations?.byModel) {
             gradingStats = {
               sonnet: gradingData.evaluations.byModel.sonnet || { total: 0, today: 0 },
               opus: gradingData.evaluations.byModel.opus || { total: 0, today: 0 }
             };
-            console.log('Processed grading stats:', gradingStats);
           }
-        } else {
-          console.error('Grading stats response not ok:', gradingRes.status);
         }
       } catch (error) {
         console.error('Failed to fetch grading stats:', error);

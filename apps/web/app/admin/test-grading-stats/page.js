@@ -65,11 +65,8 @@ export default function TestGradingStatsPage() {
     setLoading(true);
     setError(null);
     try {
-      const url = process.env.NODE_ENV === 'production'
-        ? 'https://grading.bluenote.site/api/test/add-evaluations'
-        : 'http://localhost:3001/api/test/add-evaluations';
-        
-      const res = await fetch(url, {
+      // 서버 사이드 프록시를 통해 요청
+      const res = await fetch('/api/admin/grading-test-data', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -79,7 +76,10 @@ export default function TestGradingStatsPage() {
       const data = await res.json();
       
       if (!res.ok) {
-        setError(`Add test data error: ${res.status}`);
+        setError(`Add test data error: ${data.error || res.status}`);
+        if (data.suggestion) {
+          setError(prev => `${prev}\n${data.suggestion}`);
+        }
       } else {
         alert('Test data added successfully!');
         // 다시 통계 가져오기

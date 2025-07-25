@@ -33,8 +33,6 @@ export async function GET() {
           ? 'https://grading.bluenote.site/api/stats'
           : 'http://localhost:3001/api/stats';
       
-      console.log('Fetching grading stats from:', gradingUrl);
-        
       const response = await fetch(gradingUrl, {
         headers: {
           'Content-Type': 'application/json',
@@ -45,15 +43,9 @@ export async function GET() {
       
       if (response.ok) {
         gradingStats = await response.json();
-        console.log('Grading stats fetched successfully:', gradingStats);
-      } else {
-        console.error('Grading stats API returned:', response.status);
-        const errorText = await response.text();
-        console.error('Error response:', errorText);
       }
     } catch (error) {
-      console.error('Failed to fetch grading stats:', error.message);
-      // 오류가 발생해도 기본값 반환
+      // 오류가 발생해도 기본값 반환 (grading 앱이 실행되지 않을 수 있음)
     }
 
     return NextResponse.json(gradingStats);
