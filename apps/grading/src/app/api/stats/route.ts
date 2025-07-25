@@ -83,10 +83,6 @@ export async function GET(request: NextRequest) {
       else if (model.includes('mock')) {
         modelStats.mock.total += item._count._all;
       }
-      // 기본 claude도 sonnet으로 분류
-      else if (model === 'claude') {
-        modelStats.sonnet.total += item._count._all;
-      }
     });
 
     // 오늘 통계 처리
@@ -103,10 +99,6 @@ export async function GET(request: NextRequest) {
       // mock 모델
       else if (model.includes('mock')) {
         modelStats.mock.today += item._count._all;
-      }
-      // 기본 claude도 sonnet으로 분류
-      else if (model === 'claude') {
-        modelStats.sonnet.today += item._count._all;
       }
     });
 

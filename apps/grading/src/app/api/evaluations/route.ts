@@ -121,7 +121,7 @@ export async function POST(request: NextRequest) {
         overallFeedback: evaluationResult.overallFeedback,
         improvementSuggestions: evaluationResult.improvementSuggestions || [],
         strengths: evaluationResult.strengths || [],
-        evaluatedBy: evaluatorType === 'mock' ? 'Mock 평가기' : (aiModel || 'claude')
+        evaluatedBy: evaluatorType === 'mock' ? 'Mock' : aiModel
       }
     });
     
