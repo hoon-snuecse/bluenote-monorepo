@@ -1,1 +1,36 @@
-*
+# Vercel CLI 관련 파일만 무시
+.vercel/
+
+# 개발 환경 파일
+.env.local
+.env.development
+.env.test
+
+# 로그 파일
+*.log
+
+# 테스트 파일
+**/*.test.js
+**/*.test.ts
+**/__tests__/
+
+# 문서
+*.md
+docs/
+CLAUDE.md
+
+# Git
+.git/
+.gitignore
+
+# 에디터 설정
+.vscode/
+.idea/
+
+# OS 파일
+.DS_Store
+Thumbs.db
+
+# 임시 파일
+*.tmp
+*.temp
