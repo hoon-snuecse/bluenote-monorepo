@@ -2,10 +2,16 @@ import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { createEvaluator } from '@/lib/ai-evaluator';
 import { sendEvaluationUpdate } from './stream/route';
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/lib/auth";
 
 // AI 평가 실행 및 저장
 export async function POST(request: NextRequest) {
   try {
+    // 세션에서 사용자 정보 가져오기
+    const session = await getServerSession(authOptions);
+    const userEmail = session?.user?.email;
+    
     const data = await request.json();
     console.log('평가 요청 데이터:', {
       submissionId: data.submissionId,
@@ -121,7 +127,8 @@ export async function POST(request: NextRequest) {
         overallFeedback: evaluationResult.overallFeedback,
         improvementSuggestions: evaluationResult.improvementSuggestions || [],
         strengths: evaluationResult.strengths || [],
-        evaluatedBy: evaluatorType === 'mock' ? 'Mock' : aiModel
+        evaluatedBy: evaluatorType === 'mock' ? 'Mock' : aiModel,
+        evaluatedByUser: userEmail  // 평가한 사용자 이메일 추가
       }
     });
     

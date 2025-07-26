@@ -1,11 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { evaluateWithClaude, EvaluationRequest } from '@/lib/claude-api';
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/lib/auth";
 
 export async function POST(request: NextRequest) {
   try {
+    // 세션에서 사용자 정보 가져오기
+    const session = await getServerSession(authOptions);
+    const userEmail = session?.user?.email;
+    
     const { submissionId, assignmentId, model } = await request.json();
-    console.log('Evaluate API called:', { submissionId, assignmentId, model });
+    console.log('Evaluate API called:', { submissionId, assignmentId, model, userEmail });
 
     if (!submissionId || !assignmentId) {
       return NextResponse.json(
@@ -95,7 +101,8 @@ export async function POST(request: NextRequest) {
           overallFeedback: aiEvaluation.detailedFeedback,
           improvementSuggestions: aiEvaluation.improvements,
           strengths: aiEvaluation.strengths,
-          evaluatedBy: model || 'claude-sonnet-4-20250514'
+          evaluatedBy: model || 'claude-sonnet-4-20250514',
+          evaluatedByUser: userEmail  // 평가한 사용자 이메일 추가
         }
       });
 

@@ -14,10 +14,11 @@ export async function GET() {
     const evaluations = await prisma.evaluation.findMany({
       select: {
         evaluatedBy: true,
-        submission: {
-          select: {
-            studentName: true
-          }
+        evaluatedByUser: true
+      },
+      where: {
+        evaluatedByUser: {
+          not: null
         }
       }
     });
@@ -26,32 +27,32 @@ export async function GET() {
     const userModelStats: Record<string, Record<string, number>> = {};
     
     evaluations.forEach(evaluation => {
-      const studentName = evaluation.submission?.studentName || 'Unknown';
+      const userEmail = evaluation.evaluatedByUser || 'Unknown';
       const model = (evaluation.evaluatedBy || '').toLowerCase();
       
-      if (!userModelStats[studentName]) {
-        userModelStats[studentName] = {
+      if (!userModelStats[userEmail]) {
+        userModelStats[userEmail] = {
           sonnet: 0,
           opus: 0
         };
       }
       
       if (model.includes('sonnet')) {
-        userModelStats[studentName].sonnet++;
+        userModelStats[userEmail].sonnet++;
       } else if (model.includes('opus')) {
-        userModelStats[studentName].opus++;
+        userModelStats[userEmail].opus++;
       }
     });
 
     // 모델별 상위 사용자 추출
     const sonnetUsers = Object.entries(userModelStats)
-      .map(([name, stats]) => ({ name, count: stats.sonnet }))
+      .map(([email, stats]) => ({ name: email, count: stats.sonnet }))
       .filter(user => user.count > 0)
       .sort((a, b) => b.count - a.count)
       .slice(0, 10);
 
     const opusUsers = Object.entries(userModelStats)
-      .map(([name, stats]) => ({ name, count: stats.opus }))
+      .map(([email, stats]) => ({ name: email, count: stats.opus }))
       .filter(user => user.count > 0)
       .sort((a, b) => b.count - a.count)
       .slice(0, 10);

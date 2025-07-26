@@ -59,7 +59,8 @@ model Evaluation {
   improvementSuggestions Json
   strengths              Json
   evaluatedAt            DateTime   @default(now())
-  evaluatedBy            String?
+  evaluatedBy            String?    // AI 모델명
+  evaluatedByUser        String?    // 평가한 사용자 이메일
   studentDbId            String?
   submission             Submission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
 
@@ -68,6 +69,7 @@ model Evaluation {
   @@index([studentId])
   @@index([studentDbId])
   @@index([evaluatedAt])
+  @@index([evaluatedByUser])
 }
 
 model AccessToken {
