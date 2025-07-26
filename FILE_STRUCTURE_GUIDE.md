@@ -23,6 +23,14 @@ bluenote-monorepo/
 │   │   │   ├── 📁 teaching/             # 교육 콘텐츠 페이지
 │   │   │   ├── 📁 analytics/            # 분석 콘텐츠 페이지
 │   │   │   ├── 📁 shed/                 # 일상 콘텐츠 페이지
+│   │   │   ├── 📁 activities/           # 활동 소개 페이지
+│   │   │   │   ├── 📄 page.js           # 활동 메인 페이지
+│   │   │   │   ├── 📁 school-innovation/ # 학교 혁신 활동
+│   │   │   │   ├── 📁 academic-research/ # 연구 활동
+│   │   │   │   └── 📁 lectures-advisory/ # 강의 및 자문
+│   │   │   ├── 📁 prg/                  # 프로그램 목록
+│   │   │   │   ├── 📄 page.js           # 프로그램 메인
+│   │   │   │   └── 📁 grading/          # AI 채점 리다이렉트
 │   │   │   ├── 📁 ai/chat/              # AI 채팅 인터페이스
 │   │   │   ├── 📄 layout.js             # 앱 전체 레이아웃
 │   │   │   └── 📄 page.js               # 홈페이지
