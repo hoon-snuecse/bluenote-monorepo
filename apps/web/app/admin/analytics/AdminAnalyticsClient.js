@@ -32,7 +32,7 @@ export default function AdminAnalyticsClient() {
     todayGradingSonnet: 0,
     totalGradingOpus: 0,
     todayGradingOpus: 0,
-    recentUsers: [],
+    userActivity: [],
     recentPosts: [],
     contentStats: {
       research: 0,
@@ -66,6 +66,10 @@ export default function AdminAnalyticsClient() {
       // Fetch usage logs
       const logsRes = await fetch('/api/admin/usage-logs');
       const logsData = await logsRes.json();
+      
+      // Fetch user activity
+      const activityRes = await fetch('/api/admin/user-activity');
+      const activityData = await activityRes.json();
       
       // Fetch content stats
       const contentPromises = ['research', 'teaching', 'analytics', 'shed'].map(async (section) => {
@@ -169,8 +173,7 @@ export default function AdminAnalyticsClient() {
       }
       
       // 디버깅을 위한 로그
-      const recentUsersData = usersData.users?.slice(-10).reverse() || [];
-      console.log('Recent users:', recentUsersData.map((u, i) => ({index: i, email: u.email})));
+      console.log('User activity:', activityData.users?.slice(0, 5));
       console.log('Grading user stats:', gradingUserStats);
       console.log('Recent posts:', recentPosts.map((p, i) => ({index: i, id: p.id, title: p.title})));
       
@@ -184,7 +187,7 @@ export default function AdminAnalyticsClient() {
         todayGradingSonnet: gradingStats.sonnet.today,
         totalGradingOpus: gradingStats.opus.total,
         todayGradingOpus: gradingStats.opus.today,
-        recentUsers: recentUsersData,
+        userActivity: activityData.users || [],
         recentPosts,
         contentStats,
         sonnetTopUsers: gradingUserStats.sonnetTopUsers || [],
@@ -442,22 +445,71 @@ export default function AdminAnalyticsClient() {
         </div>
       </div>
 
-      {/* Recent Users */}
+      {/* User Activity */}
       <div className="bg-slate-800 border border-slate-700 rounded-lg p-6">
-        <h3 className="text-lg font-semibold text-white mb-4">최근 가입 사용자</h3>
-        <div className="space-y-2">
-          {stats.recentUsers.map((user, index) => (
-            <div key={`user-${user.email}-${index}`} className="flex items-center justify-between p-2">
-              <span className="text-white">{user.email}</span>
-              <span className="text-slate-400 text-sm">
-                {new Date(user.created_at).toLocaleDateString('ko-KR')}
-              </span>
-            </div>
-          ))}
-          {stats.recentUsers.length === 0 && (
-            <p className="text-slate-500 text-center py-4">최근 가입자가 없습니다</p>
+        <h3 className="text-lg font-semibold text-white mb-4">사용자별 활동 상태</h3>
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="text-left text-slate-400 text-sm border-b border-slate-700">
+                <th className="pb-3 px-2">사용자</th>
+                <th className="pb-3 px-2 text-center">로그인 (오늘/주/총)</th>
+                <th className="pb-3 px-2">최근 로그인</th>
+                <th className="pb-3 px-2 text-center">AI 채점 (S/O)</th>
+                <th className="pb-3 px-2">디바이스</th>
+                <th className="pb-3 px-2">브라우저</th>
+              </tr>
+            </thead>
+            <tbody>
+              {stats.userActivity.slice(0, 15).map((user, index) => (
+                <tr key={`activity-${user.email}-${index}`} className="border-b border-slate-700 hover:bg-slate-700/50">
+                  <td className="py-3 px-2">
+                    <div>
+                      <div className="text-white text-sm">{user.email}</div>
+                      <div className="text-slate-500 text-xs">{user.role === 'admin' ? '관리자' : '사용자'}</div>
+                    </div>
+                  </td>
+                  <td className="py-3 px-2 text-center">
+                    <span className="text-slate-300 text-sm">
+                      {user.loginStats.today} / {user.loginStats.week} / {user.loginStats.total}
+                    </span>
+                  </td>
+                  <td className="py-3 px-2">
+                    <span className="text-slate-400 text-sm">
+                      {user.loginStats.lastLogin 
+                        ? new Date(user.loginStats.lastLogin).toLocaleString('ko-KR', {
+                            month: 'numeric',
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })
+                        : '없음'}
+                    </span>
+                  </td>
+                  <td className="py-3 px-2 text-center">
+                    <span className="text-orange-400 text-sm">{user.gradingStats.sonnet}</span>
+                    <span className="text-slate-500 mx-1">/</span>
+                    <span className="text-cyan-400 text-sm">{user.gradingStats.opus}</span>
+                  </td>
+                  <td className="py-3 px-2">
+                    <span className="text-slate-400 text-sm">{user.deviceInfo.device}</span>
+                  </td>
+                  <td className="py-3 px-2">
+                    <span className="text-slate-400 text-sm">{user.deviceInfo.browser}</span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          {stats.userActivity.length === 0 && (
+            <p className="text-slate-500 text-center py-8">사용자 활동 데이터가 없습니다</p>
           )}
         </div>
+        {stats.userActivity.length > 15 && (
+          <div className="mt-4 text-center">
+            <span className="text-slate-400 text-sm">총 {stats.userActivity.length}명 중 상위 15명 표시</span>
+          </div>
+        )}
       </div>
     </div>
   );
