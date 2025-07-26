@@ -48,7 +48,6 @@
 ```
 bluenote-monorepo/
 ├── apps/                      # 독립적인 애플리케이션들
-│   ├── bluenote/             # BlueNote Atelier (레거시)
 │   ├── web/                  # 메인 교육 웹사이트 (JavaScript)
 │   │   ├── app/              # Next.js App Router
 │   │   ├── components/       # React 컴포넌트
@@ -65,7 +64,6 @@ bluenote-monorepo/
 │   ├── auth/                 # 인증 로직
 │   ├── config/               # 공통 설정
 │   └── shared-infra/         # 공유 인프라
-├── docs/                     # 프로젝트 문서
 ├── turbo.json                # Turborepo 설정
 ├── pnpm-workspace.yaml       # pnpm 워크스페이스 설정
 └── vercel.json               # Vercel 배포 설정
@@ -155,4 +153,5 @@ bluenote-monorepo/
 
 ---
 
-*최종 업데이트: 2025-07-26*
+*최종 업데이트: 2025-07-27*
+*변경사항: bluenote 레거시 앱 제거*
