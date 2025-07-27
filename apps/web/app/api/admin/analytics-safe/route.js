@@ -81,24 +81,34 @@ export async function GET() {
       console.error('Error fetching users:', error);
     }
 
-    // 3. 로그 데이터 가져오기 (기존 Supabase 클라이언트 사용으로 복원)
+    // 3. 로그 데이터 가져오기 (REST API 직접 호출)
     let logs = [];
-    try {
-      const { data, error } = await supabase
-        .from('usage_logs')
-        .select('action_type, user_email, created_at, metadata')
-        .gte('created_at', weekAgo.toISOString())
-        .order('created_at', { ascending: false })
-        .limit(1000);
-      
-      if (!error && data) {
-        logs = data;
-        console.log('Fetched logs count:', logs.length);
-      } else if (error) {
-        console.error('Supabase logs error:', error);
+    if (SUPABASE_URL && SUPABASE_ANON_KEY) {
+      try {
+        const weekAgoStr = weekAgo.toISOString();
+        const logsUrl = `${SUPABASE_URL}/rest/v1/usage_logs?select=action_type,user_email,created_at,metadata&created_at=gte.${weekAgoStr}&order=created_at.desc&limit=1000`;
+        console.log('Fetching logs from:', logsUrl);
+        
+        const logsRes = await fetch(logsUrl, {
+          headers: {
+            'apikey': SUPABASE_ANON_KEY,
+            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+          }
+        });
+        
+        if (logsRes.ok) {
+          logs = await logsRes.json();
+          console.log('Fetched logs count:', logs.length);
+        } else {
+          console.error('Failed to fetch logs:', logsRes.status, logsRes.statusText);
+          const errorText = await logsRes.text();
+          console.error('Error response:', errorText);
+        }
+      } catch (error) {
+        console.error('Error fetching logs:', error);
       }
-    } catch (error) {
-      console.error('Error fetching logs:', error);
+    } else {
+      console.error('Missing SUPABASE_URL or SUPABASE_ANON_KEY');
     }
 
     // 4. 로그 분석
