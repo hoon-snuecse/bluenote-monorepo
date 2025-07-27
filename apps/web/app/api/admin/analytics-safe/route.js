@@ -28,7 +28,13 @@ export async function GET() {
       }, { status: 401 });
     }
 
-    const supabase = createAdminClient();
+    let supabase;
+    try {
+      supabase = createAdminClient();
+    } catch (error) {
+      console.error('Failed to create admin client:', error);
+      // Admin client 생성 실패해도 계속 진행
+    }
     
     // 한국 시간대 고려
     const now = new Date();
@@ -67,18 +73,20 @@ export async function GET() {
 
     // 2. 사용자 데이터 가져오기
     let users = [];
-    try {
-      const { data, error } = await supabase
-        .from('user_permissions')
-        .select('email, role, created_at')
-        .order('created_at', { ascending: false });
-      
-      if (!error && data) {
-        users = data;
-        response.totalUsers = users.length;
+    if (supabase) {
+      try {
+        const { data, error } = await supabase
+          .from('user_permissions')
+          .select('email, role, created_at')
+          .order('created_at', { ascending: false });
+        
+        if (!error && data) {
+          users = data;
+          response.totalUsers = users.length;
+        }
+      } catch (error) {
+        console.error('Error fetching users:', error);
       }
-    } catch (error) {
-      console.error('Error fetching users:', error);
     }
 
     // 3. 로그 데이터 가져오기 (REST API 직접 호출)
@@ -129,15 +137,19 @@ export async function GET() {
     });
 
     // 전체 로그인 수 가져오기
-    try {
-      const { count: totalLoginCount } = await supabase
-        .from('usage_logs')
-        .select('*', { count: 'exact', head: true })
-        .eq('action_type', 'login');
-      
-      response.totalLogins = totalLoginCount || loginLogs.length;
-    } catch (error) {
-      console.error('Error fetching total login count:', error);
+    if (supabase) {
+      try {
+        const { count: totalLoginCount } = await supabase
+          .from('usage_logs')
+          .select('*', { count: 'exact', head: true })
+          .eq('action_type', 'login');
+        
+        response.totalLogins = totalLoginCount || loginLogs.length;
+      } catch (error) {
+        console.error('Error fetching total login count:', error);
+        response.totalLogins = loginLogs.length;
+      }
+    } else {
       response.totalLogins = loginLogs.length;
     }
     
@@ -147,15 +159,19 @@ export async function GET() {
     }).length;
     
     // 전체 Claude 사용량 가져오기
-    try {
-      const { count: totalClaudeCount } = await supabase
-        .from('usage_logs')
-        .select('*', { count: 'exact', head: true })
-        .eq('action_type', 'claude_chat');
-      
-      response.totalClaudeUsage = totalClaudeCount || claudeLogs.length;
-    } catch (error) {
-      console.error('Error fetching total claude count:', error);
+    if (supabase) {
+      try {
+        const { count: totalClaudeCount } = await supabase
+          .from('usage_logs')
+          .select('*', { count: 'exact', head: true })
+          .eq('action_type', 'claude_chat');
+        
+        response.totalClaudeUsage = totalClaudeCount || claudeLogs.length;
+      } catch (error) {
+        console.error('Error fetching total claude count:', error);
+        response.totalClaudeUsage = claudeLogs.length;
+      }
+    } else {
       response.totalClaudeUsage = claudeLogs.length;
     }
     
@@ -379,19 +395,21 @@ export async function GET() {
     
     // 사용자별 전체 로그인 수 먼저 가져오기
     const userTotalLogins = {};
-    try {
-      const { data: allUserLogins } = await supabase
-        .from('usage_logs')
-        .select('user_email')
-        .eq('action_type', 'login');
-        
-      if (allUserLogins) {
-        allUserLogins.forEach(log => {
-          userTotalLogins[log.user_email] = (userTotalLogins[log.user_email] || 0) + 1;
-        });
+    if (supabase) {
+      try {
+        const { data: allUserLogins } = await supabase
+          .from('usage_logs')
+          .select('user_email')
+          .eq('action_type', 'login');
+          
+        if (allUserLogins) {
+          allUserLogins.forEach(log => {
+            userTotalLogins[log.user_email] = (userTotalLogins[log.user_email] || 0) + 1;
+          });
+        }
+      } catch (error) {
+        console.error('Error fetching user total logins:', error);
       }
-    } catch (error) {
-      console.error('Error fetching user total logins:', error);
     }
     
     // 사용자 활동 맵 생성
