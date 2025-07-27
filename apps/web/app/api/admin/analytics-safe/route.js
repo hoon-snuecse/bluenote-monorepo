@@ -81,29 +81,24 @@ export async function GET() {
       console.error('Error fetching users:', error);
     }
 
-    // 3. 로그 데이터 가져오기 (REST API 직접 호출)
+    // 3. 로그 데이터 가져오기 (기존 Supabase 클라이언트 사용으로 복원)
     let logs = [];
-    if (SUPABASE_URL && SUPABASE_ANON_KEY) {
-      try {
-        const logsRes = await fetch(
-          `${SUPABASE_URL}/rest/v1/usage_logs?select=action_type,user_email,created_at,metadata&created_at=gte.${weekAgo.toISOString()}&order=created_at.desc&limit=1000`,
-          {
-            headers: {
-              'apikey': SUPABASE_ANON_KEY,
-              'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
-            }
-          }
-        );
-        
-        if (logsRes.ok) {
-          logs = await logsRes.json();
-          console.log('Fetched logs count:', logs.length);
-        } else {
-          console.error('Failed to fetch logs:', logsRes.status, logsRes.statusText);
-        }
-      } catch (error) {
-        console.error('Error fetching logs:', error);
+    try {
+      const { data, error } = await supabase
+        .from('usage_logs')
+        .select('action_type, user_email, created_at, metadata')
+        .gte('created_at', weekAgo.toISOString())
+        .order('created_at', { ascending: false })
+        .limit(1000);
+      
+      if (!error && data) {
+        logs = data;
+        console.log('Fetched logs count:', logs.length);
+      } else if (error) {
+        console.error('Supabase logs error:', error);
       }
+    } catch (error) {
+      console.error('Error fetching logs:', error);
     }
 
     // 4. 로그 분석
@@ -325,13 +320,11 @@ export async function GET() {
             console.log(`Failed to fetch ${section}:`, postsRes.status);
           }
         }
+        console.log('Posts by date:', postsByDate);
       } catch (error) {
         console.error('Error fetching posts for daily stats:', error);
       }
     }
-    
-    console.log('Posts by date:', postsByDate);
-    console.log('Week ago:', weekAgo.toISOString());
     
     for (let i = 6; i >= 0; i--) {
       const date = new Date(today);
