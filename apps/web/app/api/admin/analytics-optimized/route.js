@@ -85,13 +85,8 @@ export async function GET() {
       new Date(log.created_at).toDateString() === todayString
     ).length;
 
-    // 전체 로그인 수 (별도 쿼리)
-    const { data: totalLoginData } = await supabase
-      .from('usage_logs')
-      .select('id', { count: 'exact', head: true })
-      .eq('action_type', 'login');
-
-    const totalLogins = totalLoginData || 0;
+    // 전체 로그인 수 계산 (최근 7일 기준)
+    const totalLogins = loginLogs.length;
 
     // 콘텐츠 통계 처리
     const contentStats = {
@@ -130,7 +125,7 @@ export async function GET() {
     return NextResponse.json({
       stats: {
         totalUsers: users.length,
-        totalLogins,
+        totalLogins: totalLogins,
         todayLogins,
         totalClaudeUsage: claudeLogs.length,
         todayClaudeUsage,
@@ -148,8 +143,9 @@ export async function GET() {
     });
   } catch (error) {
     console.error('Analytics API Error:', error);
+    console.error('Error stack:', error.stack);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Internal server error', details: error.message },
       { status: 500 }
     );
   }
@@ -168,7 +164,16 @@ async function fetchGradingStats() {
     ]);
 
     if (!statsRes.ok || !userStatsRes.ok) {
-      return null;
+      console.log('Grading API response not ok:', {
+        statsStatus: statsRes.status,
+        userStatsStatus: userStatsRes.status
+      });
+      return {
+        sonnet: { total: 0, today: 0 },
+        opus: { total: 0, today: 0 },
+        sonnetTopUsers: [],
+        opusTopUsers: []
+      };
     }
 
     const [statsData, userStatsData] = await Promise.all([
@@ -184,7 +189,12 @@ async function fetchGradingStats() {
     };
   } catch (error) {
     console.error('Failed to fetch grading stats:', error);
-    return null;
+    return {
+      sonnet: { total: 0, today: 0 },
+      opus: { total: 0, today: 0 },
+      sonnetTopUsers: [],
+      opusTopUsers: []
+    };
   }
 }
 
