@@ -145,101 +145,130 @@ export async function GET() {
       new Date(log.created_at).toDateString() === todayString
     ).length;
 
-    // 5. 콘텐츠 통계 (각각 개별적으로 처리)
-    try {
-      // 전체 개수 가져오기
-      const { count: researchCount, error: researchCountError } = await supabase
-        .from('research_posts')
-        .select('*', { count: 'exact', head: true });
+    // 5. 콘텐츠 통계 (직접 REST API 호출로 변경)
+    const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    
+    if (SUPABASE_URL && SUPABASE_ANON_KEY) {
+      try {
+        // Research posts count
+        const researchRes = await fetch(
+          `${SUPABASE_URL}/rest/v1/research_posts?select=*`,
+          {
+            headers: {
+              'apikey': SUPABASE_ANON_KEY,
+              'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+              'Prefer': 'count=exact',
+              'Range-Unit': 'items',
+              'Range': '0-0'
+            }
+          }
+        );
+        
+        if (researchRes.ok) {
+          const contentRange = researchRes.headers.get('content-range');
+          if (contentRange) {
+            const match = contentRange.match(/\d+-\d+\/(\d+)/);
+            if (match) {
+              response.contentStats.research = parseInt(match[1]);
+            }
+          }
+        }
       
-      if (researchCountError) {
-        console.error('Research count error:', researchCountError);
+        // Teaching posts count
+        const teachingRes = await fetch(
+          `${SUPABASE_URL}/rest/v1/teaching_posts?select=*`,
+          {
+            headers: {
+              'apikey': SUPABASE_ANON_KEY,
+              'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+              'Prefer': 'count=exact',
+              'Range-Unit': 'items',
+              'Range': '0-0'
+            }
+          }
+        );
+        
+        if (teachingRes.ok) {
+          const contentRange = teachingRes.headers.get('content-range');
+          if (contentRange) {
+            const match = contentRange.match(/\d+-\d+\/(\d+)/);
+            if (match) {
+              response.contentStats.teaching = parseInt(match[1]);
+            }
+          }
+        }
+
+        // Analytics posts count
+        const analyticsRes = await fetch(
+          `${SUPABASE_URL}/rest/v1/analytics_posts?select=*`,
+          {
+            headers: {
+              'apikey': SUPABASE_ANON_KEY,
+              'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+              'Prefer': 'count=exact',
+              'Range-Unit': 'items',
+              'Range': '0-0'
+            }
+          }
+        );
+        
+        if (analyticsRes.ok) {
+          const contentRange = analyticsRes.headers.get('content-range');
+          if (contentRange) {
+            const match = contentRange.match(/\d+-\d+\/(\d+)/);
+            if (match) {
+              response.contentStats.analytics = parseInt(match[1]);
+            }
+          }
+        }
+
+        // Shed posts count
+        const shedRes = await fetch(
+          `${SUPABASE_URL}/rest/v1/shed_posts?select=*`,
+          {
+            headers: {
+              'apikey': SUPABASE_ANON_KEY,
+              'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+              'Prefer': 'count=exact',
+              'Range-Unit': 'items',
+              'Range': '0-0'
+            }
+          }
+        );
+        
+        if (shedRes.ok) {
+          const contentRange = shedRes.headers.get('content-range');
+          if (contentRange) {
+            const match = contentRange.match(/\d+-\d+\/(\d+)/);
+            if (match) {
+              response.contentStats.shed = parseInt(match[1]);
+            }
+          }
+        }
+
+        // 최근 게시물 가져오기 (직접 API 호출)
+        const recentRes = await fetch(
+          `${SUPABASE_URL}/rest/v1/research_posts?select=id,title,created_at&order=created_at.desc&limit=5`,
+          {
+            headers: {
+              'apikey': SUPABASE_ANON_KEY,
+              'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+            }
+          }
+        );
+        
+        if (recentRes.ok) {
+          const recentPosts = await recentRes.json();
+          recentPosts.forEach(post => {
+            response.recentPosts.push({ ...post, section: 'research' });
+          });
+        }
+      } catch (error) {
+        console.error('Error fetching content stats:', error);
       }
-      
-      console.log('Research count:', researchCount);
-      response.contentStats.research = researchCount || 0;
-      
-      // 최근 게시물 가져오기
-      const { data: researchPosts } = await supabase
-        .from('research_posts')
-        .select('id, title, created_at')
-        .order('created_at', { ascending: false })
-        .limit(5);
-      
-      if (researchPosts) {
-        researchPosts.forEach(post => {
-          response.recentPosts.push({ ...post, section: 'research' });
-        });
-      }
-    } catch (error) {
-      console.error('Error fetching research posts:', error);
     }
 
-    try {
-      const { count: teachingCount } = await supabase
-        .from('teaching_posts')
-        .select('*', { count: 'exact', head: true });
-      
-      response.contentStats.teaching = teachingCount || 0;
-      
-      const { data: teachingPosts } = await supabase
-        .from('teaching_posts')
-        .select('id, title, created_at')
-        .order('created_at', { ascending: false })
-        .limit(5);
-      
-      if (teachingPosts) {
-        teachingPosts.forEach(post => {
-          response.recentPosts.push({ ...post, section: 'teaching' });
-        });
-      }
-    } catch (error) {
-      console.error('Error fetching teaching posts:', error);
-    }
-
-    try {
-      const { count: analyticsCount } = await supabase
-        .from('analytics_posts')
-        .select('*', { count: 'exact', head: true });
-      
-      response.contentStats.analytics = analyticsCount || 0;
-      
-      const { data: analyticsPosts } = await supabase
-        .from('analytics_posts')
-        .select('id, title, created_at')
-        .order('created_at', { ascending: false })
-        .limit(5);
-      
-      if (analyticsPosts) {
-        analyticsPosts.forEach(post => {
-          response.recentPosts.push({ ...post, section: 'analytics' });
-        });
-      }
-    } catch (error) {
-      console.error('Error fetching analytics posts:', error);
-    }
-
-    try {
-      const { count: shedCount } = await supabase
-        .from('shed_posts')
-        .select('*', { count: 'exact', head: true });
-      
-      response.contentStats.shed = shedCount || 0;
-      
-      const { data: shedPosts } = await supabase
-        .from('shed_posts')
-        .select('id, title, created_at')
-        .order('created_at', { ascending: false })
-        .limit(5);
-      
-      if (shedPosts) {
-        shedPosts.forEach(post => {
-          response.recentPosts.push({ ...post, section: 'shed' });
-        });
-      }
-    } catch (error) {
-      console.error('Error fetching shed posts:', error);
-    }
 
     // 최근 게시물 정렬 및 제한
     response.recentPosts.sort((a, b) => 
