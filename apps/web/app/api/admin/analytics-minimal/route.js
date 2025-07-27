@@ -90,7 +90,7 @@ export async function GET() {
       }
     }
 
-    // 5. 채점 통계 추가
+    // 5. 채점 통계 및 최다 사용자 추가
     try {
       const baseUrl = process.env.NODE_ENV === 'production'
         ? 'https://grading.bluenote.site'
@@ -99,10 +99,17 @@ export async function GET() {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 5000);
       
-      const gradingRes = await fetch(`${baseUrl}/api/stats`, { 
-        cache: 'no-store',
-        signal: controller.signal
-      });
+      // 통계와 사용자별 데이터를 동시에 가져오기
+      const [gradingRes, userStatsRes] = await Promise.all([
+        fetch(`${baseUrl}/api/stats`, { 
+          cache: 'no-store',
+          signal: controller.signal
+        }),
+        fetch(`${baseUrl}/api/stats/user-evaluations`, { 
+          cache: 'no-store',
+          signal: controller.signal
+        })
+      ]);
       
       clearTimeout(timeoutId);
 
@@ -114,6 +121,35 @@ export async function GET() {
           response.todayGradingSonnet = gradingData.evaluations.byModel.sonnet?.today || 0;
           response.totalGradingOpus = gradingData.evaluations.byModel.opus?.total || 0;
           response.todayGradingOpus = gradingData.evaluations.byModel.opus?.today || 0;
+        }
+      }
+      
+      if (userStatsRes && userStatsRes.ok) {
+        const userStatsData = await userStatsRes.json();
+        
+        // userStats를 배열로 변환하고 정렬하여 상위 사용자 추출
+        if (userStatsData.userStats) {
+          const userEntries = Object.entries(userStatsData.userStats);
+          
+          // Sonnet 최다 사용자 (상위 5명)
+          response.sonnetTopUsers = userEntries
+            .filter(([email, stats]) => stats.sonnet > 0)
+            .sort((a, b) => b[1].sonnet - a[1].sonnet)
+            .slice(0, 5)
+            .map(([email, stats]) => ({
+              name: email,
+              count: stats.sonnet
+            }));
+          
+          // Opus 최다 사용자 (상위 5명)
+          response.opusTopUsers = userEntries
+            .filter(([email, stats]) => stats.opus > 0)
+            .sort((a, b) => b[1].opus - a[1].opus)
+            .slice(0, 5)
+            .map(([email, stats]) => ({
+              name: email,
+              count: stats.opus
+            }));
         }
       }
     } catch (error) {
