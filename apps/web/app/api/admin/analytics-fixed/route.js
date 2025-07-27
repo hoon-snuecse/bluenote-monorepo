@@ -100,78 +100,81 @@ export async function GET() {
       .limit(15);
 
     if (!usersError && users) {
-      // 사용자별 로그인 통계 가져오기
+      // user_daily_stats 테이블에서 사용자별 통계 가져오기
       const userEmails = users.map(u => u.email);
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       const weekAgo = new Date(today);
       weekAgo.setDate(weekAgo.getDate() - 7);
       
-      // usage_logs에서 로그인 정보 가져오기
-      const { data: loginLogs } = await supabase
-        .from('usage_logs')
-        .select('user_email, created_at, metadata')
-        .eq('action_type', 'login')
+      // 오늘 통계
+      const { data: todayStats } = await supabase
+        .from('user_daily_stats')
+        .select('*')
         .in('user_email', userEmails)
-        .gte('created_at', weekAgo.toISOString());
+        .eq('date', today.toISOString().split('T')[0]);
       
-      // 사용자별 통계 계산
-      const userStatsMap = {};
+      // 지난 7일 통계
+      const { data: weekStats } = await supabase
+        .from('user_daily_stats')
+        .select('user_email, login_count, grading_sonnet_count, grading_opus_count')
+        .in('user_email', userEmails)
+        .gte('date', weekAgo.toISOString().split('T')[0]);
       
-      if (loginLogs) {
-        loginLogs.forEach(log => {
-          if (!userStatsMap[log.user_email]) {
-            userStatsMap[log.user_email] = {
-              total: 0,
-              today: 0,
-              week: 0,
-              lastLogin: null,
-              lastDevice: 'Unknown',
-              lastBrowser: 'Unknown'
-            };
-          }
-          
-          const logDate = new Date(log.created_at);
-          userStatsMap[log.user_email].week++;
-          
-          if (logDate >= today) {
-            userStatsMap[log.user_email].today++;
-          }
-          
-          // 가장 최근 로그인 정보 업데이트
-          if (!userStatsMap[log.user_email].lastLogin || logDate > new Date(userStatsMap[log.user_email].lastLogin)) {
-            userStatsMap[log.user_email].lastLogin = log.created_at;
-            
-            // metadata에서 디바이스 정보 추출
-            if (log.metadata) {
-              const metadata = typeof log.metadata === 'string' ? JSON.parse(log.metadata) : log.metadata;
-              userStatsMap[log.user_email].lastDevice = metadata.device || 'Unknown';
-              userStatsMap[log.user_email].lastBrowser = metadata.browser || 'Unknown';
-            }
-          }
-        });
-      }
-      
-      // 전체 로그인 수 가져오기
-      const { count: totalLoginCount } = await supabase
-        .from('usage_logs')
-        .select('*', { count: 'exact', head: true })
-        .eq('action_type', 'login')
+      // 전체 기간 통계
+      const { data: totalStats } = await supabase
+        .from('user_daily_stats')
+        .select('user_email, login_count, grading_sonnet_count, grading_opus_count')
         .in('user_email', userEmails);
       
-      // 사용자별 전체 로그인 수 업데이트
-      if (totalLoginCount) {
-        const avgLoginPerUser = Math.floor(totalLoginCount / userEmails.length);
-        Object.keys(userStatsMap).forEach(email => {
-          userStatsMap[email].total = userStatsMap[email].week + avgLoginPerUser;
+      // 통계 집계
+      const userStatsMap = {};
+      
+      // 오늘 통계 맵핑
+      if (todayStats) {
+        todayStats.forEach(stat => {
+          userStatsMap[stat.user_email] = {
+            today: stat.login_count || 0,
+            week: 0,
+            total: 0,
+            lastLogin: stat.last_login_at,
+            lastDevice: stat.last_device || 'Unknown',
+            lastBrowser: stat.last_browser || 'Unknown',
+            gradingSonnet: stat.grading_sonnet_count || 0,
+            gradingOpus: stat.grading_opus_count || 0
+          };
         });
       }
       
-      // 디버깅용 로그
-      console.log('User activity data:', {
-        usersCount: users?.length || 0,
-        userStatsMapKeys: Object.keys(userStatsMap).length
-      });
+      // 주간 통계 집계
+      if (weekStats) {
+        weekStats.forEach(stat => {
+          if (!userStatsMap[stat.user_email]) {
+            userStatsMap[stat.user_email] = {
+              today: 0, week: 0, total: 0,
+              lastLogin: null, lastDevice: 'Unknown', lastBrowser: 'Unknown',
+              gradingSonnet: 0, gradingOpus: 0
+            };
+          }
+          userStatsMap[stat.user_email].week += stat.login_count || 0;
+        });
+      }
+      
+      // 전체 통계 집계
+      if (totalStats) {
+        totalStats.forEach(stat => {
+          if (!userStatsMap[stat.user_email]) {
+            userStatsMap[stat.user_email] = {
+              today: 0, week: 0, total: 0,
+              lastLogin: null, lastDevice: 'Unknown', lastBrowser: 'Unknown',
+              gradingSonnet: 0, gradingOpus: 0
+            };
+          }
+          userStatsMap[stat.user_email].total += stat.login_count || 0;
+          userStatsMap[stat.user_email].gradingSonnet += stat.grading_sonnet_count || 0;
+          userStatsMap[stat.user_email].gradingOpus += stat.grading_opus_count || 0;
+        });
+      }
       
       // 사용자 활동 정보 구성
       response.userActivity = users.map(user => ({
@@ -184,8 +187,8 @@ export async function GET() {
           lastLogin: userStatsMap[user.email]?.lastLogin || null
         },
         gradingStats: {
-          sonnet: 0,
-          opus: 0
+          sonnet: userStatsMap[user.email]?.gradingSonnet || 0,
+          opus: userStatsMap[user.email]?.gradingOpus || 0
         },
         deviceInfo: {
           device: userStatsMap[user.email]?.lastDevice || 'Unknown',
