@@ -428,12 +428,17 @@ export async function GET() {
         ? 'https://grading.bluenote.site'
         : 'http://localhost:3002';
 
+      console.log('Fetching grading stats from:', `${baseUrl}/api/stats`);
+      
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 5000);
       
       const gradingRes = await fetch(`${baseUrl}/api/stats`, { 
         cache: 'no-store',
-        signal: controller.signal
+        signal: controller.signal,
+        headers: {
+          'Accept': 'application/json'
+        }
       });
       
       clearTimeout(timeoutId);
@@ -447,7 +452,16 @@ export async function GET() {
           response.todayGradingSonnet = gradingData.evaluations.byModel.sonnet?.today || 0;
           response.totalGradingOpus = gradingData.evaluations.byModel.opus?.total || 0;
           response.todayGradingOpus = gradingData.evaluations.byModel.opus?.today || 0;
+          
+          console.log('Grading stats set:', {
+            totalSonnet: response.totalGradingSonnet,
+            todaySonnet: response.todayGradingSonnet,
+            totalOpus: response.totalGradingOpus,
+            todayOpus: response.todayGradingOpus
+          });
         }
+      } else {
+        console.error('Grading API failed:', gradingRes.status, gradingRes.statusText);
       }
       
       // 사용자별 채점 통계 가져오기
@@ -491,7 +505,17 @@ export async function GET() {
           }));
       }
     } catch (error) {
-      console.log('Grading stats fetch failed (non-critical):', error.message);
+      console.error('Grading stats fetch failed:', {
+        message: error.message,
+        name: error.name,
+        stack: error.stack
+      });
+      
+      // 기본값 설정
+      response.totalGradingSonnet = 0;
+      response.todayGradingSonnet = 0;
+      response.totalGradingOpus = 0;
+      response.todayGradingOpus = 0;
     }
 
     // 디버깅용 로그
@@ -502,7 +526,13 @@ export async function GET() {
       contentStats: response.contentStats,
       recentPostsCount: response.recentPosts.length,
       dailyStatsCount: response.dailyStats.length,
-      userActivityCount: response.userActivity.length
+      userActivityCount: response.userActivity.length,
+      gradingStats: {
+        totalSonnet: response.totalGradingSonnet,
+        todaySonnet: response.todayGradingSonnet,
+        totalOpus: response.totalGradingOpus,
+        todayOpus: response.todayGradingOpus
+      }
     });
     
     return NextResponse.json({ stats: response });
