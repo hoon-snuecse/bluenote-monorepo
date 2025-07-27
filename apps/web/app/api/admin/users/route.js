@@ -1,6 +1,6 @@
 import { createApiHandler, crud, supabaseQuery } from '@/lib/api-helpers';
 
-const handleAdminRequest = createApiHandler({ requiredRole: 'admin' });
+const handleAdminRequest = createApiHandler({ requiredRole: 'admin', useAdminClient: true });
 
 // GET - Fetch all users
 export async function GET(request) {
