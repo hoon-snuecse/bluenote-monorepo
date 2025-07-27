@@ -81,21 +81,29 @@ export async function GET() {
       console.error('Error fetching users:', error);
     }
 
-    // 3. 로그 데이터 가져오기
+    // 3. 로그 데이터 가져오기 (REST API 직접 호출)
     let logs = [];
-    try {
-      const { data, error } = await supabase
-        .from('usage_logs')
-        .select('action_type, user_email, created_at, metadata')
-        .gte('created_at', weekAgo.toISOString())
-        .order('created_at', { ascending: false })
-        .limit(1000);
-      
-      if (!error && data) {
-        logs = data;
+    if (SUPABASE_URL && SUPABASE_ANON_KEY) {
+      try {
+        const logsRes = await fetch(
+          `${SUPABASE_URL}/rest/v1/usage_logs?select=action_type,user_email,created_at,metadata&created_at=gte.${weekAgo.toISOString()}&order=created_at.desc&limit=1000`,
+          {
+            headers: {
+              'apikey': SUPABASE_ANON_KEY,
+              'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+            }
+          }
+        );
+        
+        if (logsRes.ok) {
+          logs = await logsRes.json();
+          console.log('Fetched logs count:', logs.length);
+        } else {
+          console.error('Failed to fetch logs:', logsRes.status, logsRes.statusText);
+        }
+      } catch (error) {
+        console.error('Error fetching logs:', error);
       }
-    } catch (error) {
-      console.error('Error fetching logs:', error);
     }
 
     // 4. 로그 분석
@@ -361,6 +369,7 @@ export async function GET() {
       });
     }
     response.dailyStats = dailyStats;
+    console.log('Daily stats:', dailyStats);
 
     // 7. 사용자 활동 (간단한 버전)
     const userActivityMap = {};
