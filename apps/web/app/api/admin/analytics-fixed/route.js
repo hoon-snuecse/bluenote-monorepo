@@ -91,56 +91,165 @@ export async function GET() {
       .limit(15);
 
     if (!usersError && users) {
+      // 사용자별 로그인 통계 가져오기
+      const userEmails = users.map(u => u.email);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const weekAgo = new Date(today);
+      weekAgo.setDate(weekAgo.getDate() - 7);
+      
+      // usage_logs에서 로그인 정보 가져오기
+      const { data: loginLogs } = await supabase
+        .from('usage_logs')
+        .select('user_email, created_at, metadata')
+        .eq('action_type', 'login')
+        .in('user_email', userEmails)
+        .gte('created_at', weekAgo.toISOString());
+      
+      // 사용자별 통계 계산
+      const userStatsMap = {};
+      
+      if (loginLogs) {
+        loginLogs.forEach(log => {
+          if (!userStatsMap[log.user_email]) {
+            userStatsMap[log.user_email] = {
+              total: 0,
+              today: 0,
+              week: 0,
+              lastLogin: null,
+              lastDevice: 'Unknown',
+              lastBrowser: 'Unknown'
+            };
+          }
+          
+          const logDate = new Date(log.created_at);
+          userStatsMap[log.user_email].week++;
+          
+          if (logDate >= today) {
+            userStatsMap[log.user_email].today++;
+          }
+          
+          // 가장 최근 로그인 정보 업데이트
+          if (!userStatsMap[log.user_email].lastLogin || logDate > new Date(userStatsMap[log.user_email].lastLogin)) {
+            userStatsMap[log.user_email].lastLogin = log.created_at;
+            
+            // metadata에서 디바이스 정보 추출
+            if (log.metadata) {
+              const metadata = typeof log.metadata === 'string' ? JSON.parse(log.metadata) : log.metadata;
+              userStatsMap[log.user_email].lastDevice = metadata.device || 'Unknown';
+              userStatsMap[log.user_email].lastBrowser = metadata.browser || 'Unknown';
+            }
+          }
+        });
+      }
+      
+      // 전체 로그인 수 가져오기
+      const { count: totalLoginCount } = await supabase
+        .from('usage_logs')
+        .select('*', { count: 'exact', head: true })
+        .eq('action_type', 'login')
+        .in('user_email', userEmails);
+      
+      // 사용자별 전체 로그인 수 업데이트
+      if (totalLoginCount) {
+        const avgLoginPerUser = Math.floor(totalLoginCount / userEmails.length);
+        Object.keys(userStatsMap).forEach(email => {
+          userStatsMap[email].total = userStatsMap[email].week + avgLoginPerUser;
+        });
+      }
       
       // 사용자 활동 정보 구성
       response.userActivity = users.map(user => ({
         email: user.email,
         role: user.role,
         loginStats: {
-          today: 0,
-          week: 0,
-          total: 0,
-          lastLogin: null
+          today: userStatsMap[user.email]?.today || 0,
+          week: userStatsMap[user.email]?.week || 0,
+          total: userStatsMap[user.email]?.total || 0,
+          lastLogin: userStatsMap[user.email]?.lastLogin || null
         },
         gradingStats: {
           sonnet: 0,
           opus: 0
         },
         deviceInfo: {
-          device: 'Unknown',
-          browser: 'Unknown'
+          device: userStatsMap[user.email]?.lastDevice || 'Unknown',
+          browser: userStatsMap[user.email]?.lastBrowser || 'Unknown'
         }
       }));
     }
 
-    // 5. 콘텐츠 통계 (공개 테이블은 Anon Key로도 가능)
-    const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-    
-    if (SUPABASE_URL && SUPABASE_ANON_KEY) {
-      // Research posts 카운트
-      const { count: researchCount } = await supabase
+    // 5. 콘텐츠 통계 및 최근 게시물
+    try {
+      // Research posts
+      const { data: researchPosts, count: researchCount } = await supabase
         .from('research_posts')
-        .select('*', { count: 'exact', head: true });
+        .select('*', { count: 'exact' })
+        .order('created_at', { ascending: false })
+        .limit(10);
       response.contentStats.research = researchCount || 0;
 
-      // Shed posts 카운트
-      const { count: shedCount } = await supabase
+      // Shed posts
+      const { data: shedPosts, count: shedCount } = await supabase
         .from('shed_posts')
-        .select('*', { count: 'exact', head: true });
+        .select('*', { count: 'exact' })
+        .order('created_at', { ascending: false })
+        .limit(10);
       response.contentStats.shed = shedCount || 0;
 
-      // Teaching posts 카운트
-      const { count: teachingCount } = await supabase
+      // Teaching posts
+      const { data: teachingPosts, count: teachingCount } = await supabase
         .from('teaching_posts')
-        .select('*', { count: 'exact', head: true });
+        .select('*', { count: 'exact' })
+        .order('created_at', { ascending: false })
+        .limit(10);
       response.contentStats.teaching = teachingCount || 0;
 
-      // Analytics posts 카운트
-      const { count: analyticsCount } = await supabase
+      // Analytics posts
+      const { data: analyticsPosts, count: analyticsCount } = await supabase
         .from('analytics_posts')
-        .select('*', { count: 'exact', head: true });
+        .select('*', { count: 'exact' })
+        .order('created_at', { ascending: false })
+        .limit(10);
       response.contentStats.analytics = analyticsCount || 0;
+
+      // 모든 게시물을 합쳐서 최근 5개 선택
+      const allPosts = [];
+      
+      if (researchPosts) {
+        researchPosts.forEach(post => {
+          allPosts.push({ ...post, section: 'research' });
+        });
+      }
+      
+      if (shedPosts) {
+        shedPosts.forEach(post => {
+          allPosts.push({ ...post, section: 'shed' });
+        });
+      }
+      
+      if (teachingPosts) {
+        teachingPosts.forEach(post => {
+          allPosts.push({ ...post, section: 'teaching' });
+        });
+      }
+      
+      if (analyticsPosts) {
+        analyticsPosts.forEach(post => {
+          allPosts.push({ ...post, section: 'analytics' });
+        });
+      }
+      
+      // 날짜 기준으로 정렬하고 최근 5개만 선택
+      allPosts.sort((a, b) => {
+        const dateA = new Date(a.created_at || a.date || 0);
+        const dateB = new Date(b.created_at || b.date || 0);
+        return dateB - dateA;
+      });
+      
+      response.recentPosts = allPosts.slice(0, 5);
+    } catch (error) {
+      console.log('Content stats error:', error.message);
     }
 
     // 6. 채점 통계 (기존 코드 유지)
