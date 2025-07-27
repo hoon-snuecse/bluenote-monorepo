@@ -36,5 +36,10 @@ WHERE table_schema = 'public'
 ORDER BY table_name;
 
 -- 5. 공간 회수를 위한 VACUUM (선택사항)
--- 시스템 부하가 적을 때 실행 권장
-VACUUM ANALYZE;
+-- 주의: VACUUM은 별도로 실행해야 합니다 (트랜잭션 외부에서)
+-- Supabase SQL Editor에서는 실행할 수 없으므로, 
+-- Supabase 대시보드의 Database > Vacuum 기능을 사용하거나
+-- 자동 VACUUM이 실행되기를 기다리세요.
+
+-- 대신 테이블 통계 업데이트만 수행
+ANALYZE;
