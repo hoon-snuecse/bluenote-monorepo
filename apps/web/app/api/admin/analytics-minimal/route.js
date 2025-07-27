@@ -38,32 +38,16 @@ export async function GET() {
       dailyStats: []
     };
 
-    // 3. 최소한의 일별 통계 생성 (7일)
+    // 3. daily_stats 테이블에서 7일 통계 가져오기
     const today = new Date();
     today.setHours(0, 0, 0, 0);
+    const weekAgo = new Date(today);
+    weekAgo.setDate(weekAgo.getDate() - 6); // 7일간 데이터
     
-    for (let i = 6; i >= 0; i--) {
-      const date = new Date(today);
-      date.setDate(date.getDate() - i);
-      
-      response.dailyStats.push({
-        date: date.toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' }),
-        fullDate: date.toISOString().split('T')[0],
-        claude: 0,
-        posts: 0,
-        logins: 0,
-        uniqueLogins: 0
-      });
-    }
-
-    // 4. usage_logs 데이터 시도
     if (SUPABASE_URL && SUPABASE_ANON_KEY) {
       try {
-        const weekAgo = new Date(today);
-        weekAgo.setDate(weekAgo.getDate() - 7);
-        
-        const logsRes = await fetch(
-          `${SUPABASE_URL}/rest/v1/usage_logs?select=action_type,created_at&created_at=gte.${weekAgo.toISOString()}&order=created_at.desc`,
+        const dailyStatsRes = await fetch(
+          `${SUPABASE_URL}/rest/v1/daily_stats?select=*&date=gte.${weekAgo.toISOString().split('T')[0]}&order=date.asc`,
           {
             headers: {
               'apikey': SUPABASE_ANON_KEY,
@@ -72,28 +56,37 @@ export async function GET() {
           }
         );
         
-        if (logsRes.ok) {
-          const logs = await logsRes.json();
+        if (dailyStatsRes.ok) {
+          const dailyStatsData = await dailyStatsRes.json();
           
-          // 날짜별로 집계
-          logs.forEach(log => {
-            const logDate = new Date(log.created_at);
-            const dateKey = logDate.toISOString().split('T')[0];
+          // 일별 통계 변환
+          response.dailyStats = dailyStatsData.map(day => ({
+            date: new Date(day.date).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' }),
+            fullDate: day.date,
+            claude: day.claude_usage_count || 0,
+            posts: day.total_post_count || 0,
+            logins: day.login_count || 0,
+            uniqueLogins: day.unique_login_count || 0
+          }));
+
+          // 누적 통계 계산
+          dailyStatsData.forEach(day => {
+            response.totalLogins += day.login_count || 0;
+            response.totalClaudeUsage += day.claude_usage_count || 0;
             
-            const dayStatIndex = response.dailyStats.findIndex(d => d.fullDate === dateKey);
-            if (dayStatIndex !== -1) {
-              if (log.action_type === 'login') {
-                response.dailyStats[dayStatIndex].logins++;
-                response.totalLogins++;
-              } else if (log.action_type === 'claude_chat') {
-                response.dailyStats[dayStatIndex].claude++;
-                response.totalClaudeUsage++;
-              }
+            // 오늘 통계
+            if (day.date === today.toISOString().split('T')[0]) {
+              response.todayLogins = day.login_count || 0;
+              response.todayClaudeUsage = day.claude_usage_count || 0;
             }
           });
+          
+          // 총 사용자 수는 별도로 가져옴
+        } else {
+          console.error('Failed to fetch daily stats:', dailyStatsRes.status);
         }
       } catch (error) {
-        console.error('Error fetching logs:', error);
+        console.error('Error fetching daily stats:', error);
       }
     }
 
@@ -142,7 +135,7 @@ export async function GET() {
       if (usersRes.ok) {
         const users = await usersRes.json();
         
-        // 사용자별 로그인 통계 계산을 위해 전체 로그 가져오기
+        // 사용자별 로그인 통계는 아직 usage_logs에서 계산
         const userActivityMap = {};
         
         try {
