@@ -53,14 +53,46 @@ export default function AdminAnalyticsClient() {
       return;
     }
 
+    // 먼저 간단한 테스트 엔드포인트로 연결 확인
+    testConnection();
     fetchAnalytics();
   }, [session, status, router]);
+
+  const testConnection = async () => {
+    try {
+      const testRes = await fetch('/api/admin/test-analytics');
+      const testData = await testRes.json();
+      console.log('Test endpoint response:', testData);
+    } catch (error) {
+      console.error('Test endpoint failed:', error);
+    }
+  };
 
   const fetchAnalytics = async () => {
     setLoading(true);
     try {
       // 새로운 통합 API 사용
-      const analyticsRes = await fetch('/api/admin/analytics-fixed');
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30초 타임아웃
+      
+      const analyticsRes = await fetch('/api/admin/analytics-fixed', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        cache: 'no-store',
+        signal: controller.signal
+      });
+      
+      clearTimeout(timeoutId);
+      
+      if (!analyticsRes.ok) {
+        console.error('API Response not OK:', analyticsRes.status, analyticsRes.statusText);
+        const errorText = await analyticsRes.text();
+        console.error('Error response:', errorText);
+        return;
+      }
+      
       const analyticsData = await analyticsRes.json();
       
       if (analyticsData.stats) {
@@ -70,6 +102,16 @@ export default function AdminAnalyticsClient() {
       }
     } catch (error) {
       console.error('Failed to fetch analytics:', error);
+      console.error('Error details:', {
+        message: error.message,
+        stack: error.stack,
+        name: error.name
+      });
+      
+      // 더 구체적인 에러 처리
+      if (error.name === 'AbortError') {
+        console.error('Request timed out after 30 seconds');
+      }
     } finally {
       setLoading(false);
     }

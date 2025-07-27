@@ -13,7 +13,16 @@ export async function GET() {
     }
 
     // 2. Service Role 클라이언트 사용
-    const supabase = createAdminClient();
+    let supabase;
+    try {
+      supabase = createAdminClient();
+    } catch (error) {
+      console.error('Failed to create admin client:', error);
+      return NextResponse.json(
+        { error: 'Service configuration error', message: error.message },
+        { status: 500 }
+      );
+    }
     
     const response = {
       totalUsers: 0,
