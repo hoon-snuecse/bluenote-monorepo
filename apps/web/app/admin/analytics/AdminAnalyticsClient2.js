@@ -47,7 +47,7 @@ export default function AdminAnalyticsClient2() {
     setError(null);
 
     try {
-      const response = await fetch('/api/admin/analytics-v2');
+      const response = await fetch('/api/admin/analytics-minimal');
       
       if (!response.ok) {
         throw new Error('Failed to fetch analytics');

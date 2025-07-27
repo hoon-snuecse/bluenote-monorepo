@@ -97,6 +97,73 @@ export async function GET() {
       }
     }
 
+    // 5. 채점 통계 추가
+    try {
+      const baseUrl = process.env.NODE_ENV === 'production'
+        ? 'https://grading.bluenote.site'
+        : 'http://localhost:3002';
+
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
+      
+      const gradingRes = await fetch(`${baseUrl}/api/stats`, { 
+        cache: 'no-store',
+        signal: controller.signal
+      });
+      
+      clearTimeout(timeoutId);
+
+      if (gradingRes.ok) {
+        const gradingData = await gradingRes.json();
+        
+        if (gradingData.evaluations?.byModel) {
+          response.totalGradingSonnet = gradingData.evaluations.byModel.sonnet?.total || 0;
+          response.todayGradingSonnet = gradingData.evaluations.byModel.sonnet?.today || 0;
+          response.totalGradingOpus = gradingData.evaluations.byModel.opus?.total || 0;
+          response.todayGradingOpus = gradingData.evaluations.byModel.opus?.today || 0;
+        }
+      }
+    } catch (error) {
+      console.log('Grading stats fetch failed (non-critical):', error.message);
+    }
+
+    // 6. 사용자 활동 데이터 추가
+    try {
+      const usersRes = await fetch(
+        `${SUPABASE_URL}/rest/v1/user_permissions?select=email,role&limit=15`,
+        {
+          headers: {
+            'apikey': SUPABASE_ANON_KEY,
+            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+          }
+        }
+      );
+
+      if (usersRes.ok) {
+        const users = await usersRes.json();
+        response.userActivity = users.map(user => ({
+          email: user.email,
+          role: user.role,
+          loginStats: {
+            today: 0,
+            week: 0,
+            total: 0,
+            lastLogin: null
+          },
+          gradingStats: {
+            sonnet: 0,
+            opus: 0
+          },
+          deviceInfo: {
+            device: 'Unknown',
+            browser: 'Unknown'
+          }
+        }));
+      }
+    } catch (error) {
+      console.error('Error fetching users:', error);
+    }
+
     return NextResponse.json({ stats: response });
 
   } catch (error) {
