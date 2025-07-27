@@ -6,10 +6,26 @@ import { createAdminClient } from '@/lib/supabase/admin';
 export async function GET() {
   try {
     // 1. 세션 확인
-    const session = await getServerSession(authOptions);
+    let session;
+    try {
+      session = await getServerSession(authOptions);
+    } catch (error) {
+      console.error('Session error:', error);
+      return NextResponse.json({ 
+        error: 'Session error', 
+        details: error.message 
+      }, { status: 500 });
+    }
     
-    if (!session || !session.user.isAdmin) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!session) {
+      return NextResponse.json({ error: 'No session' }, { status: 401 });
+    }
+    
+    if (!session.user?.isAdmin) {
+      return NextResponse.json({ 
+        error: 'Not admin',
+        user: session.user?.email || 'unknown'
+      }, { status: 401 });
     }
 
     const supabase = createAdminClient();
