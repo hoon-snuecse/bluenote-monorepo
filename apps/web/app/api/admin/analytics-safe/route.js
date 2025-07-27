@@ -434,18 +434,35 @@ export async function GET() {
       const timeoutId = setTimeout(() => controller.abort(), 5000);
       
       const gradingRes = await fetch(`${baseUrl}/api/stats`, { 
+        method: 'GET',
         cache: 'no-store',
         signal: controller.signal,
         headers: {
-          'Accept': 'application/json'
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
         }
       });
       
       clearTimeout(timeoutId);
 
+      console.log('Grading API fetch completed:', {
+        ok: gradingRes.ok,
+        status: gradingRes.status
+      });
+      
       if (gradingRes.ok) {
-        const gradingData = await gradingRes.json();
-        console.log('Grading API response:', gradingData);
+        const gradingText = await gradingRes.text();
+        console.log('Grading API raw response:', gradingText);
+        
+        let gradingData;
+        try {
+          gradingData = JSON.parse(gradingText);
+        } catch (e) {
+          console.error('Failed to parse grading response:', e);
+          throw new Error('Invalid JSON response from grading API');
+        }
+        
+        console.log('Grading API parsed data:', gradingData);
         
         if (gradingData.evaluations?.byModel) {
           response.totalGradingSonnet = gradingData.evaluations.byModel.sonnet?.total || 0;
@@ -461,7 +478,13 @@ export async function GET() {
           });
         }
       } else {
-        console.error('Grading API failed:', gradingRes.status, gradingRes.statusText);
+        const errorText = await gradingRes.text();
+        console.error('Grading API failed:', {
+          status: gradingRes.status,
+          statusText: gradingRes.statusText,
+          errorText: errorText,
+          url: `${baseUrl}/api/stats`
+        });
       }
       
       // 사용자별 채점 통계 가져오기
