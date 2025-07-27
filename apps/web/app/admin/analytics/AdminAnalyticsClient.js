@@ -95,11 +95,16 @@ export default function AdminAnalyticsClient() {
       }
       
       const analyticsData = await analyticsRes.json();
+      console.log('Analytics API response:', analyticsData);
       
       if (analyticsData.stats) {
+        console.log('Setting stats:', analyticsData.stats);
         setStats(analyticsData.stats);
+        console.log('Stats set successfully');
       } else if (analyticsData.error) {
         console.error('API Error:', analyticsData.error);
+      } else {
+        console.error('Unexpected response format:', analyticsData);
       }
     } catch (error) {
       console.error('Failed to fetch analytics:', error);
