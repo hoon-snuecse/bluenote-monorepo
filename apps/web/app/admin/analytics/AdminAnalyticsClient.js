@@ -61,6 +61,10 @@ export default function AdminAnalyticsClient() {
   const testConnection = async () => {
     try {
       const testRes = await fetch('/api/admin/test-analytics');
+      if (!testRes.ok) {
+        console.error('Test endpoint not OK:', testRes.status);
+        return;
+      }
       const testData = await testRes.json();
       console.log('Test endpoint response:', testData);
     } catch (error) {
@@ -77,9 +81,6 @@ export default function AdminAnalyticsClient() {
       
       const analyticsRes = await fetch('/api/admin/analytics-fixed', {
         method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         cache: 'no-store',
         signal: controller.signal
       });
