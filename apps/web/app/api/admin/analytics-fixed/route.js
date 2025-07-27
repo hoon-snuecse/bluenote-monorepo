@@ -15,6 +15,11 @@ export async function GET() {
     // 2. Service Role 클라이언트 사용
     const supabase = createAdminClient();
     
+    // Service Role 키 확인
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    console.log('Service Role Key exists:', !!serviceKey);
+    console.log('Service Role Key prefix:', serviceKey?.substring(0, 20) + '...');
+    
     const response = {
       totalUsers: 0,
       totalLogins: 0,
@@ -75,13 +80,26 @@ export async function GET() {
     }
 
     // 4. 사용자 정보 가져오기 (Service Role 사용)
+    // 전체 사용자 수 카운트
+    const { count: totalUserCount, error: countError } = await supabase
+      .from('user_permissions')
+      .select('*', { count: 'exact', head: true });
+    
+    console.log('Total user count:', { totalUserCount, countError });
+    
+    if (!countError && totalUserCount !== null) {
+      response.totalUsers = totalUserCount;
+    }
+    
+    // 사용자 활동 정보를 위한 상세 데이터 (15명만)
     const { data: users, error: usersError } = await supabase
       .from('user_permissions')
       .select('email, role')
       .limit(15);
 
+    console.log('User permissions query result:', { users, error: usersError });
+
     if (!usersError && users) {
-      response.totalUsers = users.length;
       
       // 사용자 활동 정보 구성
       response.userActivity = users.map(user => ({
