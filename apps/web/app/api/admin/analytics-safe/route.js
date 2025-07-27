@@ -432,21 +432,13 @@ export async function GET() {
 
       console.log('Fetching grading stats from:', `${baseUrl}/api/stats`);
       
-      // Node.js fetch를 사용하여 더 안정적으로 처리
-      const gradingRes = await fetch(`${baseUrl}/api/stats`, { 
-        method: 'GET',
-        headers: {
-          'Accept': 'application/json',
-          'User-Agent': 'Bluenote-Web/1.0'
-        }
-      }).catch(error => {
-        console.error('Fetch error:', error);
-        return null;
-      });
-
-      if (!gradingRes) {
-        console.error('Grading API fetch returned null');
-        throw new Error('Failed to fetch grading stats');
+      // 간단하게 fetch 처리
+      let gradingRes;
+      try {
+        gradingRes = await fetch(`${baseUrl}/api/stats`);
+      } catch (fetchError) {
+        console.error('Grading API fetch error:', fetchError);
+        throw fetchError;
       }
       
       console.log('Grading API fetch completed:', {
@@ -455,18 +447,8 @@ export async function GET() {
       });
       
       if (gradingRes.ok) {
-        const gradingText = await gradingRes.text();
-        console.log('Grading API raw response:', gradingText);
-        
-        let gradingData;
-        try {
-          gradingData = JSON.parse(gradingText);
-        } catch (e) {
-          console.error('Failed to parse grading response:', e);
-          throw new Error('Invalid JSON response from grading API');
-        }
-        
-        console.log('Grading API parsed data:', gradingData);
+        const gradingData = await gradingRes.json();
+        console.log('Grading API data:', gradingData);
         
         if (gradingData.evaluations?.byModel) {
           response.totalGradingSonnet = gradingData.evaluations.byModel.sonnet?.total || 0;
@@ -492,16 +474,13 @@ export async function GET() {
       }
       
       // 사용자별 채점 통계 가져오기
-      const userStatsRes = await fetch(`${baseUrl}/api/stats/user-evaluations`, {
-        method: 'GET',
-        headers: {
-          'Accept': 'application/json',
-          'User-Agent': 'Bluenote-Web/1.0'
-        }
-      }).catch(error => {
-        console.error('User stats fetch error:', error);
-        return null;
-      });
+      let userStatsRes;
+      try {
+        userStatsRes = await fetch(`${baseUrl}/api/stats/user-evaluations`);
+      } catch (userStatsError) {
+        console.error('User stats fetch error:', userStatsError);
+        userStatsRes = null;
+      }
       
       if (userStatsRes && userStatsRes.ok) {
         const userStatsData = await userStatsRes.json();
