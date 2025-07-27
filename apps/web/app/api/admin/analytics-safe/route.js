@@ -424,31 +424,23 @@ export async function GET() {
 
     // 8. Grading 통계 (옵션, 실패해도 무시)
     try {
-      const baseUrl = process.env.GRADING_API_URL || (
-        process.env.NODE_ENV === 'production'
-          ? 'https://grading.bluenote.site'
-          : 'http://localhost:3002'
-      );
+      const baseUrl = process.env.NODE_ENV === 'production'
+        ? 'https://grading.bluenote.site'
+        : 'http://localhost:3002';
 
-      console.log('Fetching grading stats from:', `${baseUrl}/api/stats`);
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
       
-      // 간단하게 fetch 처리
-      let gradingRes;
-      try {
-        gradingRes = await fetch(`${baseUrl}/api/stats`);
-      } catch (fetchError) {
-        console.error('Grading API fetch error:', fetchError);
-        throw fetchError;
-      }
-      
-      console.log('Grading API fetch completed:', {
-        ok: gradingRes.ok,
-        status: gradingRes.status
+      const gradingRes = await fetch(`${baseUrl}/api/stats`, { 
+        cache: 'no-store',
+        signal: controller.signal
       });
       
+      clearTimeout(timeoutId);
+
       if (gradingRes.ok) {
         const gradingData = await gradingRes.json();
-        console.log('Grading API data:', gradingData);
+        console.log('Grading API response:', gradingData);
         
         if (gradingData.evaluations?.byModel) {
           response.totalGradingSonnet = gradingData.evaluations.byModel.sonnet?.total || 0;
@@ -456,33 +448,15 @@ export async function GET() {
           response.totalGradingOpus = gradingData.evaluations.byModel.opus?.total || 0;
           response.todayGradingOpus = gradingData.evaluations.byModel.opus?.today || 0;
           
-          console.log('Grading stats set:', {
-            totalSonnet: response.totalGradingSonnet,
-            todaySonnet: response.todayGradingSonnet,
-            totalOpus: response.totalGradingOpus,
-            todayOpus: response.todayGradingOpus
-          });
         }
-      } else {
-        const errorText = await gradingRes.text();
-        console.error('Grading API failed:', {
-          status: gradingRes.status,
-          statusText: gradingRes.statusText,
-          errorText: errorText,
-          url: `${baseUrl}/api/stats`
-        });
       }
       
       // 사용자별 채점 통계 가져오기
-      let userStatsRes;
-      try {
-        userStatsRes = await fetch(`${baseUrl}/api/stats/user-evaluations`);
-      } catch (userStatsError) {
-        console.error('User stats fetch error:', userStatsError);
-        userStatsRes = null;
-      }
+      const userStatsRes = await fetch(`${baseUrl}/api/stats/user-evaluations`, {
+        cache: 'no-store'
+      });
       
-      if (userStatsRes && userStatsRes.ok) {
+      if (userStatsRes.ok) {
         const userStatsData = await userStatsRes.json();
         console.log('User stats response:', userStatsData);
         
@@ -518,17 +492,7 @@ export async function GET() {
           }));
       }
     } catch (error) {
-      console.error('Grading stats fetch failed:', {
-        message: error.message,
-        name: error.name,
-        stack: error.stack
-      });
-      
-      // 기본값 설정
-      response.totalGradingSonnet = 0;
-      response.todayGradingSonnet = 0;
-      response.totalGradingOpus = 0;
-      response.todayGradingOpus = 0;
+      console.log('Grading stats fetch failed (non-critical):', error.message);
     }
 
     // 디버깅용 로그
@@ -539,13 +503,7 @@ export async function GET() {
       contentStats: response.contentStats,
       recentPostsCount: response.recentPosts.length,
       dailyStatsCount: response.dailyStats.length,
-      userActivityCount: response.userActivity.length,
-      gradingStats: {
-        totalSonnet: response.totalGradingSonnet,
-        todaySonnet: response.todayGradingSonnet,
-        totalOpus: response.totalGradingOpus,
-        todayOpus: response.todayGradingOpus
-      }
+      userActivityCount: response.userActivity.length
     });
     
     return NextResponse.json({ stats: response });
