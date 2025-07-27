@@ -212,6 +212,13 @@ export async function GET() {
       console.log('Grading stats fetch failed (non-critical):', error.message);
     }
 
+    console.log('Final response grading stats:', {
+      totalGradingSonnet: response.totalGradingSonnet,
+      todayGradingSonnet: response.todayGradingSonnet,
+      totalGradingOpus: response.totalGradingOpus,
+      todayGradingOpus: response.todayGradingOpus
+    });
+    
     return NextResponse.json({ stats: response });
 
   } catch (error) {
