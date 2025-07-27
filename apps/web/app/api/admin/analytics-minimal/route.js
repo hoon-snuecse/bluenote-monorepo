@@ -141,27 +141,144 @@ export async function GET() {
 
       if (usersRes.ok) {
         const users = await usersRes.json();
-        response.userActivity = users.map(user => ({
-          email: user.email,
-          role: user.role,
-          loginStats: {
-            today: 0,
-            week: 0,
-            total: 0,
-            lastLogin: null
-          },
-          gradingStats: {
-            sonnet: 0,
-            opus: 0
-          },
-          deviceInfo: {
-            device: 'Unknown',
-            browser: 'Unknown'
+        
+        // 사용자별 로그인 통계 계산을 위해 전체 로그 가져오기
+        const userActivityMap = {};
+        
+        try {
+          const allLogsRes = await fetch(
+            `${SUPABASE_URL}/rest/v1/usage_logs?select=action_type,created_at,user_email&order=created_at.desc`,
+            {
+              headers: {
+                'apikey': SUPABASE_ANON_KEY,
+                'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+              }
+            }
+          );
+          
+          if (allLogsRes.ok) {
+            const allLogs = await allLogsRes.json();
+            
+            allLogs.forEach(log => {
+              const userEmail = log.user_email;
+              if (userEmail) {
+                if (!userActivityMap[userEmail]) {
+                  userActivityMap[userEmail] = {
+                    totalLogins: 0,
+                    weekLogins: 0,
+                    todayLogins: 0,
+                    lastLogin: null,
+                    claudeUsage: 0
+                  };
+                }
+                
+                const logDate = new Date(log.created_at);
+                const todayStart = new Date(today);
+                todayStart.setHours(0, 0, 0, 0);
+                
+                if (log.action_type === 'login') {
+                  userActivityMap[userEmail].totalLogins++;
+                  
+                  if (logDate >= weekAgo) {
+                    userActivityMap[userEmail].weekLogins++;
+                  }
+                  
+                  if (logDate >= todayStart) {
+                    userActivityMap[userEmail].todayLogins++;
+                  }
+                  
+                  if (!userActivityMap[userEmail].lastLogin || logDate > new Date(userActivityMap[userEmail].lastLogin)) {
+                    userActivityMap[userEmail].lastLogin = log.created_at;
+                  }
+                } else if (log.action_type === 'claude_chat') {
+                  userActivityMap[userEmail].claudeUsage++;
+                }
+              }
+            });
           }
-        }));
+        } catch (logError) {
+          console.error('Error fetching user logs:', logError);
+        }
+        
+        response.userActivity = users.map(user => {
+          const activity = userActivityMap[user.email] || {};
+          return {
+            email: user.email,
+            role: user.role,
+            loginStats: {
+              today: activity.todayLogins || 0,
+              week: activity.weekLogins || 0,
+              total: activity.totalLogins || 0,
+              lastLogin: activity.lastLogin || null
+            },
+            gradingStats: {
+              sonnet: 0,
+              opus: 0
+            },
+            deviceInfo: {
+              device: 'Unknown',
+              browser: 'Unknown'
+            }
+          };
+        });
+        
+        response.totalUsers = users.length;
       }
     } catch (error) {
       console.error('Error fetching users:', error);
+    }
+
+    // 7. 콘텐츠 통계 추가
+    try {
+      // Research posts
+      const researchRes = await fetch(
+        `${SUPABASE_URL}/rest/v1/research_posts?select=id`,
+        {
+          headers: {
+            'apikey': SUPABASE_ANON_KEY,
+            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+            'Prefer': 'count=exact',
+            'Range-Unit': 'items',
+            'Range': '0-0'
+          }
+        }
+      );
+      
+      if (researchRes.ok) {
+        const contentRange = researchRes.headers.get('content-range');
+        if (contentRange) {
+          const match = contentRange.match(/\d+-\d+\/(\d+)/);
+          if (match) {
+            response.contentStats.research = parseInt(match[1]);
+          }
+        }
+      }
+
+      // Shed posts
+      const shedRes = await fetch(
+        `${SUPABASE_URL}/rest/v1/shed_posts?select=id`,
+        {
+          headers: {
+            'apikey': SUPABASE_ANON_KEY,
+            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+            'Prefer': 'count=exact',
+            'Range-Unit': 'items',
+            'Range': '0-0'
+          }
+        }
+      );
+      
+      if (shedRes.ok) {
+        const contentRange = shedRes.headers.get('content-range');
+        if (contentRange) {
+          const match = contentRange.match(/\d+-\d+\/(\d+)/);
+          if (match) {
+            response.contentStats.shed = parseInt(match[1]);
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching content stats:', error);
     }
 
     return NextResponse.json({ stats: response });
