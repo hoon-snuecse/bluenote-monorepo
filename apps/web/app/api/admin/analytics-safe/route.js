@@ -284,12 +284,48 @@ export async function GET() {
 
     // 6. 일별 통계 계산
     const dailyStats = [];
+    
+    // 게시물 통계를 위한 날짜별 카운트 - 모든 게시물 가져오기
+    const postsByDate = {};
+    
+    // 7일 이내의 모든 게시물 가져오기
+    if (SUPABASE_URL && SUPABASE_ANON_KEY) {
+      try {
+        // 각 섹션별로 7일 이내 게시물 가져오기
+        const sections = ['research_posts', 'teaching_posts', 'analytics_posts', 'shed_posts'];
+        
+        for (const section of sections) {
+          const postsRes = await fetch(
+            `${SUPABASE_URL}/rest/v1/${section}?select=created_at&created_at=gte.${weekAgo.toISOString()}&order=created_at.desc`,
+            {
+              headers: {
+                'apikey': SUPABASE_ANON_KEY,
+                'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+              }
+            }
+          );
+          
+          if (postsRes.ok) {
+            const posts = await postsRes.json();
+            posts.forEach(post => {
+              const postDate = new Date(post.created_at);
+              const dateKey = postDate.toISOString().split('T')[0];
+              postsByDate[dateKey] = (postsByDate[dateKey] || 0) + 1;
+            });
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching posts for daily stats:', error);
+      }
+    }
+    
     for (let i = 6; i >= 0; i--) {
       const date = new Date(today);
       date.setDate(date.getDate() - i);
       const dayStart = new Date(date);
       const dayEnd = new Date(date);
       dayEnd.setDate(dayEnd.getDate() + 1);
+      const dateKey = date.toISOString().split('T')[0];
       
       const dayLogs = logs.filter(log => {
         const logDate = new Date(log.created_at);
@@ -311,9 +347,9 @@ export async function GET() {
 
       dailyStats.push({
         date: date.toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' }),
-        fullDate: date.toISOString().split('T')[0],
+        fullDate: dateKey,
         claude: claudeCount,
-        posts: 0, // 게시물 작성 로그가 없는 경우
+        posts: postsByDate[dateKey] || 0,
         logins: loginCount,
         uniqueLogins: loginUsers.size
       });
