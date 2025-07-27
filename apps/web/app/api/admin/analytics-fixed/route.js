@@ -158,6 +158,12 @@ export async function GET() {
         });
       }
       
+      // 디버깅용 로그
+      console.log('User activity data:', {
+        usersCount: users?.length || 0,
+        userStatsMapKeys: Object.keys(userStatsMap).length
+      });
+      
       // 사용자 활동 정보 구성
       response.userActivity = users.map(user => ({
         email: user.email,
@@ -248,8 +254,20 @@ export async function GET() {
       });
       
       response.recentPosts = allPosts.slice(0, 5);
+      
+      // 디버깅용 로그
+      console.log('Content fetch results:', {
+        researchCount: researchPosts?.length || 0,
+        shedCount: shedPosts?.length || 0,
+        teachingCount: teachingPosts?.length || 0,
+        analyticsCount: analyticsPosts?.length || 0,
+        totalPosts: allPosts.length,
+        recentPostsCount: response.recentPosts.length
+      });
     } catch (error) {
-      console.log('Content stats error:', error.message);
+      console.error('Content stats error:', error.message);
+      // 더 자세한 에러 정보 추가
+      response.contentError = error.message;
     }
 
     // 6. 채점 통계 (기존 코드 유지)
@@ -318,6 +336,7 @@ export async function GET() {
 
   } catch (error) {
     console.error('Analytics Fixed API Error:', error);
+    console.error('Error stack:', error.stack);
     return NextResponse.json(
       { error: 'Internal server error', message: error.message },
       { status: 500 }

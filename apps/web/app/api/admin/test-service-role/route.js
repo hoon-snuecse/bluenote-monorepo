@@ -1,127 +1,98 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
+import { createAdminClient } from '@/lib/supabase/admin';
 
 export async function GET() {
   try {
-    // 세션 확인
     const session = await getServerSession(authOptions);
     
     if (!session || !session.user?.isAdmin) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Service Role Key 테스트
-    const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
-    const ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
+    // Service Role 클라이언트의 실제 동작 테스트
+    const supabase = createAdminClient();
+    
     const results = {
       timestamp: new Date().toISOString(),
-      environment: {
-        hasUrl: !!SUPABASE_URL,
-        hasServiceKey: !!SERVICE_KEY,
-        hasAnonKey: !!ANON_KEY,
-        serviceKeyPrefix: SERVICE_KEY ? SERVICE_KEY.substring(0, 10) + '...' : 'missing',
-        serviceKeyLength: SERVICE_KEY?.length || 0
-      },
-      tests: {}
+      serviceRoleTest: {},
+      errors: []
     };
 
-    // Test 1: Service Role Key로 user_permissions 접근
-    if (SUPABASE_URL && SERVICE_KEY) {
+    // 1. Service Role JWT 토큰 확인 (환경변수)
+    results.serviceRoleTest.hasServiceRoleKey = !!process.env.SUPABASE_SERVICE_ROLE_KEY;
+    results.serviceRoleTest.keyLength = process.env.SUPABASE_SERVICE_ROLE_KEY?.length || 0;
+    
+    // 2. 각 테이블에 대한 직접 쿼리 테스트
+    const tables = ['research_posts', 'shed_posts', 'teaching_posts', 'analytics_posts'];
+    
+    for (const table of tables) {
       try {
-        const response = await fetch(
-          `${SUPABASE_URL}/rest/v1/user_permissions?select=*&limit=1`,
-          {
-            headers: {
-              'apikey': SERVICE_KEY,
-              'Authorization': `Bearer ${SERVICE_KEY}`,
-              'Content-Type': 'application/json',
-              'Prefer': 'return=representation'
-            }
-          }
-        );
-
-        results.tests.serviceRoleAccess = {
-          status: response.status,
-          statusText: response.statusText,
-          success: response.ok
+        // 단순 SELECT 1개만
+        const { data, error } = await supabase
+          .from(table)
+          .select('id, title')
+          .limit(1)
+          .single();
+        
+        results.serviceRoleTest[table] = {
+          success: !error,
+          hasData: !!data,
+          error: error?.message || null,
+          errorCode: error?.code || null,
+          errorHint: error?.hint || null,
+          errorDetails: error?.details || null
         };
-
-        if (!response.ok) {
-          const errorText = await response.text();
-          results.tests.serviceRoleAccess.error = errorText;
-        } else {
-          const data = await response.json();
-          results.tests.serviceRoleAccess.dataReceived = data.length > 0;
-        }
-      } catch (error) {
-        results.tests.serviceRoleAccess = { 
-          error: error.message,
-          success: false 
+      } catch (e) {
+        results.serviceRoleTest[table] = {
+          success: false,
+          error: e.message,
+          type: 'exception'
         };
       }
     }
 
-    // Test 2: Anon Key로 접근 (실패해야 정상)
-    if (SUPABASE_URL && ANON_KEY) {
-      try {
-        const response = await fetch(
-          `${SUPABASE_URL}/rest/v1/user_permissions?select=*&limit=1`,
-          {
-            headers: {
-              'apikey': ANON_KEY,
-              'Authorization': `Bearer ${ANON_KEY}`
-            }
-          }
-        );
-
-        results.tests.anonKeyAccess = {
-          status: response.status,
-          statusText: response.statusText,
-          success: response.ok,
-          shouldFail: true,
-          correctBehavior: !response.ok
-        };
-      } catch (error) {
-        results.tests.anonKeyAccess = { 
-          error: error.message,
-          correctBehavior: true 
-        };
-      }
+    // 3. RPC 함수 테스트 (있다면)
+    try {
+      const { data: rpcTest, error: rpcError } = await supabase
+        .rpc('get_table_info', { table_name: 'research_posts' });
+      
+      results.serviceRoleTest.rpcFunction = {
+        available: !rpcError,
+        error: rpcError?.message || null
+      };
+    } catch (e) {
+      results.serviceRoleTest.rpcFunction = {
+        available: false,
+        error: 'RPC function not found'
+      };
     }
 
-    // Test 3: RLS 정책 확인
-    if (SUPABASE_URL && SERVICE_KEY) {
-      try {
-        const response = await fetch(
-          `${SUPABASE_URL}/rest/v1/rpc/check_rls_status`,
-          {
-            method: 'POST',
-            headers: {
-              'apikey': SERVICE_KEY,
-              'Authorization': `Bearer ${SERVICE_KEY}`,
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({})
-          }
-        );
-
-        if (response.ok) {
-          const data = await response.json();
-          results.tests.rlsStatus = data;
-        }
-      } catch (error) {
-        // RPC 함수가 없을 수 있음 - 무시
-      }
+    // 4. 민감한 테이블 접근 테스트 (비교용)
+    try {
+      const { data, error } = await supabase
+        .from('user_permissions')
+        .select('*')
+        .limit(1);
+      
+      results.serviceRoleTest.sensitiveTableAccess = {
+        success: !error,
+        hasData: !!data,
+        error: error?.message || null
+      };
+    } catch (e) {
+      results.serviceRoleTest.sensitiveTableAccess = {
+        success: false,
+        error: e.message
+      };
     }
 
-    return NextResponse.json(results, { status: 200 });
+    return NextResponse.json(results);
 
   } catch (error) {
     return NextResponse.json({ 
-      error: 'Test Service Role API Error', 
+      error: 'Test failed', 
       message: error.message 
     }, { status: 500 });
   }
