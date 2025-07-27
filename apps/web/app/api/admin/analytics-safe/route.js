@@ -404,12 +404,55 @@ export async function GET() {
 
       if (gradingRes.ok) {
         const gradingData = await gradingRes.json();
+        console.log('Grading API response:', gradingData);
+        
         if (gradingData.evaluations?.byModel) {
           response.totalGradingSonnet = gradingData.evaluations.byModel.sonnet?.total || 0;
           response.todayGradingSonnet = gradingData.evaluations.byModel.sonnet?.today || 0;
           response.totalGradingOpus = gradingData.evaluations.byModel.opus?.total || 0;
           response.todayGradingOpus = gradingData.evaluations.byModel.opus?.today || 0;
         }
+      }
+      
+      // 사용자별 채점 통계 가져오기
+      const userStatsRes = await fetch(`${baseUrl}/api/stats/user-evaluations`, {
+        cache: 'no-store'
+      });
+      
+      if (userStatsRes.ok) {
+        const userStatsData = await userStatsRes.json();
+        console.log('User stats response:', userStatsData);
+        
+        // 사용자 활동에 채점 통계 병합
+        if (userStatsData.userStats) {
+          Object.entries(userStatsData.userStats).forEach(([email, stats]) => {
+            const userIndex = response.userActivity.findIndex(u => u.email === email);
+            if (userIndex !== -1) {
+              response.userActivity[userIndex].gradingStats = stats;
+            }
+          });
+        }
+        
+        // Top users 계산
+        const userEntries = Object.entries(userStatsData.userStats || {});
+        
+        response.sonnetTopUsers = userEntries
+          .filter(([_, stats]) => stats.sonnet > 0)
+          .sort((a, b) => b[1].sonnet - a[1].sonnet)
+          .slice(0, 5)
+          .map(([email, stats]) => ({
+            name: email.split('@')[0],
+            count: stats.sonnet
+          }));
+          
+        response.opusTopUsers = userEntries
+          .filter(([_, stats]) => stats.opus > 0)
+          .sort((a, b) => b[1].opus - a[1].opus)
+          .slice(0, 5)
+          .map(([email, stats]) => ({
+            name: email.split('@')[0],
+            count: stats.opus
+          }));
       }
     } catch (error) {
       console.log('Grading stats fetch failed (non-critical):', error.message);
