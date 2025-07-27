@@ -104,26 +104,57 @@ export async function GET() {
       }
     });
 
-    response.totalLogins = loginLogs.length;
+    // 전체 로그인 수 가져오기
+    try {
+      const { count: totalLoginCount } = await supabase
+        .from('usage_logs')
+        .select('*', { count: 'exact', head: true })
+        .eq('action_type', 'login');
+      
+      response.totalLogins = totalLoginCount || loginLogs.length;
+    } catch (error) {
+      console.error('Error fetching total login count:', error);
+      response.totalLogins = loginLogs.length;
+    }
+    
     response.todayLogins = loginLogs.filter(log => 
       new Date(log.created_at).toDateString() === todayString
     ).length;
     
-    response.totalClaudeUsage = claudeLogs.length;
+    // 전체 Claude 사용량 가져오기
+    try {
+      const { count: totalClaudeCount } = await supabase
+        .from('usage_logs')
+        .select('*', { count: 'exact', head: true })
+        .eq('action_type', 'claude_chat');
+      
+      response.totalClaudeUsage = totalClaudeCount || claudeLogs.length;
+    } catch (error) {
+      console.error('Error fetching total claude count:', error);
+      response.totalClaudeUsage = claudeLogs.length;
+    }
+    
     response.todayClaudeUsage = claudeLogs.filter(log => 
       new Date(log.created_at).toDateString() === todayString
     ).length;
 
     // 5. 콘텐츠 통계 (각각 개별적으로 처리)
     try {
+      // 전체 개수 가져오기
+      const { count: researchCount } = await supabase
+        .from('research_posts')
+        .select('*', { count: 'exact', head: true });
+      
+      response.contentStats.research = researchCount || 0;
+      
+      // 최근 게시물 가져오기
       const { data: researchPosts } = await supabase
         .from('research_posts')
         .select('id, title, created_at')
         .order('created_at', { ascending: false })
-        .limit(10);
+        .limit(5);
       
       if (researchPosts) {
-        response.contentStats.research = researchPosts.length;
         researchPosts.forEach(post => {
           response.recentPosts.push({ ...post, section: 'research' });
         });
@@ -133,14 +164,19 @@ export async function GET() {
     }
 
     try {
+      const { count: teachingCount } = await supabase
+        .from('teaching_posts')
+        .select('*', { count: 'exact', head: true });
+      
+      response.contentStats.teaching = teachingCount || 0;
+      
       const { data: teachingPosts } = await supabase
         .from('teaching_posts')
         .select('id, title, created_at')
         .order('created_at', { ascending: false })
-        .limit(10);
+        .limit(5);
       
       if (teachingPosts) {
-        response.contentStats.teaching = teachingPosts.length;
         teachingPosts.forEach(post => {
           response.recentPosts.push({ ...post, section: 'teaching' });
         });
@@ -150,14 +186,19 @@ export async function GET() {
     }
 
     try {
+      const { count: analyticsCount } = await supabase
+        .from('analytics_posts')
+        .select('*', { count: 'exact', head: true });
+      
+      response.contentStats.analytics = analyticsCount || 0;
+      
       const { data: analyticsPosts } = await supabase
         .from('analytics_posts')
         .select('id, title, created_at')
         .order('created_at', { ascending: false })
-        .limit(10);
+        .limit(5);
       
       if (analyticsPosts) {
-        response.contentStats.analytics = analyticsPosts.length;
         analyticsPosts.forEach(post => {
           response.recentPosts.push({ ...post, section: 'analytics' });
         });
@@ -167,14 +208,19 @@ export async function GET() {
     }
 
     try {
+      const { count: shedCount } = await supabase
+        .from('shed_posts')
+        .select('*', { count: 'exact', head: true });
+      
+      response.contentStats.shed = shedCount || 0;
+      
       const { data: shedPosts } = await supabase
         .from('shed_posts')
         .select('id, title, created_at')
         .order('created_at', { ascending: false })
-        .limit(10);
+        .limit(5);
       
       if (shedPosts) {
-        response.contentStats.shed = shedPosts.length;
         shedPosts.forEach(post => {
           response.recentPosts.push({ ...post, section: 'shed' });
         });
@@ -248,10 +294,28 @@ export async function GET() {
       };
     });
 
+    // 사용자별 전체 로그인 수 가져오기
+    const userTotalLogins = {};
+    try {
+      const { data: allUserLogins } = await supabase
+        .from('usage_logs')
+        .select('user_email')
+        .eq('action_type', 'login');
+        
+      if (allUserLogins) {
+        allUserLogins.forEach(log => {
+          userTotalLogins[log.user_email] = (userTotalLogins[log.user_email] || 0) + 1;
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching user total logins:', error);
+    }
+    
     loginLogs.forEach(log => {
       if (userActivityMap[log.user_email]) {
         const logDate = new Date(log.created_at);
         userActivityMap[log.user_email].loginStats.week++;
+        userActivityMap[log.user_email].loginStats.total = userTotalLogins[log.user_email] || userActivityMap[log.user_email].loginStats.week;
         
         if (logDate >= today) {
           userActivityMap[log.user_email].loginStats.today++;
