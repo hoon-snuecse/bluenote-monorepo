@@ -29,8 +29,15 @@ export async function GET() {
     }
 
     const supabase = createAdminClient();
+    
+    // 한국 시간대 고려
     const now = new Date();
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const kstOffset = 9 * 60; // KST는 UTC+9
+    const localOffset = now.getTimezoneOffset();
+    const totalOffset = kstOffset + localOffset;
+    const kstNow = new Date(now.getTime() + totalOffset * 60 * 1000);
+    
+    const today = new Date(kstNow.getFullYear(), kstNow.getMonth(), kstNow.getDate());
     const weekAgo = new Date(today);
     weekAgo.setDate(weekAgo.getDate() - 7);
 
@@ -141,10 +148,15 @@ export async function GET() {
     // 5. 콘텐츠 통계 (각각 개별적으로 처리)
     try {
       // 전체 개수 가져오기
-      const { count: researchCount } = await supabase
+      const { count: researchCount, error: researchCountError } = await supabase
         .from('research_posts')
         .select('*', { count: 'exact', head: true });
       
+      if (researchCountError) {
+        console.error('Research count error:', researchCountError);
+      }
+      
+      console.log('Research count:', researchCount);
       response.contentStats.research = researchCount || 0;
       
       // 최근 게시물 가져오기
