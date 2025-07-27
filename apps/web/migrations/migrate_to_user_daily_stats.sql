@@ -122,20 +122,20 @@ INSERT INTO public.user_daily_stats (
   grading_opus_count
 )
 SELECT 
-  evaluatedByUser as user_email,
-  DATE(evaluatedAt) as date,
+  "evaluatedByUser" as user_email,
+  DATE("evaluatedAt") as date,
   SUM(CASE 
-    WHEN evaluatedBy LIKE '%sonnet%' THEN 1 
+    WHEN "evaluatedBy" LIKE '%sonnet%' THEN 1 
     ELSE 0 
   END) as grading_sonnet_count,
   SUM(CASE 
-    WHEN evaluatedBy LIKE '%opus%' THEN 1 
+    WHEN "evaluatedBy" LIKE '%opus%' THEN 1 
     ELSE 0 
   END) as grading_opus_count
 FROM public."Evaluation"
-WHERE evaluatedByUser IS NOT NULL
-  AND evaluatedByUser != ''
-GROUP BY evaluatedByUser, DATE(evaluatedAt)
+WHERE "evaluatedByUser" IS NOT NULL
+  AND "evaluatedByUser" != ''
+GROUP BY "evaluatedByUser", DATE("evaluatedAt")
 ON CONFLICT (user_email, date) 
 DO UPDATE SET
   grading_sonnet_count = user_daily_stats.grading_sonnet_count + EXCLUDED.grading_sonnet_count,
