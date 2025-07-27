@@ -273,28 +273,7 @@ export async function GET() {
     // 7. 사용자 활동 (간단한 버전)
     const userActivityMap = {};
     
-    users.forEach(user => {
-      userActivityMap[user.email] = {
-        email: user.email,
-        role: user.role,
-        loginStats: {
-          today: 0,
-          week: 0,
-          total: 0,
-          lastLogin: null
-        },
-        gradingStats: {
-          sonnet: 0,
-          opus: 0
-        },
-        deviceInfo: {
-          device: 'Unknown',
-          browser: 'Unknown'
-        }
-      };
-    });
-
-    // 사용자별 전체 로그인 수 가져오기
+    // 사용자별 전체 로그인 수 먼저 가져오기
     const userTotalLogins = {};
     try {
       const { data: allUserLogins } = await supabase
@@ -311,11 +290,32 @@ export async function GET() {
       console.error('Error fetching user total logins:', error);
     }
     
+    // 사용자 활동 맵 생성
+    users.forEach(user => {
+      userActivityMap[user.email] = {
+        email: user.email,
+        role: user.role,
+        loginStats: {
+          today: 0,
+          week: 0,
+          total: userTotalLogins[user.email] || 0,
+          lastLogin: null
+        },
+        gradingStats: {
+          sonnet: 0,
+          opus: 0
+        },
+        deviceInfo: {
+          device: 'Unknown',
+          browser: 'Unknown'
+        }
+      };
+    });
+    
     loginLogs.forEach(log => {
       if (userActivityMap[log.user_email]) {
         const logDate = new Date(log.created_at);
         userActivityMap[log.user_email].loginStats.week++;
-        userActivityMap[log.user_email].loginStats.total = userTotalLogins[log.user_email] || userActivityMap[log.user_email].loginStats.week;
         
         if (logDate >= today) {
           userActivityMap[log.user_email].loginStats.today++;
@@ -342,10 +342,15 @@ export async function GET() {
         ? 'https://grading.bluenote.site'
         : 'http://localhost:3002';
 
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
+      
       const gradingRes = await fetch(`${baseUrl}/api/stats/evaluations`, { 
         cache: 'no-store',
-        signal: AbortSignal.timeout(5000) // 5초 타임아웃
+        signal: controller.signal
       });
+      
+      clearTimeout(timeoutId);
 
       if (gradingRes.ok) {
         const gradingData = await gradingRes.json();
@@ -360,6 +365,17 @@ export async function GET() {
       console.log('Grading stats fetch failed (non-critical):', error.message);
     }
 
+    // 디버깅용 로그
+    console.log('Analytics Safe API Response:', {
+      totalUsers: response.totalUsers,
+      totalLogins: response.totalLogins,
+      totalClaudeUsage: response.totalClaudeUsage,
+      contentStats: response.contentStats,
+      recentPostsCount: response.recentPosts.length,
+      dailyStatsCount: response.dailyStats.length,
+      userActivityCount: response.userActivity.length
+    });
+    
     return NextResponse.json({ stats: response });
 
   } catch (error) {
