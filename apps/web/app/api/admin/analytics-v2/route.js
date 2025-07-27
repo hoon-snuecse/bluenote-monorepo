@@ -176,19 +176,37 @@ export async function GET() {
         ? 'https://grading.bluenote.site'
         : 'http://localhost:3002';
 
+      console.log('Fetching grading stats from:', `${baseUrl}/api/stats`);
+      
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
+      
       const gradingRes = await fetch(`${baseUrl}/api/stats`, { 
-        cache: 'no-store'
+        cache: 'no-store',
+        signal: controller.signal
       });
+      
+      clearTimeout(timeoutId);
+
+      console.log('Grading API response status:', gradingRes.status);
 
       if (gradingRes.ok) {
         const gradingData = await gradingRes.json();
+        console.log('Grading data:', gradingData);
         
         if (gradingData.evaluations?.byModel) {
           response.totalGradingSonnet = gradingData.evaluations.byModel.sonnet?.total || 0;
           response.todayGradingSonnet = gradingData.evaluations.byModel.sonnet?.today || 0;
           response.totalGradingOpus = gradingData.evaluations.byModel.opus?.total || 0;
           response.todayGradingOpus = gradingData.evaluations.byModel.opus?.today || 0;
+          
+          console.log('Grading stats set:', {
+            sonnet: response.totalGradingSonnet,
+            opus: response.totalGradingOpus
+          });
         }
+      } else {
+        console.error('Grading API failed:', gradingRes.status);
       }
     } catch (error) {
       console.log('Grading stats fetch failed (non-critical):', error.message);
