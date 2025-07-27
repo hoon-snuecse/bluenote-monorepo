@@ -63,14 +63,13 @@ export default function AdminAnalyticsClient() {
       const analyticsRes = await fetch('/api/admin/analytics-fixed');
       const analyticsData = await analyticsRes.json();
       
+      console.log('Analytics API response:', analyticsData); // 디버깅용
+      
       if (analyticsData.stats) {
         setStats(analyticsData.stats);
-        setLoading(false);
-        return;
+      } else if (analyticsData.error) {
+        console.error('API Error:', analyticsData.error);
       }
-      
-      // 새 API가 실패한 경우만 기존 로직 실행
-      console.error('Failed to fetch from new API, falling back to old method');
     } catch (error) {
       console.error('Failed to fetch analytics:', error);
     } finally {
