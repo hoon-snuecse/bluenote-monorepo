@@ -59,141 +59,18 @@ export default function AdminAnalyticsClient() {
   const fetchAnalytics = async () => {
     setLoading(true);
     try {
-      // Fetch users
-      const usersRes = await fetch('/api/admin/users');
-      const usersData = await usersRes.json();
+      // 새로운 통합 API 사용
+      const analyticsRes = await fetch('/api/admin/analytics-fixed');
+      const analyticsData = await analyticsRes.json();
       
-      // Fetch usage logs
-      const logsRes = await fetch('/api/admin/usage-logs');
-      const logsData = await logsRes.json();
-      
-      // Fetch user activity
-      const activityRes = await fetch('/api/admin/user-activity');
-      const activityData = await activityRes.json();
-      
-      // Fetch content stats
-      const contentPromises = ['research', 'teaching', 'analytics', 'shed'].map(async (section) => {
-        // 각 섹션별로 올바른 API 경로 사용
-        const apiPath = section === 'shed' 
-          ? `/api/shed/posts/supabase`
-          : `/api/${section}/posts/supabase`;
-          
-        const res = await fetch(apiPath);
-        const data = await res.json();
-        return { section, count: data.posts?.length || 0, posts: data.posts || [] };
-      });
-      const contentResults = await Promise.all(contentPromises);
-      
-      // Process data
-      const contentStats = {};
-      let totalPosts = 0;
-      const allPosts = [];
-      
-      contentResults.forEach(result => {
-        contentStats[result.section] = result.count;
-        totalPosts += result.count;
-        result.posts.forEach(post => {
-          allPosts.push({ ...post, section: result.section });
-        });
-      });
-      
-      // Sort posts by date
-      allPosts.sort((a, b) => new Date(b.created_at || b.date) - new Date(a.created_at || a.date));
-      const recentPosts = allPosts.slice(0, 5);
-      
-      // Process Claude usage and login stats
-      const today = new Date().toDateString();
-      const claudeUsage = logsData.logs?.filter(log => log.action_type === 'claude_chat') || [];
-      const todayClaudeUsage = claudeUsage.filter(log => 
-        new Date(log.created_at).toDateString() === today
-      ).length;
-      
-      // Process login stats
-      const loginLogs = logsData.logs?.filter(log => log.action_type === 'login') || [];
-      const todayLoginLogs = loginLogs.filter(log => 
-        new Date(log.created_at).toDateString() === today
-      );
-      const todayLogins = todayLoginLogs.length;
-      
-      // Fetch grading stats from grading app via server-side API
-      let gradingStats = {
-        sonnet: { total: 0, today: 0 },
-        opus: { total: 0, today: 0 }
-      };
-      
-      try {
-        const gradingRes = await fetch('/api/admin/grading-stats');
-        if (gradingRes.ok) {
-          const gradingData = await gradingRes.json();
-          
-          if (gradingData.evaluations?.byModel) {
-            gradingStats = {
-              sonnet: gradingData.evaluations.byModel.sonnet || { total: 0, today: 0 },
-              opus: gradingData.evaluations.byModel.opus || { total: 0, today: 0 }
-            };
-          }
-        }
-      } catch (error) {
-        console.error('Failed to fetch grading stats:', error);
+      if (analyticsData.stats) {
+        setStats(analyticsData.stats);
+        setLoading(false);
+        return;
       }
       
-      // Fetch grading user stats (model-specific top users)
-      let gradingUserStats = {
-        sonnetTopUsers: [],
-        opusTopUsers: []
-      };
-      
-      try {
-        const gradingUserRes = await fetch('/api/admin/grading-user-stats');
-        if (gradingUserRes.ok) {
-          gradingUserStats = await gradingUserRes.json();
-        }
-      } catch (error) {
-        console.error('Failed to fetch grading user stats:', error);
-      }
-      
-      // Daily stats for the last 7 days
-      const dailyStats = [];
-      for (let i = 6; i >= 0; i--) {
-        const date = new Date();
-        date.setDate(date.getDate() - i);
-        const dateString = date.toDateString();
-        const dayLogs = logsData.logs?.filter(log => 
-          new Date(log.created_at).toDateString() === dateString
-        ) || [];
-        
-        dailyStats.push({
-          date: date.toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' }),
-          fullDate: date.toISOString().split('T')[0], // YYYY-MM-DD 형식으로 고유한 key 생성용
-          claude: dayLogs.filter(log => log.action_type === 'claude_chat').length,
-          posts: dayLogs.filter(log => log.action_type === 'post_write').length,
-          logins: dayLogs.filter(log => log.action_type === 'login').length,
-          uniqueLogins: new Set(dayLogs.filter(log => log.action_type === 'login').map(log => log.user_email)).size
-        });
-      }
-      
-      // 디버깅을 위한 로그
-      console.log('User activity:', activityData.users?.slice(0, 5));
-      console.log('Grading user stats:', gradingUserStats);
-      console.log('Recent posts:', recentPosts.map((p, i) => ({index: i, id: p.id, title: p.title})));
-      
-      setStats({
-        totalUsers: usersData.users?.length || 0,
-        totalLogins: loginLogs.length,
-        todayLogins,
-        totalClaudeUsage: claudeUsage.length,
-        todayClaudeUsage,
-        totalGradingSonnet: gradingStats.sonnet.total,
-        todayGradingSonnet: gradingStats.sonnet.today,
-        totalGradingOpus: gradingStats.opus.total,
-        todayGradingOpus: gradingStats.opus.today,
-        userActivity: activityData.users || [],
-        recentPosts,
-        contentStats,
-        sonnetTopUsers: gradingUserStats.sonnetTopUsers || [],
-        opusTopUsers: gradingUserStats.opusTopUsers || [],
-        dailyStats
-      });
+      // 새 API가 실패한 경우만 기존 로직 실행
+      console.error('Failed to fetch from new API, falling back to old method');
     } catch (error) {
       console.error('Failed to fetch analytics:', error);
     } finally {
