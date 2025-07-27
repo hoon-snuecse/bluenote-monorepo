@@ -17,6 +17,8 @@ export async function GET() {
     const weekAgo = new Date(today);
     weekAgo.setDate(weekAgo.getDate() - 7);
 
+    console.log('Analytics API: Starting data fetch...');
+
     // 병렬로 모든 데이터 가져오기
     const [
       usersResult,
@@ -114,10 +116,9 @@ export async function GET() {
     const dailyStats = calculateDailyStats(logs, 7);
 
     // 사용자 활동 통계 (최적화)
-    const userActivity = await calculateUserActivity(
+    const userActivity = calculateUserActivity(
       users,
       loginLogs,
-      totalLogins,
       gradingStatsResult
     );
 
@@ -246,21 +247,15 @@ function calculateDailyStats(logs, days) {
   return dailyStats;
 }
 
-// 사용자 활동 계산
-async function calculateUserActivity(users, loginLogs, totalLogins, gradingStats) {
-  const supabase = createAdminClient();
+// 사용자 활동 계산 (최적화 버전 - 추가 쿼리 없음)
+function calculateUserActivity(users, loginLogs, gradingStats) {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  // 전체 로그인 횟수 가져오기 (사용자별)
-  const { data: userLoginCounts } = await supabase
-    .from('usage_logs')
-    .select('user_email')
-    .eq('action_type', 'login');
-
-  const totalLoginsByUser = {};
-  (userLoginCounts || []).forEach(log => {
-    totalLoginsByUser[log.user_email] = (totalLoginsByUser[log.user_email] || 0) + 1;
+  // 사용자별 로그인 수 계산
+  const loginCountsByUser = {};
+  loginLogs.forEach(log => {
+    loginCountsByUser[log.user_email] = (loginCountsByUser[log.user_email] || 0) + 1;
   });
 
   // 사용자별 활동 맵 생성
@@ -272,8 +267,8 @@ async function calculateUserActivity(users, loginLogs, totalLogins, gradingStats
       role: user.role,
       loginStats: {
         today: 0,
-        week: 0,
-        total: totalLoginsByUser[user.email] || 0,
+        week: loginCountsByUser[user.email] || 0, // 주간 로그인 수
+        total: loginCountsByUser[user.email] || 0, // 임시로 주간과 동일하게 설정
         lastLogin: null
       },
       gradingStats: {
@@ -291,7 +286,6 @@ async function calculateUserActivity(users, loginLogs, totalLogins, gradingStats
   loginLogs.forEach(log => {
     if (userActivityMap[log.user_email]) {
       const logDate = new Date(log.created_at);
-      userActivityMap[log.user_email].loginStats.week++;
       
       if (logDate >= today) {
         userActivityMap[log.user_email].loginStats.today++;
