@@ -87,32 +87,45 @@ export async function GET() {
       console.error('Error fetching daily stats:', error);
     }
 
-    // 3. 전체 사용자 수 가져오기
+    // 3. 전체 사용자 수 가져오기 및 사용자 활동 데이터
+    let users = [];
     try {
       const usersRes = await fetch(
-        `${SUPABASE_URL}/rest/v1/user_permissions?select=email`,
+        `${SUPABASE_URL}/rest/v1/user_permissions?select=email,role,created_at&order=created_at.desc`,
         {
           headers: {
             'apikey': SUPABASE_ANON_KEY,
-            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-            'Prefer': 'count=exact',
-            'Range-Unit': 'items',
-            'Range': '0-0'
+            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
           }
         }
       );
 
       if (usersRes.ok) {
-        const contentRange = usersRes.headers.get('content-range');
-        if (contentRange) {
-          const match = contentRange.match(/\d+-\d+\/(\d+)/);
-          if (match) {
-            response.totalUsers = parseInt(match[1]);
+        users = await usersRes.json();
+        response.totalUsers = users.length;
+        
+        // 사용자 활동 데이터 구성 (임시로 기본값 설정)
+        response.userActivity = users.slice(0, 15).map(user => ({
+          email: user.email,
+          role: user.role,
+          loginStats: {
+            today: 0,
+            week: 0,
+            total: 0,
+            lastLogin: null
+          },
+          gradingStats: {
+            sonnet: 0,
+            opus: 0
+          },
+          deviceInfo: {
+            device: 'Unknown',
+            browser: 'Unknown'
           }
-        }
+        }));
       }
     } catch (error) {
-      console.error('Error fetching user count:', error);
+      console.error('Error fetching users:', error);
     }
 
     // 4. 콘텐츠 통계

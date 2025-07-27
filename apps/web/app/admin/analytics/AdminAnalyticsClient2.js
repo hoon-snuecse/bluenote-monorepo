@@ -102,6 +102,12 @@ export default function AdminAnalyticsClient2() {
   if (!stats) {
     return null;
   }
+  
+  console.log('Rendering with stats:', {
+    totalGradingSonnet: stats.totalGradingSonnet,
+    totalGradingOpus: stats.totalGradingOpus,
+    userActivityCount: stats.userActivity?.length
+  });
 
   return (
     <div className="space-y-6 pt-6">
