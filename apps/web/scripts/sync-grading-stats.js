@@ -2,6 +2,17 @@
 // user_daily_stats 테이블을 업데이트합니다.
 // cron job이나 수동으로 실행할 수 있습니다.
 
+import { config } from 'dotenv';
+import { join } from 'path';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+// .env.local 파일 로드
+config({ path: join(__dirname, '..', '.env.local') });
+
 import { createAdminClient } from '../lib/supabase/admin.js';
 
 async function syncGradingStats() {
@@ -9,9 +20,7 @@ async function syncGradingStats() {
   
   try {
     // 1. grading 앱에서 일별 사용자별 통계 가져오기
-    const baseUrl = process.env.NODE_ENV === 'production'
-      ? 'https://grading.bluenote.site'
-      : 'http://localhost:3002';
+    const baseUrl = 'https://grading.bluenote.site';
     
     const response = await fetch(`${baseUrl}/api/stats/daily-user-evaluations`);
     
