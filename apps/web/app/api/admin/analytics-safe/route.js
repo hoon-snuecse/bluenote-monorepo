@@ -101,7 +101,11 @@ export async function GET() {
     // 4. 로그 분석
     const loginLogs = [];
     const claudeLogs = [];
-    const todayString = today.toDateString();
+    
+    // 오늘 날짜 범위 설정 (한국 시간 기준)
+    const todayStart = new Date(today);
+    const todayEnd = new Date(today);
+    todayEnd.setDate(todayEnd.getDate() + 1);
     
     logs.forEach(log => {
       if (log.action_type === 'login') {
@@ -124,9 +128,10 @@ export async function GET() {
       response.totalLogins = loginLogs.length;
     }
     
-    response.todayLogins = loginLogs.filter(log => 
-      new Date(log.created_at).toDateString() === todayString
-    ).length;
+    response.todayLogins = loginLogs.filter(log => {
+      const logDate = new Date(log.created_at);
+      return logDate >= todayStart && logDate < todayEnd;
+    }).length;
     
     // 전체 Claude 사용량 가져오기
     try {
@@ -141,9 +146,10 @@ export async function GET() {
       response.totalClaudeUsage = claudeLogs.length;
     }
     
-    response.todayClaudeUsage = claudeLogs.filter(log => 
-      new Date(log.created_at).toDateString() === todayString
-    ).length;
+    response.todayClaudeUsage = claudeLogs.filter(log => {
+      const logDate = new Date(log.created_at);
+      return logDate >= todayStart && logDate < todayEnd;
+    }).length;
 
     // 5. 콘텐츠 통계 (직접 REST API 호출로 변경)
     const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -281,11 +287,14 @@ export async function GET() {
     for (let i = 6; i >= 0; i--) {
       const date = new Date(today);
       date.setDate(date.getDate() - i);
-      const dateString = date.toDateString();
+      const dayStart = new Date(date);
+      const dayEnd = new Date(date);
+      dayEnd.setDate(dayEnd.getDate() + 1);
       
-      const dayLogs = logs.filter(log => 
-        new Date(log.created_at).toDateString() === dateString
-      );
+      const dayLogs = logs.filter(log => {
+        const logDate = new Date(log.created_at);
+        return logDate >= dayStart && logDate < dayEnd;
+      });
       
       const loginUsers = new Set();
       let claudeCount = 0;
@@ -358,7 +367,7 @@ export async function GET() {
         const logDate = new Date(log.created_at);
         userActivityMap[log.user_email].loginStats.week++;
         
-        if (logDate >= today) {
+        if (logDate >= todayStart && logDate < todayEnd) {
           userActivityMap[log.user_email].loginStats.today++;
         }
         
@@ -386,7 +395,7 @@ export async function GET() {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 5000);
       
-      const gradingRes = await fetch(`${baseUrl}/api/stats/evaluations`, { 
+      const gradingRes = await fetch(`${baseUrl}/api/stats`, { 
         cache: 'no-store',
         signal: controller.signal
       });
