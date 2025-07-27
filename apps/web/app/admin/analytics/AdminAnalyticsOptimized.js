@@ -47,7 +47,7 @@ export default function AdminAnalyticsOptimized() {
     setError(null);
 
     try {
-      const response = await fetch('/api/admin/analytics-optimized');
+      const response = await fetch('/api/admin/analytics-safe');
       
       if (!response.ok) {
         throw new Error('Failed to fetch analytics');
