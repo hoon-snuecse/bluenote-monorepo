@@ -63,8 +63,6 @@ export default function AdminAnalyticsClient() {
       const analyticsRes = await fetch('/api/admin/analytics-fixed');
       const analyticsData = await analyticsRes.json();
       
-      console.log('Analytics API response:', analyticsData); // 디버깅용
-      
       if (analyticsData.stats) {
         setStats(analyticsData.stats);
       } else if (analyticsData.error) {

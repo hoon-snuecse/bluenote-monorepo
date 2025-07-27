@@ -15,11 +15,6 @@ export async function GET() {
     // 2. Service Role 클라이언트 사용
     const supabase = createAdminClient();
     
-    // Service Role 키 확인
-    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-    console.log('Service Role Key exists:', !!serviceKey);
-    console.log('Service Role Key prefix:', serviceKey?.substring(0, 20) + '...');
-    
     const response = {
       totalUsers: 0,
       totalLogins: 0,
@@ -85,8 +80,6 @@ export async function GET() {
       .from('user_permissions')
       .select('*', { count: 'exact', head: true });
     
-    console.log('Total user count:', { totalUserCount, countError });
-    
     if (!countError && totalUserCount !== null) {
       response.totalUsers = totalUserCount;
     }
@@ -96,8 +89,6 @@ export async function GET() {
       .from('user_permissions')
       .select('email, role')
       .limit(15);
-
-    console.log('User permissions query result:', { users, error: usersError });
 
     if (!usersError && users) {
       
