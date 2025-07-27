@@ -219,7 +219,11 @@ export async function GET() {
       todayGradingOpus: response.todayGradingOpus
     });
     
-    return NextResponse.json({ stats: response });
+    return NextResponse.json({ stats: response }, {
+      headers: {
+        'Content-Type': 'application/json; charset=utf-8'
+      }
+    });
 
   } catch (error) {
     console.error('Analytics V2 API Error:', error);

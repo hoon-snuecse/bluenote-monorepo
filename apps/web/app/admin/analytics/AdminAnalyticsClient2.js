@@ -54,6 +54,11 @@ export default function AdminAnalyticsClient2() {
       }
 
       const data = await response.json();
+      console.log('Received stats:', data.stats);
+      console.log('Grading stats:', {
+        sonnet: data.stats.totalGradingSonnet,
+        opus: data.stats.totalGradingOpus
+      });
       setStats(data.stats);
     } catch (error) {
       console.error('Failed to fetch analytics:', error);
