@@ -307,17 +307,23 @@ export async function GET() {
           
           if (postsRes.ok) {
             const posts = await postsRes.json();
+            console.log(`Posts from ${section}:`, posts.length);
             posts.forEach(post => {
               const postDate = new Date(post.created_at);
               const dateKey = postDate.toISOString().split('T')[0];
               postsByDate[dateKey] = (postsByDate[dateKey] || 0) + 1;
             });
+          } else {
+            console.log(`Failed to fetch ${section}:`, postsRes.status);
           }
         }
       } catch (error) {
         console.error('Error fetching posts for daily stats:', error);
       }
     }
+    
+    console.log('Posts by date:', postsByDate);
+    console.log('Week ago:', weekAgo.toISOString());
     
     for (let i = 6; i >= 0; i--) {
       const date = new Date(today);
