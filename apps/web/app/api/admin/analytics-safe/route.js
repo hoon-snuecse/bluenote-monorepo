@@ -424,27 +424,31 @@ export async function GET() {
 
     // 8. Grading 통계 (옵션, 실패해도 무시)
     try {
-      const baseUrl = process.env.NODE_ENV === 'production'
-        ? 'https://grading.bluenote.site'
-        : 'http://localhost:3002';
+      const baseUrl = process.env.GRADING_API_URL || (
+        process.env.NODE_ENV === 'production'
+          ? 'https://grading.bluenote.site'
+          : 'http://localhost:3002'
+      );
 
       console.log('Fetching grading stats from:', `${baseUrl}/api/stats`);
       
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 5000);
-      
+      // Node.js fetch를 사용하여 더 안정적으로 처리
       const gradingRes = await fetch(`${baseUrl}/api/stats`, { 
         method: 'GET',
-        cache: 'no-store',
-        signal: controller.signal,
         headers: {
           'Accept': 'application/json',
-          'Content-Type': 'application/json'
+          'User-Agent': 'Bluenote-Web/1.0'
         }
+      }).catch(error => {
+        console.error('Fetch error:', error);
+        return null;
       });
-      
-      clearTimeout(timeoutId);
 
+      if (!gradingRes) {
+        console.error('Grading API fetch returned null');
+        throw new Error('Failed to fetch grading stats');
+      }
+      
       console.log('Grading API fetch completed:', {
         ok: gradingRes.ok,
         status: gradingRes.status
@@ -489,10 +493,17 @@ export async function GET() {
       
       // 사용자별 채점 통계 가져오기
       const userStatsRes = await fetch(`${baseUrl}/api/stats/user-evaluations`, {
-        cache: 'no-store'
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+          'User-Agent': 'Bluenote-Web/1.0'
+        }
+      }).catch(error => {
+        console.error('User stats fetch error:', error);
+        return null;
       });
       
-      if (userStatsRes.ok) {
+      if (userStatsRes && userStatsRes.ok) {
         const userStatsData = await userStatsRes.json();
         console.log('User stats response:', userStatsData);
         
