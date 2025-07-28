@@ -1,5 +1,5 @@
 {
   "framework": "nextjs",
   "buildCommand": "cd ../.. && pnpm build --filter=@bluenote/quiz",
-  "outputDirectory": "apps/quiz/.next"
+  "outputDirectory": ".next"
 }
