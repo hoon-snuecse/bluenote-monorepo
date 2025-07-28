@@ -6,29 +6,44 @@ import { authOptions } from '@/lib/authOptions'
 export async function GET(request, { params }) {
   try {
     const { id } = params
-    const supabase = createClient()
+    const supabase = createServiceClient()
 
-    // 퀴즈 정보 가져오기
-    const { data: quiz, error: quizError } = await supabase
-      .from('quizzes')
+    // 먼저 shared_quizzes에서 퀴즈 정보 가져오기
+    const { data: sharedQuiz, error: sharedError } = await supabase
+      .from('shared_quizzes')
       .select(`
         id,
+        quiz_id,
         title,
-        topic,
         description,
+        subject_category,
+        grade_level,
         total_questions,
-        metadata,
-        created_at,
-        user_email
+        true_false_count,
+        multiple_choice_count,
+        user_email,
+        created_at
       `)
       .eq('id', id)
       .single()
 
-    if (quizError || !quiz) {
+    if (sharedError || !sharedQuiz) {
       return NextResponse.json(
         { error: '퀴즈를 찾을 수 없습니다.' },
         { status: 404 }
       )
+    }
+    
+    const quizId = sharedQuiz.quiz_id
+    const quiz = {
+      id: quizId,
+      title: sharedQuiz.title,
+      description: sharedQuiz.description,
+      total_questions: sharedQuiz.total_questions,
+      true_false_count: sharedQuiz.true_false_count,
+      multiple_choice_count: sharedQuiz.multiple_choice_count,
+      user_email: sharedQuiz.user_email,
+      created_at: sharedQuiz.created_at
     }
 
     // 문항 정보 가져오기
@@ -42,7 +57,7 @@ export async function GET(request, { params }) {
         explanation,
         order_index
       `)
-      .eq('quiz_id', id)
+      .eq('quiz_id', quizId)
       .order('order_index')
 
     if (questionsError) {
@@ -99,22 +114,24 @@ export async function DELETE(request, { params }) {
     const { id } = params
     const supabase = createServiceClient()
 
-    // 퀴즈 소유자 확인
-    const { data: quiz, error: quizError } = await supabase
-      .from('quizzes')
-      .select('user_email')
+    // shared_quizzes에서 퀴즈 정보 확인
+    const { data: sharedQuiz, error: sharedError } = await supabase
+      .from('shared_quizzes')
+      .select('quiz_id, user_email')
       .eq('id', id)
       .single()
 
-    if (quizError || !quiz) {
+    if (sharedError || !sharedQuiz) {
       return NextResponse.json(
         { error: '퀴즈를 찾을 수 없습니다.' },
         { status: 404 }
       )
     }
+    
+    const quizId = sharedQuiz.quiz_id
 
     // 소유자만 삭제 가능
-    if (quiz.user_email !== session.user.email) {
+    if (sharedQuiz.user_email !== session.user.email) {
       return NextResponse.json(
         { error: '본인의 퀴즈만 삭제할 수 있습니다.' },
         { status: 403 }
@@ -126,7 +143,7 @@ export async function DELETE(request, { params }) {
     const { data: questions } = await supabase
       .from('questions')
       .select('id')
-      .eq('quiz_id', id)
+      .eq('quiz_id', quizId)
 
     if (questions) {
       const questionIds = questions.map(q => q.id)
@@ -140,19 +157,19 @@ export async function DELETE(request, { params }) {
     await supabase
       .from('questions')
       .delete()
-      .eq('quiz_id', id)
+      .eq('quiz_id', quizId)
 
-    // 3. 공유 퀴즈 삭제
+    // 3. 공유 퀴즈 삭제 (shared_quizzes ID로 삭제)
     await supabase
       .from('shared_quizzes')
       .delete()
-      .eq('quiz_id', id)
+      .eq('id', id)
 
     // 4. 퀴즈 삭제
     const { error: deleteError } = await supabase
       .from('quizzes')
       .delete()
-      .eq('id', id)
+      .eq('id', quizId)
 
     if (deleteError) {
       console.error('Delete quiz error:', deleteError)
