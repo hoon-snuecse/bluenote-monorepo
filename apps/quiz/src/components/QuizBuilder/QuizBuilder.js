@@ -300,6 +300,8 @@ export default function QuizBuilder() {
                 
                 // sessionStorage에 선택된 문항 저장
                 sessionStorage.setItem('selectedQuestions', JSON.stringify(selectedQuestions))
+                // 주제도 함께 저장
+                sessionStorage.setItem('quizTopic', topic)
                 
                 // 미리보기 탭으로 이동
                 window.location.href = '/my-quizzes'

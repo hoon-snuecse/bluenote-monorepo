@@ -16,8 +16,8 @@ export async function POST(request) {
         'Answer 2 - max 60 characters',
         'Answer 3 - max 60 characters',
         'Answer 4 - max 60 characters',
-        'Time limit (sec) – 5, 10, 20, 30, 60, 90, 120, or 240 secs',
-        'Correct answer(s) - choose at least one'
+        'Time limit (sec)',
+        'Correct answer(s)'
       ]
     ]
 

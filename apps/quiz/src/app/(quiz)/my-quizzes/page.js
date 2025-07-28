@@ -11,19 +11,25 @@ import {
   XCircle,
   Clock,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  Maximize2,
+  Minimize2
 } from 'lucide-react'
 
 export default function PreviewPage() {
   const { data: session } = useSession()
   const [questions, setQuestions] = useState([])
   const [quizTitle, setQuizTitle] = useState('')
+  const [quizTopic, setQuizTopic] = useState('')
   const [expandedQuestions, setExpandedQuestions] = useState({})
+  const [expandAll, setExpandAll] = useState(false)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     // sessionStorage에서 선택된 문항 가져오기
     const savedQuestions = sessionStorage.getItem('selectedQuestions')
+    const savedTopic = sessionStorage.getItem('quizTopic')
+    
     if (savedQuestions) {
       try {
         const parsed = JSON.parse(savedQuestions)
@@ -32,6 +38,12 @@ export default function PreviewPage() {
         console.error('Failed to parse questions:', error)
       }
     }
+    
+    if (savedTopic) {
+      setQuizTopic(savedTopic)
+      setQuizTitle(savedTopic) // 주제를 제목으로도 사용
+    }
+    
     setLoading(false)
   }, [])
 
@@ -40,6 +52,15 @@ export default function PreviewPage() {
       ...prev,
       [index]: !prev[index]
     }))
+  }
+
+  const toggleAllQuestions = () => {
+    const newExpandedState = {}
+    questions.forEach((_, index) => {
+      newExpandedState[index] = !expandAll
+    })
+    setExpandedQuestions(newExpandedState)
+    setExpandAll(!expandAll)
   }
 
   const handleExportCSV = async () => {
@@ -125,7 +146,7 @@ export default function PreviewPage() {
 
   const handleSaveToCommunity = async () => {
     if (!quizTitle.trim()) {
-      alert('퀴즈 제목을 입력해주세요.')
+      alert('주제를 입력해주세요.')
       return
     }
 
@@ -138,21 +159,24 @@ export default function PreviewPage() {
         body: JSON.stringify({ 
           questions, 
           title: quizTitle,
-          topic: questions[0]?.metadata?.topic || '일반',
+          topic: quizTopic || quizTitle,
           grade: questions[0]?.metadata?.grade || 'general'
         }),
       })
+
+      const data = await response.json()
 
       if (response.ok) {
         alert('퀴즈가 커뮤니티에 저장되었습니다!')
         // 커뮤니티 탭으로 이동
         window.location.href = '/community'
       } else {
-        throw new Error('Save failed')
+        console.error('Save error:', data)
+        alert(data.error || '저장 중 오류가 발생했습니다.')
       }
     } catch (error) {
       console.error('Save failed:', error)
-      alert('저장 중 오류가 발생했습니다.')
+      alert('저장 중 오류가 발생했습니다. 로그인 상태를 확인해주세요.')
     }
   }
 
@@ -190,10 +214,56 @@ export default function PreviewPage() {
         </p>
       </div>
 
-      {/* 퀴즈 제목 입력 */}
+      {/* 액션 버튼들 - 상단으로 이동 */}
+      <div className="bg-white rounded-lg shadow p-6">
+        <div className="flex flex-col sm:flex-row gap-4">
+          {/* 내보내기 버튼들 */}
+          <div className="flex-1">
+            <p className="text-sm font-medium text-gray-700 mb-3">내보내기</p>
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={handleExportCSV}
+                className="inline-flex items-center rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+              >
+                <FileSpreadsheet className="mr-2 h-4 w-4" />
+                CSV 다운로드
+              </button>
+              <button
+                onClick={handleExportXLSX}
+                className="inline-flex items-center rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+              >
+                <FileSpreadsheet className="mr-2 h-4 w-4" />
+                Excel 다운로드
+              </button>
+              <button
+                onClick={handleExportHTML}
+                className="inline-flex items-center rounded-md bg-purple-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2"
+              >
+                <FileText className="mr-2 h-4 w-4" />
+                교사용 가이드 (HTML)
+              </button>
+            </div>
+          </div>
+
+          {/* 저장하기 버튼 */}
+          <div className="flex-1 sm:flex-none">
+            <p className="text-sm font-medium text-gray-700 mb-3">커뮤니티</p>
+            <button
+              onClick={handleSaveToCommunity}
+              disabled={!quizTitle.trim()}
+              className="inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Save className="mr-2 h-4 w-4" />
+              커뮤니티에 저장하기
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* 퀴즈 주제 표시 */}
       <div className="bg-white rounded-lg shadow p-6">
         <label htmlFor="quiz-title" className="block text-sm font-medium text-gray-700 mb-2">
-          퀴즈 제목
+          주제
         </label>
         <input
           type="text"
@@ -207,10 +277,26 @@ export default function PreviewPage() {
 
       {/* 문항 목록 */}
       <div className="bg-white rounded-lg shadow">
-        <div className="p-6 border-b border-gray-200">
+        <div className="p-6 border-b border-gray-200 flex justify-between items-center">
           <h2 className="text-lg font-medium text-gray-900">
             문항 목록 ({questions.length}개)
           </h2>
+          <button
+            onClick={toggleAllQuestions}
+            className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          >
+            {expandAll ? (
+              <>
+                <Minimize2 className="h-4 w-4" />
+                간략히 보기
+              </>
+            ) : (
+              <>
+                <Maximize2 className="h-4 w-4" />
+                전체 펼쳐보기
+              </>
+            )}
+          </button>
         </div>
         <div className="divide-y divide-gray-200">
           {questions.map((question, index) => (
@@ -300,52 +386,6 @@ export default function PreviewPage() {
               )}
             </div>
           ))}
-        </div>
-      </div>
-
-      {/* 액션 버튼들 */}
-      <div className="bg-white rounded-lg shadow p-6">
-        <div className="flex flex-col sm:flex-row gap-4">
-          {/* 내보내기 버튼들 */}
-          <div className="flex-1">
-            <p className="text-sm font-medium text-gray-700 mb-3">내보내기</p>
-            <div className="flex flex-wrap gap-2">
-              <button
-                onClick={handleExportCSV}
-                className="inline-flex items-center rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
-              >
-                <FileSpreadsheet className="mr-2 h-4 w-4" />
-                CSV 다운로드
-              </button>
-              <button
-                onClick={handleExportXLSX}
-                className="inline-flex items-center rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
-              >
-                <FileSpreadsheet className="mr-2 h-4 w-4" />
-                Excel 다운로드
-              </button>
-              <button
-                onClick={handleExportHTML}
-                className="inline-flex items-center rounded-md bg-purple-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2"
-              >
-                <FileText className="mr-2 h-4 w-4" />
-                교사용 가이드 (HTML)
-              </button>
-            </div>
-          </div>
-
-          {/* 저장하기 버튼 */}
-          <div className="flex-1 sm:flex-none">
-            <p className="text-sm font-medium text-gray-700 mb-3">커뮤니티</p>
-            <button
-              onClick={handleSaveToCommunity}
-              disabled={!quizTitle.trim()}
-              className="inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <Save className="mr-2 h-4 w-4" />
-              커뮤니티에 저장하기
-            </button>
-          </div>
         </div>
       </div>
     </div>
