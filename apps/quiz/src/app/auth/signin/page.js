@@ -13,6 +13,7 @@ function SignInContent() {
   const handleGoogleSignIn = async () => {
     setIsLoading(true)
     try {
+      console.log('Signing in with callbackUrl:', callbackUrl)
       const result = await signIn('google', { 
         callbackUrl,
         redirect: true 
