@@ -31,14 +31,11 @@ export async function POST(request) {
       email: session.user.email 
     })
 
-    // Quiz 앱은 user_id로 이메일을 직접 사용
-    const userId = session.user.email
-
     // 퀴즈 메타데이터 저장
     const { data: quiz, error: quizError } = await supabase
       .from('quizzes')
       .insert({
-        user_id: userId,
+        user_email: session.user.email,
         title,
         topic: topic || '일반',
         description: `AI로 생성된 ${questions.length}개 문항`,
@@ -48,7 +45,8 @@ export async function POST(request) {
           created_by: 'ai',
           ai_model: questions[0]?.metadata?.ai_model || 'claude'
         },
-        status: 'published'
+        status: 'published',
+        is_public: true
       })
       .select()
       .single()
@@ -68,11 +66,10 @@ export async function POST(request) {
       question_type: q.type,
       difficulty: q.metadata?.difficulty || 'medium',
       time_limit: q.timeLimit || 30,
-      correct_answer: q.options.findIndex(opt => opt.isCorrect) + 1,
+      points: 1000,
       explanation: q.explanation || null,
       metadata: q.metadata || {},
-      order_index: index + 1,
-      is_selected: true
+      order_index: index + 1
     }))
 
     const { error: questionsError } = await supabase
@@ -97,7 +94,7 @@ export async function POST(request) {
         optionsToInsert.push({
           question_id: questionId,
           option_text: opt.text,
-          option_order: optIndex + 1,
+          order_index: optIndex,  // 0-3 범위
           is_correct: opt.isCorrect
         })
       })
@@ -117,7 +114,7 @@ export async function POST(request) {
           finalOptions.push({
             question_id: sq.id,
             option_text: opt.text,
-            option_order: optIndex + 1,
+            order_index: optIndex,  // 0-3 범위
             is_correct: opt.isCorrect
           })
         })
@@ -133,11 +130,23 @@ export async function POST(request) {
     }
 
     // 커뮤니티에 공유
+    const truefalseCount = questions.filter(q => q.type === 'true_false').length
+    const multipleChoiceCount = questions.filter(q => q.type === 'multiple_choice').length
+    
     const { error: shareError } = await supabase
       .from('shared_quizzes')
       .insert({
         quiz_id: quiz.id,
-        shared_by: userId,
+        user_email: session.user.email,
+        title: quiz.title,
+        description: quiz.description,
+        subject_category: topic || '일반',
+        grade_level: grade || 'general',
+        total_questions: questions.length,
+        true_false_count: truefalseCount,
+        multiple_choice_count: multipleChoiceCount,
+        tags: [],
+        is_public: true,
         visibility: 'public'
       })
 
