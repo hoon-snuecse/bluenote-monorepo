@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/authOptions'
-import { createClient } from '@/lib/supabase'
+import { createServiceClient } from '@/lib/supabase'
 import * as XLSX from 'xlsx'
 
 export async function POST(request, { params }) {
@@ -18,7 +18,7 @@ export async function POST(request, { params }) {
     const { id } = params
     const { format } = await request.json()
 
-    const supabase = createClient()
+    const supabase = createServiceClient()
 
     // 퀴즈 ID로 직접 퀴즈 정보 가져오기
     const { data: quiz, error: quizError } = await supabase
@@ -33,8 +33,9 @@ export async function POST(request, { params }) {
       .single()
 
     if (quizError || !quiz) {
+      console.error('Quiz fetch error:', quizError)
       return NextResponse.json(
-        { error: '퀴즈를 찾을 수 없습니다.' },
+        { error: '퀴즈를 찾을 수 없습니다.', details: quizError?.message },
         { status: 404 }
       )
     }
@@ -54,8 +55,9 @@ export async function POST(request, { params }) {
       .order('order_index')
 
     if (questionsError) {
+      console.error('Questions fetch error:', questionsError)
       return NextResponse.json(
-        { error: '문항을 불러올 수 없습니다.' },
+        { error: '문항을 불러올 수 없습니다.', details: questionsError.message },
         { status: 500 }
       )
     }
@@ -89,7 +91,8 @@ export async function POST(request, { params }) {
     // 다운로드 카운트 증가 (별도 테이블 구현 필요)
     // await supabase.from('download_logs').insert({ ... })
 
-    if (format === 'csv') {
+    try {
+      if (format === 'csv') {
       // CSV 형식으로 변환
       const headers = [
         'Question - max 95 characters',
@@ -345,9 +348,9 @@ export async function POST(request, { params }) {
       const ws = XLSX.utils.aoa_to_sheet(kahootData)
       XLSX.utils.book_append_sheet(wb, ws, 'Kahoot Quiz')
 
-      const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'buffer' })
+      const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' })
 
-      return new Response(excelBuffer, {
+      return new Response(Buffer.from(excelBuffer), {
         headers: {
           'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
           'Content-Disposition': `attachment; filename="${quiz.title || 'quiz'}_kahoot.xlsx"`
@@ -355,15 +358,33 @@ export async function POST(request, { params }) {
       })
     }
 
-    return NextResponse.json(
-      { error: '지원하지 않는 형식입니다.' },
-      { status: 400 }
-    )
+      return NextResponse.json(
+        { error: '지원하지 않는 형식입니다.' },
+        { status: 400 }
+      )
+    } catch (formatError) {
+      console.error(`Format ${format} error:`, formatError)
+      return NextResponse.json(
+        { 
+          error: `${format} 형식 생성 중 오류가 발생했습니다.`,
+          details: formatError.message
+        },
+        { status: 500 }
+      )
+    }
 
   } catch (error) {
-    console.error('Download error:', error)
+    console.error('Download error details:', {
+      error: error.message,
+      stack: error.stack,
+      name: error.name
+    })
     return NextResponse.json(
-      { error: '다운로드 중 오류가 발생했습니다.' },
+      { 
+        error: '다운로드 중 오류가 발생했습니다.',
+        details: error.message,
+        type: error.name
+      },
       { status: 500 }
     )
   }

@@ -179,6 +179,25 @@ export default function CommunityPage() {
                   취소
                 </button>
                 <button
+                  onClick={() => {
+                    // 본인 퀴즈만 필터링하여 전체 선택
+                    const myQuizIds = filteredQuizzes
+                      .filter(quiz => quiz.user_email === session.user.email)
+                      .map(quiz => quiz.quiz_id || quiz.id)
+                    setSelectedQuizzes(myQuizIds)
+                  }}
+                  className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
+                >
+                  전체 선택
+                </button>
+                <button
+                  onClick={() => setSelectedQuizzes([])}
+                  disabled={selectedQuizzes.length === 0}
+                  className="px-3 py-1.5 text-sm bg-gray-600 text-white rounded hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  선택 해제
+                </button>
+                <button
                   onClick={handleDeleteSelected}
                   disabled={selectedQuizzes.length === 0}
                   className="px-3 py-1.5 text-sm bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
@@ -250,15 +269,15 @@ export default function CommunityPage() {
           </p>
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {filteredQuizzes.map((quiz) => (
             <div
               key={quiz.id}
-              className="flex rounded-lg border border-gray-200 bg-white shadow-sm hover:shadow-md transition-shadow relative"
+              className="rounded-lg border border-gray-200 bg-white shadow-sm hover:shadow-md transition-shadow relative"
             >
-              {/* 체크박스 (선택 모드일 때 & 본인 퀴즈일 때만 표시) */}
-              {isSelectionMode && session?.user?.email === quiz.user_email && (
-                <div className="absolute left-2 top-2 z-10">
+              {/* 체크박스 - 항상 표시, 본인 퀴즈만 활성화 */}
+              <div className="absolute right-2 top-2 z-10">
+                {session?.user?.email === quiz.user_email ? (
                   <button
                     onClick={() => handleSelectQuiz(quiz.quiz_id || quiz.id)}
                     className="p-1"
@@ -269,32 +288,34 @@ export default function CommunityPage() {
                       <Square className="w-5 h-5 text-gray-400" />
                     )}
                   </button>
-                </div>
-              )}
-              
-              {/* 왼쪽: 퀴즈 정보 */}
-              <div className={`flex-1 p-4 ${isSelectionMode ? 'pl-10' : ''}`}>
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <h3 className="text-base font-medium text-gray-900">
-                      {quiz.title}
-                    </h3>
-                    {quiz.description && (
-                      <p className="mt-0.5 text-xs text-gray-600 line-clamp-1">
-                        {quiz.description}
-                      </p>
-                    )}
+                ) : (
+                  <div className="p-1">
+                    <Square className="w-5 h-5 text-gray-200 cursor-not-allowed" />
                   </div>
+                )}
+              </div>
+              
+              <div className="p-4">
+                {/* 제목 및 태그 */}
+                <div className="pr-8">
+                  <h3 className="text-sm font-medium text-gray-900 line-clamp-2">
+                    {quiz.title}
+                  </h3>
+                  {quiz.description && (
+                    <p className="mt-0.5 text-xs text-gray-600 line-clamp-2">
+                      {quiz.description}
+                    </p>
+                  )}
                   
                   {/* 카테고리 태그 */}
-                  <div className="ml-4 flex flex-wrap gap-2">
+                  <div className="mt-2 flex flex-wrap gap-1">
                     {quiz.subject_category && (
-                      <span className="inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800">
+                      <span className="inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-800">
                         {quiz.subject_category}
                       </span>
                     )}
                     {quiz.grade_level && (
-                      <span className="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800">
+                      <span className="inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800">
                         {quiz.grade_level === 'elementary' ? '초등' : 
                          quiz.grade_level === 'middle' ? '중등' : 
                          quiz.grade_level === 'high' ? '고등' : 
@@ -305,56 +326,58 @@ export default function CommunityPage() {
                   </div>
                 </div>
 
-                {/* 메타 정보 - 가로로 배치 */}
-                <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-gray-600">
-                  <span className="flex items-center">
-                    <BookOpen className="h-3 w-3 mr-0.5" />
-                    {quiz.total_questions}문항
-                  </span>
-                  <span>
-                    OX {quiz.true_false_count} / 선다 {quiz.multiple_choice_count}
-                  </span>
-                  <span className="flex items-center">
-                    <Users className="h-3 w-3 mr-0.5" />
-                    {quiz.user_name || '익명'}
-                  </span>
-                  <span>
-                    {new Date(quiz.created_at).toLocaleDateString('ko-KR')}
-                  </span>
-                  <span className="flex items-center">
+                {/* 메타 정보 */}
+                <div className="mt-3 space-y-1 text-xs text-gray-600">
+                  <div className="flex items-center justify-between">
+                    <span className="flex items-center">
+                      <BookOpen className="h-3 w-3 mr-0.5" />
+                      {quiz.total_questions}문항
+                    </span>
+                    <span>
+                      OX {quiz.true_false_count} / 선다 {quiz.multiple_choice_count}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="flex items-center">
+                      <Users className="h-3 w-3 mr-0.5" />
+                      {quiz.user_name || '익명'}
+                    </span>
+                    <span>
+                      {new Date(quiz.created_at).toLocaleDateString('ko-KR')}
+                    </span>
+                  </div>
+                  <div className="flex items-center">
                     <Download className="h-3 w-3 mr-0.5" />
                     {quiz.download_count}회
-                  </span>
+                  </div>
                 </div>
-              </div>
 
-              {/* 오른쪽: 액션 버튼 */}
-              <div className="flex items-center border-l border-gray-200 p-3">
-                <div className="space-y-1.5">
+                {/* 액션 버튼 */}
+                <div className="mt-3 grid grid-cols-2 gap-1.5">
                   <button
                     onClick={() => window.location.href = `/quiz/${quiz.quiz_id || quiz.id}`}
-                    className="w-full rounded bg-white px-2 py-1 text-xs font-medium text-gray-700 border border-gray-300 hover:bg-gray-50"
+                    className="rounded bg-white px-2 py-1 text-xs font-medium text-gray-700 border border-gray-300 hover:bg-gray-50"
                   >
                     자세히
                   </button>
                   <button
                     onClick={() => handleDownload(quiz.quiz_id || quiz.id, 'xlsx')}
                     disabled={!session}
-                    className="w-full rounded bg-green-600 px-2 py-1 text-xs font-medium text-white hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="rounded bg-green-600 px-2 py-1 text-xs font-medium text-white hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Excel
                   </button>
                   <button
                     onClick={() => handleDownload(quiz.quiz_id || quiz.id, 'csv')}
                     disabled={!session}
-                    className="w-full rounded bg-blue-600 px-2 py-1 text-xs font-medium text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="rounded bg-blue-600 px-2 py-1 text-xs font-medium text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     CSV
                   </button>
                   <button
                     onClick={() => handleDownload(quiz.quiz_id || quiz.id, 'html')}
                     disabled={!session}
-                    className="w-full rounded bg-purple-600 px-2 py-1 text-xs font-medium text-white hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="rounded bg-purple-600 px-2 py-1 text-xs font-medium text-white hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     해설
                   </button>
