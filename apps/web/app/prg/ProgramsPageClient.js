@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { PenTool, Calculator, BarChart2, Brain, Lock, Sparkles } from 'lucide-react';
+import { PenTool, FileQuestion, BarChart2, Brain, Lock, Sparkles } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 
 export default function ProgramsPageClient() {
@@ -45,18 +45,20 @@ export default function ProgramsPageClient() {
       ]
     },
     {
-      icon: Calculator,
-      title: "수학 문제 생성기",
-      subtitle: "Math Problem Generator",
-      description: "학년별, 단원별 맞춤형 수학 문제를 자동으로 생성하는 도구",
-      href: "/prg/math-generator",
-      status: "coming-soon",
+      icon: FileQuestion,
+      title: "Kahoot 퀴즈 메이커",
+      subtitle: "AI Quiz Generator for Kahoot",
+      description: "AI의 도움을 받아 Kahoot용 대화형 퀴즈를 쉽고 빠르게 생성하는 도구",
+      href: "https://quiz.bluenote.site",
+      status: "active",
       requireAuth: true,
+      hasAI: true,
+      isExternal: true,
       features: [
-        "학년별 난이도 조절",
-        "문제 유형 선택",
-        "정답 및 풀이 제공",
-        "워크시트 생성"
+        "AI 기반 문항 자동 생성",
+        "Kahoot 호환 CSV/Excel 내보내기",
+        "정답 및 해설 포함",
+        "교사 커뮤니티 공유"
       ]
     },
     {
@@ -200,6 +202,13 @@ export default function ProgramsPageClient() {
               );
 
               if (program.status === 'active' && (!program.requireAuth || session)) {
+                if (program.isExternal) {
+                  return (
+                    <a key={index} href={program.href} target="_blank" rel="noopener noreferrer">
+                      {CardContent}
+                    </a>
+                  );
+                }
                 return (
                   <Link key={index} href={program.href}>
                     {CardContent}
