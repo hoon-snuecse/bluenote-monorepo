@@ -52,9 +52,17 @@ export async function POST(request) {
       .single()
 
     if (quizError) {
-      console.error('Quiz creation error:', quizError)
+      console.error('Quiz creation error:', {
+        error: quizError,
+        data: {
+          user_email: session.user.email,
+          title,
+          topic,
+          total_questions: questions.length
+        }
+      })
       return NextResponse.json(
-        { error: '퀴즈 저장 중 오류가 발생했습니다.' },
+        { error: '퀴즈 저장 중 오류가 발생했습니다.', details: quizError.message },
         { status: 500 }
       )
     }
@@ -77,11 +85,15 @@ export async function POST(request) {
       .insert(questionsToInsert)
 
     if (questionsError) {
-      console.error('Questions insertion error:', questionsError)
+      console.error('Questions insertion error:', {
+        error: questionsError,
+        questionsToInsert: questionsToInsert[0], // 첫 번째 문항 확인
+        totalQuestions: questionsToInsert.length
+      })
       // 실패 시 퀴즈도 삭제
       await supabase.from('quizzes').delete().eq('id', quiz.id)
       return NextResponse.json(
-        { error: '문항 저장 중 오류가 발생했습니다.' },
+        { error: '문항 저장 중 오류가 발생했습니다.', details: questionsError.message },
         { status: 500 }
       )
     }
