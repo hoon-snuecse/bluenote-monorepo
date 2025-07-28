@@ -3,10 +3,15 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/authOptions'
 import Anthropic from '@anthropic-ai/sdk'
 
+// Claude API 키 확인
+const apiKey = process.env.ANTHROPIC_API_KEY || process.env.CLAUDE_API_KEY
+
+if (!apiKey) {
+  console.error('ANTHROPIC_API_KEY or CLAUDE_API_KEY is not set')
+}
+
 // Claude API 클라이언트 초기화
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY || process.env.CLAUDE_API_KEY,
-})
+const anthropic = apiKey ? new Anthropic({ apiKey }) : null
 
 export async function POST(request) {
   try {
@@ -15,7 +20,18 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    // API 키 확인
+    if (!anthropic) {
+      console.error('Anthropic client not initialized - API key missing')
+      return NextResponse.json({ 
+        error: 'AI 서비스가 설정되지 않았습니다. 관리자에게 문의해주세요.',
+        details: 'API key not configured'
+      }, { status: 500 })
+    }
+
     const { topic, grade, questionCount, trueFalseRatio } = await request.json()
+    
+    console.log('Generating questions for:', { topic, grade, questionCount, trueFalseRatio })
 
     // 학년별 난이도 설정
     const gradeLevel = {
