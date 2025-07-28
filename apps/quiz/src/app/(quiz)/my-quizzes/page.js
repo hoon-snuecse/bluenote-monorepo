@@ -5,73 +5,178 @@ import { useSession } from 'next-auth/react'
 import { 
   FileSpreadsheet, 
   Download, 
-  Trash2, 
-  Edit3, 
-  Calendar,
+  Save,
   FileText,
-  MoreVertical,
-  Search
+  CheckCircle,
+  XCircle,
+  Clock,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react'
 
-export default function MyQuizzesPage() {
+export default function PreviewPage() {
   const { data: session } = useSession()
-  const [quizzes, setQuizzes] = useState([])
+  const [questions, setQuestions] = useState([])
+  const [quizTitle, setQuizTitle] = useState('')
+  const [expandedQuestions, setExpandedQuestions] = useState({})
   const [loading, setLoading] = useState(true)
-  const [searchTerm, setSearchTerm] = useState('')
-  const [filterStatus, setFilterStatus] = useState('all')
 
   useEffect(() => {
-    if (session) {
-      loadMyQuizzes()
+    // sessionStorage에서 선택된 문항 가져오기
+    const savedQuestions = sessionStorage.getItem('selectedQuestions')
+    if (savedQuestions) {
+      try {
+        const parsed = JSON.parse(savedQuestions)
+        setQuestions(parsed)
+      } catch (error) {
+        console.error('Failed to parse questions:', error)
+      }
     }
-  }, [session])
+    setLoading(false)
+  }, [])
 
-  const loadMyQuizzes = async () => {
+  const toggleQuestion = (index) => {
+    setExpandedQuestions(prev => ({
+      ...prev,
+      [index]: !prev[index]
+    }))
+  }
+
+  const handleExportCSV = async () => {
     try {
-      const response = await fetch('/api/quizzes/my-quizzes')
+      const response = await fetch('/api/export/csv', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ questions, title: quizTitle }),
+      })
+
       if (response.ok) {
-        const data = await response.json()
-        setQuizzes(data.quizzes)
+        const blob = await response.blob()
+        const url = window.URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = `${quizTitle || 'quiz'}_kahoot.csv`
+        document.body.appendChild(a)
+        a.click()
+        document.body.removeChild(a)
+        window.URL.revokeObjectURL(url)
       }
     } catch (error) {
-      console.error('Failed to load quizzes:', error)
-    } finally {
-      setLoading(false)
+      console.error('Export failed:', error)
+      alert('CSV 내보내기 중 오류가 발생했습니다.')
     }
   }
 
-  const handleDelete = async (quizId) => {
-    if (!confirm('정말로 이 퀴즈를 삭제하시겠습니까?')) {
+  const handleExportXLSX = async () => {
+    try {
+      const response = await fetch('/api/export/xlsx', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ questions, title: quizTitle }),
+      })
+
+      if (response.ok) {
+        const blob = await response.blob()
+        const url = window.URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = `${quizTitle || 'quiz'}_kahoot.xlsx`
+        document.body.appendChild(a)
+        a.click()
+        document.body.removeChild(a)
+        window.URL.revokeObjectURL(url)
+      }
+    } catch (error) {
+      console.error('Export failed:', error)
+      alert('Excel 내보내기 중 오류가 발생했습니다.')
+    }
+  }
+
+  const handleExportHTML = async () => {
+    try {
+      const response = await fetch('/api/export/html', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ questions, title: quizTitle }),
+      })
+
+      if (response.ok) {
+        const blob = await response.blob()
+        const url = window.URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = `${quizTitle || 'quiz'}_teacher_guide.html`
+        document.body.appendChild(a)
+        a.click()
+        document.body.removeChild(a)
+        window.URL.revokeObjectURL(url)
+      }
+    } catch (error) {
+      console.error('Export failed:', error)
+      alert('HTML 내보내기 중 오류가 발생했습니다.')
+    }
+  }
+
+  const handleSaveToCommunity = async () => {
+    if (!quizTitle.trim()) {
+      alert('퀴즈 제목을 입력해주세요.')
       return
     }
 
     try {
-      const response = await fetch(`/api/quizzes/${quizId}`, {
-        method: 'DELETE',
+      const response = await fetch('/api/quizzes/save', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          questions, 
+          title: quizTitle,
+          topic: questions[0]?.metadata?.topic || '일반',
+          grade: questions[0]?.metadata?.grade || 'general'
+        }),
       })
 
       if (response.ok) {
-        setQuizzes(quizzes.filter(q => q.id !== quizId))
+        alert('퀴즈가 커뮤니티에 저장되었습니다!')
+        // 커뮤니티 탭으로 이동
+        window.location.href = '/community'
+      } else {
+        throw new Error('Save failed')
       }
     } catch (error) {
-      console.error('Failed to delete quiz:', error)
+      console.error('Save failed:', error)
+      alert('저장 중 오류가 발생했습니다.')
     }
   }
-
-  const filteredQuizzes = quizzes.filter(quiz => {
-    const matchesSearch = quiz.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         quiz.topic.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesStatus = filterStatus === 'all' || quiz.status === filterStatus
-    return matchesSearch && matchesStatus
-  })
 
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">퀴즈 목록을 불러오는 중...</p>
+          <p className="mt-4 text-gray-600">문항을 불러오는 중...</p>
         </div>
+      </div>
+    )
+  }
+
+  if (!questions.length) {
+    return (
+      <div className="rounded-lg bg-white p-12 text-center shadow">
+        <p className="text-gray-500 mb-4">선택된 문항이 없습니다.</p>
+        <a
+          href="/create"
+          className="inline-flex items-center text-sm font-medium text-blue-600 hover:text-blue-500"
+        >
+          퀴즈 생성하러 가기 →
+        </a>
       </div>
     )
   }
@@ -79,136 +184,170 @@ export default function MyQuizzesPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">내 퀴즈</h1>
+        <h1 className="text-2xl font-bold text-gray-900">문항 미리보기</h1>
         <p className="mt-1 text-sm text-gray-600">
-          저장한 퀴즈를 관리하고 다시 다운로드할 수 있습니다
+          선택한 {questions.length}개 문항을 확인하고 내보내거나 저장할 수 있습니다.
         </p>
       </div>
 
-      {/* 검색 및 필터 */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-          <input
-            type="text"
-            placeholder="퀴즈 제목 또는 주제로 검색..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full rounded-md border-gray-300 pl-10 pr-3 py-2 text-sm focus:border-blue-500 focus:ring-blue-500"
-          />
-        </div>
-        <div className="flex items-center gap-2">
-          <select
-            value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value)}
-            className="rounded-md border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500"
-          >
-            <option value="all">모든 상태</option>
-            <option value="draft">임시저장</option>
-            <option value="published">게시됨</option>
-            <option value="archived">보관됨</option>
-          </select>
-        </div>
+      {/* 퀴즈 제목 입력 */}
+      <div className="bg-white rounded-lg shadow p-6">
+        <label htmlFor="quiz-title" className="block text-sm font-medium text-gray-700 mb-2">
+          퀴즈 제목
+        </label>
+        <input
+          type="text"
+          id="quiz-title"
+          value={quizTitle}
+          onChange={(e) => setQuizTitle(e.target.value)}
+          placeholder="예: 조선시대 역사 퀴즈"
+          className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+        />
       </div>
 
-      {/* 퀴즈 목록 */}
-      {filteredQuizzes.length === 0 ? (
-        <div className="rounded-lg bg-white p-12 text-center shadow">
-          <p className="text-gray-500">
-            {searchTerm || filterStatus !== 'all' 
-              ? '검색 결과가 없습니다.' 
-              : '아직 저장된 퀴즈가 없습니다.'}
-          </p>
-          {!searchTerm && filterStatus === 'all' && (
-            <a
-              href="/create"
-              className="mt-4 inline-flex items-center text-sm font-medium text-blue-600 hover:text-blue-500"
-            >
-              첫 퀴즈 만들기 →
-            </a>
-          )}
+      {/* 문항 목록 */}
+      <div className="bg-white rounded-lg shadow">
+        <div className="p-6 border-b border-gray-200">
+          <h2 className="text-lg font-medium text-gray-900">
+            문항 목록 ({questions.length}개)
+          </h2>
         </div>
-      ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {filteredQuizzes.map((quiz) => (
-            <div
-              key={quiz.id}
-              className="relative rounded-lg border border-gray-200 bg-white p-6 shadow-sm hover:shadow-md transition-shadow"
-            >
-              {/* 상태 뱃지 */}
-              <div className="absolute right-4 top-4">
-                <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                  quiz.status === 'published' 
-                    ? 'bg-green-100 text-green-800'
-                    : quiz.status === 'draft'
-                    ? 'bg-yellow-100 text-yellow-800'
-                    : 'bg-gray-100 text-gray-800'
-                }`}>
-                  {quiz.status === 'published' ? '게시됨' : 
-                   quiz.status === 'draft' ? '임시저장' : '보관됨'}
-                </span>
-              </div>
-
-              {/* 퀴즈 정보 */}
-              <div className="mb-4">
-                <h3 className="text-lg font-medium text-gray-900 line-clamp-1">
-                  {quiz.title}
-                </h3>
-                <p className="mt-1 text-sm text-gray-600 line-clamp-2">
-                  {quiz.topic}
-                </p>
-                <div className="mt-3 flex items-center text-xs text-gray-500">
-                  <Calendar className="mr-1 h-3 w-3" />
-                  {new Date(quiz.created_at).toLocaleDateString('ko-KR')}
-                </div>
-              </div>
-
-              {/* 문항 정보 */}
-              <div className="mb-4 flex items-center justify-between text-sm">
-                <span className="text-gray-600">
-                  총 {quiz.total_questions}개 문항
-                </span>
-                <div className="flex items-center gap-2">
-                  {quiz.exports_count > 0 && (
-                    <span className="text-xs text-gray-500">
-                      {quiz.exports_count}회 내보냄
+        <div className="divide-y divide-gray-200">
+          {questions.map((question, index) => (
+            <div key={index} className="p-6">
+              {/* 문항 헤더 */}
+              <div 
+                className="flex items-start justify-between cursor-pointer"
+                onClick={() => toggleQuestion(index)}
+              >
+                <div className="flex-1">
+                  <div className="flex items-center gap-3">
+                    <span className="text-lg font-medium text-gray-900">
+                      {index + 1}. {question.question}
                     </span>
+                    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                      question.type === 'true_false' 
+                        ? 'bg-green-100 text-green-700' 
+                        : 'bg-blue-100 text-blue-700'
+                    }`}>
+                      {question.type === 'true_false' ? 'OX형' : '4지선다형'}
+                    </span>
+                    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                      question.metadata?.difficulty === 'hard' 
+                        ? 'bg-red-100 text-red-700'
+                        : question.metadata?.difficulty === 'medium'
+                        ? 'bg-yellow-100 text-yellow-700'
+                        : 'bg-gray-100 text-gray-700'
+                    }`}>
+                      {question.metadata?.difficulty === 'hard' ? '상' : 
+                       question.metadata?.difficulty === 'medium' ? '중' : '하'}
+                    </span>
+                    <span className="inline-flex items-center text-xs text-gray-500">
+                      <Clock className="mr-1 h-3 w-3" />
+                      {question.timeLimit}초
+                    </span>
+                  </div>
+                </div>
+                <button className="ml-2 text-gray-400 hover:text-gray-600">
+                  {expandedQuestions[index] ? (
+                    <ChevronUp className="h-5 w-5" />
+                  ) : (
+                    <ChevronDown className="h-5 w-5" />
                   )}
-                </div>
-              </div>
-
-              {/* 액션 버튼들 */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => window.location.href = `/create/preview?quiz_id=${quiz.id}`}
-                    className="inline-flex items-center rounded-md bg-blue-50 px-3 py-1.5 text-xs font-medium text-blue-700 hover:bg-blue-100"
-                  >
-                    <Edit3 className="mr-1 h-3 w-3" />
-                    편집
-                  </button>
-                  <button
-                    onClick={() => {
-                      // 내보내기 모달 열기
-                      alert('내보내기 기능 구현 예정')
-                    }}
-                    className="inline-flex items-center rounded-md bg-green-50 px-3 py-1.5 text-xs font-medium text-green-700 hover:bg-green-100"
-                  >
-                    <Download className="mr-1 h-3 w-3" />
-                    내보내기
-                  </button>
-                </div>
-                <button
-                  onClick={() => handleDelete(quiz.id)}
-                  className="rounded-md p-1.5 text-gray-400 hover:bg-gray-100 hover:text-red-600"
-                >
-                  <Trash2 className="h-4 w-4" />
                 </button>
               </div>
+
+              {/* 문항 상세 (확장 시) */}
+              {expandedQuestions[index] && (
+                <div className="mt-4 space-y-3">
+                  {/* 선택지 */}
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium text-gray-700">선택지:</p>
+                    {question.options.map((option, optIndex) => (
+                      <div 
+                        key={optIndex}
+                        className={`flex items-center gap-2 p-2 rounded ${
+                          option.isCorrect ? 'bg-green-50' : 'bg-gray-50'
+                        }`}
+                      >
+                        {option.isCorrect ? (
+                          <CheckCircle className="h-4 w-4 text-green-600" />
+                        ) : (
+                          <XCircle className="h-4 w-4 text-gray-400" />
+                        )}
+                        <span className={`text-sm ${
+                          option.isCorrect ? 'font-medium text-green-900' : 'text-gray-700'
+                        }`}>
+                          {option.text}
+                        </span>
+                        {option.isCorrect && (
+                          <span className="ml-auto text-xs text-green-600 font-medium">
+                            정답
+                          </span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* 해설 */}
+                  {question.explanation && (
+                    <div className="bg-blue-50 rounded-lg p-4">
+                      <p className="text-sm font-medium text-blue-900 mb-1">해설:</p>
+                      <p className="text-sm text-blue-800">{question.explanation}</p>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           ))}
         </div>
-      )}
+      </div>
+
+      {/* 액션 버튼들 */}
+      <div className="bg-white rounded-lg shadow p-6">
+        <div className="flex flex-col sm:flex-row gap-4">
+          {/* 내보내기 버튼들 */}
+          <div className="flex-1">
+            <p className="text-sm font-medium text-gray-700 mb-3">내보내기</p>
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={handleExportCSV}
+                className="inline-flex items-center rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+              >
+                <FileSpreadsheet className="mr-2 h-4 w-4" />
+                CSV 다운로드
+              </button>
+              <button
+                onClick={handleExportXLSX}
+                className="inline-flex items-center rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+              >
+                <FileSpreadsheet className="mr-2 h-4 w-4" />
+                Excel 다운로드
+              </button>
+              <button
+                onClick={handleExportHTML}
+                className="inline-flex items-center rounded-md bg-purple-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2"
+              >
+                <FileText className="mr-2 h-4 w-4" />
+                교사용 가이드 (HTML)
+              </button>
+            </div>
+          </div>
+
+          {/* 저장하기 버튼 */}
+          <div className="flex-1 sm:flex-none">
+            <p className="text-sm font-medium text-gray-700 mb-3">커뮤니티</p>
+            <button
+              onClick={handleSaveToCommunity}
+              disabled={!quizTitle.trim()}
+              className="inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Save className="mr-2 h-4 w-4" />
+              커뮤니티에 저장하기
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   )
 }

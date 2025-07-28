@@ -1,0 +1,205 @@
+import { NextResponse } from 'next/server'
+
+export async function POST(request) {
+  try {
+    const { questions, title } = await request.json()
+
+    // HTML 템플릿 생성
+    const htmlContent = `<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${title || '퀴즈'} - 교사용 가이드</title>
+    <style>
+        body {
+            font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2563eb;
+            border-bottom: 3px solid #2563eb;
+            padding-bottom: 10px;
+        }
+        .question-card {
+            margin: 30px 0;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #2563eb;
+        }
+        .question-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .question-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #1f2937;
+        }
+        .badges {
+            display: flex;
+            gap: 8px;
+        }
+        .badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .badge.type-ox {
+            background-color: #d1fae5;
+            color: #065f46;
+        }
+        .badge.type-mc {
+            background-color: #dbeafe;
+            color: #1e40af;
+        }
+        .badge.difficulty-easy {
+            background-color: #e5e7eb;
+            color: #374151;
+        }
+        .badge.difficulty-medium {
+            background-color: #fef3c7;
+            color: #92400e;
+        }
+        .badge.difficulty-hard {
+            background-color: #fee2e2;
+            color: #991b1b;
+        }
+        .options {
+            margin: 15px 0;
+        }
+        .option {
+            padding: 10px 15px;
+            margin: 5px 0;
+            background-color: white;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+        }
+        .option.correct {
+            background-color: #d1fae5;
+            border: 1px solid #6ee7b7;
+        }
+        .option-marker {
+            font-weight: bold;
+            margin-right: 10px;
+            width: 25px;
+        }
+        .correct-mark {
+            margin-left: auto;
+            color: #059669;
+            font-weight: bold;
+        }
+        .explanation {
+            margin-top: 15px;
+            padding: 15px;
+            background-color: #eff6ff;
+            border-radius: 5px;
+            border-left: 3px solid #3b82f6;
+        }
+        .explanation-title {
+            font-weight: bold;
+            color: #1e40af;
+            margin-bottom: 5px;
+        }
+        .meta-info {
+            margin-top: 15px;
+            display: flex;
+            gap: 20px;
+            color: #6b7280;
+            font-size: 14px;
+        }
+        @media print {
+            body {
+                background-color: white;
+            }
+            .container {
+                box-shadow: none;
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>${title || '퀴즈'} - 교사용 가이드</h1>
+        <p style="color: #6b7280; margin-bottom: 30px;">
+            총 ${questions.length}개 문항 | 
+            생성일: ${new Date().toLocaleDateString('ko-KR')}
+        </p>
+        
+        ${questions.map((question, index) => `
+        <div class="question-card">
+            <div class="question-header">
+                <div class="question-title">문제 ${index + 1}. ${question.question}</div>
+                <div class="badges">
+                    <span class="badge type-${question.type === 'true_false' ? 'ox' : 'mc'}">
+                        ${question.type === 'true_false' ? 'OX형' : '4지선다형'}
+                    </span>
+                    <span class="badge difficulty-${question.metadata?.difficulty || 'medium'}">
+                        ${question.metadata?.difficulty === 'hard' ? '상' : 
+                          question.metadata?.difficulty === 'medium' ? '중' : '하'}
+                    </span>
+                </div>
+            </div>
+            
+            <div class="options">
+                ${question.options.map((option, optIndex) => `
+                <div class="option ${option.isCorrect ? 'correct' : ''}">
+                    <span class="option-marker">${optIndex + 1})</span>
+                    <span>${option.text}</span>
+                    ${option.isCorrect ? '<span class="correct-mark">✓ 정답</span>' : ''}
+                </div>
+                `).join('')}
+            </div>
+            
+            ${question.explanation ? `
+            <div class="explanation">
+                <div class="explanation-title">💡 해설</div>
+                ${question.explanation}
+            </div>
+            ` : ''}
+            
+            <div class="meta-info">
+                <span>⏱ 제한시간: ${question.timeLimit}초</span>
+                <span>🎯 배점: ${question.points || 1000}점</span>
+            </div>
+        </div>
+        `).join('')}
+        
+        <div style="margin-top: 50px; padding-top: 30px; border-top: 1px solid #e5e7eb; color: #6b7280; text-align: center;">
+            <p>이 문서는 Bluenote Quiz Maker에서 생성되었습니다.</p>
+        </div>
+    </div>
+</body>
+</html>`
+
+    return new Response(htmlContent, {
+      headers: {
+        'Content-Type': 'text/html; charset=utf-8',
+        'Content-Disposition': `attachment; filename="${title || 'quiz'}_teacher_guide.html"`
+      }
+    })
+  } catch (error) {
+    console.error('Export HTML error:', error)
+    return NextResponse.json(
+      { error: 'HTML 내보내기 중 오류가 발생했습니다.' },
+      { status: 500 }
+    )
+  }
+}

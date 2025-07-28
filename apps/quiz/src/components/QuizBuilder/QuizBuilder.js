@@ -263,10 +263,28 @@ export default function QuizBuilder() {
       {/* 생성된 문항 표시 */}
       {questions.length > 0 && (
         <div className="mt-8">
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-medium text-gray-900">
-              생성된 문항 ({questions.length}개)
-            </h3>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-4">
+              <h3 className="text-lg font-medium text-gray-900">
+                생성된 문항 ({questions.length}개)
+              </h3>
+              <label className="flex items-center gap-2 text-sm text-gray-600">
+                <input
+                  type="checkbox"
+                  id="select-all"
+                  defaultChecked
+                  onChange={(e) => {
+                    const checked = e.target.checked
+                    questions.forEach((_, index) => {
+                      const checkbox = document.getElementById(`question-${index}`)
+                      if (checkbox) checkbox.checked = checked
+                    })
+                  }}
+                  className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                />
+                전체 선택
+              </label>
+            </div>
             <button
               onClick={() => {
                 // 선택된 문항만 필터링
@@ -283,12 +301,12 @@ export default function QuizBuilder() {
                 // sessionStorage에 선택된 문항 저장
                 sessionStorage.setItem('selectedQuestions', JSON.stringify(selectedQuestions))
                 
-                // 퀴즈 저장 탭으로 이동
+                // 미리보기 탭으로 이동
                 window.location.href = '/my-quizzes'
               }}
               className="inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
             >
-              선택 문항 저장하기
+              선택 문항 미리보기
               <ChevronRight className="ml-1 h-4 w-4" />
             </button>
           </div>
