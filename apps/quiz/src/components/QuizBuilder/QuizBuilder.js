@@ -18,11 +18,6 @@ export default function QuizBuilder() {
   const [difficultyMediumPercent, setDifficultyMediumPercent] = useState(60)
   const [difficultyLowPercent, setDifficultyLowPercent] = useState(20)
   
-  // 실제 문항 수 계산
-  const difficultyHigh = Math.round(totalQuestions * difficultyHighPercent / 100)
-  const difficultyMedium = Math.round(totalQuestions * difficultyMediumPercent / 100)
-  const difficultyLow = totalQuestions - difficultyHigh - difficultyMedium
-  
   // AI 모델 선택
   const [aiModel, setAiModel] = useState('claude-sonnet-4-20250514')
   
@@ -31,6 +26,11 @@ export default function QuizBuilder() {
   
   // 전체 문항 수 계산
   const totalQuestions = trueFalseCount + multipleChoiceCount
+  
+  // 실제 문항 수 계산
+  const difficultyHigh = Math.round(totalQuestions * difficultyHighPercent / 100)
+  const difficultyMedium = Math.round(totalQuestions * difficultyMediumPercent / 100)
+  const difficultyLow = totalQuestions - difficultyHigh - difficultyMedium
 
   const handleSubmit = async (e) => {
     e.preventDefault()
