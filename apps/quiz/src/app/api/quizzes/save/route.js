@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/authOptions'
-import { createClient } from '@/lib/supabase'
+import { createServiceClient } from '@/lib/supabase'
 
 export async function POST(request) {
   try {
@@ -24,7 +24,7 @@ export async function POST(request) {
       )
     }
 
-    const supabase = createClient()
+    const supabase = createServiceClient()
 
     // 퀴즈 메타데이터 저장
     const { data: quiz, error: quizError } = await supabase
