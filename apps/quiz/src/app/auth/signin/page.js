@@ -71,6 +71,21 @@ function SignInContent() {
         <div className="mt-6 text-center text-xs text-gray-600">
           <p>로그인하면 서비스 이용약관과 개인정보 처리방침에 동의하는 것으로 간주됩니다.</p>
         </div>
+        
+        <div className="mt-8 border-t pt-6">
+          <p className="text-center text-sm text-gray-500 mb-3">
+            이미 Bluenote에 로그인하셨나요?
+          </p>
+          <a 
+            href="https://bluenote.site"
+            className="block text-center text-blue-600 hover:text-blue-500 text-sm font-medium"
+          >
+            Bluenote 메인 사이트로 이동 →
+          </a>
+          <p className="mt-2 text-center text-xs text-gray-400">
+            메인 사이트에서 로그인하면 모든 서비스를 이용할 수 있습니다
+          </p>
+        </div>
       </div>
     </div>
   )

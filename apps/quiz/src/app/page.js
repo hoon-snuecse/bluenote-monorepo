@@ -1,6 +1,10 @@
 import { redirect } from 'next/navigation'
 import { getServerSession } from 'next-auth'
-import { createAuthOptions } from '@bluenote/auth'
+
+// Quiz 앱 전용 authOptions
+const authOptions = {
+  secret: process.env.NEXTAUTH_SECRET,
+}
 
 export default async function HomePage() {
   try {
@@ -17,7 +21,6 @@ export default async function HomePage() {
       redirect('/auth/error?error=Configuration')
     }
 
-    const authOptions = createAuthOptions()
     const session = await getServerSession(authOptions)
     
     console.log('HomePage - session exists:', !!session)
