@@ -7,12 +7,26 @@ import { Loader2, Sparkles, ChevronRight } from 'lucide-react'
 export default function QuizBuilder() {
   const { data: session } = useSession()
   const [topic, setTopic] = useState('')
-  const [grade, setGrade] = useState('middle')
-  const [questionCount, setQuestionCount] = useState(10)
-  const [trueFalseRatio, setTrueFalseRatio] = useState(30)
+  const [grade, setGrade] = useState('middle1')
+  
+  // 문항 유형별 개수
+  const [trueFalseCount, setTrueFalseCount] = useState(3)
+  const [multipleChoiceCount, setMultipleChoiceCount] = useState(7)
+  
+  // 난이도별 문항 수
+  const [difficultyHigh, setDifficultyHigh] = useState(2)
+  const [difficultyMedium, setDifficultyMedium] = useState(6)
+  const [difficultyLow, setDifficultyLow] = useState(2)
+  
+  // AI 모델 선택
+  const [aiModel, setAiModel] = useState('claude-sonnet-4-20250514')
+  
   const [isGenerating, setIsGenerating] = useState(false)
   const [questions, setQuestions] = useState([])
   const [error, setError] = useState(null)
+  
+  // 전체 문항 수 계산
+  const totalQuestions = trueFalseCount + multipleChoiceCount
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -34,22 +48,35 @@ export default function QuizBuilder() {
         body: JSON.stringify({
           topic,
           grade,
-          questionCount,
-          trueFalseRatio,
+          trueFalseCount,
+          multipleChoiceCount,
+          difficultyHigh,
+          difficultyMedium,
+          difficultyLow,
+          aiModel,
         }),
       })
 
       if (!response.ok) {
-        throw new Error('문항 생성 실패')
+        const errorData = await response.json()
+        console.error('API Error:', errorData)
+        throw new Error(errorData.error || '문항 생성 실패')
       }
 
       const data = await response.json()
+      
+      if (!data.questions || !Array.isArray(data.questions)) {
+        throw new Error('잘못된 응답 형식입니다')
+      }
+      
+      console.log('Generated questions:', data.questions.length)
       setQuestions(data.questions)
       
       // 임시로 sessionStorage에 저장
       sessionStorage.setItem('tempQuestions', JSON.stringify(data.questions))
     } catch (err) {
-      setError(err.message)
+      console.error('문항 생성 오류:', err)
+      setError(err.message || '문항 생성 중 오류가 발생했습니다')
     } finally {
       setIsGenerating(false)
     }
@@ -91,59 +118,117 @@ export default function QuizBuilder() {
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
             disabled={isGenerating}
           >
-            <option value="elementary">초등학교</option>
-            <option value="middle">중학교</option>
-            <option value="high">고등학교</option>
-            <option value="general">일반</option>
+            <option value="elementary3">초등학교 3학년</option>
+            <option value="elementary4">초등학교 4학년</option>
+            <option value="elementary5">초등학교 5학년</option>
+            <option value="elementary6">초등학교 6학년</option>
+            <option value="middle1">중학교 1학년</option>
+            <option value="middle2">중학교 2학년</option>
+            <option value="middle3">중학교 3학년</option>
           </select>
         </div>
 
-        {/* 문항 수 설정 */}
+        {/* 문항 유형별 개수 */}
         <div>
-          <label htmlFor="questionCount" className="block text-sm font-medium text-gray-700">
-            생성할 문항 수
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            문항 유형별 개수
           </label>
-          <div className="mt-1 flex items-center space-x-3">
-            <input
-              type="range"
-              id="questionCount"
-              min="5"
-              max="30"
-              step="5"
-              value={questionCount}
-              onChange={(e) => setQuestionCount(Number(e.target.value))}
-              className="flex-1"
-              disabled={isGenerating}
-            />
-            <span className="w-12 text-center font-medium text-gray-900">
-              {questionCount}개
-            </span>
+          <div className="space-y-3">
+            <div className="flex items-center space-x-3">
+              <label className="w-24 text-sm text-gray-600">OX형:</label>
+              <input
+                type="number"
+                min="0"
+                max="20"
+                value={trueFalseCount}
+                onChange={(e) => setTrueFalseCount(Number(e.target.value))}
+                className="w-20 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                disabled={isGenerating}
+              />
+              <span className="text-sm text-gray-600">문항</span>
+            </div>
+            <div className="flex items-center space-x-3">
+              <label className="w-24 text-sm text-gray-600">4지선다형:</label>
+              <input
+                type="number"
+                min="0"
+                max="20"
+                value={multipleChoiceCount}
+                onChange={(e) => setMultipleChoiceCount(Number(e.target.value))}
+                className="w-20 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                disabled={isGenerating}
+              />
+              <span className="text-sm text-gray-600">문항</span>
+            </div>
+            <div className="pl-28 text-sm font-medium text-gray-900">
+              전체: {totalQuestions}문항
+            </div>
           </div>
         </div>
 
-        {/* OX/4지선다 비율 */}
+        {/* 난이도별 문항 수 */}
         <div>
-          <label htmlFor="trueFalseRatio" className="block text-sm font-medium text-gray-700">
-            문항 유형 비율
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            난이도별 문항 수
           </label>
-          <div className="mt-1 flex items-center space-x-3">
-            <span className="text-sm text-gray-600">4지선다</span>
-            <input
-              type="range"
-              id="trueFalseRatio"
-              min="0"
-              max="100"
-              step="10"
-              value={trueFalseRatio}
-              onChange={(e) => setTrueFalseRatio(Number(e.target.value))}
-              className="flex-1"
-              disabled={isGenerating}
-            />
-            <span className="text-sm text-gray-600">OX형</span>
+          <div className="space-y-3">
+            <div className="flex items-center space-x-3">
+              <label className="w-24 text-sm text-gray-600">상:</label>
+              <input
+                type="number"
+                min="0"
+                max="20"
+                value={difficultyHigh}
+                onChange={(e) => setDifficultyHigh(Number(e.target.value))}
+                className="w-20 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                disabled={isGenerating}
+              />
+              <span className="text-sm text-gray-600">문항</span>
+            </div>
+            <div className="flex items-center space-x-3">
+              <label className="w-24 text-sm text-gray-600">중:</label>
+              <input
+                type="number"
+                min="0"
+                max="20"
+                value={difficultyMedium}
+                onChange={(e) => setDifficultyMedium(Number(e.target.value))}
+                className="w-20 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                disabled={isGenerating}
+              />
+              <span className="text-sm text-gray-600">문항</span>
+            </div>
+            <div className="flex items-center space-x-3">
+              <label className="w-24 text-sm text-gray-600">하:</label>
+              <input
+                type="number"
+                min="0"
+                max="20"
+                value={difficultyLow}
+                onChange={(e) => setDifficultyLow(Number(e.target.value))}
+                className="w-20 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                disabled={isGenerating}
+              />
+              <span className="text-sm text-gray-600">문항</span>
+            </div>
           </div>
-          <p className="mt-1 text-sm text-gray-500">
-            OX형 {trueFalseRatio}% / 4지선다 {100 - trueFalseRatio}%
-          </p>
+        </div>
+
+        {/* AI 모델 선택 */}
+        <div>
+          <label htmlFor="aiModel" className="block text-sm font-medium text-gray-700">
+            AI 모델 선택
+          </label>
+          <select
+            id="aiModel"
+            value={aiModel}
+            onChange={(e) => setAiModel(e.target.value)}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+            disabled={isGenerating}
+          >
+            <option value="claude-sonnet-4-20250514">Claude Sonnet 4 (기본)</option>
+            <option value="claude-opus-4-20250514">Claude Opus 4</option>
+          </select>
         </div>
 
         {/* 에러 메시지 */}
@@ -204,17 +289,17 @@ export default function QuizBuilder() {
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <p className="text-sm font-medium text-gray-900">
-                      {index + 1}. {question.question_text}
+                      {index + 1}. {question.question}
                     </p>
                     <div className="mt-2 flex items-center space-x-3 text-xs text-gray-500">
                       <span className={`rounded-full px-2 py-1 ${
-                        question.question_type === 'true_false' 
+                        question.type === 'true_false' 
                           ? 'bg-green-100 text-green-700' 
                           : 'bg-blue-100 text-blue-700'
                       }`}>
-                        {question.question_type === 'true_false' ? 'OX형' : '4지선다'}
+                        {question.type === 'true_false' ? 'OX형' : '4지선다'}
                       </span>
-                      <span>{question.time_limit}초</span>
+                      <span>{question.timeLimit}초</span>
                     </div>
                   </div>
                 </div>

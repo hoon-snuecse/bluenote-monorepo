@@ -29,31 +29,65 @@ export async function POST(request) {
       }, { status: 500 })
     }
 
-    const { topic, grade, questionCount, trueFalseRatio } = await request.json()
+    const { 
+      topic, 
+      grade, 
+      trueFalseCount, 
+      multipleChoiceCount,
+      difficultyHigh,
+      difficultyMedium,
+      difficultyLow,
+      aiModel 
+    } = await request.json()
     
-    console.log('Generating questions for:', { topic, grade, questionCount, trueFalseRatio })
+    console.log('Generating questions for:', { 
+      topic, 
+      grade, 
+      trueFalseCount, 
+      multipleChoiceCount,
+      difficulties: { high: difficultyHigh, medium: difficultyMedium, low: difficultyLow },
+      aiModel 
+    })
 
-    // 학년별 난이도 설정
-    const gradeLevel = {
-      elementary: '초등학생',
-      middle: '중학생',
-      high: '고등학생',
-      general: '일반'
-    }[grade] || '일반'
+    // 전체 문항 수 및 난이도 합계 검증
+    const totalQuestions = trueFalseCount + multipleChoiceCount
+    const totalDifficulty = difficultyHigh + difficultyMedium + difficultyLow
+    
+    // 문항 수와 난이도별 합계가 일치하는지 확인
+    if (totalQuestions !== totalDifficulty) {
+      return NextResponse.json({ 
+        error: `전체 문항 수(${totalQuestions})와 난이도별 문항 수 합계(${totalDifficulty})가 일치하지 않습니다.`
+      }, { status: 400 })
+    }
 
-    // OX형과 4지선다형 문항 수 계산
-    const trueFalseCount = Math.round((questionCount * trueFalseRatio) / 100)
-    const multipleChoiceCount = questionCount - trueFalseCount
+    // 학년별 설정
+    const gradeMap = {
+      elementary3: '초등학교 3학년',
+      elementary4: '초등학교 4학년',
+      elementary5: '초등학교 5학년',
+      elementary6: '초등학교 6학년',
+      middle1: '중학교 1학년',
+      middle2: '중학교 2학년',
+      middle3: '중학교 3학년'
+    }
+    const gradeLevel = gradeMap[grade] || '중학교 1학년'
 
     // Claude에게 문항 생성 요청
     const prompt = `당신은 한국의 교육 전문가입니다. ${gradeLevel} 수준에 맞는 Kahoot 퀴즈 문항을 생성해주세요.
 
 주제: ${topic}
-총 문항 수: ${questionCount}개
+총 문항 수: ${totalQuestions}개
+
+문항 유형별 개수:
 - OX형 문항: ${trueFalseCount}개
 - 4지선다형 문항: ${multipleChoiceCount}개
 
-다음 형식으로 정확히 ${questionCount}개의 문항을 JSON 배열로 생성해주세요:
+난이도별 문항 수:
+- 상 난이도: ${difficultyHigh}개 (심화 학습, 응용 문제)
+- 중 난이도: ${difficultyMedium}개 (기본 개념 이해)
+- 하 난이도: ${difficultyLow}개 (기초 개념, 단순 암기)
+
+다음 형식으로 정확히 ${totalQuestions}개의 문항을 JSON 배열로 생성해주세요:
 
 [
   {
@@ -69,7 +103,7 @@ export async function POST(request) {
     "metadata": {
       "grade": "${grade}",
       "topic": "${topic}",
-      "difficulty": "easy/medium/hard"
+      "difficulty": "hard" 또는 "medium" 또는 "easy"
     }
   }
 ]
@@ -80,14 +114,21 @@ export async function POST(request) {
 3. OX형의 경우 반드시 "O" (맞다)와 "X" (틀리다) 두 개의 선택지만
 4. 각 문항마다 정확히 하나의 정답만 있어야 함
 5. 해설은 교육적이고 이해하기 쉽게 작성
-6. 다양한 난이도로 골고루 분포
+6. 반드시 지정된 난이도별 문항 수를 정확히 지켜주세요:
+   - 난이도 "hard": ${difficultyHigh}개
+   - 난이도 "medium": ${difficultyMedium}개  
+   - 난이도 "easy": ${difficultyLow}개
 7. 학년 수준에 맞는 어휘와 개념 사용
+8. 문항 유형별 개수도 정확히 지켜주세요
 
 JSON 형식으로만 응답하고, 다른 텍스트는 포함하지 마세요.`
 
+    console.log('Calling Claude API with prompt length:', prompt.length)
+    
     const response = await anthropic.messages.create({
-      model: 'claude-3-sonnet-20240229',
+      model: aiModel, // 사용자가 선택한 모델 사용
       max_tokens: 4000,
+      temperature: 0.7,
       messages: [
         {
           role: 'user',
@@ -95,6 +136,8 @@ JSON 형식으로만 응답하고, 다른 텍스트는 포함하지 마세요.`
         }
       ]
     })
+    
+    console.log('Claude API response received')
 
     // Claude 응답에서 JSON 추출
     const content = response.content[0].text
@@ -142,16 +185,46 @@ JSON 형식으로만 응답하고, 다른 텍스트는 포함하지 마세요.`
       message: '문항이 성공적으로 생성되었습니다.'
     })
   } catch (error) {
-    console.error('Error generating questions:', error)
+    console.error('Error generating questions:', {
+      message: error.message,
+      name: error.name,
+      status: error.status,
+      type: error.type,
+      stack: error.stack
+    })
+    
+    // Anthropic API 에러 처리
+    if (error.status === 401) {
+      return NextResponse.json({ 
+        error: 'API 인증 실패. API 키를 확인해주세요.',
+        details: 'Invalid API key'
+      }, { status: 500 })
+    }
+    
+    if (error.status === 429) {
+      return NextResponse.json({ 
+        error: 'API 요청 한도 초과. 잠시 후 다시 시도해주세요.',
+        details: 'Rate limit exceeded'
+      }, { status: 429 })
+    }
+    
+    if (error.status === 400) {
+      return NextResponse.json({ 
+        error: '잘못된 요청입니다. 입력 내용을 확인해주세요.',
+        details: error.message
+      }, { status: 400 })
+    }
     
     if (error.message?.includes('api_key')) {
       return NextResponse.json({ 
-        error: 'API 키가 설정되지 않았습니다. 관리자에게 문의해주세요.' 
+        error: 'API 키가 설정되지 않았습니다. 관리자에게 문의해주세요.',
+        details: 'API key not configured'
       }, { status: 500 })
     }
     
     return NextResponse.json({ 
-      error: '문항 생성 중 오류가 발생했습니다. 다시 시도해주세요.' 
+      error: '문항 생성 중 오류가 발생했습니다. 다시 시도해주세요.',
+      details: error.message || 'Unknown error'
     }, { status: 500 })
   }
 }
