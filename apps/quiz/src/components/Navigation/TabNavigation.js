@@ -12,7 +12,7 @@ const tabs = [
     description: 'AI로 새로운 퀴즈 만들기'
   },
   {
-    name: '내 퀴즈',
+    name: '퀴즈 저장',
     href: '/my-quizzes',
     icon: Save,
     description: '저장한 퀴즈 관리'

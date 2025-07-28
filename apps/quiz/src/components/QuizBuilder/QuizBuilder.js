@@ -115,7 +115,7 @@ export default function QuizBuilder() {
             id="grade"
             value={grade}
             onChange={(e) => setGrade(e.target.value)}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+            className="mt-1 block w-48 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
             disabled={isGenerating}
           >
             <option value="elementary3">초등학교 3학년</option>
@@ -128,10 +128,10 @@ export default function QuizBuilder() {
           </select>
         </div>
 
-        {/* 문항 유형별 개수 */}
+        {/* 문항 유형별 문항 수 */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            문항 유형별 개수
+            문항 유형별 문항 수
           </label>
           <div className="space-y-3">
             <div className="flex items-center space-x-3">
@@ -223,7 +223,7 @@ export default function QuizBuilder() {
             id="aiModel"
             value={aiModel}
             onChange={(e) => setAiModel(e.target.value)}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+            className="mt-1 block w-64 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
             disabled={isGenerating}
           >
             <option value="claude-sonnet-4-20250514">Claude Sonnet 4 (기본)</option>
@@ -269,25 +269,45 @@ export default function QuizBuilder() {
             </h3>
             <button
               onClick={() => {
-                // 문항 선택 페이지로 이동
-                window.location.href = `/create/preview?quiz_id=temp`
+                // 선택된 문항만 필터링
+                const selectedQuestions = questions.filter((_, index) => {
+                  const checkbox = document.getElementById(`question-${index}`)
+                  return checkbox && checkbox.checked
+                })
+                
+                if (selectedQuestions.length === 0) {
+                  alert('최소 1개 이상의 문항을 선택해주세요.')
+                  return
+                }
+                
+                // sessionStorage에 선택된 문항 저장
+                sessionStorage.setItem('selectedQuestions', JSON.stringify(selectedQuestions))
+                
+                // 퀴즈 저장 탭으로 이동
+                window.location.href = '/my-quizzes'
               }}
-              className="inline-flex items-center text-sm font-medium text-blue-600 hover:text-blue-500"
+              className="inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
             >
-              문항 선택하기
+              선택 문항 저장하기
               <ChevronRight className="ml-1 h-4 w-4" />
             </button>
           </div>
           
           {/* 문항 미리보기 목록 */}
           <div className="mt-4 space-y-3">
-            {questions.slice(0, 3).map((question, index) => (
+            {questions.map((question, index) => (
               <div
                 key={index}
-                className="rounded-lg border border-gray-200 bg-white p-4"
+                className="rounded-lg border border-gray-200 bg-white p-4 hover:border-gray-300 transition-colors"
               >
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
+                <div className="flex items-start gap-3">
+                  <input
+                    type="checkbox"
+                    id={`question-${index}`}
+                    defaultChecked
+                    className="mt-1 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  />
+                  <label htmlFor={`question-${index}`} className="flex-1 cursor-pointer">
                     <p className="text-sm font-medium text-gray-900">
                       {index + 1}. {question.question}
                     </p>
@@ -297,20 +317,16 @@ export default function QuizBuilder() {
                           ? 'bg-green-100 text-green-700' 
                           : 'bg-blue-100 text-blue-700'
                       }`}>
-                        {question.type === 'true_false' ? 'OX형' : '4지선다'}
+                        {question.type === 'true_false' ? 'OX형' : '4지선다형'}
                       </span>
+                      <span>{question.metadata?.difficulty === 'hard' ? '상' : question.metadata?.difficulty === 'medium' ? '중' : '하'}</span>
+                      <span>•</span>
                       <span>{question.timeLimit}초</span>
                     </div>
-                  </div>
+                  </label>
                 </div>
               </div>
             ))}
-            
-            {questions.length > 3 && (
-              <p className="text-center text-sm text-gray-500">
-                +{questions.length - 3}개 더 보기...
-              </p>
-            )}
           </div>
         </div>
       )}
