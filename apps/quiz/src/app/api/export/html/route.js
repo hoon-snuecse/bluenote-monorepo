@@ -3,6 +3,13 @@ import { NextResponse } from 'next/server'
 export async function POST(request) {
   try {
     const { questions, title } = await request.json()
+    
+    console.log('Export HTML - received questions:', questions?.length)
+    console.log('First question structure:', questions?.[0])
+    
+    // 첫 번째 문항으로 데이터 구조 파악
+    const sampleQuestion = questions?.[0]
+    const isQuizBuilderFormat = sampleQuestion && 'question' in sampleQuestion
 
     // HTML 템플릿 생성
     const htmlContent = `<!DOCTYPE html>
@@ -146,10 +153,10 @@ export async function POST(request) {
         ${questions.map((question, index) => `
         <div class="question-card">
             <div class="question-header">
-                <div class="question-title">문제 ${index + 1}. ${question.question}</div>
+                <div class="question-title">문제 ${index + 1}. ${isQuizBuilderFormat ? question.question : question.question_text}</div>
                 <div class="badges">
-                    <span class="badge type-${question.type === 'true_false' ? 'ox' : 'mc'}">
-                        ${question.type === 'true_false' ? 'OX형' : '4지선다형'}
+                    <span class="badge type-${(question.type || question.question_type) === 'true_false' ? 'ox' : 'mc'}">
+                        ${(question.type || question.question_type) === 'true_false' ? 'OX형' : '4지선다형'}
                     </span>
                     <span class="badge difficulty-${question.metadata?.difficulty || 'medium'}">
                         ${question.metadata?.difficulty === 'hard' ? '상' : 
@@ -159,13 +166,16 @@ export async function POST(request) {
             </div>
             
             <div class="options">
-                ${question.options.map((option, optIndex) => `
-                <div class="option ${option.isCorrect ? 'correct' : ''}">
+                ${question.options ? question.options.map((option, optIndex) => {
+                    const isCorrect = isQuizBuilderFormat ? option.isCorrect : option.is_correct;
+                    const optionText = isQuizBuilderFormat ? option.text : option.option_text;
+                    return `
+                <div class="option ${isCorrect ? 'correct' : ''}">
                     <span class="option-marker">${optIndex + 1})</span>
-                    <span>${option.text}</span>
-                    ${option.isCorrect ? '<span class="correct-mark">✓ 정답</span>' : ''}
+                    <span>${optionText}</span>
+                    ${isCorrect ? '<span class="correct-mark">✓ 정답</span>' : ''}
                 </div>
-                `).join('')}
+                `}).join('') : ''}
             </div>
             
             ${question.explanation ? `
@@ -176,7 +186,7 @@ export async function POST(request) {
             ` : ''}
             
             <div class="meta-info">
-                <span>⏱ 제한시간: ${question.timeLimit}초</span>
+                <span>⏱ 제한시간: ${question.timeLimit || question.time_limit || 30}초</span>
                 <span>🎯 배점: ${question.points || 1000}점</span>
             </div>
         </div>
