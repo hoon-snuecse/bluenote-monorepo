@@ -20,6 +20,9 @@ Vercel 프로젝트 설정에서 다음 환경 변수들을 반드시 설정해�
 ### 4. Claude AI 설정
 - `ANTHROPIC_API_KEY`: Anthropic에서 발급받은 API 키
 
+### 5. 디버깅 (선택사항)
+- `NEXTAUTH_DEBUG`: true (개발/디버깅 시), false 또는 미설정 (프로덕션)
+
 ## 설정 방법
 
 1. Vercel 대시보드에서 bluenote-quiz 프로젝트 선택

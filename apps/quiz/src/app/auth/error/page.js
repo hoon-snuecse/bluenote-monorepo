@@ -9,9 +9,17 @@ function ErrorContent() {
   const error = searchParams.get('error')
   
   const errorMessages = {
-    Configuration: '서버 설정 오류가 발생했습니다.',
+    Configuration: '서버 설정 오류가 발생했습니다. 환경 변수를 확인해주세요.',
     AccessDenied: '접근이 거부되었습니다.',
     Verification: '인증 링크가 만료되었거나 이미 사용되었습니다.',
+    OAuthSignin: 'OAuth 로그인을 시작하는 중 오류가 발생했습니다.',
+    OAuthCallback: 'OAuth 인증 과정에서 오류가 발생했습니다.',
+    OAuthCreateAccount: 'OAuth 계정 생성 중 오류가 발생했습니다.',
+    EmailCreateAccount: '이메일 계정 생성 중 오류가 발생했습니다.',
+    Callback: '인증 콜백 처리 중 오류가 발생했습니다.',
+    OAuthAccountNotLinked: '이미 다른 계정과 연결된 이메일입니다.',
+    EmailSignin: '이메일 로그인 중 오류가 발생했습니다.',
+    CredentialsSignin: '자격 증명 확인 중 오류가 발생했습니다.',
     Default: '로그인 중 오류가 발생했습니다.',
   }
   

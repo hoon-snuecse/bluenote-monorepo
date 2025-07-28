@@ -63,17 +63,17 @@ export default function ProgramsPageClient() {
     },
     {
       icon: BarChart2,
-      title: "학습 분석 대시보드",
-      subtitle: "Learning Analytics",
-      description: "학생들의 학습 데이터를 시각화하고 인사이트를 제공하는 분석 도구",
-      href: "/prg/analytics",
+      title: "학급 네트워크 분석",
+      subtitle: "Classroom Network Analysis",
+      description: "학급의 학생들간 사회적 관계에 대한 분석",
+      href: "/prg/network-analysis",
       status: "coming-soon",
       requireAuth: true,
       features: [
-        "실시간 데이터 시각화",
-        "학습 패턴 분석",
-        "성취도 예측",
-        "맞춤형 추천"
+        "학급의 특징 분석",
+        "소집단 특성 분석",
+        "관계 형성 파악",
+        "네트워크 시각화"
       ]
     },
     {

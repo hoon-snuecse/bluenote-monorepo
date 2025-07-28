@@ -13,9 +13,17 @@ function SignInContent() {
   const handleGoogleSignIn = async () => {
     setIsLoading(true)
     try {
-      await signIn('google', { callbackUrl })
+      const result = await signIn('google', { 
+        callbackUrl,
+        redirect: true 
+      })
+      console.log('SignIn result:', result)
     } catch (error) {
-      console.error('로그인 실패:', error)
+      console.error('로그인 실패 상세:', {
+        message: error.message,
+        error: error,
+        stack: error.stack
+      })
       setIsLoading(false)
     }
   }
