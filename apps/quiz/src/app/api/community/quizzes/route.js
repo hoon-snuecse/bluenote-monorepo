@@ -15,6 +15,7 @@ export async function GET(request) {
       .from('shared_quizzes')
       .select(`
         id,
+        quiz_id,
         created_at,
         user_email,
         title,
@@ -69,6 +70,7 @@ export async function GET(request) {
     // 응답 형식 정리 (이미 shared_quizzes에 모든 정보가 있음)
     const formattedQuizzes = sharedQuizzes.map(sq => ({
       id: sq.id,
+      quiz_id: sq.quiz_id,
       title: sq.title,
       description: sq.description,
       total_questions: sq.total_questions,

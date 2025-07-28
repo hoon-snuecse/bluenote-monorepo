@@ -20,46 +20,66 @@ export async function POST(request, { params }) {
 
     const supabase = createClient()
 
-    // 공유된 퀴즈 정보 가져오기
-    const { data: sharedQuiz, error: sharedError } = await supabase
-      .from('shared_quizzes')
+    // 퀴즈 ID로 직접 퀴즈 정보 가져오기
+    const { data: quiz, error: quizError } = await supabase
+      .from('quizzes')
       .select(`
-        quiz:quizzes!inner (
-          id,
-          title,
-          topic,
-          description,
-          questions (
-            question_text,
-            question_type,
-            time_limit,
-            explanation,
-            question_options (
-              option_text,
-              is_correct,
-              option_order
-            )
-          )
-        )
+        id,
+        title,
+        topic,
+        description
       `)
       .eq('id', id)
       .single()
 
-    if (sharedError || !sharedQuiz) {
+    if (quizError || !quiz) {
       return NextResponse.json(
         { error: '퀴즈를 찾을 수 없습니다.' },
         { status: 404 }
       )
     }
 
-    const quiz = sharedQuiz.quiz
-    const questions = quiz.questions.map(q => ({
+    // 문항 정보 가져오기
+    const { data: questions, error: questionsError } = await supabase
+      .from('questions')
+      .select(`
+        id,
+        question_text,
+        question_type,
+        time_limit,
+        explanation,
+        order_index
+      `)
+      .eq('quiz_id', id)
+      .order('order_index')
+
+    if (questionsError) {
+      return NextResponse.json(
+        { error: '문항을 불러올 수 없습니다.' },
+        { status: 500 }
+      )
+    }
+
+    // 각 문항의 선택지 가져오기
+    const questionIds = questions.map(q => q.id)
+    const { data: options } = await supabase
+      .from('question_options')
+      .select('*')
+      .in('question_id', questionIds)
+      .order('order_index')
+
+    // 문항과 선택지 매핑
+    const questionsWithOptions = questions.map(q => ({
+      ...q,
+      question_options: options.filter(opt => opt.question_id === q.id)
+    }))
+    const formattedQuestions = questionsWithOptions.map(q => ({
       question: q.question_text,
       type: q.question_type,
       timeLimit: q.time_limit,
       explanation: q.explanation,
       options: q.question_options
-        .sort((a, b) => a.option_order - b.option_order)
+        .sort((a, b) => a.order_index - b.order_index)
         .map(opt => ({
           text: opt.option_text,
           isCorrect: opt.is_correct
@@ -81,7 +101,7 @@ export async function POST(request, { params }) {
         'Correct answer(s)'
       ]
 
-      const rows = questions.map((question) => {
+      const rows = formattedQuestions.map((question) => {
         const answers = ['', '', '', '']
         const correctAnswers = []
 
@@ -125,6 +145,158 @@ export async function POST(request, { params }) {
         }
       })
 
+    } else if (format === 'html') {
+      // HTML 교사 가이드 생성
+      const htmlContent = `
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${quiz.title} - 교사용 가이드</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            border-bottom: 3px solid #4CAF50;
+            padding-bottom: 10px;
+        }
+        .question {
+            margin: 30px 0;
+            padding: 20px;
+            background-color: #f9f9f9;
+            border-left: 4px solid #2196F3;
+            border-radius: 5px;
+        }
+        .question-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .question-number {
+            font-size: 18px;
+            font-weight: bold;
+            color: #2196F3;
+        }
+        .question-type {
+            font-size: 12px;
+            padding: 3px 10px;
+            background-color: #e3f2fd;
+            color: #1976d2;
+            border-radius: 15px;
+        }
+        .question-text {
+            font-size: 16px;
+            margin-bottom: 15px;
+            font-weight: 500;
+        }
+        .options {
+            margin-left: 20px;
+        }
+        .option {
+            margin: 10px 0;
+            padding: 10px;
+            background-color: white;
+            border-radius: 5px;
+        }
+        .correct {
+            background-color: #e8f5e9;
+            border: 1px solid #4CAF50;
+        }
+        .correct::before {
+            content: "✓ ";
+            color: #4CAF50;
+            font-weight: bold;
+        }
+        .explanation {
+            margin-top: 15px;
+            padding: 15px;
+            background-color: #fff3e0;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        .explanation-label {
+            font-weight: bold;
+            color: #f57c00;
+            margin-bottom: 5px;
+        }
+        .metadata {
+            margin-bottom: 30px;
+            padding: 15px;
+            background-color: #e8eaf6;
+            border-radius: 5px;
+        }
+        .metadata-item {
+            margin: 5px 0;
+            font-size: 14px;
+        }
+        @media print {
+            body { background-color: white; }
+            .container { box-shadow: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>${quiz.title}</h1>
+        
+        <div class="metadata">
+            <div class="metadata-item"><strong>주제:</strong> ${quiz.topic || '일반'}</div>
+            <div class="metadata-item"><strong>총 문항 수:</strong> ${formattedQuestions.length}개</div>
+            <div class="metadata-item"><strong>생성일:</strong> ${new Date().toLocaleDateString('ko-KR')}</div>
+        </div>
+
+        ${formattedQuestions.map((q, index) => `
+            <div class="question">
+                <div class="question-header">
+                    <span class="question-number">문제 ${index + 1}</span>
+                    <span class="question-type">${q.type === 'true_false' ? 'OX형' : '4지선다'}</span>
+                </div>
+                
+                <div class="question-text">${q.question}</div>
+                
+                <div class="options">
+                    ${q.options.map((opt, optIndex) => `
+                        <div class="option ${opt.isCorrect ? 'correct' : ''}">
+                            ${String.fromCharCode(65 + optIndex)}. ${opt.text}
+                        </div>
+                    `).join('')}
+                </div>
+                
+                ${q.explanation ? `
+                    <div class="explanation">
+                        <div class="explanation-label">해설</div>
+                        ${q.explanation}
+                    </div>
+                ` : ''}
+            </div>
+        `).join('')}
+    </div>
+</body>
+</html>
+      `
+
+      return new Response(htmlContent, {
+        headers: {
+          'Content-Type': 'text/html; charset=utf-8',
+          'Content-Disposition': `attachment; filename="${quiz.title || 'quiz'}_teacher_guide.html"`
+        }
+      })
+
     } else if (format === 'xlsx') {
       // Excel 형식으로 변환
       const wb = XLSX.utils.book_new()
@@ -141,7 +313,7 @@ export async function POST(request, { params }) {
         ]
       ]
 
-      questions.forEach((question) => {
+      formattedQuestions.forEach((question) => {
         const answers = ['', '', '', '']
         const correctAnswers = []
 

@@ -167,68 +167,28 @@ export default function CommunityPage() {
           </p>
         </div>
       ) : (
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <div className="space-y-4">
           {filteredQuizzes.map((quiz) => (
             <div
               key={quiz.id}
-              className="flex flex-col rounded-lg border border-gray-200 bg-white shadow-sm hover:shadow-md transition-shadow"
+              className="flex rounded-lg border border-gray-200 bg-white shadow-sm hover:shadow-md transition-shadow"
             >
-              {/* 퀴즈 정보 */}
+              {/* 왼쪽: 퀴즈 정보 */}
               <div className="flex-1 p-6">
-                <div className="mb-4">
-                  <h3 className="text-lg font-medium text-gray-900 line-clamp-1">
-                    {quiz.title}
-                  </h3>
-                  {quiz.description && (
-                    <p className="mt-1 text-sm text-gray-600 line-clamp-2">
-                      {quiz.description}
-                    </p>
-                  )}
-                </div>
-
-                {/* 메타 정보 */}
-                <div className="mb-4 space-y-2">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-gray-600">
-                      <BookOpen className="inline h-4 w-4 mr-1" />
-                      {quiz.total_questions}개 문항
-                    </span>
-                    <span className="text-gray-600">
-                      OX {quiz.true_false_count}개 / 선다 {quiz.multiple_choice_count}개
-                    </span>
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <h3 className="text-lg font-medium text-gray-900">
+                      {quiz.title}
+                    </h3>
+                    {quiz.description && (
+                      <p className="mt-1 text-sm text-gray-600 line-clamp-2">
+                        {quiz.description}
+                      </p>
+                    )}
                   </div>
                   
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="inline-flex items-center text-gray-600">
-                      <Users className="mr-1 h-4 w-4" />
-                      {quiz.user_name || '익명'}
-                    </span>
-                    <span className="text-gray-600">
-                      {new Date(quiz.created_at).toLocaleDateString('ko-KR')}
-                    </span>
-                  </div>
-                </div>
-
-                {/* 통계 */}
-                <div className="flex items-center justify-between text-sm">
-                  <div className="flex items-center space-x-3">
-                    <span className="inline-flex items-center text-yellow-600">
-                      <Star className="mr-1 h-4 w-4 fill-current" />
-                      {quiz.rating_average.toFixed(1)}
-                    </span>
-                    <span className="text-gray-500">
-                      ({quiz.rating_count}개)
-                    </span>
-                  </div>
-                  <span className="text-gray-600">
-                    <Download className="inline h-4 w-4 mr-1" />
-                    {quiz.download_count}회
-                  </span>
-                </div>
-
-                {/* 카테고리 태그 */}
-                {(quiz.subject_category || quiz.grade_level) && (
-                  <div className="mt-3 flex flex-wrap gap-2">
+                  {/* 카테고리 태그 */}
+                  <div className="ml-4 flex flex-wrap gap-2">
                     {quiz.subject_category && (
                       <span className="inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800">
                         {quiz.subject_category}
@@ -240,34 +200,65 @@ export default function CommunityPage() {
                       </span>
                     )}
                   </div>
-                )}
+                </div>
+
+                {/* 메타 정보 - 가로로 배치 */}
+                <div className="mt-4 flex flex-wrap items-center gap-4 text-sm text-gray-600">
+                  <span>
+                    <BookOpen className="inline h-4 w-4 mr-1" />
+                    {quiz.total_questions}개 문항
+                  </span>
+                  <span>
+                    OX {quiz.true_false_count}개 / 선다 {quiz.multiple_choice_count}개
+                  </span>
+                  <span className="inline-flex items-center">
+                    <Users className="mr-1 h-4 w-4" />
+                    {quiz.user_name || '익명'}
+                  </span>
+                  <span>
+                    {new Date(quiz.created_at).toLocaleDateString('ko-KR')}
+                  </span>
+                  <span className="inline-flex items-center text-yellow-600">
+                    <Star className="mr-1 h-4 w-4 fill-current" />
+                    {quiz.rating_average.toFixed(1)} ({quiz.rating_count})
+                  </span>
+                  <span>
+                    <Download className="inline h-4 w-4 mr-1" />
+                    {quiz.download_count}회
+                  </span>
+                </div>
               </div>
 
-              {/* 다운로드 버튼 */}
-              <div className="border-t border-gray-200 p-4">
-                <div className="flex items-center justify-between">
+              {/* 오른쪽: 액션 버튼 */}
+              <div className="flex items-center border-l border-gray-200 p-6">
+                <div className="space-y-2">
                   <button
-                    onClick={() => window.location.href = `/community/${quiz.id}`}
-                    className="text-sm font-medium text-blue-600 hover:text-blue-500"
+                    onClick={() => window.location.href = `/quiz/${quiz.quiz_id || quiz.id}`}
+                    className="w-full rounded-md bg-white px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 hover:bg-gray-50"
                   >
                     자세히 보기
                   </button>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => handleDownload(quiz.id, 'xlsx')}
-                      disabled={!session}
-                      className="inline-flex items-center rounded-md bg-green-50 px-3 py-1.5 text-xs font-medium text-green-700 hover:bg-green-100 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      Excel
-                    </button>
-                    <button
-                      onClick={() => handleDownload(quiz.id, 'csv')}
-                      disabled={!session}
-                      className="inline-flex items-center rounded-md bg-blue-50 px-3 py-1.5 text-xs font-medium text-blue-700 hover:bg-blue-100 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      CSV
-                    </button>
-                  </div>
+                  <button
+                    onClick={() => handleDownload(quiz.quiz_id || quiz.id, 'xlsx')}
+                    disabled={!session}
+                    className="w-full rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Excel 다운로드
+                  </button>
+                  <button
+                    onClick={() => handleDownload(quiz.quiz_id || quiz.id, 'csv')}
+                    disabled={!session}
+                    className="w-full rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    CSV 다운로드
+                  </button>
+                  <button
+                    onClick={() => handleDownload(quiz.quiz_id || quiz.id, 'html')}
+                    disabled={!session}
+                    className="w-full rounded-md bg-purple-600 px-4 py-2 text-sm font-medium text-white hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    해설 다운로드
+                  </button>
                 </div>
               </div>
             </div>

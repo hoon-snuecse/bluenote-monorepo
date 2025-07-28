@@ -1,162 +1,84 @@
 import { NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/authOptions'
 import { createClient } from '@/lib/supabase'
 
-// GET: 특정 퀴즈 조회
 export async function GET(request, { params }) {
   try {
-    const session = await getServerSession(authOptions)
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
     const { id } = params
     const supabase = createClient()
-    
-    // RLS 컨텍스트 설정
-    await supabase.rpc('set_current_user_email', { 
-      email: session.user.email 
-    })
 
-    // 퀴즈와 관련 데이터 조회
-    const { data: quiz, error } = await supabase
+    // 퀴즈 정보 가져오기
+    const { data: quiz, error: quizError } = await supabase
       .from('quizzes')
       .select(`
-        *,
-        questions (
-          *,
-          question_options (*)
-        )
+        id,
+        title,
+        topic,
+        description,
+        total_questions,
+        metadata,
+        created_at,
+        user_email
       `)
       .eq('id', id)
       .single()
 
-    if (error) {
-      if (error.code === 'PGRST116') {
-        return NextResponse.json({ error: 'Quiz not found' }, { status: 404 })
-      }
-      console.error('Error fetching quiz:', error)
-      return NextResponse.json({ error: error.message }, { status: 500 })
+    if (quizError || !quiz) {
+      return NextResponse.json(
+        { error: '퀴즈를 찾을 수 없습니다.' },
+        { status: 404 }
+      )
     }
 
-    // 문항 정렬
-    quiz.questions.sort((a, b) => a.order_index - b.order_index)
-    quiz.questions.forEach(question => {
-      question.question_options.sort((a, b) => a.order_index - b.order_index)
-    })
+    // 문항 정보 가져오기
+    const { data: questions, error: questionsError } = await supabase
+      .from('questions')
+      .select(`
+        id,
+        question_text,
+        question_type,
+        time_limit,
+        explanation,
+        order_index
+      `)
+      .eq('quiz_id', id)
+      .order('order_index')
 
-    return NextResponse.json({ data: quiz })
-  } catch (error) {
-    console.error('Error in GET /api/quizzes/[id]:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
-  }
-}
-
-// PUT: 퀴즈 업데이트
-export async function PUT(request, { params }) {
-  try {
-    const session = await getServerSession(authOptions)
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    if (questionsError) {
+      return NextResponse.json(
+        { error: '문항을 불러올 수 없습니다.' },
+        { status: 500 }
+      )
     }
 
-    const { id } = params
-    const body = await request.json()
-    const { title, description, tags, metadata } = body
+    // 각 문항의 선택지 가져오기
+    const questionIds = questions.map(q => q.id)
+    const { data: options } = await supabase
+      .from('question_options')
+      .select('*')
+      .in('question_id', questionIds)
+      .order('order_index')
 
-    const supabase = createClient()
-    
-    // RLS 컨텍스트 설정
-    await supabase.rpc('set_current_user_email', { 
-      email: session.user.email 
-    })
-
-    // 퀴즈 소유권 확인
-    const { data: existingQuiz, error: checkError } = await supabase
-      .from('quizzes')
-      .select('id')
-      .eq('id', id)
-      .single()
-
-    if (checkError || !existingQuiz) {
-      return NextResponse.json({ error: 'Quiz not found or access denied' }, { status: 404 })
-    }
-
-    // 퀴즈 업데이트
-    const updateData = {
-      updated_at: new Date().toISOString()
-    }
-    if (title !== undefined) updateData.title = title
-    if (description !== undefined) updateData.description = description
-    if (tags !== undefined) updateData.tags = tags
-    if (metadata !== undefined) updateData.metadata = metadata
-
-    const { data: updatedQuiz, error: updateError } = await supabase
-      .from('quizzes')
-      .update(updateData)
-      .eq('id', id)
-      .select()
-      .single()
-
-    if (updateError) {
-      console.error('Error updating quiz:', updateError)
-      return NextResponse.json({ error: updateError.message }, { status: 500 })
-    }
+    // 문항과 선택지 매핑
+    const questionsWithOptions = questions.map(q => ({
+      ...q,
+      options: options
+        .filter(opt => opt.question_id === q.id)
+        .sort((a, b) => a.order_index - b.order_index)
+    }))
 
     return NextResponse.json({
-      data: updatedQuiz,
-      message: '퀴즈가 성공적으로 업데이트되었습니다.'
+      quiz: {
+        ...quiz,
+        user_name: quiz.user_email?.split('@')[0] || '익명'
+      },
+      questions: questionsWithOptions
     })
+
   } catch (error) {
-    console.error('Error in PUT /api/quizzes/[id]:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
-  }
-}
-
-// DELETE: 퀴즈 삭제
-export async function DELETE(request, { params }) {
-  try {
-    const session = await getServerSession(authOptions)
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    const { id } = params
-    const supabase = createClient()
-    
-    // RLS 컨텍스트 설정
-    await supabase.rpc('set_current_user_email', { 
-      email: session.user.email 
-    })
-
-    // 퀴즈 소유권 확인
-    const { data: existingQuiz, error: checkError } = await supabase
-      .from('quizzes')
-      .select('id')
-      .eq('id', id)
-      .single()
-
-    if (checkError || !existingQuiz) {
-      return NextResponse.json({ error: 'Quiz not found or access denied' }, { status: 404 })
-    }
-
-    // 관련 데이터는 CASCADE로 자동 삭제됨
-    const { error: deleteError } = await supabase
-      .from('quizzes')
-      .delete()
-      .eq('id', id)
-
-    if (deleteError) {
-      console.error('Error deleting quiz:', deleteError)
-      return NextResponse.json({ error: deleteError.message }, { status: 500 })
-    }
-
-    return NextResponse.json({
-      message: '퀴즈가 성공적으로 삭제되었습니다.'
-    })
-  } catch (error) {
-    console.error('Error in DELETE /api/quizzes/[id]:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    console.error('Quiz detail error:', error)
+    return NextResponse.json(
+      { error: '퀴즈 정보를 불러오는 중 오류가 발생했습니다.' },
+      { status: 500 }
+    )
   }
 }
