@@ -78,6 +78,7 @@ export async function GET(request) {
       multiple_choice_count: sq.multiple_choice_count,
       subject_category: sq.subject_category,
       grade_level: sq.grade_level,
+      user_email: sq.user_email, // 체크박스 선택을 위해 필요
       user_name: sq.user_email?.split('@')[0] || '익명', // 이메일에서 사용자명 추출
       created_at: sq.created_at,
       download_count: sq.download_count || 0,

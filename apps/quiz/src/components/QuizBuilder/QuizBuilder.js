@@ -24,6 +24,7 @@ export default function QuizBuilder() {
   const [isGenerating, setIsGenerating] = useState(false)
   const [questions, setQuestions] = useState([])
   const [error, setError] = useState(null)
+  const [sortBy, setSortBy] = useState('default') // 정렬 기준
   
   // 전체 문항 수 계산
   const totalQuestions = trueFalseCount + multipleChoiceCount
@@ -102,7 +103,7 @@ export default function QuizBuilder() {
             />
           </div>
           <p className="mt-1 text-sm text-gray-500">
-            교과목, 단원, 책 제목 등을 구체적으로 입력해주세요
+            책의 경우 작가 이름도 함께 써 주시면 도움이 됩니다.
           </p>
         </div>
 
@@ -284,6 +285,48 @@ export default function QuizBuilder() {
                 />
                 전체 선택
               </label>
+              {/* 정렬 옵션 */}
+              <select
+                value={sortBy}
+                onChange={(e) => {
+                  const value = e.target.value
+                  setSortBy(value)
+                  
+                  // 정렬 로직
+                  let sorted = [...questions]
+                  if (value === 'difficulty-high') {
+                    sorted.sort((a, b) => {
+                      const order = { hard: 3, medium: 2, easy: 1 }
+                      return (order[b.metadata?.difficulty] || 0) - (order[a.metadata?.difficulty] || 0)
+                    })
+                  } else if (value === 'difficulty-low') {
+                    sorted.sort((a, b) => {
+                      const order = { hard: 3, medium: 2, easy: 1 }
+                      return (order[a.metadata?.difficulty] || 0) - (order[b.metadata?.difficulty] || 0)
+                    })
+                  } else if (value === 'type-ox') {
+                    sorted.sort((a, b) => {
+                      if (a.type === 'true_false' && b.type !== 'true_false') return -1
+                      if (a.type !== 'true_false' && b.type === 'true_false') return 1
+                      return 0
+                    })
+                  } else if (value === 'type-multiple') {
+                    sorted.sort((a, b) => {
+                      if (a.type === 'multiple_choice' && b.type !== 'multiple_choice') return -1
+                      if (a.type !== 'multiple_choice' && b.type === 'multiple_choice') return 1
+                      return 0
+                    })
+                  }
+                  setQuestions(sorted)
+                }}
+                className="ml-4 rounded-md border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500"
+              >
+                <option value="default">기본 정렬</option>
+                <option value="difficulty-high">난이도 높은 순</option>
+                <option value="difficulty-low">난이도 낮은 순</option>
+                <option value="type-ox">OX형 먼저</option>
+                <option value="type-multiple">선다형 먼저</option>
+              </select>
             </div>
             <button
               onClick={() => {

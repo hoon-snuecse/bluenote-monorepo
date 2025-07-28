@@ -22,20 +22,18 @@ export default function CommunityPage() {
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [sortBy, setSortBy] = useState('recent')
-  const [filterCategory, setFilterCategory] = useState('all')
   const [filterGrade, setFilterGrade] = useState('all')
   const [selectedQuizzes, setSelectedQuizzes] = useState([])
   const [isSelectionMode, setIsSelectionMode] = useState(false)
 
   useEffect(() => {
     loadCommunityQuizzes()
-  }, [sortBy, filterCategory, filterGrade])
+  }, [sortBy, filterGrade])
 
   const loadCommunityQuizzes = async () => {
     try {
       const params = new URLSearchParams({
         sort: sortBy,
-        category: filterCategory,
         grade: filterGrade,
       })
       
@@ -249,13 +247,13 @@ export default function CommunityPage() {
               className="rounded-md border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500"
             >
               <option value="all">모든 학년</option>
-              <option value="초3">초3</option>
-              <option value="초4">초4</option>
-              <option value="초5">초5</option>
-              <option value="초6">초6</option>
-              <option value="중1">중1</option>
-              <option value="중2">중2</option>
-              <option value="중3">중3</option>
+              <option value="elementary3">초3</option>
+              <option value="elementary4">초4</option>
+              <option value="elementary5">초5</option>
+              <option value="elementary6">초6</option>
+              <option value="middle1">중1</option>
+              <option value="middle2">중2</option>
+              <option value="middle3">중3</option>
             </select>
           </div>
         </div>
@@ -279,8 +277,11 @@ export default function CommunityPage() {
               <div className="absolute right-2 top-2 z-10">
                 {session?.user?.email === quiz.user_email ? (
                   <button
-                    onClick={() => handleSelectQuiz(quiz.quiz_id || quiz.id)}
-                    className="p-1"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      handleSelectQuiz(quiz.quiz_id || quiz.id)
+                    }}
+                    className="p-1 hover:bg-gray-100 rounded"
                   >
                     {selectedQuizzes.includes(quiz.quiz_id || quiz.id) ? (
                       <CheckSquare className="w-5 h-5 text-blue-600" />
@@ -352,32 +353,32 @@ export default function CommunityPage() {
                   </div>
                 </div>
 
-                {/* 액션 버튼 */}
-                <div className="mt-3 grid grid-cols-2 gap-1.5">
+                {/* 액션 버튼 - 한 줄로 배치 */}
+                <div className="mt-3 flex gap-1">
                   <button
                     onClick={() => window.location.href = `/quiz/${quiz.quiz_id || quiz.id}`}
-                    className="rounded bg-white px-2 py-1 text-xs font-medium text-gray-700 border border-gray-300 hover:bg-gray-50"
+                    className="flex-1 rounded bg-gray-100 px-1.5 py-0.5 text-xs font-medium text-gray-700 border border-gray-300 hover:bg-gray-200"
                   >
                     자세히
                   </button>
                   <button
                     onClick={() => handleDownload(quiz.quiz_id || quiz.id, 'xlsx')}
                     disabled={!session}
-                    className="rounded bg-green-600 px-2 py-1 text-xs font-medium text-white hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="flex-1 rounded bg-green-100 px-1.5 py-0.5 text-xs font-medium text-green-700 hover:bg-green-200 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Excel
                   </button>
                   <button
                     onClick={() => handleDownload(quiz.quiz_id || quiz.id, 'csv')}
                     disabled={!session}
-                    className="rounded bg-blue-600 px-2 py-1 text-xs font-medium text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="flex-1 rounded bg-blue-100 px-1.5 py-0.5 text-xs font-medium text-blue-700 hover:bg-blue-200 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     CSV
                   </button>
                   <button
                     onClick={() => handleDownload(quiz.quiz_id || quiz.id, 'html')}
                     disabled={!session}
-                    className="rounded bg-purple-600 px-2 py-1 text-xs font-medium text-white hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="flex-1 rounded bg-purple-100 px-1.5 py-0.5 text-xs font-medium text-purple-700 hover:bg-purple-200 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     해설
                   </button>

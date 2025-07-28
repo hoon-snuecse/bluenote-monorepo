@@ -191,6 +191,11 @@ export default function QuizDetailPage() {
                   </div>
                 ))}
               </div>
+              {question.explanation && (
+                <div className="mt-2 p-2 bg-amber-50 text-amber-800 rounded text-sm">
+                  <span className="font-medium">해설:</span> {question.explanation}
+                </div>
+              )}
             </div>
           ))}
         </div>
@@ -222,6 +227,11 @@ export default function QuizDetailPage() {
                     </div>
                   ))}
                 </div>
+                {question.explanation && (
+                  <div className="mt-2 p-2 bg-amber-50 text-amber-800 rounded text-sm">
+                    <span className="font-medium">해설:</span> {question.explanation}
+                  </div>
+                )}
               </div>
             ))}
           </div>
