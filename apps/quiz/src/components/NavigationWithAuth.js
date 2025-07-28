@@ -18,8 +18,7 @@ import {
   Shield,
   Laptop,
   User,
-  History,
-  BrainCircuit
+  History
 } from 'lucide-react';
 
 export default function NavigationWithAuth() {
@@ -88,12 +87,6 @@ export default function NavigationWithAuth() {
       label: '프로그램', 
       icon: Laptop,
       external: true
-    },
-    { 
-      href: '/create', 
-      label: '퀴즈메이커', 
-      icon: BrainCircuit,
-      highlighted: true
     },
   ];
 
