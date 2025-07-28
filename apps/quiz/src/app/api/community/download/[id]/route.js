@@ -20,24 +20,26 @@ export async function POST(request, { params }) {
 
     const supabase = createServiceClient()
 
-    // 퀴즈 ID로 직접 퀴즈 정보 가져오기
-    const { data: quiz, error: quizError } = await supabase
-      .from('quizzes')
-      .select(`
-        id,
-        title,
-        topic,
-        description
-      `)
+    // 먼저 shared_quizzes에서 실제 quiz_id 가져오기
+    const { data: sharedQuiz, error: sharedError } = await supabase
+      .from('shared_quizzes')
+      .select('quiz_id, title, description, download_count')
       .eq('id', id)
       .single()
 
-    if (quizError || !quiz) {
-      console.error('Quiz fetch error:', quizError)
+    if (sharedError || !sharedQuiz) {
+      console.error('Shared quiz fetch error:', sharedError)
       return NextResponse.json(
-        { error: '퀴즈를 찾을 수 없습니다.', details: quizError?.message },
+        { error: '공유된 퀴즈를 찾을 수 없습니다.', details: sharedError?.message },
         { status: 404 }
       )
+    }
+
+    const quizId = sharedQuiz.quiz_id
+    const quiz = {
+      id: quizId,
+      title: sharedQuiz.title,
+      description: sharedQuiz.description
     }
 
     // 문항 정보 가져오기
@@ -51,7 +53,7 @@ export async function POST(request, { params }) {
         explanation,
         order_index
       `)
-      .eq('quiz_id', id)
+      .eq('quiz_id', quizId)
       .order('order_index')
 
     if (questionsError) {
@@ -88,8 +90,11 @@ export async function POST(request, { params }) {
         }))
     }))
 
-    // 다운로드 카운트 증가 (별도 테이블 구현 필요)
-    // await supabase.from('download_logs').insert({ ... })
+    // 다운로드 카운트 증가
+    await supabase
+      .from('shared_quizzes')
+      .update({ download_count: (sharedQuiz.download_count || 0) + 1 })
+      .eq('id', id)
 
     try {
       if (format === 'csv') {
