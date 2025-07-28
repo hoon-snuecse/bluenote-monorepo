@@ -1,21 +1,12 @@
 import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
-import { createAuthOptions } from '@bluenote/auth'
+import { authOptions } from '@/lib/authOptions'
 import { createClient } from '@/lib/supabase'
-
-const authCallbacks = {
-  async session({ session, token }) {
-    if (session?.user && token?.sub) {
-      session.user.id = token.sub
-    }
-    return session
-  }
-}
 
 // GET: 사용자의 퀴즈 목록 조회
 export async function GET(request) {
   try {
-    const session = await getServerSession(createAuthOptions(authCallbacks))
+    const session = await getServerSession(authOptions)
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
@@ -75,7 +66,7 @@ export async function GET(request) {
 // POST: 새 퀴즈 생성
 export async function POST(request) {
   try {
-    const session = await getServerSession(createAuthOptions(authCallbacks))
+    const session = await getServerSession(authOptions)
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }

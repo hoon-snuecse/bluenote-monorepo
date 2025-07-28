@@ -1,11 +1,7 @@
 import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { cookies } from 'next/headers'
-
-// authOptions를 직접 가져오기
-const authOptions = {
-  secret: process.env.NEXTAUTH_SECRET,
-}
+import { authOptions } from '@/lib/authOptions'
 
 export async function GET() {
   try {

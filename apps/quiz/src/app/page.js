@@ -1,10 +1,6 @@
 import { redirect } from 'next/navigation'
 import { getServerSession } from 'next-auth'
-
-// Quiz 앱 전용 authOptions
-const authOptions = {
-  secret: process.env.NEXTAUTH_SECRET,
-}
+import { authOptions } from '@/lib/authOptions'
 
 export default async function HomePage() {
   try {

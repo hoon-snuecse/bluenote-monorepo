@@ -1,21 +1,12 @@
 import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
-import { createAuthOptions } from '@bluenote/auth'
+import { authOptions } from '@/lib/authOptions'
 import { createClient } from '@/lib/supabase'
-
-const authCallbacks = {
-  async session({ session, token }) {
-    if (session?.user && token?.sub) {
-      session.user.id = token.sub
-    }
-    return session
-  }
-}
 
 // GET: 특정 퀴즈 조회
 export async function GET(request, { params }) {
   try {
-    const session = await getServerSession(createAuthOptions(authCallbacks))
+    const session = await getServerSession(authOptions)
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
@@ -65,7 +56,7 @@ export async function GET(request, { params }) {
 // PUT: 퀴즈 업데이트
 export async function PUT(request, { params }) {
   try {
-    const session = await getServerSession(createAuthOptions(authCallbacks))
+    const session = await getServerSession(authOptions)
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
@@ -126,7 +117,7 @@ export async function PUT(request, { params }) {
 // DELETE: 퀴즈 삭제
 export async function DELETE(request, { params }) {
   try {
-    const session = await getServerSession(createAuthOptions(authCallbacks))
+    const session = await getServerSession(authOptions)
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }

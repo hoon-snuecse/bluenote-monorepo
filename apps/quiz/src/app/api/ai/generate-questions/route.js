@@ -1,16 +1,7 @@
 import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
-import { createAuthOptions } from '@bluenote/auth'
+import { authOptions } from '@/lib/authOptions'
 import Anthropic from '@anthropic-ai/sdk'
-
-const authCallbacks = {
-  async session({ session, token }) {
-    if (session?.user && token?.sub) {
-      session.user.id = token.sub
-    }
-    return session
-  }
-}
 
 // Claude API 클라이언트 초기화
 const anthropic = new Anthropic({
@@ -19,7 +10,7 @@ const anthropic = new Anthropic({
 
 export async function POST(request) {
   try {
-    const session = await getServerSession(createAuthOptions(authCallbacks))
+    const session = await getServerSession(authOptions)
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
