@@ -26,11 +26,6 @@ export async function POST(request) {
 
     const supabase = createClient()
 
-    // RLS 컨텍스트 설정
-    await supabase.rpc('set_current_user_email', { 
-      email: session.user.email 
-    })
-
     // 퀴즈 메타데이터 저장
     const { data: quiz, error: quizError } = await supabase
       .from('quizzes')
