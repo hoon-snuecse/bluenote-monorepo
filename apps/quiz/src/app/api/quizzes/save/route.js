@@ -1,11 +1,12 @@
 import { NextResponse } from 'next/server'
-import { getServerSession } from '@bluenote/auth'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/authOptions'
 import { createClient } from '@/lib/supabase'
 
 export async function POST(request) {
   try {
     // 세션 확인
-    const session = await getServerSession()
+    const session = await getServerSession(authOptions)
     if (!session?.user?.email) {
       return NextResponse.json(
         { error: '로그인이 필요합니다.' },

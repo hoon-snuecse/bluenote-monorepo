@@ -26,7 +26,7 @@ function ErrorContent() {
   const message = errorMessages[error] || errorMessages.Default
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-gray-50 px-4 py-12 sm:px-6 lg:px-8">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-gray-50 px-4 py-12 pt-28 sm:px-6 lg:px-8">
       <div className="w-full max-w-md space-y-8 text-center">
         <div>
           <h2 className="text-3xl font-bold tracking-tight text-gray-900">
