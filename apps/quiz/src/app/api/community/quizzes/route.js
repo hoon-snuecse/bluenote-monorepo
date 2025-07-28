@@ -16,29 +16,28 @@ export async function GET(request) {
       .select(`
         id,
         created_at,
-        quiz:quizzes!inner (
-          id,
-          title,
-          topic,
-          description,
-          total_questions,
-          metadata,
-          user:users!inner (
-            name,
-            email
-          )
-        )
+        user_email,
+        title,
+        description,
+        subject_category,
+        grade_level,
+        total_questions,
+        true_false_count,
+        multiple_choice_count,
+        download_count,
+        rating_average,
+        rating_count
       `)
-      .eq('visibility', 'public')
+      .eq('is_public', true)
 
     // 카테고리 필터
     if (category !== 'all') {
-      query = query.eq('quiz.metadata->>subject_category', category)
+      query = query.eq('subject_category', category)
     }
 
     // 학년 필터
     if (grade !== 'all') {
-      query = query.eq('quiz.metadata->>grade', grade)
+      query = query.eq('grade_level', grade)
     }
 
     // 정렬
@@ -62,54 +61,26 @@ export async function GET(request) {
     if (error) {
       console.error('Error fetching community quizzes:', error)
       return NextResponse.json(
-        { error: '커뮤니티 퀴즈를 불러오는 중 오류가 발생했습니다.' },
+        { error: '커뮤니티 퀴즈를 불러오는 중 오류가 발생했습니다.', details: error.message },
         { status: 500 }
       )
     }
 
-    // 각 퀴즈에 대한 추가 정보 조회
-    const quizIds = sharedQuizzes.map(sq => sq.quiz.id)
-    
-    // 문항 유형별 개수 조회
-    const { data: questionStats } = await supabase
-      .from('questions')
-      .select('quiz_id, question_type')
-      .in('quiz_id', quizIds)
-
-    // 통계 정보 계산
-    const statsMap = {}
-    questionStats?.forEach(q => {
-      if (!statsMap[q.quiz_id]) {
-        statsMap[q.quiz_id] = { true_false: 0, multiple_choice: 0 }
-      }
-      if (q.question_type === 'true_false') {
-        statsMap[q.quiz_id].true_false++
-      } else {
-        statsMap[q.quiz_id].multiple_choice++
-      }
-    })
-
-    // 응답 형식 정리
+    // 응답 형식 정리 (이미 shared_quizzes에 모든 정보가 있음)
     const formattedQuizzes = sharedQuizzes.map(sq => ({
       id: sq.id,
-      quiz_id: sq.quiz.id,
-      title: sq.quiz.title,
-      description: sq.quiz.description,
-      topic: sq.quiz.topic,
-      total_questions: sq.quiz.total_questions,
-      true_false_count: statsMap[sq.quiz.id]?.true_false || 0,
-      multiple_choice_count: statsMap[sq.quiz.id]?.multiple_choice || 0,
-      subject_category: sq.quiz.metadata?.subject_category,
-      grade_level: sq.quiz.metadata?.grade === 'middle1' ? '중1' :
-                   sq.quiz.metadata?.grade === 'middle2' ? '중2' :
-                   sq.quiz.metadata?.grade === 'middle3' ? '중3' :
-                   sq.quiz.metadata?.grade === 'elementary' ? '초등' :
-                   sq.quiz.metadata?.grade === 'high' ? '고등' : '일반',
-      user_name: sq.quiz.user.name,
+      title: sq.title,
+      description: sq.description,
+      total_questions: sq.total_questions,
+      true_false_count: sq.true_false_count,
+      multiple_choice_count: sq.multiple_choice_count,
+      subject_category: sq.subject_category,
+      grade_level: sq.grade_level,
+      user_name: sq.user_email?.split('@')[0] || '익명', // 이메일에서 사용자명 추출
       created_at: sq.created_at,
-      download_count: 0, // 실제 구현 시 별도 테이블에서 조회
-      rating_average: 4.5, // 실제 구현 시 별도 테이블에서 조회
-      rating_count: 10 // 실제 구현 시 별도 테이블에서 조회
+      download_count: sq.download_count || 0,
+      rating_average: sq.rating_average || 0,
+      rating_count: sq.rating_count || 0
     }))
 
     return NextResponse.json({ quizzes: formattedQuizzes })
