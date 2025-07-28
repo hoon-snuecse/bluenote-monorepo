@@ -12,6 +12,6 @@ pnpm install
 
 # Build the quiz app
 echo "Building Quiz app..."
-pnpm build --filter=quiz
+pnpm build --filter=@bluenote/quiz
 
 echo "Build complete!"
