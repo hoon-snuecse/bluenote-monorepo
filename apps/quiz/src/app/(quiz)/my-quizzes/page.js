@@ -13,7 +13,10 @@ import {
   ChevronDown,
   ChevronUp,
   Maximize2,
-  Minimize2
+  Minimize2,
+  Trash2,
+  CheckSquare,
+  Square
 } from 'lucide-react'
 
 export default function PreviewPage() {
@@ -24,6 +27,8 @@ export default function PreviewPage() {
   const [expandedQuestions, setExpandedQuestions] = useState({})
   const [expandAll, setExpandAll] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [selectedQuestions, setSelectedQuestions] = useState([])
+  const [sortBy, setSortBy] = useState('default')
 
   useEffect(() => {
     // sessionStorage에서 선택된 문항 가져오기
@@ -150,6 +155,11 @@ export default function PreviewPage() {
       return
     }
 
+    if (questions.length === 0) {
+      alert('저장할 문항이 없습니다.')
+      return
+    }
+
     try {
       const response = await fetch('/api/quizzes/save', {
         method: 'POST',
@@ -208,9 +218,9 @@ export default function PreviewPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">문항 미리보기</h1>
+        <h1 className="text-2xl font-bold text-gray-900">편집하기</h1>
         <p className="mt-1 text-sm text-gray-600">
-          선택한 {questions.length}개 문항을 확인하고 내보내거나 저장할 수 있습니다.
+          생성된 {questions.length}개 문항을 편집하고 내보내거나 저장할 수 있습니다.
         </p>
       </div>
 
@@ -277,40 +287,138 @@ export default function PreviewPage() {
 
       {/* 문항 목록 */}
       <div className="bg-white rounded-lg shadow">
-        <div className="p-6 border-b border-gray-200 flex justify-between items-center">
-          <h2 className="text-lg font-medium text-gray-900">
-            문항 목록 ({questions.length}개)
-          </h2>
-          <button
-            onClick={toggleAllQuestions}
-            className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-          >
-            {expandAll ? (
-              <>
-                <Minimize2 className="h-4 w-4" />
-                간략히 보기
-              </>
-            ) : (
-              <>
-                <Maximize2 className="h-4 w-4" />
-                전체 펼쳐보기
-              </>
-            )}
-          </button>
+        <div className="p-6 border-b border-gray-200">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-lg font-medium text-gray-900">
+              문항 목록 ({questions.length}개)
+            </h2>
+            <button
+              onClick={toggleAllQuestions}
+              className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            >
+              {expandAll ? (
+                <>
+                  <Minimize2 className="h-4 w-4" />
+                  간략히 보기
+                </>
+              ) : (
+                <>
+                  <Maximize2 className="h-4 w-4" />
+                  전체 펼쳐보기
+                </>
+              )}
+            </button>
+          </div>
+          
+          {/* 선택 및 정렬 컨트롤 */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <label className="flex items-center gap-2 text-sm text-gray-600">
+                <input
+                  type="checkbox"
+                  checked={selectedQuestions.length === questions.length}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      setSelectedQuestions(questions.map((_, index) => index))
+                    } else {
+                      setSelectedQuestions([])
+                    }
+                  }}
+                  className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                />
+                전체 선택
+              </label>
+              
+              {selectedQuestions.length > 0 && (
+                <button
+                  onClick={() => {
+                    if (confirm(`선택한 ${selectedQuestions.length}개의 문항을 삭제하시겠습니까?`)) {
+                      const newQuestions = questions.filter((_, index) => !selectedQuestions.includes(index))
+                      setQuestions(newQuestions)
+                      setSelectedQuestions([])
+                      // sessionStorage도 업데이트
+                      sessionStorage.setItem('selectedQuestions', JSON.stringify(newQuestions))
+                    }
+                  }}
+                  className="inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-red-600 bg-red-50 rounded-md hover:bg-red-100"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  삭제 ({selectedQuestions.length})
+                </button>
+              )}
+            </div>
+            
+            {/* 정렬 옵션 */}
+            <select
+              value={sortBy}
+              onChange={(e) => {
+                const value = e.target.value
+                setSortBy(value)
+                
+                // 정렬 로직
+                let sorted = [...questions]
+                if (value === 'difficulty-high') {
+                  sorted.sort((a, b) => {
+                    const order = { hard: 3, medium: 2, easy: 1 }
+                    return (order[b.metadata?.difficulty] || 0) - (order[a.metadata?.difficulty] || 0)
+                  })
+                } else if (value === 'difficulty-low') {
+                  sorted.sort((a, b) => {
+                    const order = { hard: 3, medium: 2, easy: 1 }
+                    return (order[a.metadata?.difficulty] || 0) - (order[b.metadata?.difficulty] || 0)
+                  })
+                } else if (value === 'type-ox') {
+                  sorted.sort((a, b) => {
+                    if (a.type === 'true_false' && b.type !== 'true_false') return -1
+                    if (a.type !== 'true_false' && b.type === 'true_false') return 1
+                    return 0
+                  })
+                } else if (value === 'type-multiple') {
+                  sorted.sort((a, b) => {
+                    if (a.type === 'multiple_choice' && b.type !== 'multiple_choice') return -1
+                    if (a.type !== 'multiple_choice' && b.type === 'multiple_choice') return 1
+                    return 0
+                  })
+                }
+                setQuestions(sorted)
+              }}
+              className="rounded-md border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500"
+            >
+              <option value="default">기본 정렬</option>
+              <option value="difficulty-high">난이도 높은 순</option>
+              <option value="difficulty-low">난이도 낮은 순</option>
+              <option value="type-ox">OX형 먼저</option>
+              <option value="type-multiple">선다형 먼저</option>
+            </select>
+          </div>
         </div>
         <div className="divide-y divide-gray-200">
           {questions.map((question, index) => (
             <div key={index} className="p-6">
               {/* 문항 헤더 */}
-              <div 
-                className="flex items-start justify-between cursor-pointer"
-                onClick={() => toggleQuestion(index)}
-              >
-                <div className="flex-1">
-                  <div className="flex items-center gap-3">
-                    <span className="text-lg font-medium text-gray-900">
-                      {index + 1}. {question.question}
-                    </span>
+              <div className="flex items-start gap-3">
+                <input
+                  type="checkbox"
+                  checked={selectedQuestions.includes(index)}
+                  onChange={(e) => {
+                    e.stopPropagation()
+                    if (e.target.checked) {
+                      setSelectedQuestions([...selectedQuestions, index])
+                    } else {
+                      setSelectedQuestions(selectedQuestions.filter(i => i !== index))
+                    }
+                  }}
+                  className="mt-1 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                />
+                <div 
+                  className="flex-1 flex items-start justify-between cursor-pointer"
+                  onClick={() => toggleQuestion(index)}
+                >
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3">
+                      <span className="text-lg font-medium text-gray-900">
+                        {index + 1}. {question.question}
+                      </span>
                     <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
                       question.type === 'true_false' 
                         ? 'bg-green-100 text-green-700' 
@@ -333,14 +441,15 @@ export default function PreviewPage() {
                       {question.timeLimit}초
                     </span>
                   </div>
+                  </div>
+                  <button className="ml-2 text-gray-400 hover:text-gray-600">
+                    {expandedQuestions[index] ? (
+                      <ChevronUp className="h-5 w-5" />
+                    ) : (
+                      <ChevronDown className="h-5 w-5" />
+                    )}
+                  </button>
                 </div>
-                <button className="ml-2 text-gray-400 hover:text-gray-600">
-                  {expandedQuestions[index] ? (
-                    <ChevronUp className="h-5 w-5" />
-                  ) : (
-                    <ChevronDown className="h-5 w-5" />
-                  )}
-                </button>
               </div>
 
               {/* 문항 상세 (확장 시) */}

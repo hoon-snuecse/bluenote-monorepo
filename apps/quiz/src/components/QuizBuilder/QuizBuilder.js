@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useSession } from 'next-auth/react'
-import { Loader2, Sparkles, ChevronRight } from 'lucide-react'
+import { Loader2, Sparkles } from 'lucide-react'
 
 export default function QuizBuilder() {
   const { data: session } = useSession()
@@ -13,18 +13,21 @@ export default function QuizBuilder() {
   const [trueFalseCount, setTrueFalseCount] = useState(3)
   const [multipleChoiceCount, setMultipleChoiceCount] = useState(7)
   
-  // 난이도별 문항 수
-  const [difficultyHigh, setDifficultyHigh] = useState(2)
-  const [difficultyMedium, setDifficultyMedium] = useState(6)
-  const [difficultyLow, setDifficultyLow] = useState(2)
+  // 난이도별 비율 (%)
+  const [difficultyHighPercent, setDifficultyHighPercent] = useState(20)
+  const [difficultyMediumPercent, setDifficultyMediumPercent] = useState(60)
+  const [difficultyLowPercent, setDifficultyLowPercent] = useState(20)
+  
+  // 실제 문항 수 계산
+  const difficultyHigh = Math.round(totalQuestions * difficultyHighPercent / 100)
+  const difficultyMedium = Math.round(totalQuestions * difficultyMediumPercent / 100)
+  const difficultyLow = totalQuestions - difficultyHigh - difficultyMedium
   
   // AI 모델 선택
   const [aiModel, setAiModel] = useState('claude-sonnet-4-20250514')
   
   const [isGenerating, setIsGenerating] = useState(false)
-  const [questions, setQuestions] = useState([])
   const [error, setError] = useState(null)
-  const [sortBy, setSortBy] = useState('default') // 정렬 기준
   
   // 전체 문항 수 계산
   const totalQuestions = trueFalseCount + multipleChoiceCount
@@ -71,10 +74,14 @@ export default function QuizBuilder() {
       }
       
       console.log('Generated questions:', data.questions.length)
-      setQuestions(data.questions)
       
-      // 임시로 sessionStorage에 저장
+      // sessionStorage에 저장하고 바로 미리보기 페이지로 이동
       sessionStorage.setItem('tempQuestions', JSON.stringify(data.questions))
+      sessionStorage.setItem('selectedQuestions', JSON.stringify(data.questions))
+      sessionStorage.setItem('quizTopic', topic)
+      
+      // 미리보기 페이지로 이동
+      window.location.href = '/my-quizzes'
     } catch (err) {
       console.error('문항 생성 오류:', err)
       setError(err.message || '문항 생성 중 오류가 발생했습니다')
@@ -167,10 +174,10 @@ export default function QuizBuilder() {
           </div>
         </div>
 
-        {/* 난이도별 문항 수 */}
+        {/* 난이도별 문항 비율 */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            난이도별 문항 수
+            난이도별 문항 비율
           </label>
           <div className="space-y-3">
             <div className="flex items-center space-x-3">
@@ -178,39 +185,72 @@ export default function QuizBuilder() {
               <input
                 type="number"
                 min="0"
-                max="20"
-                value={difficultyHigh}
-                onChange={(e) => setDifficultyHigh(Number(e.target.value))}
-                className="w-20 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                max="100"
+                value={difficultyHighPercent}
+                onChange={(e) => {
+                  const value = Math.min(100, Math.max(0, Number(e.target.value)))
+                  const remaining = 100 - value
+                  setDifficultyHighPercent(value)
+                  // 남은 비율을 중/하에 비례 배분
+                  if (remaining > 0) {
+                    const mediumRatio = difficultyMediumPercent / (difficultyMediumPercent + difficultyLowPercent)
+                    setDifficultyMediumPercent(Math.round(remaining * mediumRatio))
+                    setDifficultyLowPercent(remaining - Math.round(remaining * mediumRatio))
+                  } else {
+                    setDifficultyMediumPercent(0)
+                    setDifficultyLowPercent(0)
+                  }
+                }}
+                className="w-16 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
                 disabled={isGenerating}
               />
-              <span className="text-sm text-gray-600">문항</span>
+              <span className="text-sm text-gray-600">%</span>
+              <span className="text-sm text-gray-500">({difficultyHigh}문항)</span>
             </div>
             <div className="flex items-center space-x-3">
               <label className="w-24 text-sm text-gray-600">중:</label>
               <input
                 type="number"
                 min="0"
-                max="20"
-                value={difficultyMedium}
-                onChange={(e) => setDifficultyMedium(Number(e.target.value))}
-                className="w-20 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                max="100"
+                value={difficultyMediumPercent}
+                onChange={(e) => {
+                  const value = Math.min(100, Math.max(0, Number(e.target.value)))
+                  const total = value + difficultyHighPercent
+                  if (total <= 100) {
+                    setDifficultyMediumPercent(value)
+                    setDifficultyLowPercent(100 - total)
+                  }
+                }}
+                className="w-16 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
                 disabled={isGenerating}
               />
-              <span className="text-sm text-gray-600">문항</span>
+              <span className="text-sm text-gray-600">%</span>
+              <span className="text-sm text-gray-500">({difficultyMedium}문항)</span>
             </div>
             <div className="flex items-center space-x-3">
               <label className="w-24 text-sm text-gray-600">하:</label>
               <input
                 type="number"
                 min="0"
-                max="20"
-                value={difficultyLow}
-                onChange={(e) => setDifficultyLow(Number(e.target.value))}
-                className="w-20 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                max="100"
+                value={difficultyLowPercent}
+                onChange={(e) => {
+                  const value = Math.min(100, Math.max(0, Number(e.target.value)))
+                  const total = value + difficultyHighPercent
+                  if (total <= 100) {
+                    setDifficultyLowPercent(value)
+                    setDifficultyMediumPercent(100 - total)
+                  }
+                }}
+                className="w-16 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
                 disabled={isGenerating}
               />
-              <span className="text-sm text-gray-600">문항</span>
+              <span className="text-sm text-gray-600">%</span>
+              <span className="text-sm text-gray-500">({difficultyLow}문항)</span>
+            </div>
+            <div className="pl-28 text-sm text-gray-500">
+              합계: {difficultyHighPercent + difficultyMediumPercent + difficultyLowPercent}%
             </div>
           </div>
         </div>
@@ -261,138 +301,6 @@ export default function QuizBuilder() {
         </div>
       </form>
 
-      {/* 생성된 문항 표시 */}
-      {questions.length > 0 && (
-        <div className="mt-8">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-4">
-              <h3 className="text-lg font-medium text-gray-900">
-                생성된 문항 ({questions.length}개)
-              </h3>
-              <label className="flex items-center gap-2 text-sm text-gray-600">
-                <input
-                  type="checkbox"
-                  id="select-all"
-                  defaultChecked
-                  onChange={(e) => {
-                    const checked = e.target.checked
-                    questions.forEach((_, index) => {
-                      const checkbox = document.getElementById(`question-${index}`)
-                      if (checkbox) checkbox.checked = checked
-                    })
-                  }}
-                  className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                />
-                전체 선택
-              </label>
-              {/* 정렬 옵션 */}
-              <select
-                value={sortBy}
-                onChange={(e) => {
-                  const value = e.target.value
-                  setSortBy(value)
-                  
-                  // 정렬 로직
-                  let sorted = [...questions]
-                  if (value === 'difficulty-high') {
-                    sorted.sort((a, b) => {
-                      const order = { hard: 3, medium: 2, easy: 1 }
-                      return (order[b.metadata?.difficulty] || 0) - (order[a.metadata?.difficulty] || 0)
-                    })
-                  } else if (value === 'difficulty-low') {
-                    sorted.sort((a, b) => {
-                      const order = { hard: 3, medium: 2, easy: 1 }
-                      return (order[a.metadata?.difficulty] || 0) - (order[b.metadata?.difficulty] || 0)
-                    })
-                  } else if (value === 'type-ox') {
-                    sorted.sort((a, b) => {
-                      if (a.type === 'true_false' && b.type !== 'true_false') return -1
-                      if (a.type !== 'true_false' && b.type === 'true_false') return 1
-                      return 0
-                    })
-                  } else if (value === 'type-multiple') {
-                    sorted.sort((a, b) => {
-                      if (a.type === 'multiple_choice' && b.type !== 'multiple_choice') return -1
-                      if (a.type !== 'multiple_choice' && b.type === 'multiple_choice') return 1
-                      return 0
-                    })
-                  }
-                  setQuestions(sorted)
-                }}
-                className="ml-4 rounded-md border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500"
-              >
-                <option value="default">기본 정렬</option>
-                <option value="difficulty-high">난이도 높은 순</option>
-                <option value="difficulty-low">난이도 낮은 순</option>
-                <option value="type-ox">OX형 먼저</option>
-                <option value="type-multiple">선다형 먼저</option>
-              </select>
-            </div>
-            <button
-              onClick={() => {
-                // 선택된 문항만 필터링
-                const selectedQuestions = questions.filter((_, index) => {
-                  const checkbox = document.getElementById(`question-${index}`)
-                  return checkbox && checkbox.checked
-                })
-                
-                if (selectedQuestions.length === 0) {
-                  alert('최소 1개 이상의 문항을 선택해주세요.')
-                  return
-                }
-                
-                // sessionStorage에 선택된 문항 저장
-                sessionStorage.setItem('selectedQuestions', JSON.stringify(selectedQuestions))
-                // 주제도 함께 저장
-                sessionStorage.setItem('quizTopic', topic)
-                
-                // 미리보기 탭으로 이동
-                window.location.href = '/my-quizzes'
-              }}
-              className="inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-            >
-              선택 문항 미리보기
-              <ChevronRight className="ml-1 h-4 w-4" />
-            </button>
-          </div>
-          
-          {/* 문항 미리보기 목록 */}
-          <div className="mt-4 space-y-3">
-            {questions.map((question, index) => (
-              <div
-                key={index}
-                className="rounded-lg border border-gray-200 bg-white p-4 hover:border-gray-300 transition-colors"
-              >
-                <div className="flex items-start gap-3">
-                  <input
-                    type="checkbox"
-                    id={`question-${index}`}
-                    defaultChecked
-                    className="mt-1 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                  />
-                  <label htmlFor={`question-${index}`} className="flex-1 cursor-pointer">
-                    <p className="text-sm font-medium text-gray-900">
-                      {index + 1}. {question.question}
-                    </p>
-                    <div className="mt-2 flex items-center space-x-3 text-xs text-gray-500">
-                      <span className={`rounded-full px-2 py-1 ${
-                        question.type === 'true_false' 
-                          ? 'bg-green-100 text-green-700' 
-                          : 'bg-blue-100 text-blue-700'
-                      }`}>
-                        {question.type === 'true_false' ? 'OX형' : '4지선다형'}
-                      </span>
-                      <span>{question.metadata?.difficulty === 'hard' ? '상' : question.metadata?.difficulty === 'medium' ? '중' : '하'}</span>
-                      <span>•</span>
-                      <span>{question.timeLimit}초</span>
-                    </div>
-                  </label>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
     </div>
   )
 }
