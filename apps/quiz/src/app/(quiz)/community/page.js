@@ -46,9 +46,14 @@ export default function CommunityPage() {
     }
   }
 
-  const handleDownload = async (sharedQuizId, format) => {
+  const handleDownload = async (quizId, format) => {
     try {
-      const response = await fetch(`/api/community/download/${sharedQuizId}`, {
+      if (!session) {
+        alert('다운로드하려면 로그인이 필요합니다.')
+        return
+      }
+
+      const response = await fetch(`/api/community/download/${quizId}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -56,25 +61,38 @@ export default function CommunityPage() {
         body: JSON.stringify({ format }),
       })
 
-      if (response.ok) {
-        const blob = await response.blob()
-        const url = window.URL.createObjectURL(blob)
-        const a = document.createElement('a')
-        a.href = url
-        a.download = `community_quiz.${format}`
-        a.click()
-        window.URL.revokeObjectURL(url)
-        
-        // 다운로드 수 업데이트
-        const updatedQuizzes = sharedQuizzes.map(q => 
-          q.id === sharedQuizId 
-            ? { ...q, download_count: q.download_count + 1 }
-            : q
-        )
-        setSharedQuizzes(updatedQuizzes)
+      if (!response.ok) {
+        const error = await response.json()
+        console.error('Download error:', error)
+        alert(error.error || '다운로드 중 오류가 발생했습니다.')
+        return
       }
+
+      const blob = await response.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      
+      // 적절한 파일명 설정
+      const quiz = sharedQuizzes.find(q => q.quiz_id === quizId)
+      const filename = format === 'html' 
+        ? `${quiz?.title || 'quiz'}_teacher_guide.html`
+        : `${quiz?.title || 'quiz'}_kahoot.${format}`
+      
+      a.download = filename
+      a.click()
+      window.URL.revokeObjectURL(url)
+      
+      // 다운로드 수 업데이트
+      const updatedQuizzes = sharedQuizzes.map(q => 
+        q.quiz_id === quizId 
+          ? { ...q, download_count: (q.download_count || 0) + 1 }
+          : q
+      )
+      setSharedQuizzes(updatedQuizzes)
     } catch (error) {
       console.error('Download failed:', error)
+      alert('다운로드 중 오류가 발생했습니다.')
     }
   }
 
@@ -125,23 +143,7 @@ export default function CommunityPage() {
             >
               <option value="recent">최신순</option>
               <option value="popular">인기순</option>
-              <option value="rating">평점순</option>
               <option value="downloads">다운로드순</option>
-            </select>
-            
-            <select
-              value={filterCategory}
-              onChange={(e) => setFilterCategory(e.target.value)}
-              className="rounded-md border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500"
-            >
-              <option value="all">모든 과목</option>
-              <option value="korean">국어</option>
-              <option value="math">수학</option>
-              <option value="english">영어</option>
-              <option value="science">과학</option>
-              <option value="social">사회</option>
-              <option value="history">역사</option>
-              <option value="other">기타</option>
             </select>
             
             <select
@@ -150,10 +152,13 @@ export default function CommunityPage() {
               className="rounded-md border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500"
             >
               <option value="all">모든 학년</option>
-              <option value="elementary">초등학교</option>
-              <option value="middle">중학교</option>
-              <option value="high">고등학교</option>
-              <option value="general">일반</option>
+              <option value="초3">초3</option>
+              <option value="초4">초4</option>
+              <option value="초5">초5</option>
+              <option value="초6">초6</option>
+              <option value="중1">중1</option>
+              <option value="중2">중2</option>
+              <option value="중3">중3</option>
             </select>
           </div>
         </div>
@@ -196,7 +201,11 @@ export default function CommunityPage() {
                     )}
                     {quiz.grade_level && (
                       <span className="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800">
-                        {quiz.grade_level}
+                        {quiz.grade_level === 'elementary' ? '초등' : 
+                         quiz.grade_level === 'middle' ? '중등' : 
+                         quiz.grade_level === 'high' ? '고등' : 
+                         quiz.grade_level.includes('elementary') ? quiz.grade_level.replace('elementary', '초') :
+                         quiz.grade_level}
                       </span>
                     )}
                   </div>
@@ -218,10 +227,6 @@ export default function CommunityPage() {
                   <span>
                     {new Date(quiz.created_at).toLocaleDateString('ko-KR')}
                   </span>
-                  <span className="inline-flex items-center text-yellow-600">
-                    <Star className="mr-1 h-4 w-4 fill-current" />
-                    {quiz.rating_average.toFixed(1)} ({quiz.rating_count})
-                  </span>
                   <span>
                     <Download className="inline h-4 w-4 mr-1" />
                     {quiz.download_count}회
@@ -241,23 +246,23 @@ export default function CommunityPage() {
                   <button
                     onClick={() => handleDownload(quiz.quiz_id || quiz.id, 'xlsx')}
                     disabled={!session}
-                    className="w-full rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full rounded-md bg-green-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    Excel 다운로드
+                    Excel
                   </button>
                   <button
                     onClick={() => handleDownload(quiz.quiz_id || quiz.id, 'csv')}
                     disabled={!session}
-                    className="w-full rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full rounded-md bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    CSV 다운로드
+                    CSV
                   </button>
                   <button
                     onClick={() => handleDownload(quiz.quiz_id || quiz.id, 'html')}
                     disabled={!session}
-                    className="w-full rounded-md bg-purple-600 px-4 py-2 text-sm font-medium text-white hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full rounded-md bg-purple-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    해설 다운로드
+                    해설
                   </button>
                 </div>
               </div>

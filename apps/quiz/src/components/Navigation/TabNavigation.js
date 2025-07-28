@@ -29,12 +29,12 @@ export function TabNavigation() {
   const pathname = usePathname()
 
   return (
-    <nav className="border-b border-gray-200 bg-white">
+    <nav className="border-b-2 border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50 shadow-sm">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 justify-between">
           <div className="flex">
             <div className="flex shrink-0 items-center">
-              <h1 className="text-xl font-bold text-gray-900">
+              <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
                 Kahoot 퀴즈 메이커
               </h1>
             </div>
@@ -48,10 +48,10 @@ export function TabNavigation() {
                     key={tab.name}
                     href={tab.href}
                     className={`
-                      inline-flex items-center border-b-2 px-1 pt-1 text-sm font-medium
+                      inline-flex items-center border-b-3 px-1 pt-1 text-sm font-medium transition-all
                       ${isActive
-                        ? 'border-blue-500 text-gray-900'
-                        : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+                        ? 'border-blue-600 text-blue-600 font-semibold'
+                        : 'border-transparent text-gray-600 hover:border-gray-400 hover:text-gray-900'
                       }
                     `}
                   >
