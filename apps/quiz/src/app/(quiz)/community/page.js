@@ -10,7 +10,10 @@ import {
   Filter,
   TrendingUp,
   Clock,
-  Search
+  Search,
+  Trash2,
+  CheckSquare,
+  Square
 } from 'lucide-react'
 
 export default function CommunityPage() {
@@ -21,6 +24,8 @@ export default function CommunityPage() {
   const [sortBy, setSortBy] = useState('recent')
   const [filterCategory, setFilterCategory] = useState('all')
   const [filterGrade, setFilterGrade] = useState('all')
+  const [selectedQuizzes, setSelectedQuizzes] = useState([])
+  const [isSelectionMode, setIsSelectionMode] = useState(false)
 
   useEffect(() => {
     loadCommunityQuizzes()
@@ -96,6 +101,43 @@ export default function CommunityPage() {
     }
   }
 
+  const handleSelectQuiz = (quizId) => {
+    setSelectedQuizzes(prev => 
+      prev.includes(quizId) 
+        ? prev.filter(id => id !== quizId)
+        : [...prev, quizId]
+    )
+  }
+
+  const handleDeleteSelected = async () => {
+    if (selectedQuizzes.length === 0) return
+    
+    if (!confirm(`선택한 ${selectedQuizzes.length}개의 퀴즈를 삭제하시겠습니까?`)) return
+
+    try {
+      // Delete each selected quiz
+      for (const quizId of selectedQuizzes) {
+        const response = await fetch(`/api/quizzes/${quizId}`, {
+          method: 'DELETE',
+        })
+        
+        if (!response.ok) {
+          const error = await response.json()
+          console.error('Delete error:', error)
+        }
+      }
+      
+      // Reload quizzes
+      await loadCommunityQuizzes()
+      setSelectedQuizzes([])
+      setIsSelectionMode(false)
+      alert('선택한 퀴즈가 삭제되었습니다.')
+    } catch (error) {
+      console.error('Delete failed:', error)
+      alert('삭제 중 오류가 발생했습니다.')
+    }
+  }
+
   const filteredQuizzes = sharedQuizzes.filter(quiz =>
     quiz.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
     quiz.description?.toLowerCase().includes(searchTerm.toLowerCase())
@@ -120,6 +162,42 @@ export default function CommunityPage() {
           다른 교사들이 공유한 퀴즈를 탐색하고 다운로드하세요
         </p>
       </div>
+
+      {/* 선택 모드 컨트롤 */}
+      {session && (
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            {isSelectionMode ? (
+              <>
+                <button
+                  onClick={() => {
+                    setIsSelectionMode(false)
+                    setSelectedQuizzes([])
+                  }}
+                  className="px-3 py-1.5 text-sm bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
+                >
+                  취소
+                </button>
+                <button
+                  onClick={handleDeleteSelected}
+                  disabled={selectedQuizzes.length === 0}
+                  className="px-3 py-1.5 text-sm bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+                >
+                  <Trash2 className="w-3 h-3" />
+                  삭제 ({selectedQuizzes.length})
+                </button>
+              </>
+            ) : (
+              <button
+                onClick={() => setIsSelectionMode(true)}
+                className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
+              >
+                선택
+              </button>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* 검색 및 필터 */}
       <div className="space-y-4 rounded-lg bg-white p-4 shadow">
@@ -176,17 +254,33 @@ export default function CommunityPage() {
           {filteredQuizzes.map((quiz) => (
             <div
               key={quiz.id}
-              className="flex rounded-lg border border-gray-200 bg-white shadow-sm hover:shadow-md transition-shadow"
+              className="flex rounded-lg border border-gray-200 bg-white shadow-sm hover:shadow-md transition-shadow relative"
             >
+              {/* 체크박스 (선택 모드일 때 & 본인 퀴즈일 때만 표시) */}
+              {isSelectionMode && session?.user?.email === quiz.user_email && (
+                <div className="absolute left-2 top-2 z-10">
+                  <button
+                    onClick={() => handleSelectQuiz(quiz.quiz_id || quiz.id)}
+                    className="p-1"
+                  >
+                    {selectedQuizzes.includes(quiz.quiz_id || quiz.id) ? (
+                      <CheckSquare className="w-5 h-5 text-blue-600" />
+                    ) : (
+                      <Square className="w-5 h-5 text-gray-400" />
+                    )}
+                  </button>
+                </div>
+              )}
+              
               {/* 왼쪽: 퀴즈 정보 */}
-              <div className="flex-1 p-6">
+              <div className={`flex-1 p-4 ${isSelectionMode ? 'pl-10' : ''}`}>
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
-                    <h3 className="text-lg font-medium text-gray-900">
+                    <h3 className="text-base font-medium text-gray-900">
                       {quiz.title}
                     </h3>
                     {quiz.description && (
-                      <p className="mt-1 text-sm text-gray-600 line-clamp-2">
+                      <p className="mt-0.5 text-xs text-gray-600 line-clamp-1">
                         {quiz.description}
                       </p>
                     )}
@@ -212,55 +306,55 @@ export default function CommunityPage() {
                 </div>
 
                 {/* 메타 정보 - 가로로 배치 */}
-                <div className="mt-4 flex flex-wrap items-center gap-4 text-sm text-gray-600">
-                  <span>
-                    <BookOpen className="inline h-4 w-4 mr-1" />
-                    {quiz.total_questions}개 문항
+                <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-gray-600">
+                  <span className="flex items-center">
+                    <BookOpen className="h-3 w-3 mr-0.5" />
+                    {quiz.total_questions}문항
                   </span>
                   <span>
-                    OX {quiz.true_false_count}개 / 선다 {quiz.multiple_choice_count}개
+                    OX {quiz.true_false_count} / 선다 {quiz.multiple_choice_count}
                   </span>
-                  <span className="inline-flex items-center">
-                    <Users className="mr-1 h-4 w-4" />
+                  <span className="flex items-center">
+                    <Users className="h-3 w-3 mr-0.5" />
                     {quiz.user_name || '익명'}
                   </span>
                   <span>
                     {new Date(quiz.created_at).toLocaleDateString('ko-KR')}
                   </span>
-                  <span>
-                    <Download className="inline h-4 w-4 mr-1" />
+                  <span className="flex items-center">
+                    <Download className="h-3 w-3 mr-0.5" />
                     {quiz.download_count}회
                   </span>
                 </div>
               </div>
 
               {/* 오른쪽: 액션 버튼 */}
-              <div className="flex items-center border-l border-gray-200 p-6">
-                <div className="space-y-2">
+              <div className="flex items-center border-l border-gray-200 p-3">
+                <div className="space-y-1.5">
                   <button
                     onClick={() => window.location.href = `/quiz/${quiz.quiz_id || quiz.id}`}
-                    className="w-full rounded-md bg-white px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 hover:bg-gray-50"
+                    className="w-full rounded bg-white px-2 py-1 text-xs font-medium text-gray-700 border border-gray-300 hover:bg-gray-50"
                   >
-                    자세히 보기
+                    자세히
                   </button>
                   <button
                     onClick={() => handleDownload(quiz.quiz_id || quiz.id, 'xlsx')}
                     disabled={!session}
-                    className="w-full rounded-md bg-green-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full rounded bg-green-600 px-2 py-1 text-xs font-medium text-white hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Excel
                   </button>
                   <button
                     onClick={() => handleDownload(quiz.quiz_id || quiz.id, 'csv')}
                     disabled={!session}
-                    className="w-full rounded-md bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full rounded bg-blue-600 px-2 py-1 text-xs font-medium text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     CSV
                   </button>
                   <button
                     onClick={() => handleDownload(quiz.quiz_id || quiz.id, 'html')}
                     disabled={!session}
-                    className="w-full rounded-md bg-purple-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full rounded bg-purple-600 px-2 py-1 text-xs font-medium text-white hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     해설
                   </button>
