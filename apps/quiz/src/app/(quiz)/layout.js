@@ -1,10 +1,10 @@
 import { TabNavigation } from '@/components/Navigation/TabNavigation'
 import { getServerSession } from 'next-auth/next'
-import { authOptions } from '@bluenote/auth'
+import { createAuthOptions } from '@bluenote/auth'
 import { redirect } from 'next/navigation'
 
 export default async function QuizLayout({ children }) {
-  const session = await getServerSession(authOptions)
+  const session = await getServerSession(createAuthOptions())
   
   if (!session) {
     redirect('/auth/signin')

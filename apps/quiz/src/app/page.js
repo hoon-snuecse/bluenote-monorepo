@@ -1,8 +1,9 @@
 import { redirect } from 'next/navigation'
-import { getServerSession } from '@bluenote/auth'
+import { getServerSession } from 'next-auth'
+import { createAuthOptions } from '@bluenote/auth'
 
 export default async function HomePage() {
-  const session = await getServerSession()
+  const session = await getServerSession(createAuthOptions())
   
   if (session) {
     // 로그인된 사용자는 퀴즈 생성 페이지로
