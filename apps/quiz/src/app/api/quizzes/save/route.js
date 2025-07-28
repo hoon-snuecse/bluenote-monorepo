@@ -31,26 +31,14 @@ export async function POST(request) {
       email: session.user.email 
     })
 
-    // 사용자 ID 가져오기
-    const { data: userData, error: userError } = await supabase
-      .from('users')
-      .select('id')
-      .eq('email', session.user.email)
-      .single()
-
-    if (userError || !userData) {
-      console.error('User lookup error:', userError)
-      return NextResponse.json(
-        { error: '사용자 정보를 찾을 수 없습니다.' },
-        { status: 404 }
-      )
-    }
+    // Quiz 앱은 user_id로 이메일을 직접 사용
+    const userId = session.user.email
 
     // 퀴즈 메타데이터 저장
     const { data: quiz, error: quizError } = await supabase
       .from('quizzes')
       .insert({
-        user_id: userData.id,
+        user_id: userId,
         title,
         topic: topic || '일반',
         description: `AI로 생성된 ${questions.length}개 문항`,
@@ -149,7 +137,7 @@ export async function POST(request) {
       .from('shared_quizzes')
       .insert({
         quiz_id: quiz.id,
-        shared_by: userData.id,
+        shared_by: userId,
         visibility: 'public'
       })
 
