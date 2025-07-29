@@ -1,12 +1,13 @@
 import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { createAuthOptions } from '@bluenote/auth'
 import { createServiceClient } from '@/lib/supabase'
 import * as XLSX from 'xlsx'
 
 export async function POST(request, { params }) {
   try {
     // 세션 확인
+    const authOptions = createAuthOptions()
     const session = await getServerSession(authOptions)
     if (!session?.user?.email) {
       return NextResponse.json(

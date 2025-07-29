@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { createAuthOptions } from '@bluenote/auth'
 import Anthropic from '@anthropic-ai/sdk'
 
 // Claude API 키 확인
@@ -15,6 +15,7 @@ const anthropic = apiKey ? new Anthropic({ apiKey }) : null
 
 export async function POST(request) {
   try {
+    const authOptions = createAuthOptions()
     const session = await getServerSession(authOptions)
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })

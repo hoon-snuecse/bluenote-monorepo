@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { createAuthOptions } from '@bluenote/auth'
 
 export async function GET() {
   const cookieStore = cookies()
@@ -10,6 +10,7 @@ export async function GET() {
   // 세션 정보 가져오기
   let session = null
   try {
+    const authOptions = createAuthOptions()
     session = await getServerSession(authOptions)
   } catch (error) {
     console.error('Failed to get session:', error)

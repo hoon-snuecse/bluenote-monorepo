@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { createAuthOptions } from '@bluenote/auth'
 import { cookies } from 'next/headers'
 
 export async function GET() {
@@ -9,6 +9,7 @@ export async function GET() {
     const allCookies = cookieStore.getAll()
     
     // 세션 확인
+    const authOptions = createAuthOptions()
     const session = await getServerSession(authOptions)
     
     // 쿠키 목록

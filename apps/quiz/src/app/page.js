@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation'
 import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { createAuthOptions } from '@bluenote/auth'
 import { cookies } from 'next/headers'
 
 export default async function HomePage() {
@@ -23,6 +23,7 @@ export default async function HomePage() {
 
     let session = null
     try {
+      const authOptions = createAuthOptions()
       session = await getServerSession(authOptions)
     } catch (sessionError) {
       console.error('Failed to get session:', sessionError)
