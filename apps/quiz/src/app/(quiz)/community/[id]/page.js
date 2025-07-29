@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import { createClient } from '@/lib/supabase'
-import { ChevronLeft, Download, Star, Calendar, User, FileText, Eye } from 'lucide-react'
+import { ChevronLeft, Download, Star, Calendar, User, FileText } from 'lucide-react'
 import QuestionPreview from '@/components/QuestionPreview/QuestionPreview'
 
 export default function CommunityQuizDetailPage() {
@@ -71,11 +71,12 @@ export default function CommunityQuizDetailPage() {
       
       setQuestions(sharedQuiz.quizzes.questions || [])
 
-      // 조회수 증가
-      await supabase
-        .from('shared_quizzes')
-        .update({ views: (sharedQuiz.views || 0) + 1 })
-        .eq('id', id)
+      // 조회수 증가 (views 컬럼이 있는 경우에만)
+      // TODO: 데이터베이스에 views 컬럼 추가 후 주석 해제
+      // await supabase
+      //   .from('shared_quizzes')
+      //   .update({ views: (sharedQuiz.views || 0) + 1 })
+      //   .eq('id', id)
 
     } catch (err) {
       console.error('퀴즈 상세 조회 오류:', err)
@@ -190,10 +191,11 @@ export default function CommunityQuizDetailPage() {
               <Calendar className="w-4 h-4 mr-1" />
               {new Date(quiz.shared_at).toLocaleDateString()}
             </div>
-            <div className="flex items-center">
+            {/* 조회수 - views 컬럼 추가 후 사용 */}
+            {/* <div className="flex items-center">
               <Eye className="w-4 h-4 mr-1" />
               조회 {quiz.views || 0}
-            </div>
+            </div> */}
             <div className="flex items-center">
               <Download className="w-4 h-4 mr-1" />
               다운로드 {quiz.downloads || 0}
