@@ -8,7 +8,7 @@ export async function middleware(request) {
   console.log('Middleware - pathname:', pathname)
   
   // 인증이 필요없는 경로
-  const publicPaths = ['/auth/signin', '/auth/error', '/api/auth', '/api/health', '/auth/check-web-session', '/api/auth/debug-cookies', '/auth/sync-session']
+  const publicPaths = ['/auth/signin', '/auth/error', '/api/auth', '/api/health', '/auth/check-web-session', '/api/debug', '/auth/sync-session']
   const isPublicPath = publicPaths.some(path => pathname.startsWith(path))
   
   if (isPublicPath) {
