@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/authOptions'
+import { authOptions } from '@/lib/auth'
 import { createServiceClient } from '@/lib/supabase'
 import * as XLSX from 'xlsx'
 

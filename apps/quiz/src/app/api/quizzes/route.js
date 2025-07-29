@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/authOptions'
+import { authOptions } from '@/lib/auth'
 import { createClient } from '@/lib/supabase'
 
 // GET: 사용자의 퀴즈 목록 조회

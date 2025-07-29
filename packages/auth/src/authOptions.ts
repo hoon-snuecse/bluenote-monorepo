@@ -50,10 +50,10 @@ export const createAuthOptions = (callbacks?: AuthCallbacks): NextAuthOptions =>
           httpOnly: true,
           sameSite: 'lax',
           path: '/',
-          secure: process.env.NODE_ENV === 'production',
+          secure: process.env.NODE_ENV === 'production' || process.env.VERCEL_ENV === 'production',
           maxAge: 30 * 24 * 60 * 60, // 30 days
           // 중요: 프로덕션에서는 .bluenote.site 도메인으로 설정하여 서브도메인 간 공유
-          domain: process.env.NODE_ENV === 'production' ? '.bluenote.site' : undefined
+          domain: (process.env.NODE_ENV === 'production' || process.env.VERCEL_ENV === 'production') ? '.bluenote.site' : undefined
         }
       },
       callbackUrl: {
@@ -61,8 +61,8 @@ export const createAuthOptions = (callbacks?: AuthCallbacks): NextAuthOptions =>
         options: {
           sameSite: 'lax',
           path: '/',
-          secure: process.env.NODE_ENV === 'production',
-          domain: process.env.NODE_ENV === 'production' ? '.bluenote.site' : undefined
+          secure: process.env.NODE_ENV === 'production' || process.env.VERCEL_ENV === 'production',
+          domain: (process.env.NODE_ENV === 'production' || process.env.VERCEL_ENV === 'production') ? '.bluenote.site' : undefined
         }
       },
       csrfToken: {
@@ -71,8 +71,8 @@ export const createAuthOptions = (callbacks?: AuthCallbacks): NextAuthOptions =>
           httpOnly: true,
           sameSite: 'lax',
           path: '/',
-          secure: process.env.NODE_ENV === 'production',
-          domain: process.env.NODE_ENV === 'production' ? '.bluenote.site' : undefined
+          secure: process.env.NODE_ENV === 'production' || process.env.VERCEL_ENV === 'production',
+          domain: (process.env.NODE_ENV === 'production' || process.env.VERCEL_ENV === 'production') ? '.bluenote.site' : undefined
         }
       }
     },

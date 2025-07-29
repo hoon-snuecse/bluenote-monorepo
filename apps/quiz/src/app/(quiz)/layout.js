@@ -1,6 +1,6 @@
 import { TabNavigation } from '@/components/Navigation/TabNavigation'
 import { getServerSession } from 'next-auth/next'
-import { authOptions } from '@/lib/authOptions'
+import { authOptions } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 
 export default async function QuizLayout({ children }) {
