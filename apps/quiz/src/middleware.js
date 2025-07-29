@@ -26,11 +26,15 @@ export async function middleware(request) {
 
   if (isProtectedPath) {
     try {
-      // 쿠키 이름을 명시적으로 지정
+      // 쿠키 이름을 명시적으로 지정 - 프로덕션과 개발 환경 구분
+      const cookieName = process.env.NODE_ENV === 'production' 
+        ? '__Secure-next-auth.session-token'
+        : 'next-auth.session-token'
+      
       const token = await getToken({ 
         req: request, 
         secret: process.env.NEXTAUTH_SECRET,
-        cookieName: 'next-auth.session-token'
+        cookieName
       })
       
       console.log('Middleware - pathname:', pathname, 'token:', !!token)
