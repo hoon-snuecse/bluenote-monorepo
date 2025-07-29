@@ -26,12 +26,35 @@ export async function middleware(req) {
     return NextResponse.next();
   }
   
-  // JWT 토큰 가져오기
-  const token = await getToken({ 
-    req, 
-    secret: process.env.NEXTAUTH_SECRET,
-    cookieName: 'next-auth.session-token'
-  });
+  // JWT 토큰 가져오기 - 프로덕션에서는 __Secure- 접두사 처리
+  const isProduction = process.env.VERCEL_ENV === 'production' || 
+                      process.env.NODE_ENV === 'production';
+  
+  // 여러 쿠키 이름을 시도
+  const cookieNames = isProduction 
+    ? ['__Secure-next-auth.session-token', 'next-auth.session-token']
+    : ['next-auth.session-token', '__Secure-next-auth.session-token'];
+  
+  let token = null;
+  
+  // 각 쿠키 이름으로 토큰 확인
+  for (const cookieName of cookieNames) {
+    try {
+      token = await getToken({ 
+        req, 
+        secret: process.env.NEXTAUTH_SECRET,
+        cookieName
+      });
+      
+      if (token) {
+        console.log('[Middleware] Found token with cookie:', cookieName);
+        break;
+      }
+    } catch (err) {
+      // 이 쿠키로는 실패, 다음 시도
+      console.log('[Middleware] Failed to get token with cookie:', cookieName);
+    }
+  }
   
   // 디버그 로그
   console.log('[Middleware] Protected path:', path);

@@ -39,30 +39,32 @@ export interface AuthCallbacks {
 export const createAuthOptions = (callbacks?: AuthCallbacks): NextAuthOptions => {
   const adminEmails = process.env.ADMIN_EMAILS?.split(',').map(email => email.trim()) || ['hoon@snuecse.org'];
 
+  const isProduction = process.env.NODE_ENV === 'production' || process.env.VERCEL_ENV === 'production';
+  
   return {
     // 쿠키 설정 - 프로덕션에서는 서브도메인 간 공유를 위해 .bluenote.site 도메인 사용
-    // useSecureCookies를 false로 설정하여 쿠키 이름이 자동으로 변경되지 않도록 함
-    useSecureCookies: false,
+    // 명시적으로 쿠키 이름과 도메인 설정
     cookies: {
       sessionToken: {
-        name: `next-auth.session-token`,
+        name: isProduction ? `__Secure-next-auth.session-token` : `next-auth.session-token`,
         options: {
           httpOnly: true,
           sameSite: 'lax',
           path: '/',
-          secure: process.env.NODE_ENV === 'production' || process.env.VERCEL_ENV === 'production',
+          secure: isProduction,
           maxAge: 30 * 24 * 60 * 60, // 30 days
           // 중요: 프로덕션에서는 .bluenote.site 도메인으로 설정하여 서브도메인 간 공유
-          domain: (process.env.NODE_ENV === 'production' || process.env.VERCEL_ENV === 'production') ? '.bluenote.site' : undefined
+          domain: isProduction ? '.bluenote.site' : undefined
         }
       },
       callbackUrl: {
-        name: `next-auth.callback-url`,
+        name: isProduction ? `__Secure-next-auth.callback-url` : `next-auth.callback-url`,
         options: {
+          httpOnly: true,
           sameSite: 'lax',
           path: '/',
-          secure: process.env.NODE_ENV === 'production' || process.env.VERCEL_ENV === 'production',
-          domain: (process.env.NODE_ENV === 'production' || process.env.VERCEL_ENV === 'production') ? '.bluenote.site' : undefined
+          secure: isProduction,
+          domain: isProduction ? '.bluenote.site' : undefined
         }
       },
       csrfToken: {
@@ -71,8 +73,8 @@ export const createAuthOptions = (callbacks?: AuthCallbacks): NextAuthOptions =>
           httpOnly: true,
           sameSite: 'lax',
           path: '/',
-          secure: process.env.NODE_ENV === 'production' || process.env.VERCEL_ENV === 'production',
-          domain: (process.env.NODE_ENV === 'production' || process.env.VERCEL_ENV === 'production') ? '.bluenote.site' : undefined
+          secure: isProduction,
+          domain: isProduction ? '.bluenote.site' : undefined
         }
       }
     },
