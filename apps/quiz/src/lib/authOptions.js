@@ -1,9 +1,9 @@
 import GoogleProvider from 'next-auth/providers/google'
 
-// Quiz 앱 전용 인증 옵션 - Google Drive 권한 없이
+// Quiz 앱 전용 인증 옵션 - Web 앱과 동일한 설정으로 세션 공유
 export const authOptions = {
-  // Web 앱과 동일한 쿠키 설정으로 세션 공유
-  useSecureCookies: false,
+  // Vercel 프로덕션 환경에서는 자동으로 보안 쿠키 사용
+  useSecureCookies: process.env.VERCEL_ENV === 'production',
   cookies: {
     sessionToken: {
       name: `next-auth.session-token`,
@@ -11,9 +11,10 @@ export const authOptions = {
         httpOnly: true,
         sameSite: 'lax',
         path: '/',
-        secure: process.env.NODE_ENV === 'production',
+        secure: process.env.VERCEL_ENV === 'production',
         maxAge: 30 * 24 * 60 * 60,
-        domain: process.env.NODE_ENV === 'production' ? '.bluenote.site' : undefined
+        // 중요: 프로덕션에서 서브도메인 간 공유를 위한 도메인 설정
+        domain: process.env.VERCEL_ENV === 'production' ? '.bluenote.site' : undefined
       }
     },
     callbackUrl: {
@@ -21,8 +22,8 @@ export const authOptions = {
       options: {
         sameSite: 'lax',
         path: '/',
-        secure: process.env.NODE_ENV === 'production',
-        domain: process.env.NODE_ENV === 'production' ? '.bluenote.site' : undefined
+        secure: process.env.VERCEL_ENV === 'production',
+        domain: process.env.VERCEL_ENV === 'production' ? '.bluenote.site' : undefined
       }
     },
     csrfToken: {
@@ -31,8 +32,8 @@ export const authOptions = {
         httpOnly: true,
         sameSite: 'lax',
         path: '/',
-        secure: process.env.NODE_ENV === 'production',
-        domain: process.env.NODE_ENV === 'production' ? '.bluenote.site' : undefined
+        secure: process.env.VERCEL_ENV === 'production',
+        domain: process.env.VERCEL_ENV === 'production' ? '.bluenote.site' : undefined
       }
     }
   },

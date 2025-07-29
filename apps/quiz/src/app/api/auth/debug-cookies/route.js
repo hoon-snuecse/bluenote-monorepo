@@ -1,9 +1,19 @@
 import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/authOptions'
 
 export async function GET() {
   const cookieStore = cookies()
   const allCookies = cookieStore.getAll()
+  
+  // 세션 정보 가져오기
+  let session = null
+  try {
+    session = await getServerSession(authOptions)
+  } catch (error) {
+    console.error('Failed to get session:', error)
+  }
   
   // 쿠키 정보를 안전하게 반환
   const cookieInfo = allCookies.map(cookie => ({
@@ -24,10 +34,23 @@ export async function GET() {
   )
   
   return NextResponse.json({
-    environment: process.env.NODE_ENV,
-    nextauth_url: process.env.NEXTAUTH_URL,
-    all_cookies: cookieInfo,
-    auth_cookies: authCookies,
-    cookie_count: allCookies.length
+    environment: {
+      NODE_ENV: process.env.NODE_ENV,
+      VERCEL_ENV: process.env.VERCEL_ENV,
+      NEXTAUTH_URL: process.env.NEXTAUTH_URL,
+      NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET ? 'SET' : 'NOT_SET',
+      GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID ? 'SET' : 'NOT_SET'
+    },
+    session: {
+      exists: !!session,
+      user_email: session?.user?.email,
+      user_id: session?.user?.id
+    },
+    cookies: {
+      all: cookieInfo,
+      auth: authCookies,
+      count: allCookies.length
+    },
+    timestamp: new Date().toISOString()
   })
 }

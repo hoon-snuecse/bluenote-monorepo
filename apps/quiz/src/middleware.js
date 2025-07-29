@@ -8,7 +8,7 @@ export async function middleware(request) {
   console.log('Middleware - pathname:', pathname)
   
   // 인증이 필요없는 경로
-  const publicPaths = ['/auth/signin', '/auth/error', '/api/auth', '/api/health', '/auth/check-web-session']
+  const publicPaths = ['/auth/signin', '/auth/error', '/api/auth', '/api/health', '/auth/check-web-session', '/api/auth/debug-cookies', '/auth/sync-session']
   const isPublicPath = publicPaths.some(path => pathname.startsWith(path))
   
   if (isPublicPath) {
@@ -26,16 +26,35 @@ export async function middleware(request) {
 
   if (isProtectedPath) {
     try {
-      // 쿠키 이름을 명시적으로 지정 - 프로덕션과 개발 환경 구분
-      const cookieName = process.env.NODE_ENV === 'production' 
-        ? '__Secure-next-auth.session-token'
-        : 'next-auth.session-token'
+      // Vercel 프로덕션 환경에서는 보안 쿠키 이름 사용
+      const isProduction = process.env.VERCEL_ENV === 'production' || 
+                          process.env.NODE_ENV === 'production'
       
-      const token = await getToken({ 
-        req: request, 
-        secret: process.env.NEXTAUTH_SECRET,
-        cookieName
-      })
+      // 여러 쿠키 이름을 시도
+      const cookieNames = isProduction 
+        ? ['__Secure-next-auth.session-token', 'next-auth.session-token']
+        : ['next-auth.session-token', '__Secure-next-auth.session-token']
+      
+      let token = null
+      
+      // 각 쿠키 이름으로 토큰 확인
+      for (const cookieName of cookieNames) {
+        try {
+          token = await getToken({ 
+            req: request, 
+            secret: process.env.NEXTAUTH_SECRET,
+            cookieName
+          })
+          
+          if (token) {
+            console.log('Middleware - found token with cookie:', cookieName)
+            break
+          }
+        } catch (err) {
+          // 이 쿠키로는 실패, 다음 시도
+          console.log('Middleware - failed to get token with cookie:', cookieName)
+        }
+      }
       
       console.log('Middleware - pathname:', pathname, 'token:', !!token)
 

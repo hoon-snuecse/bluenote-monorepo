@@ -78,10 +78,16 @@ function SignInContent() {
             이미 Bluenote에 로그인하셨나요?
           </p>
           <a 
-            href="https://bluenote.site"
-            className="block text-center text-blue-600 hover:text-blue-500 text-sm font-medium"
+            href="/auth/sync-session"
+            className="block text-center text-blue-600 hover:text-blue-500 text-sm font-medium mb-2"
           >
-            Bluenote 메인 사이트로 이동 →
+            기존 세션으로 계속하기 →
+          </a>
+          <a 
+            href="https://bluenote.site"
+            className="block text-center text-gray-600 hover:text-gray-500 text-sm"
+          >
+            Bluenote 메인 사이트로 이동
           </a>
           <p className="mt-2 text-center text-xs text-gray-400">
             메인 사이트에서 로그인하면 모든 서비스를 이용할 수 있습니다
