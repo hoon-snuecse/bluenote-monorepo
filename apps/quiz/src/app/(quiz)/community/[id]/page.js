@@ -1,0 +1,260 @@
+'use client'
+
+import { useState, useEffect } from 'react'
+import { useParams, useRouter } from 'next/navigation'
+import { useSession } from 'next-auth/react'
+import { createClient } from '@/lib/supabase'
+import { ChevronLeft, Download, Star, Calendar, User, FileText, Eye } from 'lucide-react'
+import QuestionPreview from '@/components/QuestionPreview/QuestionPreview'
+
+export default function CommunityQuizDetailPage() {
+  const { id } = useParams()
+  const router = useRouter()
+  const { data: session } = useSession()
+  const [quiz, setQuiz] = useState(null)
+  const [questions, setQuestions] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+  const [downloading, setDownloading] = useState({
+    csv: false,
+    excel: false,
+    html: false
+  })
+
+  useEffect(() => {
+    if (id) {
+      fetchQuizDetail()
+    }
+  }, [id])
+
+  const fetchQuizDetail = async () => {
+    try {
+      const supabase = createClient()
+      
+      // 공유된 퀴즈 정보 가져오기
+      const { data: sharedQuiz, error: quizError } = await supabase
+        .from('shared_quizzes')
+        .select(`
+          *,
+          quizzes (
+            id,
+            title,
+            topic,
+            created_at,
+            questions (
+              *,
+              question_options (*)
+            )
+          )
+        `)
+        .eq('id', id)
+        .single()
+
+      if (quizError) {
+        console.error('퀴즈 조회 오류:', quizError)
+        setError('퀴즈를 찾을 수 없습니다.')
+        return
+      }
+
+      if (!sharedQuiz || !sharedQuiz.quizzes) {
+        setError('퀴즈를 찾을 수 없습니다.')
+        return
+      }
+
+      setQuiz({
+        ...sharedQuiz,
+        ...sharedQuiz.quizzes,
+        shared_at: sharedQuiz.created_at,
+        downloads: sharedQuiz.downloads || 0,
+        average_rating: sharedQuiz.average_rating || 0
+      })
+      
+      setQuestions(sharedQuiz.quizzes.questions || [])
+
+      // 조회수 증가
+      await supabase
+        .from('shared_quizzes')
+        .update({ views: (sharedQuiz.views || 0) + 1 })
+        .eq('id', id)
+
+    } catch (err) {
+      console.error('퀴즈 상세 조회 오류:', err)
+      setError('퀴즈를 불러오는 중 오류가 발생했습니다.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleDownload = async (format) => {
+    if (!session) {
+      alert('다운로드하려면 로그인이 필요합니다.')
+      return
+    }
+
+    setDownloading(prev => ({ ...prev, [format]: true }))
+    
+    try {
+      const response = await fetch(`/api/export/${format}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          quizId: quiz.quiz_id || quiz.id,
+          questions: questions
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error('다운로드 실패')
+      }
+
+      const blob = await response.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `quiz_${quiz.title || 'export'}.${format}`
+      document.body.appendChild(a)
+      a.click()
+      window.URL.revokeObjectURL(url)
+      document.body.removeChild(a)
+
+      // 다운로드 수 증가
+      const supabase = createClient()
+      await supabase
+        .from('shared_quizzes')
+        .update({ downloads: (quiz.downloads || 0) + 1 })
+        .eq('id', id)
+
+      // 다운로드 기록 저장
+      await supabase
+        .from('quiz_downloads')
+        .insert({
+          quiz_id: quiz.quiz_id || quiz.id,
+          user_id: session.user.id,
+          format: format
+        })
+
+    } catch (error) {
+      console.error('다운로드 오류:', error)
+      alert('다운로드 중 오류가 발생했습니다.')
+    } finally {
+      setDownloading(prev => ({ ...prev, [format]: false }))
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center min-h-[50vh]">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+    )
+  }
+
+  if (error || !quiz) {
+    return (
+      <div className="text-center py-8">
+        <p className="text-gray-600 mb-4">{error || '퀴즈를 찾을 수 없습니다.'}</p>
+        <button
+          onClick={() => router.push('/community')}
+          className="text-blue-600 hover:text-blue-700 font-medium inline-flex items-center"
+        >
+          <ChevronLeft className="w-4 h-4 mr-1" />
+          돌아가기
+        </button>
+      </div>
+    )
+  }
+
+  return (
+    <div className="max-w-6xl mx-auto">
+      {/* 헤더 */}
+      <div className="mb-6">
+        <button
+          onClick={() => router.push('/community')}
+          className="text-gray-600 hover:text-gray-900 inline-flex items-center mb-4"
+        >
+          <ChevronLeft className="w-4 h-4 mr-1" />
+          커뮤니티로 돌아가기
+        </button>
+        
+        <div className="bg-white rounded-lg shadow-sm p-6">
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">{quiz.title}</h1>
+          
+          <div className="flex flex-wrap gap-4 text-sm text-gray-600 mb-4">
+            <div className="flex items-center">
+              <User className="w-4 h-4 mr-1" />
+              {quiz.user_email?.split('@')[0] || '익명'}
+            </div>
+            <div className="flex items-center">
+              <Calendar className="w-4 h-4 mr-1" />
+              {new Date(quiz.shared_at).toLocaleDateString()}
+            </div>
+            <div className="flex items-center">
+              <Eye className="w-4 h-4 mr-1" />
+              조회 {quiz.views || 0}
+            </div>
+            <div className="flex items-center">
+              <Download className="w-4 h-4 mr-1" />
+              다운로드 {quiz.downloads || 0}
+            </div>
+            <div className="flex items-center">
+              <Star className="w-4 h-4 mr-1 text-yellow-400" />
+              {quiz.average_rating?.toFixed(1) || '0.0'}
+            </div>
+          </div>
+
+          {quiz.description && (
+            <p className="text-gray-700 mb-4">{quiz.description}</p>
+          )}
+
+          <div className="flex gap-3">
+            <button
+              onClick={() => handleDownload('csv')}
+              disabled={downloading.csv}
+              className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center"
+            >
+              <FileText className="w-4 h-4 mr-2" />
+              {downloading.csv ? '다운로드 중...' : 'CSV 다운로드'}
+            </button>
+            <button
+              onClick={() => handleDownload('xlsx')}
+              disabled={downloading.excel}
+              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center"
+            >
+              <FileText className="w-4 h-4 mr-2" />
+              {downloading.excel ? '다운로드 중...' : 'Excel 다운로드'}
+            </button>
+            <button
+              onClick={() => handleDownload('html')}
+              disabled={downloading.html}
+              className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center"
+            >
+              <FileText className="w-4 h-4 mr-2" />
+              {downloading.html ? '다운로드 중...' : '교사용 가이드'}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* 문항 미리보기 */}
+      <div className="bg-white rounded-lg shadow-sm p-6">
+        <h2 className="text-lg font-semibold text-gray-900 mb-4">
+          문항 미리보기 ({questions.length}문항)
+        </h2>
+        
+        <div className="space-y-4">
+          {questions.map((question, index) => (
+            <QuestionPreview
+              key={question.id}
+              question={question}
+              index={index}
+              showCheckbox={false}
+              showExplanation={true}
+            />
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}

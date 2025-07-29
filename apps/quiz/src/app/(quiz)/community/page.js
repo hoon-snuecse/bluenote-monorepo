@@ -356,7 +356,7 @@ export default function CommunityPage() {
                 {/* 액션 버튼 - 한 줄로 배치 */}
                 <div className="mt-3 flex gap-1">
                   <button
-                    onClick={() => window.location.href = `/quiz/${quiz.id}`}
+                    onClick={() => window.location.href = `/community/${quiz.id}`}
                     className="flex-1 rounded bg-gray-100 px-1.5 py-0.5 text-xs font-medium text-gray-700 border border-gray-300 hover:bg-gray-200"
                   >
                     자세히
