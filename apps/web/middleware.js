@@ -30,10 +30,8 @@ export async function middleware(req) {
   const isProduction = process.env.VERCEL_ENV === 'production' || 
                       process.env.NODE_ENV === 'production';
   
-  // 여러 쿠키 이름을 시도
-  const cookieNames = isProduction 
-    ? ['__Secure-next-auth.session-token', 'next-auth.session-token']
-    : ['next-auth.session-token', '__Secure-next-auth.session-token'];
+  // 프로덕션에서도 __Secure- 접두사 없이 처리
+  const cookieNames = ['next-auth.session-token'];
   
   let token = null;
   

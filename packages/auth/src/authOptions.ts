@@ -43,10 +43,11 @@ export const createAuthOptions = (callbacks?: AuthCallbacks): NextAuthOptions =>
   
   return {
     // 쿠키 설정 - 프로덕션에서는 서브도메인 간 공유를 위해 .bluenote.site 도메인 사용
-    // 명시적으로 쿠키 이름과 도메인 설정
+    // useSecureCookies를 명시적으로 설정
+    useSecureCookies: isProduction,
     cookies: {
       sessionToken: {
-        name: isProduction ? `__Secure-next-auth.session-token` : `next-auth.session-token`,
+        name: `next-auth.session-token`,
         options: {
           httpOnly: true,
           sameSite: 'lax',
@@ -58,7 +59,7 @@ export const createAuthOptions = (callbacks?: AuthCallbacks): NextAuthOptions =>
         }
       },
       callbackUrl: {
-        name: isProduction ? `__Secure-next-auth.callback-url` : `next-auth.callback-url`,
+        name: `next-auth.callback-url`,
         options: {
           httpOnly: true,
           sameSite: 'lax',
@@ -69,6 +70,38 @@ export const createAuthOptions = (callbacks?: AuthCallbacks): NextAuthOptions =>
       },
       csrfToken: {
         name: `next-auth.csrf-token`,
+        options: {
+          httpOnly: true,
+          sameSite: 'lax',
+          path: '/',
+          secure: isProduction,
+          domain: isProduction ? '.bluenote.site' : undefined
+        }
+      },
+      pkceCodeVerifier: {
+        name: `next-auth.pkce.code_verifier`,
+        options: {
+          httpOnly: true,
+          sameSite: 'lax',
+          path: '/',
+          secure: isProduction,
+          maxAge: 60 * 15, // 15 minutes
+          domain: isProduction ? '.bluenote.site' : undefined
+        }
+      },
+      state: {
+        name: `next-auth.state`,
+        options: {
+          httpOnly: true,
+          sameSite: 'lax',
+          path: '/',
+          secure: isProduction,
+          maxAge: 60 * 15, // 15 minutes
+          domain: isProduction ? '.bluenote.site' : undefined
+        }
+      },
+      nonce: {
+        name: `next-auth.nonce`,
         options: {
           httpOnly: true,
           sameSite: 'lax',
