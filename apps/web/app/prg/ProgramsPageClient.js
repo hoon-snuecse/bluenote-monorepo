@@ -78,17 +78,17 @@ export default function ProgramsPageClient() {
     },
     {
       icon: Brain,
-      title: "AI 튜터 봇",
-      subtitle: "AI Tutor Bot",
-      description: "학생 개인의 학습 수준에 맞춰 1:1 교육을 제공하는 AI 튜터",
+      title: "수행과제 제작 시스템",
+      subtitle: "Authentic Assessment System",
+      description: "Authentic Assessment를 위한 수행 평가과제 및 가이드 제작",
       href: "/prg/ai-tutor",
       status: "development",
       requireAuth: true,
       features: [
-        "개인 맞춤형 학습",
-        "실시간 질의응답",
-        "학습 진도 관리",
-        "오답 분석"
+        "교과통합적인 수행과제 탐색",
+        "수행과제를 평가 문항으로 제작",
+        "시행 가이드",
+        "채점 루브릭 등 제공"
       ]
     }
   ];
