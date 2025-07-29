@@ -1,7 +1,5 @@
 {
-  "buildCommand": "cd ../.. && pnpm build --filter=web",
-  "outputDirectory": ".next",
-  "installCommand": "cd ../.. && pnpm install",
+  "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "nextjs",
   "regions": ["icn1"],
   "env": {
