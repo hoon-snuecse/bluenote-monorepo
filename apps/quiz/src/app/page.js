@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation'
 import { getServerSession } from 'next-auth'
-import { createAuthOptions } from '@bluenote/auth'
+import { authOptions } from '@/lib/auth'
 import { cookies } from 'next/headers'
 
 export default async function HomePage() {
@@ -17,13 +17,12 @@ export default async function HomePage() {
     }
 
     // 세션 확인 전에 쿠키 상태 로깅
-    const cookieStore = cookies()
+    const cookieStore = await cookies()
     const allCookies = cookieStore.getAll()
     console.log('HomePage - available cookies:', allCookies.map(c => c.name))
 
     let session = null
     try {
-      const authOptions = createAuthOptions()
       session = await getServerSession(authOptions)
     } catch (sessionError) {
       console.error('Failed to get session:', sessionError)
@@ -37,11 +36,13 @@ export default async function HomePage() {
     })
     
     if (session) {
+      console.log('HomePage - redirecting to /create')
       // 로그인된 사용자는 퀴즈 생성 페이지로
       redirect('/create')
     } else {
-      // 로그인하지 않은 사용자는 세션 동기화 시도
-      redirect('/auth/sync-session')
+      console.log('HomePage - no session, redirecting to /auth/signin')
+      // 로그인하지 않은 사용자는 로그인 페이지로
+      redirect('/auth/signin')
     }
   } catch (error) {
     console.error('HomePage error details:', {

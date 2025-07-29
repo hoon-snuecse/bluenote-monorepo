@@ -64,8 +64,7 @@ export function StudentGroupManager() {
   const [filterGrade, setFilterGrade] = useState<string>('')
   const [filterClass, setFilterClass] = useState<string>('')
   const [importLoading, setImportLoading] = useState(false)
-  const [importType, setImportType] = useState<'excel' | 'csv' | 'googlesheets'>('excel')
-  const [googleSheetId, setGoogleSheetId] = useState('')
+  const [importType, setImportType] = useState<'excel' | 'csv'>('excel')
   const [editingStudent, setEditingStudent] = useState<Student | null>(null)
   const [studentEditData, setStudentEditData] = useState({
     studentId: '',
@@ -291,40 +290,6 @@ export function StudentGroupManager() {
     }
   }
 
-  const handleImportGoogleSheets = async () => {
-    if (!googleSheetId || !selectedGroup) return
-
-    setImportLoading(true)
-    try {
-      const response = await fetch('/api/students/import/google-sheets', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          spreadsheetId: googleSheetId,
-          groupId: selectedGroup.id
-        })
-      })
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Google Sheets 가져오기 실패')
-      }
-
-      if (data.students && data.students.length > 0) {
-        await addStudents(selectedGroup.id, data.students)
-        const fetchedStudents = await fetchStudents(selectedGroup.id)
-        setStudents(fetchedStudents)
-        setImportDialogOpen(false)
-        setGoogleSheetId('')
-        alert(`${data.students.length}명의 학생을 성공적으로 가져왔습니다.`)
-      }
-    } catch (error) {
-      alert(error instanceof Error ? error.message : 'Google Sheets 가져오기 중 오류가 발생했습니다.')
-    } finally {
-      setImportLoading(false)
-    }
-  }
 
   const handleDownloadTemplate = async (format: 'excel' | 'csv') => {
     try {
@@ -872,12 +837,12 @@ export function StudentGroupManager() {
           <DialogHeader>
             <DialogTitle>학생 자료 가져오기</DialogTitle>
             <DialogDescription>
-              Excel, CSV 파일 또는 Google Sheets에서 학생 정보를 가져올 수 있습니다.
+              Excel 또는 CSV 파일에서 학생 정보를 가져올 수 있습니다.
             </DialogDescription>
           </DialogHeader>
 
           <Tabs value={importType} onValueChange={(value) => setImportType(value as any)}>
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="excel">
                 <FileSpreadsheet className="mr-2 h-4 w-4" />
                 Excel
@@ -885,10 +850,6 @@ export function StudentGroupManager() {
               <TabsTrigger value="csv">
                 <FileText className="mr-2 h-4 w-4" />
                 CSV
-              </TabsTrigger>
-              <TabsTrigger value="googlesheets">
-                <Sheet className="mr-2 h-4 w-4" />
-                Google Sheets
               </TabsTrigger>
             </TabsList>
 
@@ -950,43 +911,6 @@ export function StudentGroupManager() {
               </div>
             </TabsContent>
 
-            <TabsContent value="googlesheets" className="space-y-4">
-              <div className="text-sm text-muted-foreground">
-                Google Sheets에서 학생 정보를 가져옵니다. 
-                스프레드시트의 첫 번째 행은 헤더여야 하며, 학년/반/이름 정보를 포함해야 합니다.
-              </div>
-              {!session?.user?.email && (
-                <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3 text-sm">
-                  Google Sheets를 사용하려면 먼저 로그인해야 합니다.
-                </div>
-              )}
-              <div className="space-y-2">
-                <Label htmlFor="sheet-id">스프레드시트 ID 또는 URL</Label>
-                <Input
-                  id="sheet-id"
-                  placeholder="예: 1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms"
-                  value={googleSheetId}
-                  onChange={(e) => {
-                    const value = e.target.value
-                    // URL에서 ID 추출
-                    const match = value.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/)
-                    setGoogleSheetId(match ? match[1] : value)
-                  }}
-                  disabled={importLoading}
-                />
-                <p className="text-xs text-muted-foreground">
-                  Google Sheets URL에서 /d/ 다음에 오는 부분이 스프레드시트 ID입니다.
-                </p>
-              </div>
-              <Button 
-                onClick={handleImportGoogleSheets} 
-                disabled={importLoading || !googleSheetId || !session?.user?.email}
-                className="w-full"
-              >
-                <Upload className="mr-2 h-4 w-4" />
-                {importLoading ? '가져오는 중...' : 'Google Sheets에서 가져오기'}
-              </Button>
-            </TabsContent>
           </Tabs>
 
           <div className="bg-gray-50 rounded-md p-4">

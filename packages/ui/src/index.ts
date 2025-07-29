@@ -5,6 +5,7 @@ export * from './components/ThemedCard';
 export * from './components/ThemedGradeCard';
 export * from './components/ThemedButton';
 export * from './components/CrossAppNavigation';
+export * from './components/AppNavigation';
 
 // UI Components - grading에서 가져온 컴포넌트
 export * from './components/alert';

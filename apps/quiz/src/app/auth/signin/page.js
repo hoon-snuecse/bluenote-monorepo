@@ -13,6 +13,8 @@ function SignInContent() {
   const handleGoogleSignIn = async () => {
     setIsLoading(true)
     try {
+      // 개발 환경에서는 Quiz 앱에서 직접 로그인
+      // 프로덕션에서는 서브도메인 쿠키 공유로 자동 인증됨
       console.log('Signing in with callbackUrl:', callbackUrl)
       const result = await signIn('google', { 
         callbackUrl,
@@ -74,24 +76,19 @@ function SignInContent() {
         </div>
         
         <div className="mt-8 border-t pt-6">
-          <p className="text-center text-sm text-gray-500 mb-3">
-            이미 Bluenote에 로그인하셨나요?
-          </p>
+          <div className="rounded-md bg-blue-50 p-4 mb-4">
+            <p className="text-sm text-blue-800 leading-relaxed">
+              <strong>💡 개발 환경 안내:</strong><br/>
+              로컬 개발 환경에서는 각 앱마다 개별 로그인이 필요합니다.<br/>
+              프로덕션 환경(bluenote.site)에서는 한 번의 로그인으로 모든 서비스를 이용할 수 있습니다.
+            </p>
+          </div>
           <a 
-            href="/auth/sync-session"
-            className="block text-center text-blue-600 hover:text-blue-500 text-sm font-medium mb-2"
-          >
-            기존 세션으로 계속하기 →
-          </a>
-          <a 
-            href="https://bluenote.site"
+            href={process.env.NEXT_PUBLIC_MAIN_AUTH_URL || 'http://localhost:3000'}
             className="block text-center text-gray-600 hover:text-gray-500 text-sm"
           >
             Bluenote 메인 사이트로 이동
           </a>
-          <p className="mt-2 text-center text-xs text-gray-400">
-            메인 사이트에서 로그인하면 모든 서비스를 이용할 수 있습니다
-          </p>
         </div>
       </div>
     </div>

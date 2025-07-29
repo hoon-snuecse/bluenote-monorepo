@@ -27,7 +27,6 @@ export async function GET() {
         documentId: `doc-${index + 1}`,
         documentName: doc.fileName,
         content: doc.content,
-        googleDriveFileId: doc.googleDriveFileId,
         evaluationStatus: evaluation ? 'completed' : 'pending',
         scores: evaluation ? evaluation.scores : {
           clarity: 0,

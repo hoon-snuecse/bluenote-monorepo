@@ -60,7 +60,7 @@ ANTHROPIC_API_KEY="sk-ant-..."
 OPENAI_API_KEY="sk-..."
 ```
 
-### Google OAuth (Google Drive 연동)
+### Google OAuth
 
 ```bash
 GOOGLE_CLIENT_ID="your-google-client-id.apps.googleusercontent.com"

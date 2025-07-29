@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase'
 import { getServerSession } from 'next-auth'
-import { createAuthOptions } from '@bluenote/auth'
+import { authOptions } from '@/lib/auth'
 
 export async function GET(request, { params }) {
   try {
@@ -103,7 +103,6 @@ export async function GET(request, { params }) {
 export async function DELETE(request, { params }) {
   try {
     // 세션 확인
-    const authOptions = createAuthOptions()
     const session = await getServerSession(authOptions)
     if (!session?.user?.email) {
       return NextResponse.json(

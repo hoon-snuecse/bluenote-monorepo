@@ -26,7 +26,6 @@ export interface Document {
   assignmentId: string;
   fileName: string;
   content: string;
-  googleDriveFileId?: string;
   importedAt: Date;
   evaluationStatus: 'pending' | 'in_progress' | 'completed' | 'error';
 }

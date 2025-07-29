@@ -9,6 +9,8 @@ import { DevAutoLogin } from "@/components/DevAutoLogin";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { NetworkErrorBoundary } from "@/components/NetworkErrorBoundary";
 import { FeedbackWidget } from "@/components/FeedbackWidget";
+import { Providers } from "@/components/Providers";
+import UnifiedNavigation from "@/components/UnifiedNavigation";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -54,15 +56,18 @@ export default function RootLayout({
       >
         <ErrorBoundary>
           <NetworkErrorBoundary>
-            <UserProvider>
-              <NotificationProvider>
-                <DevAutoLogin />
-                <NavigationWithAuth />
-                <NotificationContainer />
-                {children}
-                <FeedbackWidget />
-              </NotificationProvider>
-            </UserProvider>
+            <Providers>
+              <UnifiedNavigation />
+              <UserProvider>
+                <NotificationProvider>
+                  <DevAutoLogin />
+                  <NavigationWithAuth />
+                  <NotificationContainer />
+                  {children}
+                  <FeedbackWidget />
+                </NotificationProvider>
+              </UserProvider>
+            </Providers>
           </NetworkErrorBoundary>
         </ErrorBoundary>
       </body>
