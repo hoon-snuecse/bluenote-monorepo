@@ -14,7 +14,6 @@ export interface ExtendedSession extends Session {
     claudeDailyLimit?: number;
     role?: string;
   };
-  accessToken?: string;
 }
 
 // 확장된 JWT 타입 정의
@@ -117,9 +116,8 @@ export const createAuthOptions = (callbacks?: AuthCallbacks): NextAuthOptions =>
         clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
         authorization: {
           params: {
-            scope: 'openid email profile https://www.googleapis.com/auth/drive.file',
-            access_type: 'offline',
-            prompt: 'consent',
+            scope: 'openid email profile',
+            prompt: 'select_account',
           },
         },
       }),
@@ -134,10 +132,8 @@ export const createAuthOptions = (callbacks?: AuthCallbacks): NextAuthOptions =>
         return true;
       },
       async jwt({ token, user, account }) {
-        // 첫 로그인 시 토큰 정보 추가
+        // 첫 로그인 시 사용자 정보 초기화
         if (account && user) {
-          token.accessToken = account.access_token;
-          token.refreshToken = account.refresh_token;
           
           // 로그인 활동 기록 (첫 로그인 시만)
           if (callbacks?.logSignIn && user.email) {
@@ -198,10 +194,6 @@ export const createAuthOptions = (callbacks?: AuthCallbacks): NextAuthOptions =>
         extendedSession.user.claudeDailyLimit = extendedToken.claudeDailyLimit || 0;
         extendedSession.user.role = extendedToken.userRole || 'user';
         
-        // Google Drive API 접근을 위한 토큰 추가
-        if (extendedToken.accessToken) {
-          extendedSession.accessToken = extendedToken.accessToken as string;
-        }
         
         return extendedSession;
       },

@@ -1,0 +1,59 @@
+name: Environment Variables Sync
+# 이 워크플로우는 packages/auth 변경 시 Vercel 프로젝트 간 환경변수를 동기화합니다
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'packages/auth/**'
+      - '.env.example'
+  workflow_dispatch:
+
+jobs:
+  sync-env-vars:
+    name: Sync Environment Variables
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+      
+      # MCP를 통한 환경변수 동기화 스크립트 실행
+      # 실제 구현 시 MCP 도구를 활용한 자동화 추가
+      - name: Sync Vercel Environment Variables
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          echo "환경변수 동기화 시작..."
+          # TODO: MCP 도구를 활용한 실제 동기화 로직 구현
+          echo "- bluenote-web"
+          echo "- bluenote-grading" 
+          echo "- bluenote-quiz"
+          echo "환경변수 동기화 완료!"
+      
+      - name: Trigger Vercel Deployments
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          echo "배포 트리거..."
+          # TODO: 각 프로젝트 재배포 트리거
+          
+      - name: Notify Success
+        if: success()
+        run: |
+          echo "✅ 환경변수 동기화 및 배포 완료"
+          
+      - name: Notify Failure
+        if: failure()
+        run: |
+          echo "❌ 환경변수 동기화 실패"

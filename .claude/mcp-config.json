@@ -1,0 +1,183 @@
+{
+  "description": "Bluenote Monorepo MCP 자동화 설정",
+  "version": "1.0.0",
+  "created": "2025-01-29",
+  
+  "vercel": {
+    "projects": [
+      {
+        "name": "bluenote-web",
+        "domain": "bluenote.site",
+        "framework": "nextjs",
+        "buildCommand": "pnpm build --filter=web",
+        "envPrefix": "NEXT_PUBLIC_"
+      },
+      {
+        "name": "bluenote-grading",
+        "domain": "grading.bluenote.site",
+        "framework": "nextjs",
+        "buildCommand": "pnpm build --filter=grading",
+        "envPrefix": "NEXT_PUBLIC_"
+      },
+      {
+        "name": "bluenote-quiz",
+        "domain": "quiz.bluenote.site",
+        "framework": "nextjs",
+        "buildCommand": "pnpm build --filter=quiz",
+        "envPrefix": "NEXT_PUBLIC_"
+      }
+    ],
+    "sharedEnvVars": [
+      "NEXTAUTH_SECRET",
+      "GOOGLE_CLIENT_ID",
+      "GOOGLE_CLIENT_SECRET",
+      "NEXT_PUBLIC_SUPABASE_URL",
+      "NEXT_PUBLIC_SUPABASE_ANON_KEY",
+      "SUPABASE_SERVICE_ROLE_KEY",
+      "ANTHROPIC_API_KEY",
+      "CLAUDE_API_KEY"
+    ],
+    "automation": {
+      "envSync": {
+        "enabled": true,
+        "description": "모든 프로젝트 간 공통 환경변수 동기화"
+      },
+      "deploymentChecks": {
+        "enabled": true,
+        "checks": [
+          "build-success",
+          "env-vars-present",
+          "domain-configured"
+        ]
+      },
+      "buildOptimization": {
+        "enabled": true,
+        "turborepo": true,
+        "cacheStrategy": "remote"
+      }
+    }
+  },
+  
+  "github": {
+    "repository": "hoon/bluenote-monorepo",
+    "defaultBranch": "main",
+    "automation": {
+      "prChecks": {
+        "enabled": true,
+        "required": [
+          "lint",
+          "typecheck",
+          "build"
+        ]
+      },
+      "issueLabels": {
+        "bug": "버그",
+        "feature": "기능요청",
+        "auth": "인증관련",
+        "quiz": "quiz-app",
+        "web": "web-app",
+        "grading": "grading-app"
+      },
+      "workflows": [
+        {
+          "name": "env-sync",
+          "trigger": "push:packages/auth/**",
+          "action": "sync-vercel-env-vars"
+        },
+        {
+          "name": "deploy-check",
+          "trigger": "pull_request",
+          "action": "verify-deployments"
+        }
+      ]
+    }
+  },
+  
+  "supabase": {
+    "project": "bluenote",
+    "automation": {
+      "sessionManagement": {
+        "enabled": true,
+        "tasks": [
+          {
+            "name": "cleanup-expired-sessions",
+            "schedule": "0 */6 * * *",
+            "description": "6시간마다 만료된 세션 정리",
+            "function": "cleanup_expired_sessions"
+          }
+        ]
+      },
+      "monitoring": {
+        "enabled": true,
+        "metrics": [
+          "session-count",
+          "active-users",
+          "cross-domain-sessions"
+        ],
+        "alerts": [
+          {
+            "condition": "session-anomaly",
+            "threshold": "200% increase in 1 hour",
+            "action": "notify"
+          }
+        ]
+      },
+      "backup": {
+        "enabled": true,
+        "schedule": "0 2 * * *",
+        "tables": [
+          "sessions",
+          "users",
+          "quizzes",
+          "shared_quizzes"
+        ]
+      }
+    }
+  },
+  
+  "integration": {
+    "crossDomainAuth": {
+      "description": "크로스 도메인 인증 통합 설정",
+      "sessionStore": "supabase:public.sessions",
+      "cookieDomain": ".bluenote.site",
+      "sessionTimeout": "30 days",
+      "implementation": {
+        "phase1": "completed",
+        "phase2": "pending",
+        "phase3": "planned"
+      }
+    },
+    "monitoring": {
+      "dashboard": {
+        "vercelMetrics": ["deployment-status", "build-time", "error-rate"],
+        "githubMetrics": ["pr-merge-time", "issue-resolution"],
+        "supabaseMetrics": ["query-performance", "session-stats"]
+      }
+    }
+  },
+  
+  "scripts": {
+    "envSync": {
+      "description": "Vercel 프로젝트 간 환경변수 동기화",
+      "command": "mcp-vercel-sync-env",
+      "projects": ["bluenote-web", "bluenote-grading", "bluenote-quiz"]
+    },
+    "sessionCleanup": {
+      "description": "Supabase 세션 정리",
+      "command": "mcp-supabase-cleanup-sessions",
+      "schedule": "daily"
+    },
+    "deployAll": {
+      "description": "모든 앱 배포",
+      "command": "mcp-vercel-deploy-all",
+      "order": ["web", "grading", "quiz"]
+    }
+  },
+  
+  "notes": {
+    "lastUpdated": "2025-01-29",
+    "updatedBy": "Claude Code",
+    "purpose": "MCP 도구를 활용한 자동화 작업의 설정과 문서화",
+    "usage": "이 파일은 MCP 도구 사용 시 참조할 프로젝트별 설정을 정의합니다"
+  }
+}
