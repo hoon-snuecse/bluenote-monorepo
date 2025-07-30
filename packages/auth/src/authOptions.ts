@@ -43,15 +43,6 @@ export const createAuthOptions = (callbacks?: AuthCallbacks): NextAuthOptions =>
                       process.env.VERCEL_ENV === 'production' ||
                       process.env.NEXTAUTH_URL?.includes('bluenote.site');
   
-  // 디버깅용 로그
-  console.log('Auth Configuration:', {
-    NODE_ENV: process.env.NODE_ENV,
-    VERCEL_ENV: process.env.VERCEL_ENV,
-    NEXTAUTH_URL: process.env.NEXTAUTH_URL,
-    isProduction,
-    cookieDomain: isProduction ? '.bluenote.site' : undefined
-  });
-  
   return {
     // 쿠키 설정 - 프로덕션에서는 서브도메인 간 공유를 위해 .bluenote.site 도메인 사용
     // useSecureCookies를 명시적으로 설정

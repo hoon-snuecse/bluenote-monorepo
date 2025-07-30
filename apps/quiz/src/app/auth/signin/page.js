@@ -1,18 +1,38 @@
 'use client'
 
-import { useEffect, Suspense } from 'react'
-import { useSearchParams } from 'next/navigation'
+import { useEffect, useState, Suspense } from 'react'
+import { useSearchParams, useRouter } from 'next/navigation'
 
 function SignInContent() {
   const searchParams = useSearchParams()
+  const router = useRouter()
   const callbackUrl = searchParams.get('callbackUrl') || '/create'
+  const [isChecking, setIsChecking] = useState(true)
   
   useEffect(() => {
-    // 메인 사이트로 리다이렉트하여 로그인 처리
-    const mainAuthUrl = process.env.NEXT_PUBLIC_MAIN_AUTH_URL || 'https://bluenote.site'
-    const encodedCallbackUrl = encodeURIComponent(`https://quiz.bluenote.site${callbackUrl}`)
-    window.location.href = `${mainAuthUrl}/api/auth/signin?callbackUrl=${encodedCallbackUrl}`
-  }, [callbackUrl])
+    // 세션 확인
+    const checkSession = async () => {
+      try {
+        const response = await fetch('/api/auth/session')
+        const session = await response.json()
+        
+        if (session && session.user) {
+          // 세션이 있으면 원래 가려던 페이지로 이동
+          router.push(callbackUrl)
+        } else {
+          // 세션이 없으면 메인 사이트로 리다이렉트
+          const mainAuthUrl = process.env.NEXT_PUBLIC_MAIN_AUTH_URL || 'https://bluenote.site'
+          const encodedCallbackUrl = encodeURIComponent(`https://quiz.bluenote.site${callbackUrl}`)
+          window.location.href = `${mainAuthUrl}/api/auth/signin?callbackUrl=${encodedCallbackUrl}`
+        }
+      } catch (error) {
+        console.error('Session check error:', error)
+        setIsChecking(false)
+      }
+    }
+    
+    checkSession()
+  }, [callbackUrl, router])
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-gray-50 px-4 py-12 pt-28 sm:px-6 lg:px-8">
@@ -28,7 +48,9 @@ function SignInContent() {
         
         <div className="mt-8 space-y-6">
           <div className="text-center">
-            <p className="text-gray-600">메인 사이트로 리다이렉트 중...</p>
+            <p className="text-gray-600">
+              {isChecking ? '로그인 상태 확인 중...' : '메인 사이트로 이동합니다...'}
+            </p>
           </div>
         </div>
         
