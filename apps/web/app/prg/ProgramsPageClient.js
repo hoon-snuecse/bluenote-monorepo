@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { PenTool, FileQuestion, BarChart2, Brain, Lock, Sparkles } from 'lucide-react';
-import { useSession } from 'next-auth/react';
+import { useNextAuth as useAuth } from '@bluenote/auth';
 
 export default function ProgramsPageClient() {
   const [fadeIn, setFadeIn] = useState({
@@ -13,7 +13,7 @@ export default function ProgramsPageClient() {
     card3: false,
     card4: false,
   });
-  const { data: session } = useSession();
+  const { user } = useAuth();
 
   useEffect(() => {
     const timers = [
@@ -134,7 +134,7 @@ export default function ProgramsPageClient() {
           <div className="grid md:grid-cols-2 gap-8">
             {programs.map((program, index) => {
               const Icon = program.icon;
-              const isDisabled = program.status !== 'active' || (program.requireAuth && !session);
+              const isDisabled = program.status !== 'active' || (program.requireAuth && !user);
               
               const CardContent = (
                 <div className={`quote-sheet hover:shadow-xl transition-all duration-1000 ${
@@ -184,13 +184,13 @@ export default function ProgramsPageClient() {
                       </div>
                       
                       <div className="flex items-center justify-between">
-                        {program.requireAuth && !session && (
+                        {program.requireAuth && !user && (
                           <div className="flex items-center gap-2 text-sm text-amber-600">
                             <Lock className="w-4 h-4" />
                             <span>로그인 필요</span>
                           </div>
                         )}
-                        {program.status === 'active' && (!program.requireAuth || session) && (
+                        {program.status === 'active' && (!program.requireAuth || user) && (
                           <span className="text-blue-600 font-semibold ml-auto">
                             시작하기 →
                           </span>
@@ -201,7 +201,7 @@ export default function ProgramsPageClient() {
                 </div>
               );
 
-              if (program.status === 'active' && (!program.requireAuth || session)) {
+              if (program.status === 'active' && (!program.requireAuth || user)) {
                 if (program.isExternal) {
                   return (
                     <a key={index} href={program.href} target="_blank" rel="noopener noreferrer">
@@ -221,7 +221,7 @@ export default function ProgramsPageClient() {
           </div>
 
           {/* Login Notice */}
-          {!session && (
+          {!user && (
             <div className="mt-12 text-center">
               <div className="inline-flex items-center gap-2 px-6 py-3 bg-amber-50 border border-amber-200 rounded-lg">
                 <Lock className="w-5 h-5 text-amber-600" />
