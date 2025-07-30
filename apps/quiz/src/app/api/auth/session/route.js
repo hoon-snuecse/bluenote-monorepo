@@ -1,27 +1,33 @@
-import { getServerSession } from 'next-auth'
-import { NextResponse } from 'next/server'
-import { cookies } from 'next/headers'
-import { authOptions } from '@/lib/auth'
-
-export async function GET() {
+export async function GET(request) {
   try {
-    // 디버깅: 쿠키 확인
-    const cookieStore = cookies()
-    const sessionToken = cookieStore.get('next-auth.session-token')
-    console.log('Session token cookie:', sessionToken)
+    // 요청 헤더에서 쿠키 가져오기
+    const cookieHeader = request.headers.get('cookie');
     
-    const session = await getServerSession(authOptions)
-    console.log('Session from getServerSession:', session)
-    
-    // 세션이 있으면 세션 정보 반환
-    if (session) {
-      return NextResponse.json(session)
+    if (!cookieHeader) {
+      return Response.json({ user: null });
     }
+
+    // 메인 사이트의 세션 확인 API에 쿠키 전달
+    const response = await fetch('https://bluenote.site/api/auth/session-check', {
+      headers: {
+        'Cookie': cookieHeader,
+        'X-Forwarded-Host': 'quiz.bluenote.site'
+      }
+    });
+
+    if (!response.ok) {
+      return Response.json({ user: null });
+    }
+
+    const data = await response.json();
     
-    // 세션이 없으면 null 반환
-    return NextResponse.json(null)
+    // 세션 데이터 반환
+    return Response.json({
+      user: data.user || data.session?.user || null
+    });
+    
   } catch (error) {
-    console.error('Session check error:', error)
-    return NextResponse.json(null)
+    console.error('Session check error:', error);
+    return Response.json({ user: null });
   }
 }
