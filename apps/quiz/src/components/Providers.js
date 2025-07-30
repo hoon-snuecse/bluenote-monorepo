@@ -1,13 +1,7 @@
 'use client'
 
-import { SessionProvider } from 'next-auth/react'
-// import { AuthSyncProvider } from './AuthSyncProvider'
-
 export function Providers({ children }) {
-  return (
-    <SessionProvider>
-      {/* AuthSyncProvider 일시 비활성화 - 세션 문제 디버깅 중 */}
-      {children}
-    </SessionProvider>
-  )
+  // Quiz 앱은 메인 사이트의 세션을 사용하므로
+  // 자체 SessionProvider를 사용하지 않음
+  return <>{children}</>
 }

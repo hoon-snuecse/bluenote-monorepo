@@ -1,35 +1,18 @@
 'use client'
 
-import { signIn } from 'next-auth/react'
-import { useState, Suspense } from 'react'
+import { useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
-import Image from 'next/image'
 
 function SignInContent() {
-  const [isLoading, setIsLoading] = useState(false)
   const searchParams = useSearchParams()
   const callbackUrl = searchParams.get('callbackUrl') || '/create'
   
-  const handleGoogleSignIn = async () => {
-    setIsLoading(true)
-    try {
-      // 개발 환경에서는 Quiz 앱에서 직접 로그인
-      // 프로덕션에서는 서브도메인 쿠키 공유로 자동 인증됨
-      console.log('Signing in with callbackUrl:', callbackUrl)
-      const result = await signIn('google', { 
-        callbackUrl,
-        redirect: true 
-      })
-      console.log('SignIn result:', result)
-    } catch (error) {
-      console.error('로그인 실패 상세:', {
-        message: error.message,
-        error: error,
-        stack: error.stack
-      })
-      setIsLoading(false)
-    }
-  }
+  useEffect(() => {
+    // 메인 사이트로 리다이렉트하여 로그인 처리
+    const mainAuthUrl = process.env.NEXT_PUBLIC_MAIN_AUTH_URL || 'https://bluenote.site'
+    const encodedCallbackUrl = encodeURIComponent(`https://quiz.bluenote.site${callbackUrl}`)
+    window.location.href = `${mainAuthUrl}/api/auth/signin?callbackUrl=${encodedCallbackUrl}`
+  }, [callbackUrl])
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-gray-50 px-4 py-12 pt-28 sm:px-6 lg:px-8">
