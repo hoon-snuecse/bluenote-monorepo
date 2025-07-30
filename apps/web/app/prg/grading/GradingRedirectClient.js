@@ -1,11 +1,11 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useSession } from 'next-auth/react';
+import { useNextAuth as useAuth } from '@bluenote/auth';
 import { useRouter } from 'next/navigation';
 
 export default function GradingRedirectClient() {
-  const { data: session, status } = useSession();
+  const { user, status } = useAuth();
   const router = useRouter();
   const [redirecting, setRedirecting] = useState(false);
 
@@ -14,7 +14,7 @@ export default function GradingRedirectClient() {
     if (status === 'loading') return;
     
     // 세션이 있으면 바로 리다이렉트
-    if (status === 'authenticated' && session && !redirecting) {
+    if (status === 'authenticated' && user && !redirecting) {
       setRedirecting(true);
       window.location.href = 'https://grading.bluenote.site/assignments';
     }
@@ -25,7 +25,7 @@ export default function GradingRedirectClient() {
       // 로그인 후 grading 시스템으로 바로 이동하도록 callbackUrl 설정
       router.push('/auth/signin?callbackUrl=' + encodeURIComponent('https://grading.bluenote.site/assignments'));
     }
-  }, [session, status, router, redirecting]);
+  }, [user, status, router, redirecting]);
 
   return (
     <div className="min-h-screen flex items-center justify-center">

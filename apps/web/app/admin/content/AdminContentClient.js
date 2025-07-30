@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useSession } from 'next-auth/react';
+import { useNextAuth as useAuth } from '@bluenote/auth';
 import { useRouter } from 'next/navigation';
 import { 
   FileText, 
@@ -17,7 +17,7 @@ import {
 import Link from 'next/link';
 
 export default function AdminContentClient() {
-  const { data: session, status } = useSession();
+  const { user, status } = useAuth();
   const router = useRouter();
   const [activeSection, setActiveSection] = useState('research');
   const [posts, setPosts] = useState([]);
@@ -42,14 +42,14 @@ export default function AdminContentClient() {
   useEffect(() => {
     if (status === 'loading') return;
     
-    if (!session || !session.user.isAdmin) {
+    if (!user || !user.isAdmin) {
       router.push('/');
       return;
     }
 
     fetchPosts();
     fetchStats();
-  }, [session, status, router, activeSection]);
+  }, [user, status, router, activeSection]);
 
   const fetchPosts = async () => {
     setLoading(true);
@@ -148,7 +148,7 @@ export default function AdminContentClient() {
     );
   }
 
-  if (!session || !session.user.isAdmin) {
+  if (!user || !user.isAdmin) {
     return null;
   }
 

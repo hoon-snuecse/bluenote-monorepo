@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useSession } from 'next-auth/react';
+import { useNextAuth as useAuth } from '@bluenote/auth';
 import { useRouter } from 'next/navigation';
 import { 
   User, 
@@ -20,7 +20,7 @@ import {
 import Link from 'next/link';
 
 export default function AdminUsersClient() {
-  const { data: session, status } = useSession();
+  const { user: currentUser, status } = useAuth();
   const router = useRouter();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -33,13 +33,13 @@ export default function AdminUsersClient() {
   useEffect(() => {
     if (status === 'loading') return;
     
-    if (!session || !session.user.isAdmin) {
+    if (!currentUser || !currentUser.isAdmin) {
       router.push('/');
       return;
     }
 
     fetchUsers();
-  }, [session, status, router]);
+  }, [currentUser, status, router]);
 
   const fetchUsers = async () => {
     try {
@@ -143,7 +143,7 @@ export default function AdminUsersClient() {
     );
   }
 
-  if (!session || !session.user.isAdmin) {
+  if (!currentUser || !currentUser.isAdmin) {
     return null;
   }
 
@@ -370,7 +370,7 @@ export default function AdminUsersClient() {
                             >
                               <Edit2 className="w-4 h-4" />
                             </button>
-                            {user.email !== session.user.email && (
+                            {user.email !== currentUser.email && (
                               <button
                                 onClick={() => handleDeleteUser(user.email)}
                                 className="p-2 text-red-400 hover:bg-red-900/30 rounded-lg transition-colors"

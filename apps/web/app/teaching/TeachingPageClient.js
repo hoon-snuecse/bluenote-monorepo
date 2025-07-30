@@ -3,15 +3,15 @@
 import { useEffect, useState } from 'react';
 import { BookOpen, Users, Lightbulb, Plus, PenTool, ChevronRight, Tag } from 'lucide-react';
 import Link from 'next/link';
-import { useSession } from 'next-auth/react';
+import { useNextAuth as useAuth } from '@bluenote/auth';
 
 export default function TeachingPageClient() {
-  const { data: session } = useSession();
+  const { user } = useAuth();
   
   // 임시 관리자 이메일 체크 (프로덕션에서는 서버 측 검증 필요)
   const adminEmails = ['hoon@snuecse.org', 'hoon@iw.es.kr', 'sociogram@gmail.com'];
-  const isAdminEmail = session?.user?.email && adminEmails.includes(session.user.email);
-  const hasWritePermission = session?.user?.isAdmin || session?.user?.canWrite || isAdminEmail;
+  const isAdminEmail = user?.email && adminEmails.includes(user.email);
+  const hasWritePermission = user?.isAdmin || user?.canWrite || isAdminEmail;
   
   const [fadeIn, setFadeIn] = useState({
     hero: false,

@@ -4,7 +4,7 @@ import { use, useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { ChevronLeft, Calendar, Tag, Edit, Trash2, GraduationCap, BarChart2, Network, Plus, FileText, Download, Music, Video, Eye } from 'lucide-react';
 import Link from 'next/link';
-import { useSession } from 'next-auth/react';
+import { useNextAuth as useAuth } from '@bluenote/auth';
 
 const iconMap = {
   evaluation: GraduationCap,
@@ -16,7 +16,7 @@ const iconMap = {
 export default function ResearchPostClient({ params }) {
   const { id } = use(params);
   const router = useRouter();
-  const { data: session, status } = useSession();
+  const { user, status } = useAuth();
   const [post, setPost] = useState(null);
   const [loading, setLoading] = useState(true);
   const [fadeIn, setFadeIn] = useState(false);
@@ -24,13 +24,13 @@ export default function ResearchPostClient({ params }) {
   // 세션 디버그 로그
   useEffect(() => {
     console.log('Session status:', status);
-    console.log('Session data:', session);
-  }, [session, status]);
+    console.log('User data:', user);
+  }, [user, status]);
   
   // 임시 관리자 이메일 체크
   const adminEmails = ['hoon@snuecse.org', 'hoon@iw.es.kr', 'sociogram@gmail.com'];
-  const isAdminEmail = session?.user?.email && adminEmails.includes(session.user.email);
-  const hasEditPermission = session?.user?.isAdmin || session?.user?.canWrite || isAdminEmail;
+  const isAdminEmail = user?.email && adminEmails.includes(user.email);
+  const hasEditPermission = user?.isAdmin || user?.canWrite || isAdminEmail;
 
   const fetchPost = useCallback(async () => {
     try {
@@ -141,7 +141,7 @@ export default function ResearchPostClient({ params }) {
                         onClick={(e) => {
                           console.log('Edit button clicked');
                           console.log('Session status:', status);
-                          console.log('Session data:', session);
+                          console.log('User data:', user);
                           console.log('Has edit permission:', hasEditPermission);
                           // 링크는 정상적으로 작동하도록 함
                         }}

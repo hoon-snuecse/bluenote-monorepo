@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useSession } from 'next-auth/react';
+import { useNextAuth as useAuth } from '@bluenote/auth';
 import { useRouter } from 'next/navigation';
 import { 
   Settings, 
@@ -18,7 +18,7 @@ import {
 import Link from 'next/link';
 
 export default function AdminSettingsClient() {
-  const { data: session, status } = useSession();
+  const { user, status } = useAuth();
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -67,14 +67,14 @@ export default function AdminSettingsClient() {
   useEffect(() => {
     if (status === 'loading') return;
     
-    if (!session || !session.user.isAdmin) {
+    if (!user || !user.isAdmin) {
       router.push('/');
       return;
     }
 
     // Fetch settings from API
     fetchSettings();
-  }, [session, status, router]);
+  }, [user, status, router]);
 
   const fetchSettings = async () => {
     try {
@@ -125,7 +125,7 @@ export default function AdminSettingsClient() {
     );
   }
 
-  if (!session || !session.user.isAdmin) {
+  if (!user || !user.isAdmin) {
     return null;
   }
 

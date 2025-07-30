@@ -4,7 +4,7 @@ import { use, useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { ChevronLeft, Calendar, Tag, Edit, Trash2, BarChart2, Network, Plus, FileText, Download, Music, Video, Eye } from 'lucide-react';
 import Link from 'next/link';
-import { useSession } from 'next-auth/react';
+import { useNextAuth as useAuth } from '@bluenote/auth';
 
 const iconMap = {
   pisa: BarChart2,
@@ -19,12 +19,12 @@ export default function AnalyticsPostClient({ params }) {
   const [loading, setLoading] = useState(true);
   const [fadeIn, setFadeIn] = useState(false);
   
-  const { data: session } = useSession();
+  const { user } = useAuth();
   
   // 임시 관리자 이메일 체크
   const adminEmails = ['hoon@snuecse.org', 'hoon@iw.es.kr', 'sociogram@gmail.com'];
-  const isAdminEmail = session?.user?.email && adminEmails.includes(session.user.email);
-  const hasEditPermission = session?.user?.isAdmin || session?.user?.canWrite || isAdminEmail;
+  const isAdminEmail = user?.email && adminEmails.includes(user.email);
+  const hasEditPermission = user?.isAdmin || user?.canWrite || isAdminEmail;
 
   const fetchPost = useCallback(async () => {
     try {

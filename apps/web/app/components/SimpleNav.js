@@ -1,10 +1,10 @@
 'use client';
 
 import Link from 'next/link';
-import { useSession } from 'next-auth/react';
+import { useNextAuth as useAuth } from '@bluenote/auth';
 
 export default function SimpleNav() {
-  const { data: session, status } = useSession();
+  const { user, status } = useAuth();
   
   if (status === 'loading') {
     return (
@@ -26,17 +26,17 @@ export default function SimpleNav() {
         <div className="flex gap-4 items-center">
           <Link href="/" className="hover:text-blue-600">Home</Link>
           
-          {session ? (
+          {user ? (
             <>
               <Link href="/ai/chat" className="hover:text-blue-600">
                 Claude Chat
               </Link>
-              {session.user?.isAdmin && (
+              {user?.isAdmin && (
                 <Link href="/admin/dashboard" className="hover:text-blue-600">
                   Admin
                 </Link>
               )}
-              <span>{session.user?.name || session.user?.email}</span>
+              <span>{user?.name || user?.email}</span>
               <Link href="/api/auth/signout?callbackUrl=/" className="hover:text-blue-600">
                 Logout
               </Link>

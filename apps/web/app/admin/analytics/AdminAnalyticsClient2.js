@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useSession } from 'next-auth/react';
+import { useNextAuth as useAuth } from '@bluenote/auth';
 import { useRouter } from 'next/navigation';
 import { 
   BarChart3, 
@@ -20,7 +20,7 @@ import {
 import Link from 'next/link';
 
 export default function AdminAnalyticsClient2() {
-  const { data: session, status } = useSession();
+  const { user, status } = useAuth();
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -30,13 +30,13 @@ export default function AdminAnalyticsClient2() {
   useEffect(() => {
     if (status === 'loading') return;
     
-    if (!session || !session.user.isAdmin) {
+    if (!user || !user.isAdmin) {
       router.push('/');
       return;
     }
 
     fetchAnalytics();
-  }, [session, status, router]);
+  }, [user, status, router]);
 
   const fetchAnalytics = async (isRefresh = false) => {
     if (isRefresh) {
@@ -81,7 +81,7 @@ export default function AdminAnalyticsClient2() {
     );
   }
 
-  if (!session || !session.user.isAdmin) {
+  if (!user || !user.isAdmin) {
     return null;
   }
 
