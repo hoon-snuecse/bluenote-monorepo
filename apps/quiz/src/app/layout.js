@@ -1,11 +1,7 @@
 import { Inter, Noto_Sans_KR } from 'next/font/google'
 import './globals.css'
 import { Providers } from '@/components/Providers'
-import dynamic from 'next/dynamic'
-
-const UnifiedNavigation = dynamic(() => import('@/components/UnifiedNavigation'), {
-  ssr: false
-})
+import UnifiedNavigation from '@/components/UnifiedNavigation'
 
 const inter = Inter({ 
   subsets: ['latin'],
