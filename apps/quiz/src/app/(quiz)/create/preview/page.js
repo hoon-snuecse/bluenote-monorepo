@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { useSession } from 'next-auth/react'
+// import { useSession } from 'next-auth/react' // Temporarily removed due to React Hooks error
 import { 
   CheckCircle2, 
   Circle, 
@@ -21,7 +21,16 @@ import {
 } from '@/lib/exporters'
 
 export default function QuizPreviewPage() {
-  const { data: session } = useSession()
+  // const { data: session } = useSession() // Temporarily removed
+  const [session, setSession] = useState(null)
+  
+  // Fetch session manually
+  useEffect(() => {
+    fetch('/api/auth/session')
+      .then(res => res.json())
+      .then(data => setSession(data))
+      .catch(() => setSession(null))
+  }, [])
   const searchParams = useSearchParams()
   const quizId = searchParams.get('quiz_id')
   

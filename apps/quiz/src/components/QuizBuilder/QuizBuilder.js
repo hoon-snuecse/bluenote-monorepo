@@ -1,12 +1,19 @@
 'use client'
 
-import { useState } from 'react'
-import { useSession } from 'next-auth/react'
+import { useState, useEffect } from 'react'
 import { Loader2, Sparkles } from 'lucide-react'
 
 export default function QuizBuilder() {
-  const { data: session } = useSession()
+  const [session, setSession] = useState(null)
   const [topic, setTopic] = useState('')
+  
+  // 세션 확인 (임시 해결책)
+  useEffect(() => {
+    fetch('/api/auth/session')
+      .then(res => res.json())
+      .then(data => setSession(data))
+      .catch(() => setSession(null))
+  }, [])
   const [grade, setGrade] = useState('middle1')
   
   // 문항 유형별 개수

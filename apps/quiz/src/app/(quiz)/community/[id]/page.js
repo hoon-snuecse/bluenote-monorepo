@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import { useSession } from 'next-auth/react'
+// import { useSession } from 'next-auth/react' // Temporarily removed due to React Hooks error
 import { createClient } from '@/lib/supabase'
 import { ChevronLeft, Download, Star, Calendar, User, FileText } from 'lucide-react'
 import QuestionPreview from '@/components/QuestionPreview/QuestionPreview'
@@ -10,7 +10,16 @@ import QuestionPreview from '@/components/QuestionPreview/QuestionPreview'
 export default function CommunityQuizDetailPage() {
   const { id } = useParams()
   const router = useRouter()
-  const { data: session } = useSession()
+  // const { data: session } = useSession() // Temporarily removed
+  const [session, setSession] = useState(null)
+  
+  // Fetch session manually
+  useEffect(() => {
+    fetch('/api/auth/session')
+      .then(res => res.json())
+      .then(data => setSession(data))
+      .catch(() => setSession(null))
+  }, [])
   const [quiz, setQuiz] = useState(null)
   const [questions, setQuestions] = useState([])
   const [loading, setLoading] = useState(true)

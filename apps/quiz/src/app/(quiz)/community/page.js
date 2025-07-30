@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useSession } from 'next-auth/react'
+// import { useSession } from 'next-auth/react' // Temporarily removed due to React Hooks error
 import { 
   Download, 
   Star, 
@@ -17,7 +17,16 @@ import {
 } from 'lucide-react'
 
 export default function CommunityPage() {
-  const { data: session } = useSession()
+  // const { data: session } = useSession() // Temporarily removed
+  const [session, setSession] = useState(null)
+  
+  // Fetch session manually
+  useEffect(() => {
+    fetch('/api/auth/session')
+      .then(res => res.json())
+      .then(data => setSession(data))
+      .catch(() => setSession(null))
+  }, [])
   const [sharedQuizzes, setSharedQuizzes] = useState([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')

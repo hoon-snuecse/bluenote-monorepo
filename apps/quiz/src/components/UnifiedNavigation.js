@@ -14,8 +14,15 @@ export default function UnifiedNavigation() {
   }
   
   useEffect(() => {
-    // 세션 정보를 서버에서 가져온 props로 받아야 함
-    // 임시로 비워둡
+    // 세션 확인
+    fetch('/api/auth/session')
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.user) {
+          setUser(data.user)
+        }
+      })
+      .catch(() => setUser(null))
   }, [])
   
   const handleSignOut = () => {
