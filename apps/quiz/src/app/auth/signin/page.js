@@ -51,6 +51,7 @@ function SignInContent() {
             <p className="text-gray-600">
               {isChecking ? '로그인 상태 확인 중...' : '메인 사이트로 이동합니다...'}
             </p>
+            {/* 재배포 트리거: 2025-07-30 */}
           </div>
         </div>
         
