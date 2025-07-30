@@ -18,14 +18,13 @@ import {
   Shield,
   Laptop
 } from 'lucide-react';
-import { useSession } from 'next-auth/react';
-import { signIn, signOut } from '@bluenote/auth';
+import { useAuth } from '@bluenote/auth';
 
 export default function Navigation() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const pathname = usePathname();
-  const { data: session, status } = useSession();
+  const { user, status, signIn, signOut } = useAuth();
 
   // 스크롤 감지
   useEffect(() => {
@@ -121,7 +120,7 @@ export default function Navigation() {
             })}
             
             {/* Claude AI 채팅 버튼 (로그인한 경우만) */}
-            {session && (
+            {user && (
               <Link
                 href="/ai/chat"
                 className="ml-2 flex items-center gap-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:from-purple-700 hover:to-blue-700 transition-all duration-200 shadow-md hover:shadow-lg"
@@ -132,7 +131,7 @@ export default function Navigation() {
             )}
             
             {/* 관리자 대시보드 버튼 (관리자만) */}
-            {session?.user?.isAdmin && (
+            {user?.isAdmin && (
               <Link
                 href="/admin/dashboard"
                 className="ml-2 flex items-center gap-2 bg-slate-800 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-slate-900 transition-all duration-200"
@@ -146,7 +145,7 @@ export default function Navigation() {
             <div className="ml-4">
               {status === 'loading' ? (
                 <div className="px-4 py-2 text-sm text-slate-500">로딩중...</div>
-              ) : session ? (
+              ) : user ? (
                 <button
                   onClick={() => signOut()}
                   className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-800 transition-colors"
@@ -200,7 +199,7 @@ export default function Navigation() {
             })}
             
             {/* 모바일 Claude 채팅 버튼 */}
-            {session && (
+            {user && (
               <Link
                 href="/ai/chat"
                 onClick={() => setIsMenuOpen(false)}
@@ -212,7 +211,7 @@ export default function Navigation() {
             )}
             
             {/* 모바일 관리자 버튼 */}
-            {session?.user?.isAdmin && (
+            {user?.isAdmin && (
               <Link
                 href="/admin/dashboard"
                 onClick={() => setIsMenuOpen(false)}
@@ -225,7 +224,7 @@ export default function Navigation() {
             
             {/* 모바일 로그인/로그아웃 */}
             <div className="mt-4 pt-4 border-t border-slate-200">
-              {session ? (
+              {user ? (
                 <button
                   onClick={() => {
                     signOut();

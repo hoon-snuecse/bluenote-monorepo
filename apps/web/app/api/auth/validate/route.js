@@ -1,5 +1,7 @@
 import { getServerSession } from 'next-auth/next';
-import { authOptions } from '@bluenote/auth';
+import { createAuthOptions } from '@bluenote/auth';
+
+const authOptions = createAuthOptions();
 import { NextResponse } from 'next/server';
 
 // 다른 앱에서 세션 유효성을 검증하기 위한 엔드포인트

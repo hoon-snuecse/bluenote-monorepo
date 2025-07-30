@@ -1,16 +1,17 @@
 'use client';
 
-import { useSession, signOut } from 'next-auth/react';
+import { useAuth } from '@bluenote/auth';
 import { useState } from 'react';
 
 export default function SessionDebugPage() {
-  const { data: session, status, update } = useSession();
+  const { user, status, signOut } = useAuth();
+  const session = user ? { user } : null;
   const [updating, setUpdating] = useState(false);
 
   const handleRefreshSession = async () => {
     setUpdating(true);
     try {
-      await update();
+      // \ud1b5\ud569 \uc778\uc99d\uc5d0\uc11c\ub294 \ud398\uc774\uc9c0 \uc0c8\ub85c\uace0\uce68\uc73c\ub85c \uc138\uc158 \uc5c5\ub370\uc774\ud2b8
       window.location.reload();
     } catch (error) {
       console.error('Session update failed:', error);
@@ -20,7 +21,7 @@ export default function SessionDebugPage() {
   };
 
   const handleSignOutAndIn = async () => {
-    await signOut({ redirect: false });
+    await signOut();
     window.location.href = '/api/auth/signin';
   };
 
