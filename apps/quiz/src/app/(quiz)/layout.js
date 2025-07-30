@@ -1,12 +1,37 @@
-import { TabNavigation } from '@/components/Navigation/TabNavigation'
-import { getServerSession } from '@bluenote/auth'
-import { redirect } from 'next/navigation'
+'use client'
 
-export default async function QuizLayout({ children }) {
-  const session = await getServerSession()
+import { TabNavigation } from '@/components/Navigation/TabNavigation'
+import { useEffect, useState } from 'react'
+import { useRouter, usePathname } from 'next/navigation'
+
+export default function QuizLayout({ children }) {
+  const router = useRouter()
+  const pathname = usePathname()
+  const [isChecking, setIsChecking] = useState(true)
   
-  if (!session) {
-    redirect('/auth/signin')
+  useEffect(() => {
+    // 세션 확인
+    fetch('/api/auth/session')
+      .then(res => res.json())
+      .then(data => {
+        if (!data || !data.user) {
+          // 현재 경로를 콜백 URL로 포함
+          router.push(`/auth/signin?callbackUrl=${encodeURIComponent(pathname)}`)
+        }
+        setIsChecking(false)
+      })
+      .catch(() => {
+        router.push('/auth/signin')
+        setIsChecking(false)
+      })
+  }, [router, pathname])
+
+  if (isChecking) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <p className="text-gray-600">로딩 중...</p>
+      </div>
+    )
   }
 
   return (
