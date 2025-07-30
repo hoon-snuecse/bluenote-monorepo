@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { GraduationCap, BarChart2, Network, Plus, Save, X, Loader2, Image as ImageIcon, Upload, FileText, Paperclip, Music, Video } from 'lucide-react';
 import Link from 'next/link';
 import matter from 'gray-matter';
-import { useSession } from 'next-auth/react';
+import { useNextAuth as useAuth } from '@bluenote/auth';
 
 // 페이지 로드 즉시 실행
 console.log('[WritePage] Page loaded at:', new Date().toISOString());
@@ -15,23 +15,23 @@ function WritePageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const editId = searchParams.get('id') || searchParams.get('edit'); // 'id' 파라미터도 지원
-  const { data: session, status } = useSession();
+  const { user, status } = useAuth();
   
   // Debug: 세션 정보 출력
   useEffect(() => {
     console.log('[WritePage] Session status:', status);
-    console.log('[WritePage] Session data:', session);
+    console.log('[WritePage] User data:', user);
     console.log('[WritePage] Current URL:', window.location.href);
     console.log('[WritePage] Edit ID:', editId);
     
-    if (session) {
+    if (user) {
       console.log('[WritePage] User permissions:', {
-        email: session.user?.email,
-        isAdmin: session.user?.isAdmin,
-        canWrite: session.user?.canWrite
+        email: user?.email,
+        isAdmin: user?.isAdmin,
+        canWrite: user?.canWrite
       });
     }
-  }, [session, status, editId]);
+  }, [user, status, editId]);
   
   const [loading, setLoading] = useState(false);
   const [showNewCategory, setShowNewCategory] = useState(false);
@@ -492,11 +492,11 @@ function WritePageContent() {
     <div className="min-h-screen py-16 px-4">
       <div className="container-custom max-w-4xl">
         {/* Debug: 권한 정보 표시 */}
-        {session && (
+        {user && (
           <div className="mb-4 p-4 bg-gray-100 rounded-lg text-sm">
-            <p>현재 사용자: {session.user?.email}</p>
-            <p>관리자 권한: {session.user?.isAdmin ? '예' : '아니오'}</p>
-            <p>글쓰기 권한: {session.user?.canWrite ? '예' : '아니오'}</p>
+            <p>현재 사용자: {user?.email}</p>
+            <p>관리자 권한: {user?.isAdmin ? '예' : '아니오'}</p>
+            <p>글쓰기 권한: {user?.canWrite ? '예' : '아니오'}</p>
           </div>
         )}
         

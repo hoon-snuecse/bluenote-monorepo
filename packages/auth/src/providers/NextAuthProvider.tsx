@@ -1,17 +1,18 @@
 'use client'
 
-import React from 'react'
-import { SessionProvider } from 'next-auth/react'
-import { AuthProvider } from '../contexts/AuthContext'
-import { NextAuthAdapter, useNextAuthSession } from '../adapters/nextauth'
-import { useAuth as useAuthContext } from '../contexts/AuthContext'
-import type { AuthProviderProps } from '../types'
+import React, { useEffect, useState } from 'react'
+import { SessionProvider, useSession } from 'next-auth/react'
+import { signIn as nextAuthSignIn, signOut as nextAuthSignOut } from 'next-auth/react'
+import type { AuthProviderProps, AuthContextValue, AuthUser, AuthStatus } from '../types'
+
+// AuthContext를 직접 정의하여 순환 참조 방지
+const NextAuthContext = React.createContext<AuthContextValue | null>(null)
 
 // NextAuth의 SessionProvider와 통합된 AuthProvider
-export function NextAuthProvider({ children, options }: AuthProviderProps) {
+export function NextAuthProvider({ children }: AuthProviderProps) {
   return (
     <SessionProvider>
-      <NextAuthBridge options={options}>
+      <NextAuthBridge>
         {children}
       </NextAuthBridge>
     </SessionProvider>
@@ -19,37 +20,66 @@ export function NextAuthProvider({ children, options }: AuthProviderProps) {
 }
 
 // NextAuth 세션을 AuthContext와 연결하는 브릿지 컴포넌트
-function NextAuthBridge({ children, options }: AuthProviderProps) {
-  const { user, status } = useNextAuthSession()
-  const [adapter] = React.useState(() => new NextAuthAdapter(options))
+function NextAuthBridge({ children }: { children: React.ReactNode }) {
+  const { data: session, status: sessionStatus } = useSession()
+  const [authStatus, setAuthStatus] = useState<AuthStatus>('loading')
+  
+  // NextAuth 세션을 AuthUser 형식으로 변환
+  const user: AuthUser | null = session?.user ? {
+    id: (session.user as any).id || '',
+    email: session.user.email,
+    name: session.user.name,
+    image: session.user.image,
+    isAdmin: (session.user as any).isAdmin,
+    canWrite: (session.user as any).canWrite,
+    claudeDailyLimit: (session.user as any).claudeDailyLimit,
+    role: (session.user as any).role
+  } : null
 
-  // NextAuth 세션 정보를 AuthContext에 전달
-  React.useEffect(() => {
-    if (adapter.subscribeToChanges) {
-      adapter.subscribeToChanges(() => {})
+  // NextAuth 상태를 AuthStatus로 변환
+  useEffect(() => {
+    if (sessionStatus === 'loading') {
+      setAuthStatus('loading')
+    } else if (sessionStatus === 'authenticated' && session) {
+      setAuthStatus('authenticated')
+    } else {
+      setAuthStatus('unauthenticated')
     }
-  }, [adapter])
+  }, [sessionStatus, session])
+
+  const signIn = async (provider: string = 'google') => {
+    await nextAuthSignIn(provider, { 
+      callbackUrl: window.location.pathname 
+    })
+  }
+
+  const signOut = async () => {
+    await nextAuthSignOut({ 
+      callbackUrl: '/'
+    })
+  }
+
+  const value: AuthContextValue = {
+    user,
+    status: authStatus,
+    signIn,
+    signOut
+  }
 
   return (
-    <AuthProvider adapter={adapter} options={options}>
-      <SyncNextAuthSession />
+    <NextAuthContext.Provider value={value}>
       {children}
-    </AuthProvider>
+    </NextAuthContext.Provider>
   )
 }
 
-// NextAuth 세션과 AuthContext를 동기화
-function SyncNextAuthSession() {
-  const { user: nextAuthUser, status: nextAuthStatus } = useNextAuthSession()
-  const authContext = useAuthContext()
-
-  React.useEffect(() => {
-    // NextAuth 세션 상태를 AuthContext와 동기화
-    // 이미 AuthProvider 내부에서 처리되므로 추가 작업 불필요
-  }, [nextAuthUser, nextAuthStatus, authContext])
-
-  return null
-}
-
 // NextAuth를 사용하는 앱에서는 이 훅을 사용
-export { useAuth } from '../contexts/AuthContext'
+export function useAuth() {
+  const context = React.useContext(NextAuthContext)
+  
+  if (!context) {
+    throw new Error('useAuth must be used within a NextAuthProvider')
+  }
+  
+  return context
+}

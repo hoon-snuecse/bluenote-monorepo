@@ -1,11 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useSession } from 'next-auth/react';
+import { useNextAuth as useAuth } from '@bluenote/auth';
 import { useRouter } from 'next/navigation';
 
 export default function DebugAnalyticsPage() {
-  const { data: session, status } = useSession();
+  const { user, status } = useAuth();
   const router = useRouter();
   const [apiData, setApiData] = useState(null);
   const [error, setError] = useState(null);
@@ -14,13 +14,13 @@ export default function DebugAnalyticsPage() {
   useEffect(() => {
     if (status === 'loading') return;
     
-    if (!session || !session.user.isAdmin) {
+    if (!user || !user.isAdmin) {
       router.push('/');
       return;
     }
 
     fetchData();
-  }, [session, status, router]);
+  }, [user, status, router]);
 
   const fetchData = async () => {
     try {
@@ -38,7 +38,7 @@ export default function DebugAnalyticsPage() {
     return <div className="p-8 text-white">Loading...</div>;
   }
 
-  if (!session || !session.user.isAdmin) {
+  if (!user || !user.isAdmin) {
     return null;
   }
 

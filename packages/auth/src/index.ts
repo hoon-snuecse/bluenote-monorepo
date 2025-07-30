@@ -11,6 +11,6 @@ export { createAuthMiddleware } from './middleware/authMiddleware';
 export * from './types';
 export { AuthProvider, useAuth } from './contexts/AuthContext';
 export { AuthWrapper } from './components/AuthWrapper';
-export { NextAuthProvider } from './providers/NextAuthProvider';
+export { NextAuthProvider, useAuth as useNextAuth } from './providers/NextAuthProvider';
 export { FetchAdapter } from './adapters/fetch';
 export { NextAuthAdapter } from './adapters/nextauth';

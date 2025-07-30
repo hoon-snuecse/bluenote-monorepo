@@ -18,7 +18,7 @@ import {
   Shield,
   Laptop
 } from 'lucide-react';
-import { useAuth } from '@bluenote/auth';
+import { useNextAuth as useAuth } from '@bluenote/auth';
 
 export default function Navigation() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);

@@ -1,12 +1,12 @@
 'use client';
 
 import { useState } from 'react';
-import { useSession } from 'next-auth/react';
+import { useNextAuth as useAuth } from '@bluenote/auth';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
 export default function DebugGradingPage() {
-  const { data: session, status } = useSession();
+  const { user, status } = useAuth();
   const router = useRouter();
   const [debugData, setDebugData] = useState(null);
   const [statsData, setStatsData] = useState(null);
@@ -17,7 +17,7 @@ export default function DebugGradingPage() {
     return <div>Loading...</div>;
   }
 
-  if (!session || !session.user.isAdmin) {
+  if (!user || !user.isAdmin) {
     router.push('/');
     return null;
   }
