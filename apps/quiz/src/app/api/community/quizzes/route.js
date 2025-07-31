@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase'
+import { getServerSession } from '@bluenote/auth'
+import { authOptions } from '@/lib/auth'
 
 export async function GET(request) {
   try {
@@ -9,9 +11,13 @@ export async function GET(request) {
     const grade = searchParams.get('grade') || 'all'
 
     const supabase = createClient()
+    
+    // 현재 사용자 세션 가져오기
+    const session = await getServerSession(authOptions)
+    const currentUserEmail = session?.user?.email
 
-    // 기본 쿼리
-    let query = supabase
+    // 1. 공개된 퀴즈 가져오기 (shared_quizzes에서)
+    let publicQuery = supabase
       .from('shared_quizzes')
       .select(`
         id,
@@ -27,48 +33,98 @@ export async function GET(request) {
         multiple_choice_count,
         download_count,
         rating_average,
-        rating_count
+        rating_count,
+        is_public
       `)
       .eq('is_public', true)
 
     // 카테고리 필터
     if (category !== 'all') {
-      query = query.eq('subject_category', category)
+      publicQuery = publicQuery.eq('subject_category', category)
     }
 
     // 학년 필터
     if (grade !== 'all') {
-      query = query.eq('grade_level', grade)
+      publicQuery = publicQuery.eq('grade_level', grade)
     }
 
-    // 정렬
-    switch (sort) {
-      case 'popular':
-        query = query.order('download_count', { ascending: false })
-        break
-      case 'rating':
-        query = query.order('rating_average', { ascending: false })
-        break
-      case 'downloads':
-        query = query.order('download_count', { ascending: false })
-        break
-      case 'recent':
-      default:
-        query = query.order('created_at', { ascending: false })
+    const { data: publicQuizzes, error: publicError } = await publicQuery
+
+    if (publicError) {
+      console.error('Error fetching public quizzes:', publicError)
     }
 
-    const { data: sharedQuizzes, error } = await query.limit(50)
+    // 2. 본인 퀴즈 가져오기 (공유 여부 상관없이)
+    let myQuizzes = []
+    if (currentUserEmail) {
+      let myQuery = supabase
+        .from('quizzes')
+        .select(`
+          id,
+          title,
+          description,
+          created_at,
+          user_email,
+          is_shared,
+          is_sample,
+          subject_category,
+          grade_level,
+          questions (
+            question_type
+          )
+        `)
+        .eq('user_email', currentUserEmail)
+        .eq('is_sample', false)
 
-    if (error) {
-      console.error('Error fetching community quizzes:', error)
-      return NextResponse.json(
-        { error: '커뮤니티 퀴즈를 불러오는 중 오류가 발생했습니다.', details: error.message },
-        { status: 500 }
-      )
+      // 카테고리 필터
+      if (category !== 'all') {
+        myQuery = myQuery.eq('subject_category', category)
+      }
+
+      // 학년 필터
+      if (grade !== 'all') {
+        myQuery = myQuery.eq('grade_level', grade)
+      }
+
+      const { data, error: myError } = await myQuery
+
+      if (myError) {
+        console.error('Error fetching my quizzes:', myError)
+      } else if (data) {
+        // 내 퀴즈 데이터 포맷팅
+        myQuizzes = data.map(quiz => {
+          const questions = quiz.questions || []
+          const true_false_count = questions.filter(q => q.question_type === 'true_false').length
+          const multiple_choice_count = questions.filter(q => q.question_type === 'multiple_choice').length
+
+          return {
+            id: quiz.id, // 퀴즈 ID 직접 사용
+            quiz_id: quiz.id,
+            title: quiz.title,
+            description: quiz.description,
+            total_questions: questions.length,
+            true_false_count,
+            multiple_choice_count,
+            subject_category: quiz.subject_category,
+            grade_level: quiz.grade_level,
+            user_email: quiz.user_email,
+            user_name: quiz.user_email?.split('@')[0] || '익명',
+            created_at: quiz.created_at,
+            download_count: 0, // 내 퀴즈는 개별 다운로드 수 없음
+            rating_average: 0,
+            rating_count: 0,
+            is_shared: quiz.is_shared,
+            is_mine: true // 내 퀴즈 표시
+          }
+        })
+      }
     }
 
-    // 응답 형식 정리 (이미 shared_quizzes에 모든 정보가 있음)
-    const formattedQuizzes = sharedQuizzes.map(sq => ({
+    // 3. 공개 퀴즈와 내 퀴즈 병합 (중복 제거)
+    const publicQuizIds = new Set((publicQuizzes || []).map(q => q.quiz_id))
+    
+    // 공개 퀴즈 포맷팅
+    const formattedPublicQuizzes = (publicQuizzes || []).map(sq => ({
       id: sq.id,
       quiz_id: sq.quiz_id,
       title: sq.title,
@@ -78,15 +134,39 @@ export async function GET(request) {
       multiple_choice_count: sq.multiple_choice_count,
       subject_category: sq.subject_category,
       grade_level: sq.grade_level,
-      user_email: sq.user_email, // 체크박스 선택을 위해 필요
-      user_name: sq.user_email?.split('@')[0] || '익명', // 이메일에서 사용자명 추출
+      user_email: sq.user_email,
+      user_name: sq.user_email?.split('@')[0] || '익명',
       created_at: sq.created_at,
       download_count: sq.download_count || 0,
       rating_average: sq.rating_average || 0,
-      rating_count: sq.rating_count || 0
+      rating_count: sq.rating_count || 0,
+      is_shared: true,
+      is_mine: sq.user_email === currentUserEmail
     }))
 
-    return NextResponse.json({ quizzes: formattedQuizzes })
+    // 내 퀴즈 중 공개되지 않은 것들만 추가
+    const myPrivateQuizzes = myQuizzes.filter(q => !publicQuizIds.has(q.quiz_id))
+    
+    // 모든 퀴즈 합치기
+    let allQuizzes = [...formattedPublicQuizzes, ...myPrivateQuizzes]
+
+    // 정렬
+    switch (sort) {
+      case 'popular':
+        allQuizzes.sort((a, b) => (b.download_count || 0) - (a.download_count || 0))
+        break
+      case 'rating':
+        allQuizzes.sort((a, b) => (b.rating_average || 0) - (a.rating_average || 0))
+        break
+      case 'downloads':
+        allQuizzes.sort((a, b) => (b.download_count || 0) - (a.download_count || 0))
+        break
+      case 'recent':
+      default:
+        allQuizzes.sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+    }
+
+    return NextResponse.json({ quizzes: allQuizzes })
 
   } catch (error) {
     console.error('Community quizzes error:', error)

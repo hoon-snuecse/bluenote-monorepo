@@ -14,7 +14,9 @@ import {
   Search,
   Trash2,
   CheckSquare,
-  Square
+  Square,
+  Globe,
+  Lock
 } from 'lucide-react'
 
 export default function CommunityPage() {
@@ -384,11 +386,25 @@ export default function CommunityPage() {
               </div>
               
               <div className="p-4">
-                {/* 제목 및 태그 */}
+                {/* 제목 및 공유 상태 */}
                 <div className="pr-8">
-                  <h3 className="text-sm font-medium text-gray-900 line-clamp-2">
-                    {quiz.title}
-                  </h3>
+                  <div className="flex items-start justify-between gap-2">
+                    <h3 className="text-sm font-medium text-gray-900 line-clamp-2 flex-1">
+                      {quiz.title}
+                    </h3>
+                    {/* 공유 상태 아이콘 */}
+                    <div className="flex-shrink-0">
+                      {quiz.is_shared ? (
+                        <div className="flex items-center" title="공유됨">
+                          <Globe className="w-4 h-4 text-green-600" />
+                        </div>
+                      ) : (
+                        <div className="flex items-center" title="비공개">
+                          <Lock className="w-4 h-4 text-gray-400" />
+                        </div>
+                      )}
+                    </div>
+                  </div>
                   {quiz.description && (
                     <p className="mt-0.5 text-xs text-gray-600 line-clamp-2">
                       {quiz.description}
