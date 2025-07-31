@@ -10,15 +10,17 @@ export default function QuizLayout({ children }) {
   const pathname = usePathname()
   
   useEffect(() => {
+    console.log('[Quiz Layout] Current status:', status, 'pathname:', pathname, 'hasRedirected:', hasRedirected)
+    
     // 인증되지 않은 경우 리다이렉트
     if (status === 'unauthenticated' && !hasRedirected) {
       setHasRedirected(true)
-      console.log('[Quiz Layout] Redirecting to signin...')
-      // 메인 사이트 로그인 페이지로 리다이렉트
       const currentPath = window.location.pathname
-      window.location.href = `https://www.bluenote.site/login?callbackUrl=${encodeURIComponent(`https://quiz.bluenote.site${currentPath}`)}`
+      const redirectUrl = `https://www.bluenote.site/auth/signin?callbackUrl=${encodeURIComponent(`https://quiz.bluenote.site${currentPath}`)}`
+      console.log('[Quiz Layout] Redirecting to:', redirectUrl)
+      window.location.href = redirectUrl
     }
-  }, [status, hasRedirected])
+  }, [status, hasRedirected, pathname])
   
   // 로딩 중인 경우
   if (status === 'loading') {

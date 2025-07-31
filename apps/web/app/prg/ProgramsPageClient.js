@@ -51,7 +51,7 @@ export default function ProgramsPageClient() {
       description: "AI의 도움을 받아 Kahoot용 대화형 퀴즈를 쉽고 빠르게 생성하는 도구",
       href: "https://quiz.bluenote.site/community",
       status: "active",
-      requireAuth: true,
+      requireAuth: false,
       hasAI: true,
       isExternal: true,
       features: [

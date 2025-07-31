@@ -10,8 +10,11 @@ export default function SignInClient() {
   const error = searchParams.get('error');
 
   useEffect(() => {
+    console.log('[SignInClient] callbackUrl:', callbackUrl, 'error:', error);
+    
     // 에러가 없으면 바로 Google 로그인 시작
     if (!error) {
+      console.log('[SignInClient] Starting Google sign in with callbackUrl:', callbackUrl);
       signIn('google', { callbackUrl });
     }
   }, [error, callbackUrl]);

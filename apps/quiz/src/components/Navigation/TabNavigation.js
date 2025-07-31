@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { FileText, Save, Globe } from 'lucide-react'
+import { useEffect } from 'react'
 
 const tabs = [
   {
@@ -27,16 +28,20 @@ const tabs = [
 
 export function TabNavigation() {
   const pathname = usePathname()
+  
+  useEffect(() => {
+    console.log('[TabNavigation] mounted, pathname:', pathname)
+  }, [pathname])
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 border-b-2 border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50 shadow-sm">
+    <nav className="fixed top-0 left-0 right-0 z-50 border-b-2 border-gray-300 bg-white shadow-md">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 justify-between">
           <div className="flex">
             <div className="flex shrink-0 items-center">
-              <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+              <Link href="/" className="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent hover:from-blue-700 hover:to-indigo-700">
                 Kahoot 퀴즈 메이커
-              </h1>
+              </Link>
             </div>
             <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
               {tabs.map((tab) => {
