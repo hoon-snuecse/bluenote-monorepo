@@ -3,8 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { FileText, Save, Globe, User } from 'lucide-react'
-import { useEffect } from 'react'
-import { useSession } from 'next-auth/react'
+import { useEffect, useState } from 'react'
 
 const tabs = [
   {
@@ -28,9 +27,27 @@ const tabs = [
 ]
 
 function UserInfo() {
-  const { data: session, status } = useSession()
+  const [userEmail, setUserEmail] = useState(null)
+  const [loading, setLoading] = useState(true)
   
-  if (status === 'loading') {
+  useEffect(() => {
+    // 클라이언트 사이드에서만 실행
+    if (typeof window !== 'undefined') {
+      // 동적 import로 next-auth/react 가져오기
+      import('next-auth/react').then(({ getSession }) => {
+        getSession().then(session => {
+          if (session?.user?.email) {
+            setUserEmail(session.user.email)
+          }
+          setLoading(false)
+        }).catch(() => {
+          setLoading(false)
+        })
+      })
+    }
+  }, [])
+  
+  if (loading) {
     return (
       <div className="flex items-center gap-2 text-sm text-gray-500">
         <div className="w-4 h-4 rounded-full bg-gray-300 animate-pulse" />
@@ -39,14 +56,14 @@ function UserInfo() {
     )
   }
   
-  if (!session?.user?.email) {
+  if (!userEmail) {
     return null
   }
   
   return (
     <div className="flex items-center gap-2 text-sm text-gray-700">
       <User className="w-4 h-4" />
-      <span>{session.user.email}</span>
+      <span>{userEmail}</span>
     </div>
   )
 }
