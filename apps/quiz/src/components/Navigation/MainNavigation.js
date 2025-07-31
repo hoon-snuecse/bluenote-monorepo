@@ -27,6 +27,10 @@ export default function MainNavigation() {
   const [isScrolled, setIsScrolled] = useState(false);
   const { user, status } = useAuth();
   const pathname = usePathname();
+  
+  useEffect(() => {
+    console.log('[MainNavigation] Auth status:', status, 'User:', user);
+  }, [status, user]);
 
   // 스크롤 감지
   useEffect(() => {
@@ -96,6 +100,18 @@ export default function MainNavigation() {
     const currentPath = window.location.pathname;
     window.location.href = `https://www.bluenote.site/auth/signin?callbackUrl=${encodeURIComponent(`https://quiz.bluenote.site${currentPath}`)}`;
   };
+  
+  // 링크 클릭 핸들러 - 로그인 상태 확인
+  const handleNavClick = (e, href) => {
+    // 외부 링크이고 로그인되지 않은 경우 경고
+    if (status === 'unauthenticated' && !href.includes('bluenote.site/')) {
+      e.preventDefault();
+      if (confirm('이 페이지를 보려면 로그인이 필요할 수 있습니다. 로그인하시겠습니까?')) {
+        handleLogin();
+      }
+    }
+    // 그 외의 경우는 정상적으로 이동
+  };
 
   return (
     <nav className={`fixed top-0 left-0 right-0 z-[60] transition-all duration-300 ${
@@ -112,7 +128,7 @@ export default function MainNavigation() {
             title="BlueNote Atelier"
           >
             <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center text-white font-bold text-xl shadow-md group-hover:shadow-lg transition-all duration-200 group-hover:scale-105">
-              b
+              ♭
             </div>
           </a>
 
