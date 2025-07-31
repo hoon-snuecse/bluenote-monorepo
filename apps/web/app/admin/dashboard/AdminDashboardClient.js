@@ -3,28 +3,30 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Shield, Users, FileText, Settings, BarChart3, ArrowLeft } from 'lucide-react';
+import { useSession } from 'next-auth/react';
 
 export default function AdminDashboardClient() {
-  const [session, setSession] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const { data: session, status } = useSession();
   const [stats, setStats] = useState({
     totalUsers: 0,
     totalPosts: 0,
     todayLogs: 0
   });
 
+  // 디버깅용 로그
   useEffect(() => {
-    fetch('/api/auth/session-check')
-      .then(res => res.json())
-      .then(data => {
-        if (data.authenticated && data.session?.user?.isAdmin) {
-          setSession(data.session);
-          fetchStats();
-        }
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
-  }, []);
+    console.log('Admin Dashboard - Session Status:', status);
+    console.log('Admin Dashboard - Session Data:', session);
+  }, [status, session]);
+
+  // isAdmin 속성을 안전하게 확인
+  const isAdmin = session?.user && 'isAdmin' in session.user ? session.user.isAdmin : false;
+
+  useEffect(() => {
+    if (status === 'authenticated' && isAdmin) {
+      fetchStats();
+    }
+  }, [status, isAdmin]);
 
   const fetchStats = async () => {
     try {
@@ -59,7 +61,7 @@ export default function AdminDashboardClient() {
     }
   };
 
-  if (loading) {
+  if (status === 'loading') {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-gray-500">로딩 중...</div>
@@ -67,7 +69,7 @@ export default function AdminDashboardClient() {
     );
   }
 
-  if (!session?.user?.isAdmin) {
+  if (status === 'unauthenticated' || !isAdmin) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -128,7 +130,7 @@ export default function AdminDashboardClient() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mb-8">
-          <h2 className="text-lg font-medium text-white mb-2">환영합니다, {session.user.name}님</h2>
+          <h2 className="text-lg font-medium text-white mb-2">환영합니다, {session?.user?.name || session?.user?.email || '관리자'}님</h2>
           <p className="text-slate-400">BlueNote Atelier 관리자 대시보드입니다.</p>
         </div>
 

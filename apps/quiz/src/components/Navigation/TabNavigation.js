@@ -2,8 +2,9 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { FileText, Save, Globe } from 'lucide-react'
+import { FileText, Save, Globe, User } from 'lucide-react'
 import { useEffect } from 'react'
+import { useSession } from 'next-auth/react'
 
 const tabs = [
   {
@@ -25,6 +26,30 @@ const tabs = [
     description: '공유된 퀴즈 탐색'
   }
 ]
+
+function UserInfo() {
+  const { data: session, status } = useSession()
+  
+  if (status === 'loading') {
+    return (
+      <div className="flex items-center gap-2 text-sm text-gray-500">
+        <div className="w-4 h-4 rounded-full bg-gray-300 animate-pulse" />
+        <div className="w-24 h-4 bg-gray-300 rounded animate-pulse" />
+      </div>
+    )
+  }
+  
+  if (!session?.user?.email) {
+    return null
+  }
+  
+  return (
+    <div className="flex items-center gap-2 text-sm text-gray-700">
+      <User className="w-4 h-4" />
+      <span>{session.user.email}</span>
+    </div>
+  )
+}
 
 export function TabNavigation() {
   const pathname = usePathname()
@@ -73,16 +98,8 @@ export function TabNavigation() {
             </div>
           </div>
           
-          {/* 메인 사이트로 돌아가기 버튼 */}
-          <div className="flex items-center gap-4">
-            <a 
-              href="https://www.bluenote.site/prg" 
-              className="text-sm text-gray-600 hover:text-gray-800 underline"
-              title="메인 사이트로 돌아가기"
-            >
-              ← BlueNote로 돌아가기
-            </a>
-          </div>
+          {/* 사용자 정보 표시 */}
+          <UserInfo />
         </div>
       </div>
     </nav>

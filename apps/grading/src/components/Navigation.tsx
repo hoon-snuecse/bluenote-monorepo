@@ -33,15 +33,6 @@ export function Navigation() {
           
           {/* 사용자 정보 및 로그아웃 버튼 */}
           <div className="flex items-center gap-4">
-            {/* BlueNote로 돌아가기 링크 */}
-            <a 
-              href="https://www.bluenote.site/prg" 
-              className="text-sm text-gray-600 hover:text-gray-800 underline"
-              title="메인 사이트로 돌아가기"
-            >
-              ← BlueNote로 돌아가기
-            </a>
-            
             {/* 사용자 정보 */}
             <div className="flex items-center gap-2 text-sm text-gray-700">
               <User className="w-4 h-4" />
