@@ -34,7 +34,7 @@ export function TabNavigation() {
   }, [pathname])
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 border-b-2 border-gray-300 bg-white shadow-md">
+    <nav className="fixed top-16 left-0 right-0 z-50 border-b-2 border-gray-300 bg-white shadow-md">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 justify-between">
           <div className="flex">
