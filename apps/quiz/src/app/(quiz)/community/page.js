@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Link from 'next/link'
 // import { useSession } from 'next-auth/react' // Temporarily removed due to React Hooks error
 import { 
   Download, 
@@ -226,12 +227,12 @@ export default function CommunityPage() {
           <div />
         )}
         {session && (
-          <button
-            onClick={() => window.location.href = '/create'}
-            className="px-4 py-1.5 text-sm bg-green-600 text-white rounded hover:bg-green-700 font-medium"
+          <Link
+            href="/create"
+            className="px-4 py-1.5 text-sm bg-green-600 text-white rounded hover:bg-green-700 font-medium inline-block"
           >
             퀴즈문항만들기
-          </button>
+          </Link>
         )}
       </div>
 
