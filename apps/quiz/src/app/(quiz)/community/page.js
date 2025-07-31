@@ -225,12 +225,14 @@ export default function CommunityPage() {
         ) : (
           <div />
         )}
-        <button
-          onClick={() => window.location.href = '/create'}
-          className="px-4 py-1.5 text-sm bg-green-600 text-white rounded hover:bg-green-700 font-medium"
-        >
-          퀴즈문항생성
-        </button>
+        {session && (
+          <button
+            onClick={() => window.location.href = '/create'}
+            className="px-4 py-1.5 text-sm bg-green-600 text-white rounded hover:bg-green-700 font-medium"
+          >
+            퀴즈문항만들기
+          </button>
+        )}
       </div>
 
       {/* 검색 및 필터 */}
