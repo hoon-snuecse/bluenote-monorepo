@@ -120,6 +120,7 @@ export default function CommunityPage() {
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include', // 쿠키 포함
         body: JSON.stringify({ quizId }),
       })
 
