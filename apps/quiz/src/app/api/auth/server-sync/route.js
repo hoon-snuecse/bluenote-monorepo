@@ -3,15 +3,22 @@ import { NextResponse } from 'next/server';
 
 export async function POST(request) {
   try {
-    const { cookieHeader } = await request.json();
-    
     console.log('[Quiz Server Sync] Starting server-side sync');
     
-    // 서버 사이드에서 메인 사이트 세션 확인
+    // 서버 사이드에서 쿠키 가져오기
+    const cookieStore = cookies();
+    const sessionToken = cookieStore.get('next-auth.session-token');
+    
+    if (!sessionToken) {
+      console.log('[Quiz Server Sync] No session token found');
+      return NextResponse.json({ error: 'No session token' }, { status: 401 });
+    }
+    
+    // 메인 사이트 세션 확인
     const response = await fetch('https://www.bluenote.site/api/auth/session', {
       method: 'GET',
       headers: {
-        'Cookie': cookieHeader || '',
+        'Cookie': `next-auth.session-token=${sessionToken.value}`,
         'Accept': 'application/json',
         'User-Agent': 'Quiz-App-Server-Sync',
       },
@@ -32,7 +39,6 @@ export async function POST(request) {
     console.log('[Quiz Server Sync] Session found for user:', session.user.email);
 
     // Quiz 앱용 세션 쿠키 설정
-    const cookieStore = cookies();
     const isProduction = process.env.NODE_ENV === 'production';
     
     // 세션 데이터를 JSON으로 인코딩

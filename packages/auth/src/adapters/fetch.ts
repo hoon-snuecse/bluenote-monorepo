@@ -44,11 +44,12 @@ export class FetchAdapter implements AuthAdapter {
         userEmail: data.user?.email
       })
       
-      // 세션 동기화가 필요한 경우 - 자동 동기화는 제거하고 수동 동기화 페이지로 유도
-      if (data.needsSync && data.user) {
-        console.log('[FetchAdapter] Session sync needed, but auto-sync disabled due to CORS')
-        // 사용자에게 동기화가 필요함을 알리기 위해 user를 반환하되, 
-        // 실제 동기화는 sync 페이지에서 처리
+      // 세션 동기화가 필요한 경우
+      if (data.needsSync) {
+        console.log('[FetchAdapter] Session sync needed')
+        // needsSync 플래그가 있으면 null을 반환하여 
+        // 미들웨어가 동기화 페이지로 리다이렉트하도록 함
+        return null
       }
       
       // authenticated 플래그와 user 객체 둘 다 확인

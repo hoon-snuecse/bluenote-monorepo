@@ -12,18 +12,15 @@ function SyncContent() {
   useEffect(() => {
     async function syncSession() {
       try {
-        // 현재 브라우저의 쿠키를 가져와서 서버에 전달
-        const cookieHeader = document.cookie;
-        
         console.log('[Sync Page] Starting server-side sync');
         
-        // 서버 사이드 동기화 요청
+        // 서버 사이드 동기화 요청 (쿠키는 자동으로 전송됨)
         const syncResponse = await fetch('/api/auth/server-sync', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ cookieHeader }),
+          credentials: 'include',
         })
         
         if (!syncResponse.ok) {

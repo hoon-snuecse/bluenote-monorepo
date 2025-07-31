@@ -132,12 +132,13 @@ export async function GET(request) {
 export async function OPTIONS(request) {
   const origin = request.headers.get('origin');
   return new Response(null, {
-    status: 200,
+    status: 204, // No Content status for OPTIONS
     headers: {
       'Access-Control-Allow-Origin': origin || '*',
       'Access-Control-Allow-Credentials': 'true',
       'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type, Accept',
+      'Access-Control-Max-Age': '86400', // 24 hours
     },
   });
 }
