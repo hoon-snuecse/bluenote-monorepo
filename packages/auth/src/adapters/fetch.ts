@@ -36,22 +36,25 @@ export class FetchAdapter implements AuthAdapter {
       // 디버깅 로그 추가
       if (typeof window !== 'undefined') {
         console.log('[FetchAdapter] Session response:', {
+          status: response.status,
           hasUser: !!data.user,
           authenticated: data.authenticated,
-          userEmail: data.user?.email
+          userEmail: data.user?.email,
+          raw: data
         })
       }
       
-      if (data.user) {
+      // authenticated 플래그와 user 객체 둘 다 확인
+      if (data.authenticated && data.user && data.user.email) {
         const user: AuthUser = {
-          id: data.user.id || '',
+          id: data.user.id || data.user.email, // fallback to email if no id
           email: data.user.email,
-          name: data.user.name,
+          name: data.user.name || data.user.email,
           image: data.user.image,
-          isAdmin: data.user.isAdmin,
-          canWrite: data.user.canWrite,
-          claudeDailyLimit: data.user.claudeDailyLimit,
-          role: data.user.role
+          isAdmin: data.user.isAdmin || false,
+          canWrite: data.user.canWrite || false,
+          claudeDailyLimit: data.user.claudeDailyLimit || 3,
+          role: data.user.role || 'user'
         }
         
         // 사용자 정보가 변경되었으면 리스너들에게 알림
