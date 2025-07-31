@@ -33,11 +33,17 @@ export default function SignInClient() {
 
   useEffect(() => {
     // 자동으로 Google 로그인 시작 (에러가 없고 아직 시도하지 않은 경우)
-    if (!error && !hasAutoSignIn && status === 'unauthenticated') {
+    if (!error && !hasAutoSignIn && status === 'unauthenticated' && !isLoading) {
       setHasAutoSignIn(true);
-      handleSignIn();
+      setIsLoading(true);
+      // 약간의 지연을 주어 컴포넌트가 완전히 마운트되도록 함
+      const timer = setTimeout(() => {
+        signIn('google');
+      }, 100);
+      
+      return () => clearTimeout(timer);
     }
-  }, [error, hasAutoSignIn, status]);
+  }, [error, hasAutoSignIn, status, isLoading, signIn]);
 
   useEffect(() => {
     // 에러 메시지 표시
@@ -45,6 +51,37 @@ export default function SignInClient() {
       console.error('로그인 에러:', error);
     }
   }, [error]);
+
+  // 자동 로그인 중인 경우 로딩 화면만 표시
+  if ((hasAutoSignIn || isLoading) && !error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <svg
+            className="animate-spin h-12 w-12 text-blue-600 mx-auto mb-4"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+          >
+            <circle
+              className="opacity-25"
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              strokeWidth="4"
+            ></circle>
+            <path
+              className="opacity-75"
+              fill="currentColor"
+              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+            ></path>
+          </svg>
+          <p className="text-gray-600">Google 계정으로 로그인 중...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
