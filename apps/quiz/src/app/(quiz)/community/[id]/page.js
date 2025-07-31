@@ -11,14 +11,46 @@ export default function CommunityQuizDetailPage() {
   const { id } = useParams()
   const router = useRouter()
   // const { data: session } = useSession() // Temporarily removed
-  const [session, setSession] = useState(null)
+  const [session, setSession] = useState(undefined) // undefined: 로딩중, null: 미인증
   
-  // Fetch session manually
+  // Fetch session manually with sync handling
   useEffect(() => {
-    fetch('/api/auth/session')
-      .then(res => res.json())
-      .then(data => setSession(data))
-      .catch(() => setSession(null))
+    const fetchSession = async () => {
+      try {
+        // 먼저 세션 확인
+        const sessionRes = await fetch('/api/auth/session')
+        const sessionData = await sessionRes.json()
+        
+        if (sessionData.needsSync) {
+          // 메인 사이트 세션이 있지만 퀴즈앱 세션이 없는 경우 동기화
+          const syncRes = await fetch('/api/auth/session-sync', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            credentials: 'include'
+          })
+          
+          if (syncRes.ok) {
+            // 동기화 후 다시 세션 확인
+            const newSessionRes = await fetch('/api/auth/session')
+            const newSessionData = await newSessionRes.json()
+            setSession(newSessionData)
+          } else {
+            setSession(null)
+          }
+        } else if (sessionData.user) {
+          setSession(sessionData)
+        } else {
+          setSession(null)
+        }
+      } catch (error) {
+        console.error('세션 확인 오류:', error)
+        setSession(null)
+      }
+    }
+    
+    fetchSession()
   }, [])
   const [quiz, setQuiz] = useState(null)
   const [questions, setQuestions] = useState([])
@@ -31,14 +63,22 @@ export default function CommunityQuizDetailPage() {
   })
 
   useEffect(() => {
-    if (id) {
+    // 세션 로드가 완료된 후에만 데이터 조회
+    if (id && session !== undefined) {
       fetchQuizDetail()
     }
-  }, [id])
+  }, [id, session])
 
   const fetchQuizDetail = async () => {
     try {
       const supabase = createClient()
+      
+      // 세션이 있으면 RLS 컨텍스트 설정
+      if (session?.user?.email) {
+        await supabase.rpc('set_current_user_email', { 
+          email: session.user.email 
+        })
+      }
       
       // 공유된 퀴즈 정보 가져오기
       const { data: sharedQuiz, error: quizError } = await supabase
@@ -109,6 +149,7 @@ export default function CommunityQuizDetailPage() {
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include', // 쿠키 포함
         body: JSON.stringify({
           quizId: quiz.quiz_id || quiz.id,
           questions: questions
@@ -141,7 +182,7 @@ export default function CommunityQuizDetailPage() {
         .from('quiz_downloads')
         .insert({
           quiz_id: quiz.quiz_id || quiz.id,
-          user_id: session.user.id,
+          user_email: session.user.email, // email 기반으로 저장
           format: format
         })
 
@@ -153,7 +194,7 @@ export default function CommunityQuizDetailPage() {
     }
   }
 
-  if (loading) {
+  if (loading || session === undefined) {
     return (
       <div className="flex justify-center items-center min-h-[50vh]">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
