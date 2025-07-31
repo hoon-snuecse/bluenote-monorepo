@@ -7,6 +7,7 @@ export class FetchAdapter implements AuthAdapter {
   private listeners: Set<(user: AuthUser | null) => void> = new Set()
   private currentUser: AuthUser | null = null
   private syncAttempted: boolean = false
+  private isInitialLoad: boolean = true
 
   constructor(options: AuthAdapterOptions = {}) {
     this.options = {
@@ -65,11 +66,17 @@ export class FetchAdapter implements AuthAdapter {
           role: data.user.role || 'user'
         }
         
-        // 사용자 정보가 변경되었으면 리스너들에게 알림
-        if (JSON.stringify(user) !== JSON.stringify(this.currentUser)) {
+        // 초기 로드가 아닐 때만 리스너들에게 알림
+        // 초기 로드 시에는 AuthContext가 직접 상태를 설정함
+        if (!this.isInitialLoad && JSON.stringify(user) !== JSON.stringify(this.currentUser)) {
           this.currentUser = user
           this.notifyListeners(user)
+        } else {
+          this.currentUser = user
         }
+        
+        // 초기 로드 완료
+        this.isInitialLoad = false
         
         return user
       }
@@ -77,10 +84,13 @@ export class FetchAdapter implements AuthAdapter {
       console.error('[FetchAdapter] Error fetching session:', error)
     }
     
-    // 로그아웃 상태라면 리스너들에게 알림
-    if (this.currentUser !== null) {
+    // 로그아웃 상태라면 리스너들에게 알림 (초기 로드가 아닐 때만)
+    if (!this.isInitialLoad && this.currentUser !== null) {
       this.currentUser = null
       this.notifyListeners(null)
+    } else if (this.isInitialLoad) {
+      this.currentUser = null
+      this.isInitialLoad = false
     }
     
     return null

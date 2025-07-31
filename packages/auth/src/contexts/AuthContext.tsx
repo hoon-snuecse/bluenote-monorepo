@@ -9,6 +9,7 @@ const AuthContext = createContext<AuthContextValue | null>(null)
 export function AuthProvider({ children, adapter, options }: AuthProviderProps) {
   const [user, setUser] = useState<AuthUser | null>(null)
   const [status, setStatus] = useState<AuthStatus>('loading')
+  const [isInitialLoad, setIsInitialLoad] = useState(true)
   
   // 기본 어댑터는 FetchAdapter (Quiz 앱에서 주로 사용)
   const authAdapter = adapter || new FetchAdapter(options)
@@ -20,18 +21,24 @@ export function AuthProvider({ children, adapter, options }: AuthProviderProps) 
     // 초기 세션 로드
     const loadSession = async () => {
       try {
-        setStatus('loading')
+        // 초기 로드시에만 loading 상태로 설정
+        if (isInitialLoad) {
+          setStatus('loading')
+        }
+        
         const sessionUser = await authAdapter.getSession()
         
         if (mounted) {
           setUser(sessionUser)
           setStatus(sessionUser ? 'authenticated' : 'unauthenticated')
+          setIsInitialLoad(false)
         }
       } catch (error) {
         console.error('Error loading session:', error)
         if (mounted) {
           setUser(null)
           setStatus('unauthenticated')
+          setIsInitialLoad(false)
         }
       }
     }
@@ -40,8 +47,13 @@ export function AuthProvider({ children, adapter, options }: AuthProviderProps) 
 
     // 세션 변경 구독 (어댑터가 지원하는 경우)
     if (authAdapter.subscribeToChanges) {
+      let lastUpdate = 0
+      const DEBOUNCE_MS = 100 // 100ms 디바운스
+      
       unsubscribe = authAdapter.subscribeToChanges((sessionUser) => {
-        if (mounted) {
+        const now = Date.now()
+        if (mounted && !isInitialLoad && (now - lastUpdate) > DEBOUNCE_MS) {
+          lastUpdate = now
           setUser(sessionUser)
           setStatus(sessionUser ? 'authenticated' : 'unauthenticated')
         }
