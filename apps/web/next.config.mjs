@@ -48,6 +48,24 @@ const nextConfig = {
           },
         ],
       },
+      {
+        // NextAuth 세션 API에 대한 특별 처리
+        source: '/api/auth/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'no-store, no-cache, must-revalidate',
+          },
+          {
+            key: 'Access-Control-Allow-Credentials',
+            value: 'true',
+          },
+          {
+            key: 'Access-Control-Allow-Origin',
+            value: process.env.NODE_ENV === 'production' ? 'https://bluenote.site' : 'http://localhost:3000',
+          },
+        ],
+      },
     ];
   },
 };

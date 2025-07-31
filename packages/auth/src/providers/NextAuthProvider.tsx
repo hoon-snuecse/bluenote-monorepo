@@ -11,7 +11,11 @@ const NextAuthContext = React.createContext<AuthContextValue | null>(null)
 // NextAuth의 SessionProvider와 통합된 AuthProvider
 export function NextAuthProvider({ children }: AuthProviderProps) {
   return (
-    <SessionProvider>
+    <SessionProvider
+      // 세션 폴링 주기를 더 길게 설정하여 부하 감소
+      refetchInterval={5 * 60} // 5분
+      refetchOnWindowFocus={false} // 윈도우 포커스 시 자동 폴링 비활성화
+    >
       <NextAuthBridge>
         {children}
       </NextAuthBridge>
