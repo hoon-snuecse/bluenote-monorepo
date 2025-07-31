@@ -155,7 +155,7 @@ export default function SavedQuizzesPage() {
     <div className="space-y-8">
       {/* 헤더 */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">💾 퀴즈 저장</h1>
+        <h1 className="text-2xl font-bold text-gray-900">✏️ 퀴즈 편집</h1>
         <p className="mt-1 text-sm text-gray-600">
           생성한 퀴즈를 관리하고 다운로드할 수 있습니다.
         </p>

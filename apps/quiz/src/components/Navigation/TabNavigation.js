@@ -13,7 +13,7 @@ const tabs = [
     description: 'AI로 새로운 퀴즈 만들기'
   },
   {
-    name: '퀴즈 저장',
+    name: '퀴즈 편집',
     href: '/saved',
     icon: Save,
     description: '내 퀴즈 관리하기'

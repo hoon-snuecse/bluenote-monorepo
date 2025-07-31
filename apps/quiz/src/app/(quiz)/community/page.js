@@ -259,6 +259,20 @@ export default function CommunityPage() {
                   선택 해제
                 </button>
                 <button
+                  onClick={() => {
+                    if (selectedQuizzes.length === 1) {
+                      // 편집 페이지로 이동
+                      const quizId = selectedQuizzes[0]
+                      window.location.href = `/edit/${quizId}`
+                    }
+                  }}
+                  disabled={selectedQuizzes.length !== 1}
+                  className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+                >
+                  <span>✏️</span>
+                  편집하기
+                </button>
+                <button
                   onClick={handleDeleteSelected}
                   disabled={selectedQuizzes.length === 0}
                   className="px-3 py-1.5 text-sm bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
