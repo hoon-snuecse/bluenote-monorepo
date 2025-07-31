@@ -19,12 +19,16 @@ model Assignment {
   evaluationLevels  Json
   levelCount        Int
   gradingCriteria   String
+  isSample          Boolean      @default(false)
+  sampleOrder       Int?
+  sampleCategory    String?
   createdAt         DateTime     @default(now())
   updatedAt         DateTime     @updatedAt
   submissions       Submission[]
 
   @@index([schoolName])
   @@index([createdAt])
+  @@index([isSample])
 }
 
 model Submission {

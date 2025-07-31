@@ -24,37 +24,46 @@ export async function GET(request) {
       email: session.user.email 
     })
 
-    // 기본 쿼리
-    let query = supabase
-      .from('quizzes')
-      .select('*, questions(count)', { count: 'exact' })
-      .order('created_at', { ascending: false })
-      .range((page - 1) * limit, page * limit - 1)
+    // 내 퀴즈와 샘플 퀴즈를 분리하여 조회
+    const [myQuizzesResult, sampleQuizzesResult] = await Promise.all([
+      // 내 퀴즈 조회
+      supabase
+        .from('quizzes')
+        .select('*, questions(count)', { count: 'exact' })
+        .eq('user_id', session.user.id)
+        .eq('is_sample', false)
+        .or(search ? `title.ilike.%${search}%,description.ilike.%${search}%` : undefined)
+        .order('created_at', { ascending: false })
+        .range((page - 1) * limit, page * limit - 1),
+      
+      // 샘플 퀴즈 조회 (페이지네이션 없이)
+      supabase
+        .from('quizzes')
+        .select('*, questions(count)')
+        .eq('is_sample', true)
+        .order('sample_order', { ascending: true })
+    ])
 
-    // 검색 조건 추가
-    if (search) {
-      query = query.or(`title.ilike.%${search}%,description.ilike.%${search}%`)
-    }
+    const { data: myQuizzes, error: myError, count } = myQuizzesResult
+    const { data: sampleQuizzes, error: sampleError } = sampleQuizzesResult
 
-    // 태그 필터링
-    if (tag) {
-      query = query.contains('tags', [tag])
-    }
-
-    const { data: quizzes, error, count } = await query
-
-    if (error) {
-      console.error('Error fetching quizzes:', error)
-      return NextResponse.json({ error: error.message }, { status: 500 })
+    if (myError || sampleError) {
+      console.error('Error fetching quizzes:', myError || sampleError)
+      return NextResponse.json({ 
+        error: (myError || sampleError).message 
+      }, { status: 500 })
     }
 
     return NextResponse.json({
-      data: quizzes,
+      data: {
+        myQuizzes: myQuizzes || [],
+        sampleQuizzes: sampleQuizzes || []
+      },
       pagination: {
         page,
         limit,
-        total: count,
-        totalPages: Math.ceil(count / limit)
+        total: count || 0,
+        totalPages: Math.ceil((count || 0) / limit)
       }
     })
   } catch (error) {

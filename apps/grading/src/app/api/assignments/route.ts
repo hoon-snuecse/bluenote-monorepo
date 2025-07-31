@@ -24,9 +24,11 @@ export async function GET() {
     }
     
     const assignments = await prisma.assignment.findMany({
-      orderBy: {
-        createdAt: 'desc'
-      }
+      orderBy: [
+        { isSample: 'asc' }, // 샘플이 아닌 것이 먼저
+        { sampleOrder: 'asc' }, // 샘플 중에서는 순서대로
+        { createdAt: 'desc' } // 나머지는 생성일 역순
+      ]
     });
 
     // JSON 필드가 제대로 파싱되었는지 확인하고 변환
@@ -38,7 +40,10 @@ export async function GET() {
       evaluationLevels: Array.isArray(assignment.evaluationLevels)
         ? assignment.evaluationLevels
         : JSON.parse(assignment.evaluationLevels as string),
-      gradingCriteria: assignment.gradingCriteria // gradingCriteria 포함
+      gradingCriteria: assignment.gradingCriteria,
+      isSample: assignment.isSample || false,
+      sampleOrder: assignment.sampleOrder || null,
+      sampleCategory: assignment.sampleCategory || null
     }));
 
     return NextResponse.json({ 
