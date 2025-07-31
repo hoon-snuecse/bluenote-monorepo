@@ -221,12 +221,7 @@ function AssignmentsContent() {
               </CardContent>
             </Card>
           ))}
-        </div>
-
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+            </div>
           </div>
         )}
 
