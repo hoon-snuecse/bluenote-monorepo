@@ -26,8 +26,15 @@ export function Navigation() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           <div className="flex">
-            <div className="flex-shrink-0 flex items-center">
+            <div className="flex-shrink-0 flex items-center gap-4">
               <h1 className="text-xl font-bold">AI 글쓰기 평가 시스템</h1>
+              <a 
+                href="https://www.bluenote.site/prg" 
+                className="text-sm text-gray-600 hover:text-gray-800 underline"
+                title="메인 사이트로 돌아가기"
+              >
+                ← BlueNote로 돌아가기
+              </a>
             </div>
             <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
               {navItems.map((item) => {

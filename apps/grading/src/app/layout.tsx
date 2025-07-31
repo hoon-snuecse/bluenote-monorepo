@@ -4,7 +4,7 @@ import "./globals.css";
 import { UserProvider } from "@/contexts/UserContext";
 import { NotificationProvider } from "@/contexts/NotificationContext";
 import { NotificationContainer } from "@/components/NotificationContainer";
-import NavigationWithAuth from "@/components/NavigationWithAuth";
+import { Navigation } from "@/components/Navigation";
 import { DevAutoLogin } from "@/components/DevAutoLogin";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { NetworkErrorBoundary } from "@/components/NetworkErrorBoundary";
@@ -59,7 +59,7 @@ export default function RootLayout({
               <UserProvider>
                 <NotificationProvider>
                   <DevAutoLogin />
-                  <NavigationWithAuth />
+                  <Navigation />
                   <NotificationContainer />
                   {children}
                   <FeedbackWidget />

@@ -34,13 +34,18 @@ export function TabNavigation() {
   }, [pathname])
 
   return (
-    <nav className="fixed top-16 left-0 right-0 z-50 border-b-2 border-gray-300 bg-white shadow-md">
+    <nav className="fixed top-0 left-0 right-0 z-50 border-b-2 border-gray-300 bg-white shadow-md">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="flex h-16 justify-between">
-          <div className="flex">
+        <div className="flex h-16 justify-between items-center">
+          <div className="flex items-center">
             <div className="flex shrink-0 items-center">
-              <Link href="/" className="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent hover:from-blue-700 hover:to-indigo-700">
-                Kahoot 퀴즈 메이커
+              <Link href="/" className="flex items-center gap-2 group">
+                <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center text-white font-bold text-sm shadow-md group-hover:shadow-lg transition-all duration-200 group-hover:scale-105">
+                  K
+                </div>
+                <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                  Kahoot 퀴즈 메이커
+                </span>
               </Link>
             </div>
             <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
@@ -68,7 +73,16 @@ export function TabNavigation() {
             </div>
           </div>
           
-          {/* 모바일 메뉴는 나중에 구현 */}
+          {/* 메인 사이트로 돌아가기 버튼 */}
+          <div className="flex items-center gap-4">
+            <a 
+              href="https://www.bluenote.site/prg" 
+              className="text-sm text-gray-600 hover:text-gray-800 underline"
+              title="메인 사이트로 돌아가기"
+            >
+              ← BlueNote로 돌아가기
+            </a>
+          </div>
         </div>
       </div>
     </nav>

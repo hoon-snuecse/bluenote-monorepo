@@ -33,10 +33,12 @@ export default function ProgramsPageClient() {
       title: "글쓰기 평가 채점 시스템",
       subtitle: "AI Writing Assessment",
       description: "학생들의 글쓰기를 AI가 분석하고 개별 맞춤형 피드백을 제공하는 평가 도구",
-      href: "/prg/grading",
+      href: "https://grading.bluenote.site",
       status: "active",
-      requireAuth: true,
+      requireAuth: false,
       hasAI: true,
+      isExternal: true,
+      openInNewWindow: true,
       features: [
         "4가지 평가 영역 분석",
         "개별 학생 보고서 생성",
@@ -49,11 +51,12 @@ export default function ProgramsPageClient() {
       title: "Kahoot 퀴즈 메이커",
       subtitle: "AI Quiz Generator for Kahoot",
       description: "AI의 도움을 받아 Kahoot용 대화형 퀴즈를 쉽고 빠르게 생성하는 도구",
-      href: "https://quiz.bluenote.site/community",
+      href: "https://quiz.bluenote.site",
       status: "active",
       requireAuth: false,
       hasAI: true,
       isExternal: true,
+      openInNewWindow: true,
       features: [
         "AI 기반 문항 자동 생성",
         "Kahoot 호환 CSV/Excel 내보내기",
@@ -202,7 +205,7 @@ export default function ProgramsPageClient() {
               );
 
               if (program.status === 'active' && (!program.requireAuth || user)) {
-                if (program.isExternal) {
+                if (program.isExternal || program.openInNewWindow) {
                   return (
                     <a key={index} href={program.href} target="_blank" rel="noopener noreferrer">
                       {CardContent}
