@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { createServiceClient } from '@/lib/supabase'
+import { createClient } from '@/lib/supabase'
 import { getServerSession } from '@bluenote/auth'
 import { authOptions } from '@/lib/auth'
 
@@ -16,18 +16,26 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Missing required parameters' }, { status: 400 })
     }
 
-    const supabase = createServiceClient()
+    const supabase = createClient()
     
     // 다운로드 수 증가
-    const { error: updateError } = await supabase
+    const { data: currentData, error: fetchError } = await supabase
       .from('shared_quizzes')
-      .update({ 
-        download_count: supabase.sql`download_count + 1` 
-      })
+      .select('download_count')
       .eq('id', sharedQuizId)
+      .single()
 
-    if (updateError) {
-      console.error('Failed to update download count:', updateError)
+    if (!fetchError && currentData) {
+      const { error: updateError } = await supabase
+        .from('shared_quizzes')
+        .update({ 
+          download_count: (currentData.download_count || 0) + 1 
+        })
+        .eq('id', sharedQuizId)
+
+      if (updateError) {
+        console.error('Failed to update download count:', updateError)
+      }
     }
 
     // 다운로드 기록 저장
