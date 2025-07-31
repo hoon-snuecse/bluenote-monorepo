@@ -51,14 +51,8 @@ export async function POST(request) {
       // 공유되지 않은 퀴즈이고 본인 퀴즈가 아닌 경우 접근 제한
       if (!quiz.is_shared) {
         // 본인 퀴즈인지 확인
-        const { data: ownQuiz } = await supabase
-          .from('quizzes')
-          .select('id')
-          .eq('id', quizId)
-          .eq('user_email', session.user.email)
-          .single()
-          
-        if (!ownQuiz) {
+        if (quiz.user_email !== session.user.email) {
+          console.log('Access denied - quiz owner:', quiz.user_email, 'current user:', session.user.email)
           return NextResponse.json({ error: '권한이 없습니다.' }, { status: 403 })
         }
       }

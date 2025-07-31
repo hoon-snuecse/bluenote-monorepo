@@ -140,7 +140,7 @@ export default function CommunityPage() {
       a.href = url
       
       // 적절한 파일명 설정
-      const quiz = sharedQuizzes.find(q => q.quiz_id === quizId || q.id === quizId)
+      const quiz = sharedQuizzes.find(q => q.quiz_id === quizId)
       const filename = format === 'html' 
         ? `${quiz?.title || 'quiz'}_teacher_guide.html`
         : `${quiz?.title || 'quiz'}_kahoot.${format}`
@@ -151,7 +151,7 @@ export default function CommunityPage() {
       
       // 다운로드 수 업데이트
       const updatedQuizzes = sharedQuizzes.map(q => 
-        (q.quiz_id === quizId || q.id === quizId)
+        q.quiz_id === quizId
           ? { ...q, download_count: (q.download_count || 0) + 1 }
           : q
       )
@@ -244,7 +244,7 @@ export default function CommunityPage() {
                     // 본인 퀴즈만 필터링하여 전체 선택
                     const myQuizIds = filteredQuizzes
                       .filter(quiz => quiz.user_email === session.user.email)
-                      .map(quiz => quiz.quiz_id || quiz.id)
+                      .map(quiz => quiz.quiz_id)
                     setSelectedQuizzes(myQuizIds)
                   }}
                   className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
@@ -352,11 +352,11 @@ export default function CommunityPage() {
                   <button
                     onClick={(e) => {
                       e.stopPropagation()
-                      handleSelectQuiz(quiz.quiz_id || quiz.id)
+                      handleSelectQuiz(quiz.quiz_id)
                     }}
                     className="p-1 hover:bg-gray-100 rounded"
                   >
-                    {selectedQuizzes.includes(quiz.quiz_id || quiz.id) ? (
+                    {selectedQuizzes.includes(quiz.quiz_id) ? (
                       <CheckSquare className="w-5 h-5 text-blue-600" />
                     ) : (
                       <Square className="w-5 h-5 text-gray-400" />
@@ -435,21 +435,21 @@ export default function CommunityPage() {
                     자세히
                   </Link>
                   <button
-                    onClick={() => handleDownload(quiz.quiz_id || quiz.id, 'xlsx')}
+                    onClick={() => handleDownload(quiz.quiz_id, 'xlsx')}
                     disabled={!session}
                     className="flex-1 rounded bg-green-100 px-1.5 py-0.5 text-xs font-medium text-green-700 hover:bg-green-200 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Excel
                   </button>
                   <button
-                    onClick={() => handleDownload(quiz.quiz_id || quiz.id, 'csv')}
+                    onClick={() => handleDownload(quiz.quiz_id, 'csv')}
                     disabled={!session}
                     className="flex-1 rounded bg-blue-100 px-1.5 py-0.5 text-xs font-medium text-blue-700 hover:bg-blue-200 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     CSV
                   </button>
                   <button
-                    onClick={() => handleDownload(quiz.quiz_id || quiz.id, 'html')}
+                    onClick={() => handleDownload(quiz.quiz_id, 'html')}
                     disabled={!session}
                     className="flex-1 rounded bg-purple-100 px-1.5 py-0.5 text-xs font-medium text-purple-700 hover:bg-purple-200 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
