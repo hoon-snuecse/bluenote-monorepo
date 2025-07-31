@@ -1,6 +1,7 @@
 import { Inter, Noto_Sans_KR } from 'next/font/google'
 import './globals.css'
 import { Providers } from '@/components/Providers'
+import { AppLayout } from '@/components/Layout/AppLayout'
 
 const inter = Inter({ 
   subsets: ['latin'],
@@ -32,7 +33,9 @@ export default function RootLayout({ children }) {
     <html lang="ko" className={`${inter.variable} ${notoSansKR.variable}`}>
       <body className="font-sans antialiased">
         <Providers>
-          {children}
+          <AppLayout>
+            {children}
+          </AppLayout>
         </Providers>
       </body>
     </html>

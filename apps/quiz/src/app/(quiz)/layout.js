@@ -1,9 +1,8 @@
 'use client'
 
-import { TabNavigation } from '@/components/Navigation/TabNavigation'
 import { useAuth } from '@bluenote/auth'
 import { useEffect, useState } from 'react'
-import { useRouter, usePathname } from 'next/navigation'
+import { usePathname } from 'next/navigation'
 
 export default function QuizLayout({ children }) {
   const { user, status } = useAuth()
@@ -24,11 +23,8 @@ export default function QuizLayout({ children }) {
   // 로딩 중인 경우
   if (status === 'loading') {
     return (
-      <div className="min-h-screen bg-gray-50">
-        <TabNavigation />
-        <div className="flex items-center justify-center py-20 pt-16">
-          <p className="text-gray-600">로딩 중...</p>
-        </div>
+      <div className="flex items-center justify-center py-20">
+        <p className="text-gray-600">로딩 중...</p>
       </div>
     )
   }
@@ -36,22 +32,16 @@ export default function QuizLayout({ children }) {
   // 인증된 경우 콘텐츠 표시
   if (status === 'authenticated') {
     return (
-      <div className="min-h-screen bg-gray-50">
-        <TabNavigation />
-        <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 pt-16">
-          {children}
-        </main>
+      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        {children}
       </div>
     )
   }
   
   // 인증되지 않은 경우 (리다이렉트 대기 중)
   return (
-    <div className="min-h-screen bg-gray-50">
-      <TabNavigation />
-      <div className="flex items-center justify-center py-20 pt-16">
-        <p className="text-gray-600">로그인 페이지로 이동 중...</p>
-      </div>
+    <div className="flex items-center justify-center py-20">
+      <p className="text-gray-600">로그인 페이지로 이동 중...</p>
     </div>
   )
 }
