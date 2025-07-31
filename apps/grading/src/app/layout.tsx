@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter, Space_Grotesk, Gowun_Dodum } from "next/font/google";
+import { Inter, Noto_Sans_KR } from "next/font/google";
 import "./globals.css";
 import { UserProvider } from "@/contexts/UserContext";
 import { NotificationProvider } from "@/contexts/NotificationContext";
@@ -17,16 +17,10 @@ const inter = Inter({
   display: "swap",
 });
 
-const spaceGrotesk = Space_Grotesk({
+const notoSansKR = Noto_Sans_KR({
   subsets: ["latin"],
-  variable: "--font-space-grotesk",
-  display: "swap",
-});
-
-const gowunDodum = Gowun_Dodum({
-  weight: "400",
-  subsets: ["latin"],
-  variable: "--font-gowun-dodum",
+  variable: "--font-noto-sans-kr",
+  weight: ["400", "500", "700"],
   display: "swap",
 });
 
@@ -49,9 +43,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ko" className={`${inter.variable} ${spaceGrotesk.variable} ${gowunDodum.variable}`}>
+    <html lang="ko" className={`${inter.variable} ${notoSansKR.variable}`}>
       <body
-        className={`${gowunDodum.className} antialiased`}
+        className="font-sans antialiased"
       >
         <ErrorBoundary>
           <NetworkErrorBoundary>

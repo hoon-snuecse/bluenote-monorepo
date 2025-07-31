@@ -1,5 +1,4 @@
 /* Google Fonts - must be first */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=Gowun+Dodum&display=swap');
 
 /* Force rebuild - 2025-07-18 */
 
@@ -46,8 +45,7 @@
   
   /* Typography */
   --font-inter: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-space-grotesk: 'Space Grotesk', sans-serif;
-  --font-gowun-dodum: 'Gowun Dodum', sans-serif;
+  --font-noto-sans-kr: 'Noto Sans KR', sans-serif;
   
   /* Shadows */
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
