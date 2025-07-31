@@ -41,7 +41,7 @@ export async function POST(request) {
           question_options (*)
         `)
         .eq('quiz_id', quizId)
-        .order('question_order', { ascending: true })
+        .order('order_index', { ascending: true })
         
       if (questionsError) {
         console.error('Questions fetch error:', questionsError)

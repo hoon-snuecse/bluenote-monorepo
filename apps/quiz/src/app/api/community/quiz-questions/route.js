@@ -10,9 +10,26 @@ export async function GET(request) {
       return NextResponse.json({ error: 'Quiz ID is required' }, { status: 400 })
     }
 
+    console.log('Fetching questions for quiz:', quizId)
     const supabase = createClient()
     
-    // 서비스 역할로 직접 조회 (RLS 우회)
+    // 먼저 해당 퀴즈가 공유되었는지 확인
+    const { data: quiz, error: quizError } = await supabase
+      .from('quizzes')
+      .select('is_shared')
+      .eq('id', quizId)
+      .single()
+      
+    if (quizError || !quiz) {
+      console.error('Quiz not found:', quizError)
+      return NextResponse.json({ error: '퀴즈를 찾을 수 없습니다.' }, { status: 404 })
+    }
+    
+    if (!quiz.is_shared) {
+      return NextResponse.json({ error: '공유되지 않은 퀴즈입니다.' }, { status: 403 })
+    }
+    
+    // 문항 조회
     const { data: questions, error } = await supabase
       .from('questions')
       .select(`
@@ -20,13 +37,14 @@ export async function GET(request) {
         question_options (*)
       `)
       .eq('quiz_id', quizId)
-      .order('question_order', { ascending: true })
+      .order('order_index', { ascending: true })
     
     if (error) {
       console.error('Questions fetch error:', error)
       return NextResponse.json({ error: '문항을 불러올 수 없습니다.' }, { status: 500 })
     }
     
+    console.log('Found questions:', questions?.length)
     return NextResponse.json({ questions: questions || [] })
     
   } catch (error) {
