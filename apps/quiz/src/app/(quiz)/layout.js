@@ -9,18 +9,24 @@ export default function QuizLayout({ children }) {
   const [hasRedirected, setHasRedirected] = useState(false)
   const pathname = usePathname()
   
+  // 커뮤니티 페이지는 인증 없이도 접근 가능
+  const isPublicPage = pathname.startsWith('/community')
+  
   useEffect(() => {
     console.log('[Quiz Layout] Current status:', status, 'pathname:', pathname, 'hasRedirected:', hasRedirected)
     
-    // 인증되지 않은 경우 리다이렉트
-    if (status === 'unauthenticated' && !hasRedirected) {
+    // 공개 페이지가 아니고 인증되지 않은 경우에만 리다이렉트
+    if (status === 'unauthenticated' && !hasRedirected && !isPublicPage) {
       setHasRedirected(true)
       const currentPath = window.location.pathname
-      const redirectUrl = `https://www.bluenote.site/auth/signin?callbackUrl=${encodeURIComponent(`https://quiz.bluenote.site${currentPath}`)}`
+      const isProduction = process.env.NODE_ENV === 'production'
+      const mainSiteUrl = isProduction ? 'https://www.bluenote.site' : 'http://localhost:3000'
+      const quizSiteUrl = isProduction ? 'https://quiz.bluenote.site' : 'http://localhost:3003'
+      const redirectUrl = `${mainSiteUrl}/auth/signin?callbackUrl=${encodeURIComponent(`${quizSiteUrl}${currentPath}`)}`
       console.log('[Quiz Layout] Redirecting to:', redirectUrl)
       window.location.href = redirectUrl
     }
-  }, [status, hasRedirected, pathname])
+  }, [status, hasRedirected, pathname, isPublicPage])
   
   // 로딩 중인 경우
   if (status === 'loading') {
@@ -31,8 +37,8 @@ export default function QuizLayout({ children }) {
     )
   }
   
-  // 인증된 경우 콘텐츠 표시
-  if (status === 'authenticated') {
+  // 공개 페이지이거나 인증된 경우 콘텐츠 표시
+  if (isPublicPage || status === 'authenticated') {
     return (
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         {children}

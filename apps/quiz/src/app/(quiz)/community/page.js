@@ -21,12 +21,61 @@ export default function CommunityPage() {
   // const { data: session } = useSession() // Temporarily removed
   const [session, setSession] = useState(null)
   
-  // Fetch session manually
+  // Fetch session manually with sync handling
   useEffect(() => {
-    fetch('/api/auth/session')
-      .then(res => res.json())
-      .then(data => setSession(data))
-      .catch(() => setSession(null))
+    const fetchSession = async () => {
+      try {
+        // 1. 먼저 퀴즈앱 세션 확인
+        const quizSessionRes = await fetch('/api/auth/session')
+        const quizSessionData = await quizSessionRes.json()
+        
+        if (quizSessionData.authenticated && quizSessionData.user) {
+          // 퀴즈앱 세션이 있으면 사용
+          setSession(quizSessionData)
+          return
+        }
+        
+        // 2. 퀴즈앱 세션이 없으면 메인 사이트 세션 확인
+        if (quizSessionData.needsSync || quizSessionData.hasMainSession) {
+          try {
+            const mainSiteUrl = process.env.NODE_ENV === 'production' 
+              ? 'https://www.bluenote.site' 
+              : 'http://localhost:3000'
+            
+            const mainSessionRes = await fetch(`${mainSiteUrl}/api/auth/session-check`, {
+              credentials: 'include',
+              headers: {
+                'Accept': 'application/json',
+              }
+            })
+            
+            if (mainSessionRes.ok) {
+              const mainSessionData = await mainSessionRes.json()
+              
+              if (mainSessionData.authenticated && mainSessionData.session) {
+                // 메인 세션 데이터를 사용
+                setSession({
+                  user: mainSessionData.session.user || mainSessionData.user,
+                  authenticated: true
+                })
+                return
+              }
+            }
+          } catch (error) {
+            console.error('메인 사이트 세션 확인 실패:', error)
+          }
+        }
+        
+        // 3. 세션이 없는 경우
+        setSession(null)
+        
+      } catch (error) {
+        console.error('세션 확인 오류:', error)
+        setSession(null)
+      }
+    }
+    
+    fetchSession()
   }, [])
   const [sharedQuizzes, setSharedQuizzes] = useState([])
   const [loading, setLoading] = useState(true)
@@ -375,12 +424,12 @@ export default function CommunityPage() {
 
                 {/* 액션 버튼 - 한 줄로 배치 */}
                 <div className="mt-3 flex gap-1">
-                  <button
-                    onClick={() => window.location.href = `/community/${quiz.id}`}
-                    className="flex-1 rounded bg-gray-100 px-1.5 py-0.5 text-xs font-medium text-gray-700 border border-gray-300 hover:bg-gray-200"
+                  <Link
+                    href={`/community/${quiz.id}`}
+                    className="flex-1 rounded bg-gray-100 px-1.5 py-0.5 text-xs font-medium text-gray-700 border border-gray-300 hover:bg-gray-200 text-center"
                   >
                     자세히
-                  </button>
+                  </Link>
                   <button
                     onClick={() => handleDownload(quiz.quiz_id || quiz.id, 'xlsx')}
                     disabled={!session}
