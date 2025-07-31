@@ -140,7 +140,7 @@ function AssignmentsContent() {
                   key={assignment.id} 
                   className="glass card-hover border-2 border-yellow-200 bg-yellow-50/20"
                 >
-              <CardHeader className="pb-4">
+                  <CardHeader className="pb-4">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <CardTitle className="text-lg font-bold text-slate-800 mb-1 line-clamp-2">
