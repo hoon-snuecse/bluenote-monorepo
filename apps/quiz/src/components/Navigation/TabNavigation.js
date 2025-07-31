@@ -48,7 +48,7 @@ export function TabNavigation() {
                     key={tab.name}
                     href={tab.href}
                     className={`
-                      inline-flex items-center border-b-3 px-1 pt-1 text-sm font-medium transition-all
+                      inline-flex items-center border-b-2 px-1 pt-1 text-sm font-medium transition-all
                       ${isActive
                         ? 'border-blue-600 text-blue-600 font-semibold'
                         : 'border-transparent text-gray-600 hover:border-gray-400 hover:text-gray-900'
