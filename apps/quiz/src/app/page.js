@@ -1,20 +1,12 @@
 'use client'
 
-import { useEffect } from 'react'
-import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@bluenote/auth'
 
 export default function HomePage() {
-  const router = useRouter()
   const { user, status } = useAuth()
 
-  useEffect(() => {
-    // 세션 확인 후 리다이렉트
-    if (status === 'authenticated' && user) {
-      router.push('/create')
-    }
-  }, [router, user, status])
+  // 자동 리다이렉트 제거 - 사용자가 직접 선택하도록 함
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-gray-50 px-4 py-12 sm:px-6 lg:px-8">

@@ -29,7 +29,7 @@ export function TabNavigation() {
   const pathname = usePathname()
 
   return (
-    <nav className="border-b-2 border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50 shadow-sm">
+    <nav className="fixed top-0 left-0 right-0 z-50 border-b-2 border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50 shadow-sm">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 justify-between">
           <div className="flex">
