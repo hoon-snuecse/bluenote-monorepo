@@ -121,7 +121,11 @@ export default function CommunityPage() {
           'Content-Type': 'application/json',
         },
         credentials: 'include', // 쿠키 포함
-        body: JSON.stringify({ quizId }),
+        body: JSON.stringify({ 
+          quizId,
+          // 커뮤니티 메인에서는 questions가 없으므로 API가 DB에서 조회하도록 함
+          questions: null 
+        }),
       })
 
       if (!response.ok) {
