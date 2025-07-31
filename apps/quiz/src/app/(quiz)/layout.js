@@ -10,19 +10,16 @@ export default function QuizLayout({ children }) {
   const [hasRedirected, setHasRedirected] = useState(false)
   const pathname = usePathname()
   
-  // 커뮤니티 페이지는 인증 없이도 볼 수 있도록 함
-  const isPublicPage = pathname === '/community' || pathname.startsWith('/community/')
-  
   useEffect(() => {
-    // 커뮤니티 페이지가 아니고 인증되지 않은 경우에만 리다이렉트
-    if (!isPublicPage && status === 'unauthenticated' && !hasRedirected) {
+    // 인증되지 않은 경우 리다이렉트
+    if (status === 'unauthenticated' && !hasRedirected) {
       setHasRedirected(true)
       console.log('[Quiz Layout] Redirecting to signin...')
       // 메인 사이트 로그인 페이지로 리다이렉트
       const currentPath = window.location.pathname
       window.location.href = `https://www.bluenote.site/login?callbackUrl=${encodeURIComponent(`https://quiz.bluenote.site${currentPath}`)}`
     }
-  }, [status, hasRedirected, isPublicPage])
+  }, [status, hasRedirected])
   
   // 로딩 중인 경우
   if (status === 'loading') {
@@ -36,8 +33,8 @@ export default function QuizLayout({ children }) {
     )
   }
   
-  // 커뮤니티 페이지거나 인증된 경우 콘텐츠 표시
-  if (isPublicPage || status === 'authenticated') {
+  // 인증된 경우 콘텐츠 표시
+  if (status === 'authenticated') {
     return (
       <div className="min-h-screen bg-gray-50">
         <TabNavigation />
