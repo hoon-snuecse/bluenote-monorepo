@@ -1,14 +1,23 @@
 'use client';
 
-import { signIn } from 'next-auth/react';
-import { useSearchParams } from 'next/navigation';
+import { useNextAuth as useAuth } from '@bluenote/auth';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 export default function SignInClient() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const callbackUrl = searchParams.get('callbackUrl') || '/';
   const error = searchParams.get('error');
   const [isLoading, setIsLoading] = useState(false);
+  const { user, status, signIn } = useAuth();
+
+  useEffect(() => {
+    // 이미 로그인되어 있으면 callbackUrl로 리다이렉트
+    if (status === 'authenticated' && user) {
+      router.push(callbackUrl);
+    }
+  }, [user, status, callbackUrl, router]);
 
   useEffect(() => {
     // 에러 메시지 표시
@@ -20,7 +29,8 @@ export default function SignInClient() {
   const handleSignIn = async () => {
     try {
       setIsLoading(true);
-      await signIn('google', { callbackUrl });
+      await signIn('google');
+      // signIn 후 자동으로 callbackUrl로 리다이렉트됨
     } catch (error) {
       console.error('로그인 중 오류 발생:', error);
       setIsLoading(false);

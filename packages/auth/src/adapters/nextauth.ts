@@ -46,8 +46,12 @@ export class NextAuthAdapter implements AuthAdapter {
   }
 
   async signIn(provider: string = 'google'): Promise<void> {
+    // URL 파라미터에서 callbackUrl 가져오기
+    const searchParams = new URLSearchParams(window.location.search);
+    const callbackUrl = searchParams.get('callbackUrl') || window.location.pathname;
+    
     await nextAuthSignIn(provider, { 
-      callbackUrl: window.location.pathname 
+      callbackUrl: callbackUrl 
     })
   }
 
