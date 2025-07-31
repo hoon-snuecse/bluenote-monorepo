@@ -3,30 +3,46 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Shield, Users, FileText, Settings, BarChart3, ArrowLeft } from 'lucide-react';
-import { useSession } from 'next-auth/react';
 
 export default function AdminDashboardClient() {
-  const { data: session, status } = useSession();
+  const [session, setSession] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
     totalUsers: 0,
     totalPosts: 0,
     todayLogs: 0
   });
 
-  // 디버깅용 로그
   useEffect(() => {
-    console.log('Admin Dashboard - Session Status:', status);
-    console.log('Admin Dashboard - Session Data:', session);
-  }, [status, session]);
+    // 세션 체크 API 호출
+    fetch('/api/auth/session-check')
+      .then(res => {
+        if (!res.ok) {
+          throw new Error(`HTTP error! status: ${res.status}`);
+        }
+        return res.json();
+      })
+      .then(data => {
+        console.log('Admin Dashboard - Session Check Response:', data);
+        if (data.authenticated) {
+          // data.session이 올바른 구조인지 확인
+          const sessionData = data.session || data;
+          setSession(sessionData);
+          
+          // isAdmin 확인 - data.user도 체크
+          const isAdmin = sessionData.user?.isAdmin || data.user?.isAdmin;
+          if (isAdmin) {
+            fetchStats();
+          }
+        }
+        setLoading(false);
+      })
+      .catch(error => {
+        console.error('Admin Dashboard - Session Check Error:', error);
+        setLoading(false);
+      });
+  }, []);
 
-  // isAdmin 속성을 안전하게 확인
-  const isAdmin = session?.user && 'isAdmin' in session.user ? session.user.isAdmin : false;
-
-  useEffect(() => {
-    if (status === 'authenticated' && isAdmin) {
-      fetchStats();
-    }
-  }, [status, isAdmin]);
 
   const fetchStats = async () => {
     try {
@@ -61,7 +77,7 @@ export default function AdminDashboardClient() {
     }
   };
 
-  if (status === 'loading') {
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-gray-500">로딩 중...</div>
@@ -69,7 +85,7 @@ export default function AdminDashboardClient() {
     );
   }
 
-  if (status === 'unauthenticated' || !isAdmin) {
+  if (!session || !session.user?.isAdmin) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
