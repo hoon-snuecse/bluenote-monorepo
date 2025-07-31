@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase'
+import { createAdminClient } from '@/lib/supabase-admin'
 
 export async function GET(request) {
   try {
@@ -13,8 +13,9 @@ export async function GET(request) {
     }
 
     console.log('Fetching shared quiz detail for id:', sharedQuizId)
-    // 일반 클라이언트 사용 (shared_quizzes는 누구나 볼 수 있음)
-    const supabase = createClient()
+    
+    // 관리자 클라이언트 사용 (RLS 우회)
+    const supabase = createAdminClient()
     
     // 먼저 shared_quizzes 정보 가져오기
     const { data: sharedQuiz, error: sharedError } = await supabase
@@ -31,6 +32,7 @@ export async function GET(request) {
     console.log('Found shared quiz:', sharedQuiz)
     
     // quiz_id로 퀴즈 정보 가져오기
+    console.log('Fetching quiz with id:', sharedQuiz.quiz_id)
     const { data: quizData, error: quizError } = await supabase
       .from('quizzes')
       .select('*')
@@ -38,7 +40,12 @@ export async function GET(request) {
       .single()
       
     if (quizError || !quizData) {
-      console.error('Quiz not found:', quizError)
+      console.error('Quiz not found:', {
+        error: quizError,
+        quiz_id: sharedQuiz.quiz_id,
+        errorMessage: quizError?.message,
+        errorCode: quizError?.code
+      })
       return NextResponse.json({ error: '퀴즈 정보를 찾을 수 없습니다.' }, { status: 404 })
     }
     
