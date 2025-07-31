@@ -44,72 +44,11 @@ export class FetchAdapter implements AuthAdapter {
         userEmail: data.user?.email
       })
       
-      // 세션 동기화가 필요한 경우
-      if (data.needsSync && data.user && !this.syncAttempted) {
-        console.log('[FetchAdapter] Session sync needed, attempting to sync...')
-        this.syncAttempted = true
-        
-        try {
-          // 메인 사이트에서 동기화 토큰 요청
-          const tokenResponse = await fetch('https://www.bluenote.site/api/auth/session-sync', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Accept': 'application/json',
-            },
-            credentials: 'include',
-          })
-          
-          if (tokenResponse.ok) {
-            const { syncToken } = await tokenResponse.json()
-            console.log('[FetchAdapter] Got sync token, syncing session...')
-            
-            // Quiz 앱에 세션 동기화
-            const syncResponse = await fetch('/api/auth/sync', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({ syncToken }),
-            })
-            
-            if (syncResponse.ok) {
-              console.log('[FetchAdapter] Session synced successfully')
-              // 동기화 후 다시 세션 확인 (재귀 방지)
-              this.syncAttempted = false
-              const newResponse = await fetch(`${this.options.apiEndpoint}/session`, {
-                method: 'GET',
-                headers: {
-                  'Accept': 'application/json',
-                },
-                credentials: 'include',
-                cache: 'no-store'
-              })
-              
-              if (newResponse.ok) {
-                const newData = await newResponse.json()
-                if (newData.user && newData.user.email) {
-                  const user: AuthUser = {
-                    id: newData.user.id || newData.user.email,
-                    email: newData.user.email,
-                    name: newData.user.name || newData.user.email,
-                    image: newData.user.image,
-                    isAdmin: newData.user.isAdmin || false,
-                    canWrite: newData.user.canWrite || false,
-                    claudeDailyLimit: newData.user.claudeDailyLimit || 3,
-                    role: newData.user.role || 'user'
-                  }
-                  
-                  this.currentUser = user
-                  this.notifyListeners(user)
-                  return user
-                }
-              }
-            }
-          }
-        } catch (error) {
-          console.error('[FetchAdapter] Error syncing session:', error)
-        }
+      // 세션 동기화가 필요한 경우 - 자동 동기화는 제거하고 수동 동기화 페이지로 유도
+      if (data.needsSync && data.user) {
+        console.log('[FetchAdapter] Session sync needed, but auto-sync disabled due to CORS')
+        // 사용자에게 동기화가 필요함을 알리기 위해 user를 반환하되, 
+        // 실제 동기화는 sync 페이지에서 처리
       }
       
       // authenticated 플래그와 user 객체 둘 다 확인

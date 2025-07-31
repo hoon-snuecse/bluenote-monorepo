@@ -90,6 +90,31 @@ export default function QuizBuilder() {
     }
   }
 
+  // 로딩 중일 때 표시
+  if (status === 'loading') {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+        <span className="ml-3 text-gray-600">로딩 중...</span>
+      </div>
+    )
+  }
+
+  // 미인증 상태일 때 표시
+  if (!user) {
+    return (
+      <div className="text-center p-8">
+        <p className="text-gray-600 mb-4">퀴즈를 생성하려면 로그인이 필요합니다.</p>
+        <a 
+          href="/auth/sync" 
+          className="inline-block px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+        >
+          로그인하기
+        </a>
+      </div>
+    )
+  }
+
   return (
     <div className="mx-auto max-w-4xl">
       <form onSubmit={handleSubmit} className="space-y-6">

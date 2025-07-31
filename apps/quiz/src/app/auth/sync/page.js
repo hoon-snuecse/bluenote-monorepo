@@ -12,30 +12,18 @@ function SyncContent() {
   useEffect(() => {
     async function syncSession() {
       try {
-        // 메인 사이트에서 동기화 토큰 요청
-        const tokenResponse = await fetch('https://www.bluenote.site/api/auth/session-sync', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-          },
-          credentials: 'include',
-        })
+        // 현재 브라우저의 쿠키를 가져와서 서버에 전달
+        const cookieHeader = document.cookie;
         
-        if (!tokenResponse.ok) {
-          throw new Error('Failed to get sync token')
-        }
+        console.log('[Sync Page] Starting server-side sync');
         
-        const { syncToken } = await tokenResponse.json()
-        console.log('[Sync Page] Got sync token')
-        
-        // Quiz 앱에 세션 동기화
-        const syncResponse = await fetch('/api/auth/sync', {
+        // 서버 사이드 동기화 요청
+        const syncResponse = await fetch('/api/auth/server-sync', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ syncToken }),
+          body: JSON.stringify({ cookieHeader }),
         })
         
         if (!syncResponse.ok) {

@@ -30,18 +30,21 @@ export async function middleware(request) {
   const isProtectedPath = protectedPaths.some(path => pathname.startsWith(path))
   
   if (isProtectedPath) {
-    // 세션 쿠키 확인 - 다양한 가능한 쿠키 이름들 체크
+    // Quiz 앱 전용 세션 쿠키 먼저 확인
+    const quizSession = request.cookies.get('quiz-session')
+    
+    // 메인 사이트 세션 쿠키도 확인
     const possibleSessionTokenNames = [
       'next-auth.session-token',
       '__Secure-next-auth.session-token',
       '__Host-next-auth.session-token'
     ]
     
-    let sessionToken = null
+    let mainSessionToken = null
     for (const name of possibleSessionTokenNames) {
       const token = request.cookies.get(name)
       if (token) {
-        sessionToken = token
+        mainSessionToken = token
         break
       }
     }
@@ -50,15 +53,17 @@ export async function middleware(request) {
     const allCookies = request.cookies.getAll()
     console.log('[Quiz Middleware] Path:', pathname)
     console.log('[Quiz Middleware] Environment:', process.env.NODE_ENV)
-    console.log('[Quiz Middleware] Session token found:', sessionToken ? `Yes (${sessionToken.name})` : 'No')
+    console.log('[Quiz Middleware] Quiz session found:', quizSession ? 'Yes' : 'No')
+    console.log('[Quiz Middleware] Main session token found:', mainSessionToken ? `Yes (${mainSessionToken.name})` : 'No')
     console.log('[Quiz Middleware] All cookies:', allCookies.map(c => ({ name: c.name, hasValue: !!c.value })))
     
-    // 세션이 없으면 로그인 페이지로
-    if (!sessionToken) {
+    // Quiz 세션이나 메인 세션 중 하나라도 있으면 통과
+    if (!quizSession && !mainSessionToken) {
+      // 둘 다 없으면 동기화 페이지로 리다이렉트
       const url = request.nextUrl.clone()
-      url.pathname = '/auth/signin'
+      url.pathname = '/auth/sync'
       url.searchParams.set('callbackUrl', request.nextUrl.pathname)
-      console.log('[Quiz Middleware] No session, redirecting to signin')
+      console.log('[Quiz Middleware] No session found, redirecting to sync')
       return NextResponse.redirect(url)
     }
   }
