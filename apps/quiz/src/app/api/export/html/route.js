@@ -19,13 +19,6 @@ export async function POST(request) {
     if (quizId && !questions) {
       const supabase = createClient()
       
-      // 먼저 RLS 컨텍스트 설정
-      if (session.user?.email) {
-        await supabase.rpc('set_current_user_email', { 
-          email: session.user.email 
-        })
-      }
-      
       // 퀴즈 정보 조회 (직접 quizzes 테이블에서 조회)
       const { data: quiz, error: quizError } = await supabase
         .from('quizzes')
@@ -235,7 +228,7 @@ export async function POST(request) {
             </div>
             
             <div class="options">
-                ${question.options ? question.options.map((option, optIndex) => {
+                ${(question.options || question.question_options) ? (question.options || question.question_options).map((option, optIndex) => {
                     const isCorrect = isQuizBuilderFormat ? option.isCorrect : option.is_correct;
                     const optionText = isQuizBuilderFormat ? option.text : option.option_text;
                     return `

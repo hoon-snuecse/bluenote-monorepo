@@ -19,13 +19,6 @@ export async function POST(request) {
     if (quizId && !questions) {
       const supabase = createClient()
       
-      // 먼저 RLS 컨텍스트 설정
-      if (session.user?.email) {
-        await supabase.rpc('set_current_user_email', { 
-          email: session.user.email 
-        })
-      }
-      
       // 퀴즈 정보 조회 (직접 quizzes 테이블에서 조회)
       const { data: quiz, error: quizError } = await supabase
         .from('quizzes')
@@ -97,9 +90,10 @@ export async function POST(request) {
       const answers = ['', '', '', '']
       const correctAnswers = []
 
-      // 선택지 채우기 - options 배열 확인
-      if (question.options && Array.isArray(question.options)) {
-        question.options.forEach((option, index) => {
+      // 선택지 채우기 - question.options 또는 question.question_options 지원
+      const options = question.options || question.question_options || []
+      if (Array.isArray(options)) {
+        options.forEach((option, index) => {
           if (index < 4) {
             // 두 가지 데이터 구조 모두 지원
             if (isQuizBuilderFormat) {

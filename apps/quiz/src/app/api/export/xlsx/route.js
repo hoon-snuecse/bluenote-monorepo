@@ -13,19 +13,14 @@ export async function POST(request) {
 
     const { questions, title, quizId } = await request.json()
     
+    console.log('Export XLSX request:', { hasQuestions: !!questions, title, quizId })
+    
     let questionsData = questions
     let quizTitle = title
     
     // quizId가 제공된 경우 데이터베이스에서 퀴즈 조회
     if (quizId && !questions) {
       const supabase = createClient()
-      
-      // 먼저 RLS 컨텍스트 설정
-      if (session.user?.email) {
-        await supabase.rpc('set_current_user_email', { 
-          email: session.user.email 
-        })
-      }
       
       // 퀴즈 정보 조회 (직접 quizzes 테이블에서 조회)
       const { data: quiz, error: quizError } = await supabase
@@ -101,9 +96,10 @@ export async function POST(request) {
       const answers = ['', '', '', '']
       const correctAnswers = []
 
-      // 선택지 채우기
-      if (question.options && Array.isArray(question.options)) {
-        question.options.forEach((option, index) => {
+      // 선택지 채우기 - question.options 또는 question.question_options 지원
+      const options = question.options || question.question_options || []
+      if (Array.isArray(options)) {
+        options.forEach((option, index) => {
           if (index < 4) {
             // 두 가지 데이터 구조 모두 지원
             if (isQuizBuilderFormat) {
@@ -155,14 +151,15 @@ export async function POST(request) {
     questionsData.forEach((question, index) => {
       let correctAnswer = ''
       
-      if (question.options && Array.isArray(question.options)) {
+      const optionsForDetail = question.options || question.question_options || []
+      if (Array.isArray(optionsForDetail)) {
         if (isQuizBuilderFormat) {
-          correctAnswer = question.options
+          correctAnswer = optionsForDetail
             .filter(opt => opt.isCorrect)
             .map(opt => opt.text)
             .join(', ')
         } else {
-          correctAnswer = question.options
+          correctAnswer = optionsForDetail
             .filter(opt => opt.is_correct)
             .map(opt => opt.option_text)
             .join(', ')
