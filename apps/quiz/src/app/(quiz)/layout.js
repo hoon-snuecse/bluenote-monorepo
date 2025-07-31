@@ -14,8 +14,10 @@ export default function QuizLayout({ children }) {
     if (status === 'unauthenticated' && !hasRedirected) {
       setHasRedirected(true)
       console.log('[Quiz Layout] Redirecting to signin...')
-      // 메인 사이트 로그인 페이지로 리다이렉트
-      window.location.href = 'https://www.bluenote.site/auth/signin?callbackUrl=https://quiz.bluenote.site'
+      // 메인 사이트 로그인 페이지로 리다이렉트, 로그인 후 sync 페이지로 돌아옴
+      const currentPath = window.location.pathname
+      const syncUrl = `https://quiz.bluenote.site/auth/sync?callbackUrl=${encodeURIComponent(currentPath)}`
+      window.location.href = `https://www.bluenote.site/auth/signin?callbackUrl=${encodeURIComponent(syncUrl)}`
     }
   }, [status, hasRedirected])
   

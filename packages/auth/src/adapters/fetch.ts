@@ -6,6 +6,7 @@ export class FetchAdapter implements AuthAdapter {
   private options: AuthAdapterOptions
   private listeners: Set<(user: AuthUser | null) => void> = new Set()
   private currentUser: AuthUser | null = null
+  private syncAttempted: boolean = false
 
   constructor(options: AuthAdapterOptions = {}) {
     this.options = {
@@ -23,28 +24,96 @@ export class FetchAdapter implements AuthAdapter {
         headers: {
           'Accept': 'application/json',
         },
-        credentials: 'include'
+        credentials: 'include',
+        cache: 'no-store' // 캐시 비활성화
       })
       
       if (!response.ok) {
+        console.log('[FetchAdapter] Session response not ok:', response.status)
         return null
       }
 
       const data = await response.json()
       
       // 디버깅 로그 추가
-      if (typeof window !== 'undefined') {
-        console.log('[FetchAdapter] Session response:', {
-          status: response.status,
-          hasUser: !!data.user,
-          authenticated: data.authenticated,
-          userEmail: data.user?.email,
-          raw: data
-        })
+      console.log('[FetchAdapter] Session response:', {
+        status: response.status,
+        hasUser: !!data.user,
+        authenticated: data.authenticated,
+        needsSync: data.needsSync,
+        userEmail: data.user?.email
+      })
+      
+      // 세션 동기화가 필요한 경우
+      if (data.needsSync && data.user && !this.syncAttempted) {
+        console.log('[FetchAdapter] Session sync needed, attempting to sync...')
+        this.syncAttempted = true
+        
+        try {
+          // 메인 사이트에서 동기화 토큰 요청
+          const tokenResponse = await fetch('https://www.bluenote.site/api/auth/session-sync', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json',
+            },
+            credentials: 'include',
+          })
+          
+          if (tokenResponse.ok) {
+            const { syncToken } = await tokenResponse.json()
+            console.log('[FetchAdapter] Got sync token, syncing session...')
+            
+            // Quiz 앱에 세션 동기화
+            const syncResponse = await fetch('/api/auth/sync', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ syncToken }),
+            })
+            
+            if (syncResponse.ok) {
+              console.log('[FetchAdapter] Session synced successfully')
+              // 동기화 후 다시 세션 확인 (재귀 방지)
+              this.syncAttempted = false
+              const newResponse = await fetch(`${this.options.apiEndpoint}/session`, {
+                method: 'GET',
+                headers: {
+                  'Accept': 'application/json',
+                },
+                credentials: 'include',
+                cache: 'no-store'
+              })
+              
+              if (newResponse.ok) {
+                const newData = await newResponse.json()
+                if (newData.user && newData.user.email) {
+                  const user: AuthUser = {
+                    id: newData.user.id || newData.user.email,
+                    email: newData.user.email,
+                    name: newData.user.name || newData.user.email,
+                    image: newData.user.image,
+                    isAdmin: newData.user.isAdmin || false,
+                    canWrite: newData.user.canWrite || false,
+                    claudeDailyLimit: newData.user.claudeDailyLimit || 3,
+                    role: newData.user.role || 'user'
+                  }
+                  
+                  this.currentUser = user
+                  this.notifyListeners(user)
+                  return user
+                }
+              }
+            }
+          }
+        } catch (error) {
+          console.error('[FetchAdapter] Error syncing session:', error)
+        }
       }
       
       // authenticated 플래그와 user 객체 둘 다 확인
-      if (data.authenticated && data.user && data.user.email) {
+      if (data.user && data.user.email) {
         const user: AuthUser = {
           id: data.user.id || data.user.email, // fallback to email if no id
           email: data.user.email,
@@ -65,7 +134,7 @@ export class FetchAdapter implements AuthAdapter {
         return user
       }
     } catch (error) {
-      console.error('Error fetching session:', error)
+      console.error('[FetchAdapter] Error fetching session:', error)
     }
     
     // 로그아웃 상태라면 리스너들에게 알림
@@ -78,24 +147,27 @@ export class FetchAdapter implements AuthAdapter {
   }
 
   async signIn(provider: string = 'google'): Promise<void> {
+    // syncAttempted 리셋
+    this.syncAttempted = false
+    
     // 메인 사이트의 로그인 페이지로 리다이렉트
     const callbackUrl = encodeURIComponent(window.location.href)
-    window.location.href = `https://bluenote.site/auth/signin?provider=${provider}&callbackUrl=${callbackUrl}`
+    window.location.href = `https://www.bluenote.site/auth/signin?provider=${provider}&callbackUrl=${callbackUrl}`
   }
 
   async signOut(): Promise<void> {
     try {
-      // 로컬 세션 종료 시도
-      await fetch(`${this.options.apiEndpoint}/signout`, {
-        method: 'POST',
+      // Quiz 앱 세션 종료
+      await fetch('/api/auth/sync', {
+        method: 'DELETE',
         credentials: 'include'
       })
     } catch (error) {
-      console.error('Error signing out:', error)
+      console.error('Error clearing Quiz session:', error)
     }
     
     // 메인 사이트의 로그아웃 엔드포인트로 리다이렉트
-    window.location.href = 'https://bluenote.site/api/auth/signout?callbackUrl=' + encodeURIComponent(this.options.signOutUrl || '/')
+    window.location.href = 'https://www.bluenote.site/api/auth/signout?callbackUrl=' + encodeURIComponent(this.options.signOutUrl || '/')
   }
 
   subscribeToChanges(callback: (user: AuthUser | null) => void): () => void {
