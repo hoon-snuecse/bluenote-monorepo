@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { FileText, Save, Globe, User } from 'lucide-react'
+import { FileText, Save, Globe, User, LogOut } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
 const tabs = [
@@ -29,12 +29,14 @@ const tabs = [
 function UserInfo() {
   const [userEmail, setUserEmail] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [signOut, setSignOut] = useState(null)
   
   useEffect(() => {
     // 클라이언트 사이드에서만 실행
     if (typeof window !== 'undefined') {
       // 동적 import로 next-auth/react 가져오기
-      import('next-auth/react').then(({ getSession }) => {
+      import('next-auth/react').then(({ getSession, signOut: nextAuthSignOut }) => {
+        setSignOut(() => nextAuthSignOut)
         getSession().then(session => {
           if (session?.user?.email) {
             setUserEmail(session.user.email)
@@ -46,6 +48,12 @@ function UserInfo() {
       })
     }
   }, [])
+  
+  const handleSignOut = async () => {
+    if (signOut) {
+      await signOut({ callbackUrl: '/' })
+    }
+  }
   
   if (loading) {
     return (
@@ -61,9 +69,19 @@ function UserInfo() {
   }
   
   return (
-    <div className="flex items-center gap-2 text-sm text-gray-700">
-      <User className="w-4 h-4" />
-      <span>{userEmail}</span>
+    <div className="flex items-center gap-4">
+      <div className="flex items-center gap-2 text-sm text-gray-700">
+        <User className="w-4 h-4" />
+        <span>{userEmail}</span>
+      </div>
+      <button
+        onClick={handleSignOut}
+        className="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors"
+        title="로그아웃"
+      >
+        <LogOut className="w-4 h-4" />
+        <span className="hidden sm:inline">로그아웃</span>
+      </button>
     </div>
   )
 }
