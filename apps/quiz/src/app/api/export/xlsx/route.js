@@ -20,11 +20,11 @@ export async function POST(request) {
     if (quizId && !questions) {
       const supabase = createClient()
       
-      // 먼저 공유된 퀴즈에서 실제 quiz_id 찾기
-      const { data: sharedQuiz, error: sharedError } = await supabase
-        .from('shared_quizzes')
-        .select('quiz_id, title')
-        .eq('quiz_id', quizId)
+      // 퀴즈 정보 조회 (직접 quizzes 테이블에서 조회)
+      const { data: quiz, error: quizError } = await supabase
+        .from('quizzes')
+        .select('title')
+        .eq('id', quizId)
         .single()
         
       if (!sharedError && sharedQuiz) {
