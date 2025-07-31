@@ -13,37 +13,54 @@ export default function CommunityQuizDetailPage() {
   // const { data: session } = useSession() // Temporarily removed
   const [session, setSession] = useState(undefined) // undefined: 로딩중, null: 미인증
   
-  // Fetch session manually with sync handling
+  // Fetch session manually with proper handling
   useEffect(() => {
     const fetchSession = async () => {
       try {
-        // 먼저 세션 확인
-        const sessionRes = await fetch('/api/auth/session')
-        const sessionData = await sessionRes.json()
+        // 1. 먼저 퀴즈앱 세션 확인
+        const quizSessionRes = await fetch('/api/auth/session')
+        const quizSessionData = await quizSessionRes.json()
         
-        if (sessionData.needsSync) {
-          // 메인 사이트 세션이 있지만 퀴즈앱 세션이 없는 경우 동기화
-          const syncRes = await fetch('/api/auth/session-sync', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            credentials: 'include'
-          })
-          
-          if (syncRes.ok) {
-            // 동기화 후 다시 세션 확인
-            const newSessionRes = await fetch('/api/auth/session')
-            const newSessionData = await newSessionRes.json()
-            setSession(newSessionData)
-          } else {
-            setSession(null)
-          }
-        } else if (sessionData.user) {
-          setSession(sessionData)
-        } else {
-          setSession(null)
+        if (quizSessionData.authenticated && quizSessionData.user) {
+          // 퀴즈앱 세션이 있으면 사용
+          setSession(quizSessionData)
+          return
         }
+        
+        // 2. 퀴즈앱 세션이 없으면 메인 사이트 세션 확인
+        if (quizSessionData.needsSync || quizSessionData.hasMainSession) {
+          try {
+            const mainSiteUrl = process.env.NODE_ENV === 'production' 
+              ? 'https://www.bluenote.site' 
+              : 'http://localhost:3000'
+            
+            const mainSessionRes = await fetch(`${mainSiteUrl}/api/auth/session-check`, {
+              credentials: 'include',
+              headers: {
+                'Accept': 'application/json',
+              }
+            })
+            
+            if (mainSessionRes.ok) {
+              const mainSessionData = await mainSessionRes.json()
+              
+              if (mainSessionData.authenticated && mainSessionData.session) {
+                // 메인 세션 데이터를 사용
+                setSession({
+                  user: mainSessionData.session.user || mainSessionData.user,
+                  authenticated: true
+                })
+                return
+              }
+            }
+          } catch (error) {
+            console.error('메인 사이트 세션 확인 실패:', error)
+          }
+        }
+        
+        // 3. 세션이 없는 경우
+        setSession(null)
+        
       } catch (error) {
         console.error('세션 확인 오류:', error)
         setSession(null)
@@ -63,11 +80,11 @@ export default function CommunityQuizDetailPage() {
   })
 
   useEffect(() => {
-    // 세션 로드가 완료된 후에만 데이터 조회
-    if (id && session !== undefined) {
+    // 세션 로드가 완료된 후에만 데이터 조회 (한 번만 실행)
+    if (id && session !== undefined && !quiz) {
       fetchQuizDetail()
     }
-  }, [id, session])
+  }, [id, session !== undefined]) // session 객체가 아닌 로드 완료 여부만 체크
 
   const fetchQuizDetail = async () => {
     try {
@@ -136,8 +153,9 @@ export default function CommunityQuizDetailPage() {
   }
 
   const handleDownload = async (format) => {
-    if (!session) {
+    if (!session || !session.user) {
       alert('다운로드하려면 로그인이 필요합니다.')
+      router.push('/auth/signin')
       return
     }
 
@@ -260,31 +278,53 @@ export default function CommunityQuizDetailPage() {
             <p className="text-gray-700 mb-4">{quiz.description}</p>
           )}
 
-          <div className="flex gap-3">
-            <button
-              onClick={() => handleDownload('csv')}
-              disabled={downloading.csv}
-              className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center"
-            >
-              <FileText className="w-4 h-4 mr-2" />
-              {downloading.csv ? '다운로드 중...' : 'CSV 다운로드'}
-            </button>
-            <button
-              onClick={() => handleDownload('xlsx')}
-              disabled={downloading.excel}
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center"
-            >
-              <FileText className="w-4 h-4 mr-2" />
-              {downloading.excel ? '다운로드 중...' : 'Excel 다운로드'}
-            </button>
-            <button
-              onClick={() => handleDownload('html')}
-              disabled={downloading.html}
-              className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center"
-            >
-              <FileText className="w-4 h-4 mr-2" />
-              {downloading.html ? '다운로드 중...' : '교사용 가이드'}
-            </button>
+          <div className="space-y-3">
+            {!session && (
+              <p className="text-sm text-gray-600 italic">
+                다운로드하려면 로그인이 필요합니다.
+              </p>
+            )}
+            <div className="flex gap-3">
+              <button
+                onClick={() => handleDownload('csv')}
+                disabled={downloading.csv}
+                className={`px-4 py-2 rounded-md inline-flex items-center ${
+                  session 
+                    ? 'bg-green-600 text-white hover:bg-green-700' 
+                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                } disabled:opacity-50 disabled:cursor-not-allowed`}
+                title={!session ? '로그인이 필요합니다' : ''}
+              >
+                <FileText className="w-4 h-4 mr-2" />
+                {downloading.csv ? '다운로드 중...' : 'CSV 다운로드'}
+              </button>
+              <button
+                onClick={() => handleDownload('xlsx')}
+                disabled={downloading.excel}
+                className={`px-4 py-2 rounded-md inline-flex items-center ${
+                  session 
+                    ? 'bg-blue-600 text-white hover:bg-blue-700' 
+                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                } disabled:opacity-50 disabled:cursor-not-allowed`}
+                title={!session ? '로그인이 필요합니다' : ''}
+              >
+                <FileText className="w-4 h-4 mr-2" />
+                {downloading.excel ? '다운로드 중...' : 'Excel 다운로드'}
+              </button>
+              <button
+                onClick={() => handleDownload('html')}
+                disabled={downloading.html}
+                className={`px-4 py-2 rounded-md inline-flex items-center ${
+                  session 
+                    ? 'bg-purple-600 text-white hover:bg-purple-700' 
+                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                } disabled:opacity-50 disabled:cursor-not-allowed`}
+                title={!session ? '로그인이 필요합니다' : ''}
+              >
+                <FileText className="w-4 h-4 mr-2" />
+                {downloading.html ? '다운로드 중...' : '교사용 가이드'}
+              </button>
+            </div>
           </div>
         </div>
       </div>
