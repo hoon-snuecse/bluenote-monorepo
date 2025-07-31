@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { createAdminClient } from '@/lib/supabase-admin'
+import { createClient } from '@/lib/supabase'
 
 export async function GET(request) {
   try {
@@ -11,8 +11,8 @@ export async function GET(request) {
     }
 
     console.log('Fetching questions for quiz:', quizId)
-    // 관리자 클라이언트 사용 (RLS 우회)
-    const supabase = createAdminClient()
+    // 일반 클라이언트 사용 (RLS 규칙 준수)
+    const supabase = createClient()
     
     // 먼저 해당 퀴즈가 공유되었는지 확인
     const { data: quiz, error: quizError } = await supabase

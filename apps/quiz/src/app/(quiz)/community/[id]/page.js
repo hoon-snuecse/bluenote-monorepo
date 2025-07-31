@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 // import { useSession } from 'next-auth/react' // Temporarily removed due to React Hooks error
-// import { createClient } from '@/lib/supabase' // API 사용으로 불필요
+import { createClient } from '@/lib/supabase'
 import { ChevronLeft, Download, Star, Calendar, User, FileText } from 'lucide-react'
 import QuestionPreview from '@/components/QuestionPreview/QuestionPreview'
 
@@ -90,31 +90,49 @@ export default function CommunityQuizDetailPage() {
     try {
       console.log('Fetching quiz detail for id:', id)
       
-      // API를 통해 모든 정보를 한번에 가져오기 (RLS 우회)
-      const response = await fetch(`/api/community/quiz-detail?id=${id}`)
+      const supabase = createClient()
       
-      if (!response.ok) {
-        const error = await response.json()
-        console.error('Failed to fetch quiz detail:', error)
-        setError(error.error || '퀴즈를 불러올 수 없습니다.')
+      // 1. shared_quizzes 정보 가져오기 (누구나 볼 수 있음)
+      const { data: sharedQuiz, error: sharedError } = await supabase
+        .from('shared_quizzes')
+        .select('*')
+        .eq('id', id)
+        .single()
+        
+      if (sharedError || !sharedQuiz) {
+        console.error('Shared quiz not found:', sharedError)
+        setError('퀴즈를 찾을 수 없습니다.')
         return
       }
       
-      const { sharedQuiz, questions } = await response.json()
-      console.log('Quiz detail loaded:', { sharedQuiz, questionsCount: questions.length })
+      console.log('Found shared quiz:', sharedQuiz)
       
-      // 퀴즈 정보 설정
+      // 2. 퀴즈 정보 설정 (shared_quizzes에 이미 필요한 정보가 다 있음)
       setQuiz({
         ...sharedQuiz,
-        ...sharedQuiz.quiz,
         id: sharedQuiz.quiz_id,
         shared_at: sharedQuiz.created_at,
         downloads: sharedQuiz.download_count || 0,
         average_rating: sharedQuiz.rating_average || 0
       })
       
-      // 문항 설정
-      setQuestions(questions || [])
+      // 3. 문항 조회 (is_shared=true인 퀴즈의 문항은 누구나 볼 수 있음)
+      const { data: questions, error: questionsError } = await supabase
+        .from('questions')
+        .select(`
+          *,
+          question_options (*)
+        `)
+        .eq('quiz_id', sharedQuiz.quiz_id)
+        .order('order_index', { ascending: true })
+        
+      if (questionsError) {
+        console.error('Questions fetch error:', questionsError)
+        setQuestions([])
+      } else {
+        console.log('Found questions:', questions?.length)
+        setQuestions(questions || [])
+      }
 
       // 조회수 증가 (views 컬럼이 있는 경우에만)
       // TODO: 데이터베이스에 views 컬럼 추가 후 주석 해제
