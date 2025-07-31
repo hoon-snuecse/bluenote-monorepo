@@ -5,7 +5,49 @@ export async function GET(request) {
     // Next.js cookies API 사용하여 쿠키 읽기
     const cookieStore = await cookies()
     
-    // 가능한 세션 토큰 이름들
+    // 프로덕션 환경 체크
+    const isProduction = process.env.NODE_ENV === 'production';
+    
+    // 프로덕션에서는 도메인 간 쿠키 공유를 위해 직접 세션 확인
+    if (isProduction) {
+      // 모든 쿠키를 헤더로 전달
+      const allCookies = cookieStore.getAll()
+      const cookieHeader = allCookies.map(cookie => `${cookie.name}=${cookie.value}`).join('; ')
+      
+      console.log('[Quiz Session API] Production mode - forwarding cookies to main site');
+      console.log('[Quiz Session API] Cookie count:', allCookies.length);
+      
+      // www.bluenote.site의 세션 API 직접 호출
+      const response = await fetch('https://www.bluenote.site/api/auth/session', {
+        method: 'GET',
+        headers: {
+          'Cookie': cookieHeader,
+          'Accept': 'application/json',
+          'User-Agent': 'Quiz-App-Session-Check',
+        },
+        // 서버 사이드에서는 credentials 옵션 불필요
+      });
+      
+      console.log('[Quiz Session API] Main site response status:', response.status);
+      
+      if (response.ok) {
+        const session = await response.json();
+        
+        // NextAuth 세션 형식으로 반환
+        if (session && session.user) {
+          console.log('[Quiz Session API] Found session for user:', session.user.email);
+          return Response.json({
+            user: session.user,
+            authenticated: true
+          });
+        }
+      }
+      
+      console.log('[Quiz Session API] No valid session found from main site');
+      return Response.json({ user: null, authenticated: false });
+    }
+    
+    // 개발 환경에서는 기존 로직 사용
     const sessionTokenNames = [
       'next-auth.session-token',
       '__Secure-next-auth.session-token',
@@ -22,62 +64,29 @@ export async function GET(request) {
       }
     }
     
-    // 디버깅을 위한 모든 쿠키 출력
-    const allCookies = cookieStore.getAll()
-    console.log('[Quiz Session API] All cookies:', allCookies.map(c => ({ name: c.name, hasValue: !!c.value })))
-    
     if (!sessionToken) {
       console.log('[Quiz Session API] No session token found');
       return Response.json({ user: null, authenticated: false });
     }
     
-    // 쿠키 헤더 재구성
-    const cookieHeader = allCookies.map(cookie => `${cookie.name}=${cookie.value}`).join('; ')
-
-    // 로컬 개발 환경과 프로덕션 환경 구분
-    const isProduction = process.env.NODE_ENV === 'production';
-    const mainSiteUrl = isProduction 
-      ? 'https://bluenote.site' 
-      : (process.env.NEXT_PUBLIC_MAIN_AUTH_URL || 'http://localhost:3000');
-
-    console.log('[Quiz Session API] Checking session with:', mainSiteUrl);
-
-    // 메인 사이트의 세션 확인 API에 쿠키 전달
+    // 개발 환경에서는 로컬 세션 확인
+    const mainSiteUrl = process.env.NEXT_PUBLIC_MAIN_AUTH_URL || 'http://localhost:3000';
     const response = await fetch(`${mainSiteUrl}/api/auth/session-check`, {
       method: 'GET',
       headers: {
-        'Cookie': cookieHeader,
-        'X-Forwarded-Host': isProduction ? 'quiz.bluenote.site' : 'localhost:3003',
+        'Cookie': `next-auth.session-token=${sessionToken.value}`,
+        'X-Forwarded-Host': 'localhost:3003',
         'Accept': 'application/json',
       },
-      credentials: 'include',
     });
 
-    console.log('[Quiz Session API] Response status:', response.status);
-
     if (!response.ok) {
-      console.log('[Quiz Session API] Session check failed with status:', response.status);
-      return Response.json({ user: null });
+      console.log('[Quiz Session API] Session check failed');
+      return Response.json({ user: null, authenticated: false });
     }
 
     const data = await response.json();
-    
-    // 디버깅을 위한 로그
-    console.log('[Quiz Session API] Session check response:', {
-      authenticated: data.authenticated,
-      hasSession: !!data.session,
-      hasUser: !!data.user,
-      userEmail: data.user?.email || data.session?.user?.email
-    });
-    
-    // 세션 데이터 반환 - 우선순위: data.user > data.session?.user
     const user = data.user || data.session?.user || null;
-    
-    if (user) {
-      console.log('[Quiz Session API] Found user:', user.email);
-    } else {
-      console.log('[Quiz Session API] No user found in session data');
-    }
     
     return Response.json({
       user: user,
@@ -85,7 +94,7 @@ export async function GET(request) {
     });
     
   } catch (error) {
-    console.error('[Quiz Session API] Session check error:', error);
-    return Response.json({ user: null });
+    console.error('[Quiz Session API] Error:', error);
+    return Response.json({ user: null, authenticated: false });
   }
 }
