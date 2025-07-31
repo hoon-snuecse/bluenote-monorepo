@@ -102,15 +102,20 @@ export class FetchAdapter implements AuthAdapter {
   subscribeToChanges(callback: (user: AuthUser | null) => void): () => void {
     this.listeners.add(callback)
     
-    // 폴링 시작 (5초마다 세션 확인)
+    // 폴링 시작 (30초마다 세션 확인 - 더 긴 주기로 변경)
     if (!this.pollingInterval && typeof window !== 'undefined') {
       this.pollingInterval = window.setInterval(() => {
-        this.getSession()
-      }, 5000)
+        // 현재 활성 탭에서만 폴링 실행
+        if (!document.hidden) {
+          this.getSession().catch(error => {
+            console.error('[FetchAdapter] Polling error:', error)
+          })
+        }
+      }, 30000) // 30초로 변경
     }
     
-    // 초기 세션 정보 전달
-    this.getSession().then(user => callback(user))
+    // 초기 세션 정보는 이미 AuthContext에서 로드하므로 여기서는 생략
+    // 중복 호출을 방지하기 위해 callback 호출 제거
     
     // 구독 해제 함수 반환
     return () => {

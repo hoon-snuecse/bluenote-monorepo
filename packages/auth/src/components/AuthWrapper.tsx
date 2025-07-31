@@ -20,9 +20,15 @@ export function AuthWrapper({
   const pathname = usePathname()
 
   useEffect(() => {
+    // 리다이렉트는 상태가 확실히 'unauthenticated'일 때만 수행
+    // 지연을 두어 초기 로딩 중 리다이렉트 방지
     if (requireAuth && status === 'unauthenticated') {
-      const callbackUrl = encodeURIComponent(pathname)
-      router.push(`${redirectTo}?callbackUrl=${callbackUrl}`)
+      const timeoutId = setTimeout(() => {
+        const callbackUrl = encodeURIComponent(pathname)
+        router.push(`${redirectTo}?callbackUrl=${callbackUrl}`)
+      }, 100) // 100ms 지연
+      
+      return () => clearTimeout(timeoutId)
     }
   }, [requireAuth, status, router, pathname, redirectTo])
 

@@ -14,27 +14,45 @@ export function AuthProvider({ children, adapter, options }: AuthProviderProps) 
   const authAdapter = adapter || new FetchAdapter(options)
 
   useEffect(() => {
+    let mounted = true
+    let unsubscribe: (() => void) | undefined
+
     // 초기 세션 로드
-    setStatus('loading')
-    authAdapter.getSession()
-      .then(sessionUser => {
-        setUser(sessionUser)
-        setStatus(sessionUser ? 'authenticated' : 'unauthenticated')
-      })
-      .catch(error => {
+    const loadSession = async () => {
+      try {
+        setStatus('loading')
+        const sessionUser = await authAdapter.getSession()
+        
+        if (mounted) {
+          setUser(sessionUser)
+          setStatus(sessionUser ? 'authenticated' : 'unauthenticated')
+        }
+      } catch (error) {
         console.error('Error loading session:', error)
-        setUser(null)
-        setStatus('unauthenticated')
-      })
+        if (mounted) {
+          setUser(null)
+          setStatus('unauthenticated')
+        }
+      }
+    }
+
+    loadSession()
 
     // 세션 변경 구독 (어댑터가 지원하는 경우)
     if (authAdapter.subscribeToChanges) {
-      const unsubscribe = authAdapter.subscribeToChanges((sessionUser) => {
-        setUser(sessionUser)
-        setStatus(sessionUser ? 'authenticated' : 'unauthenticated')
+      unsubscribe = authAdapter.subscribeToChanges((sessionUser) => {
+        if (mounted) {
+          setUser(sessionUser)
+          setStatus(sessionUser ? 'authenticated' : 'unauthenticated')
+        }
       })
+    }
 
-      return unsubscribe
+    return () => {
+      mounted = false
+      if (unsubscribe) {
+        unsubscribe()
+      }
     }
   }, [authAdapter])
 

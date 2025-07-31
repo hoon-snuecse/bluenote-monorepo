@@ -9,21 +9,12 @@ function SessionDebug() {
   const { user, status } = useAuth()
   
   useEffect(() => {
-    console.log('[Quiz Layout] Auth status:', status)
-    console.log('[Quiz Layout] User:', user)
-    
-    // 처음 마운트 시 세션 체크 강제 실행
-    if (status === 'loading') {
-      fetch('/api/auth/session', { credentials: 'include' })
-        .then(res => res.json())
-        .then(data => {
-          console.log('[Quiz Layout] Manual session check:', data)
-        })
-        .catch(err => {
-          console.error('[Quiz Layout] Session check error:', err)
-        })
+    // 상태 변경 시만 로그 출력 (무한 루프 방지)
+    if (status !== 'loading') {
+      console.log('[Quiz Layout] Auth status:', status)
+      console.log('[Quiz Layout] User:', user)
     }
-  }, [status])
+  }, [status, user])
   
   return null
 }
