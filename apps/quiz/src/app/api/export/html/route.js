@@ -275,10 +275,13 @@ export async function POST(request) {
 </body>
 </html>`
 
+    // 파일명 안전하게 처리 (한글 인코딩)
+    const safeFilename = encodeURIComponent(`${quizTitle || 'quiz'}_teacher_guide.html`)
+    
     return new Response(htmlContent, {
       headers: {
         'Content-Type': 'text/html; charset=utf-8',
-        'Content-Disposition': `attachment; filename="${quizTitle || 'quiz'}_teacher_guide.html"`
+        'Content-Disposition': `attachment; filename*=UTF-8''${safeFilename}`
       }
     })
   } catch (error) {

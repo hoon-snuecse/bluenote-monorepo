@@ -157,10 +157,13 @@ export async function POST(request) {
     const BOM = '\uFEFF'
     const csvWithBOM = BOM + csvContent
 
+    // 파일명 안전하게 처리 (한글 인코딩)
+    const safeFilename = encodeURIComponent(`${quizTitle || 'quiz'}_kahoot.csv`)
+    
     return new Response(csvWithBOM, {
       headers: {
         'Content-Type': 'text/csv; charset=utf-8',
-        'Content-Disposition': `attachment; filename="${quizTitle || 'quiz'}_kahoot.csv"`
+        'Content-Disposition': `attachment; filename*=UTF-8''${safeFilename}`
       }
     })
   } catch (error) {

@@ -197,10 +197,13 @@ export async function POST(request) {
     // Excel 파일 생성
     const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' })
 
+    // 파일명 안전하게 처리 (한글 인코딩)
+    const safeFilename = encodeURIComponent(`${quizTitle || 'quiz'}_kahoot.xlsx`)
+    
     return new Response(excelBuffer, {
       headers: {
         'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        'Content-Disposition': `attachment; filename="${quizTitle || 'quiz'}_kahoot.xlsx"`
+        'Content-Disposition': `attachment; filename*=UTF-8''${safeFilename}`
       }
     })
   } catch (error) {
