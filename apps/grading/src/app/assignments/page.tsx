@@ -331,6 +331,7 @@ function AssignmentsContent() {
               ))}
             </div>
           )}
+        </div>
       </div>
     </div>
   );
