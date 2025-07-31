@@ -373,7 +373,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Header */}
-        <div className="mb-6 flex justify-between items-start">
+        <div className="mb-6 flex justify-between items-start pt-8">
           <div>
             <h1 className="text-4xl font-bold text-slate-900 mb-2">평가 대시보드</h1>
             <p className="text-slate-600">{assignment?.title}</p>

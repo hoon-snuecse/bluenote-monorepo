@@ -37,7 +37,7 @@ export default function CollectSubmissionsPage() {
         </div>
 
         {/* Header */}
-        <div className="mb-8 text-center">
+        <div className="mb-8 text-center pt-8">
           <h1 className="text-4xl font-bold text-slate-900 mb-2">제출물 수집</h1>
           <p className="text-lg text-slate-600">QR 코드나 링크를 통해 학생들의 글쓰기를 수집합니다</p>
         </div>
