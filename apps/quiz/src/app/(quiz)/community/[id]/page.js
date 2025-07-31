@@ -100,19 +100,7 @@ export default function CommunityQuizDetailPage() {
       // 공유된 퀴즈 정보 가져오기
       const { data: sharedQuiz, error: quizError } = await supabase
         .from('shared_quizzes')
-        .select(`
-          *,
-          quizzes (
-            id,
-            title,
-            topic,
-            created_at,
-            questions (
-              *,
-              question_options (*)
-            )
-          )
-        `)
+        .select('*')
         .eq('id', id)
         .single()
 
@@ -122,20 +110,34 @@ export default function CommunityQuizDetailPage() {
         return
       }
 
-      if (!sharedQuiz || !sharedQuiz.quizzes) {
+      if (!sharedQuiz) {
         setError('퀴즈를 찾을 수 없습니다.')
         return
       }
 
+      // API를 통해 문항 정보 조회 (RLS 우회)
+      let questionsData = []
+      try {
+        const questionsResponse = await fetch(`/api/community/quiz-questions?quizId=${sharedQuiz.quiz_id}`)
+        if (questionsResponse.ok) {
+          const data = await questionsResponse.json()
+          questionsData = data.questions || []
+        } else {
+          console.error('문항 조회 실패')
+        }
+      } catch (error) {
+        console.error('문항 조회 오류:', error)
+      }
+
       setQuiz({
         ...sharedQuiz,
-        ...sharedQuiz.quizzes,
+        id: sharedQuiz.quiz_id, // quiz_id를 id로 설정
         shared_at: sharedQuiz.created_at,
-        downloads: sharedQuiz.downloads || 0,
-        average_rating: sharedQuiz.average_rating || 0
+        downloads: sharedQuiz.download_count || 0,
+        average_rating: sharedQuiz.rating_average || 0
       })
       
-      setQuestions(sharedQuiz.quizzes.questions || [])
+      setQuestions(questionsData || [])
 
       // 조회수 증가 (views 컬럼이 있는 경우에만)
       // TODO: 데이터베이스에 views 컬럼 추가 후 주석 해제
