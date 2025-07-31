@@ -89,95 +89,70 @@ export default function CommunityQuizDetailPage() {
   const fetchQuizDetail = async () => {
     try {
       console.log('Fetching quiz detail for id:', id)
+      console.log('Session status:', session)
       const supabase = createClient()
       
       // 세션이 있으면 RLS 컨텍스트 설정
       if (session?.user?.email) {
+        console.log('Setting RLS context for:', session.user.email)
         await supabase.rpc('set_current_user_email', { 
           email: session.user.email 
         })
       }
       
-      // 먼저 shared_quizzes 정보만 가져오기
-      const { data: sharedQuizBasic, error: sharedError } = await supabase
+      // shared_quizzes와 quizzes를 join해서 가져오기
+      const { data: sharedQuizWithQuiz, error: sharedError } = await supabase
         .from('shared_quizzes')
-        .select('*')
+        .select(`
+          *,
+          quizzes!inner (
+            id,
+            title,
+            description,
+            user_email,
+            is_shared,
+            created_at,
+            updated_at
+          )
+        `)
         .eq('id', id)
         .single()
         
-      if (sharedError || !sharedQuizBasic) {
+      if (sharedError || !sharedQuizWithQuiz) {
         console.error('Shared quiz not found:', sharedError)
         setError('퀴즈를 찾을 수 없습니다.')
         return
       }
       
-      console.log('Found shared quiz:', sharedQuizBasic)
+      console.log('Found shared quiz with quiz data:', sharedQuizWithQuiz)
+      const sharedQuizBasic = sharedQuizWithQuiz
+      const quizInfo = sharedQuizWithQuiz.quizzes
       
-      // quiz_id로 퀴즈 정보와 문항 가져오기
-      const { data: quizWithQuestions, error: quizError } = await supabase
-        .from('quizzes')
-        .select(`
-          *,
-          questions (
-            *,
-            question_options (*)
-          )
-        `)
-        .eq('id', sharedQuizBasic.quiz_id)
-        .order('questions.order_index', { ascending: true })
-        .single()
-
-      if (quizError) {
-        console.error('Quiz with questions fetch error:', quizError)
-        
-        // 퀴즈 정보만 먼저 가져오기
-        const { data: quizData, error: quizOnlyError } = await supabase
-          .from('quizzes')
-          .select('*')
-          .eq('id', sharedQuizBasic.quiz_id)
-          .single()
-        
-        if (!quizOnlyError && quizData) {
-          // API를 통해 문항 정보 조회 (RLS 우회)
-          let questionsData = []
-          try {
-            const questionsResponse = await fetch(`/api/community/quiz-questions?quizId=${sharedQuizBasic.quiz_id}`)
-            if (questionsResponse.ok) {
-              const data = await questionsResponse.json()
-              questionsData = data.questions || []
-            }
-          } catch (error) {
-            console.error('문항 조회 오류:', error)
-          }
-          
-          setQuiz({
-            ...sharedQuizBasic,
-            ...quizData,
-            id: sharedQuizBasic.quiz_id,
-            shared_at: sharedQuizBasic.created_at,
-            downloads: sharedQuizBasic.download_count || 0,
-            average_rating: sharedQuizBasic.rating_average || 0
-          })
-          
-          setQuestions(questionsData || [])
-        } else {
-          setError('퀴즈 정보를 불러올 수 없습니다.')
-        }
-        return
-      }
-
-      console.log('Quiz with questions:', quizWithQuestions)
-      
+      // 퀴즈 정보 설정 (join으로 이미 가져왔음)
       setQuiz({
         ...sharedQuizBasic,
-        ...quizWithQuestions,
+        ...quizInfo,
         id: sharedQuizBasic.quiz_id,
         shared_at: sharedQuizBasic.created_at,
         downloads: sharedQuizBasic.download_count || 0,
         average_rating: sharedQuizBasic.rating_average || 0
       })
       
-      setQuestions(quizWithQuestions.questions || [])
+      // API를 통해 문항 정보 조회 (공유된 퀴즈의 문항은 API로만 조회)
+      try {
+        const questionsResponse = await fetch(`/api/community/quiz-questions?quizId=${sharedQuizBasic.quiz_id}`)
+        if (questionsResponse.ok) {
+          const data = await questionsResponse.json()
+          setQuestions(data.questions || [])
+          console.log('Questions loaded:', data.questions?.length)
+        } else {
+          console.error('Failed to fetch questions:', await questionsResponse.text())
+          setQuestions([])
+        }
+      } catch (error) {
+        console.error('문항 조회 오류:', error)
+        setQuestions([])
+      }
 
       // 조회수 증가 (views 컬럼이 있는 경우에만)
       // TODO: 데이터베이스에 views 컬럼 추가 후 주석 해제
