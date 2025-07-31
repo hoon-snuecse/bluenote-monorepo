@@ -20,6 +20,10 @@ export class FetchAdapter implements AuthAdapter {
   async getSession(): Promise<AuthUser | null> {
     try {
       const response = await fetch(`${this.options.apiEndpoint}/session`, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+        },
         credentials: 'include'
       })
       
@@ -27,18 +31,27 @@ export class FetchAdapter implements AuthAdapter {
         return null
       }
 
-      const session = await response.json()
+      const data = await response.json()
       
-      if (session?.user) {
+      // 디버깅 로그 추가
+      if (typeof window !== 'undefined') {
+        console.log('[FetchAdapter] Session response:', {
+          hasUser: !!data.user,
+          authenticated: data.authenticated,
+          userEmail: data.user?.email
+        })
+      }
+      
+      if (data.user) {
         const user: AuthUser = {
-          id: session.user.id || '',
-          email: session.user.email,
-          name: session.user.name,
-          image: session.user.image,
-          isAdmin: session.user.isAdmin,
-          canWrite: session.user.canWrite,
-          claudeDailyLimit: session.user.claudeDailyLimit,
-          role: session.user.role
+          id: data.user.id || '',
+          email: data.user.email,
+          name: data.user.name,
+          image: data.user.image,
+          isAdmin: data.user.isAdmin,
+          canWrite: data.user.canWrite,
+          claudeDailyLimit: data.user.claudeDailyLimit,
+          role: data.user.role
         }
         
         // 사용자 정보가 변경되었으면 리스너들에게 알림

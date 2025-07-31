@@ -9,10 +9,13 @@ export async function GET(request) {
 
     // 메인 사이트의 세션 확인 API에 쿠키 전달
     const response = await fetch('https://bluenote.site/api/auth/session-check', {
+      method: 'GET',
       headers: {
         'Cookie': cookieHeader,
-        'X-Forwarded-Host': 'quiz.bluenote.site'
-      }
+        'X-Forwarded-Host': 'quiz.bluenote.site',
+        'Accept': 'application/json',
+      },
+      credentials: 'include',
     });
 
     if (!response.ok) {
@@ -21,9 +24,19 @@ export async function GET(request) {
 
     const data = await response.json();
     
-    // 세션 데이터 반환
+    // 디버깅을 위한 로그
+    console.log('[Quiz] Session check response:', {
+      authenticated: data.authenticated,
+      hasSession: !!data.session,
+      hasUser: !!data.user
+    });
+    
+    // 세션 데이터 반환 - 우선순위: data.user > data.session?.user
+    const user = data.user || data.session?.user || null;
+    
     return Response.json({
-      user: data.user || data.session?.user || null
+      user: user,
+      authenticated: data.authenticated || !!user
     });
     
   } catch (error) {
