@@ -122,9 +122,8 @@ export default function CommunityPage() {
         },
         credentials: 'include', // 쿠키 포함
         body: JSON.stringify({ 
-          quizId,
-          // 커뮤니티 메인에서는 questions가 없으므로 API가 DB에서 조회하도록 함
-          questions: null 
+          quizId
+          // questions를 아예 보내지 않음 (undefined)
         }),
       })
 

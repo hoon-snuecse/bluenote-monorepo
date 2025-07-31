@@ -30,15 +30,18 @@ export async function POST(request) {
         console.log('RLS context setting skipped:', rlsError.message)
       }
       
-      // 퀴즈 정보 조회 (직접 quizzes 테이블에서 조회)
+      // 퀴즈 숡보 조회 (직접 quizzes 테이블에서 조회)
+      console.log('HTML Export - Looking for quiz with id:', quizId)
       const { data: quiz, error: quizError } = await supabase
         .from('quizzes')
-        .select('title, is_shared')
+        .select('title, is_shared, user_email')
         .eq('id', quizId)
         .single()
         
       if (quizError) {
         console.error('Quiz fetch error:', quizError)
+        console.error('Quiz ID was:', quizId)
+        console.error('Error details:', quizError.message, quizError.code)
         return NextResponse.json({ error: '퀴즈를 찾을 수 없습니다.' }, { status: 404 })
       }
       
