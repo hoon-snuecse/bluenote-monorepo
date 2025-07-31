@@ -425,7 +425,7 @@ export default function CommunityPage() {
                 {/* 액션 버튼 - 한 줄로 배치 */}
                 <div className="mt-3 flex gap-1">
                   <Link
-                    href={`/community/${quiz.quiz_id || quiz.id}`}
+                    href={`/community/${quiz.id}`}
                     className="flex-1 rounded bg-gray-100 px-1.5 py-0.5 text-xs font-medium text-gray-700 border border-gray-300 hover:bg-gray-200 text-center"
                   >
                     자세히

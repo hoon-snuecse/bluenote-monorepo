@@ -20,36 +20,65 @@ export async function POST(request) {
     if (quizId && !questions) {
       const supabase = createClient()
       
-      // 퀴즈 정보 조회 (공유된 퀴즈도 조회 가능)
-      const { data: quiz, error: quizError } = await supabase
-        .from('quizzes')
-        .select('title')
-        .eq('id', quizId)
+      // 먼저 공유된 퀴즈에서 실제 quiz_id 찾기
+      const { data: sharedQuiz, error: sharedError } = await supabase
+        .from('shared_quizzes')
+        .select('quiz_id, title')
+        .eq('quiz_id', quizId)
         .single()
         
-      if (quizError) {
-        console.error('Quiz fetch error:', quizError)
-        return NextResponse.json({ error: '퀴즈를 찾을 수 없습니다.' }, { status: 404 })
-      }
-      
-      quizTitle = quiz.title
-      
-      // 문항 조회
-      const { data: questionsFromDb, error: questionsError } = await supabase
-        .from('questions')
-        .select(`
-          *,
-          question_options (*)
-        `)
-        .eq('quiz_id', quizId)
-        .order('question_order', { ascending: true })
+      if (!sharedError && sharedQuiz) {
+        // shared_quizzes에서 찾은 경우
+        quizTitle = sharedQuiz.title
         
-      if (questionsError) {
-        console.error('Questions fetch error:', questionsError)
-        return NextResponse.json({ error: '문항을 불러올 수 없습니다.' }, { status: 500 })
+        // 문항 조회
+        const { data: questionsFromDb, error: questionsError } = await supabase
+          .from('questions')
+          .select(`
+            *,
+            question_options (*)
+          `)
+          .eq('quiz_id', sharedQuiz.quiz_id)
+          .order('question_order', { ascending: true })
+          
+        if (questionsError) {
+          console.error('Questions fetch error:', questionsError)
+          return NextResponse.json({ error: '문항을 불러올 수 없습니다.' }, { status: 500 })
+        }
+        
+        questionsData = questionsFromDb
+      } else {
+        // quizzes 테이블에서 직접 조회 (fallback)
+        const { data: quiz, error: quizError } = await supabase
+          .from('quizzes')
+          .select('title')
+          .eq('id', quizId)
+          .single()
+          
+        if (quizError) {
+          console.error('Quiz fetch error:', quizError)
+          return NextResponse.json({ error: '퀴즈를 찾을 수 없습니다.' }, { status: 404 })
+        }
+        
+        quizTitle = quiz.title
+        
+        // 문항 조회
+        const { data: questionsFromDb, error: questionsError } = await supabase
+          .from('questions')
+          .select(`
+            *,
+            question_options (*)
+          `)
+          .eq('quiz_id', quizId)
+          .order('question_order', { ascending: true })
+          
+        if (questionsError) {
+          console.error('Questions fetch error:', questionsError)
+          return NextResponse.json({ error: '문항을 불러올 수 없습니다.' }, { status: 500 })
+        }
+        
+        questionsData = questionsFromDb
       }
-      
-      questionsData = questionsFromDb
     }
     
     console.log('Export XLSX - processing questions:', questionsData?.length)
