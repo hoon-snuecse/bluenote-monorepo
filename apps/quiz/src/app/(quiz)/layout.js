@@ -7,28 +7,20 @@ import { useRouter } from 'next/navigation'
 
 export default function QuizLayout({ children }) {
   const { user, status } = useAuth()
-  const router = useRouter()
-  const [isInitialized, setIsInitialized] = useState(false)
+  const [hasRedirected, setHasRedirected] = useState(false)
   
   useEffect(() => {
-    // 초기화 완료 표시
-    if (status !== 'loading') {
-      setIsInitialized(true)
-      console.log('[Quiz Layout] Auth initialized:', { status, user: user?.email })
-    }
-  }, [status, user])
-  
-  useEffect(() => {
-    // 초기화가 완료되고 인증되지 않은 경우에만 리다이렉트
-    if (isInitialized && status === 'unauthenticated') {
+    // 인증되지 않은 경우 한 번만 리다이렉트
+    if (status === 'unauthenticated' && !hasRedirected) {
+      setHasRedirected(true)
       console.log('[Quiz Layout] Redirecting to signin...')
       // 메인 사이트 로그인 페이지로 리다이렉트
       window.location.href = 'https://www.bluenote.site/auth/signin?callbackUrl=https://quiz.bluenote.site'
     }
-  }, [isInitialized, status])
+  }, [status, hasRedirected])
   
-  // 로딩 중이거나 초기화되지 않은 경우
-  if (!isInitialized || status === 'loading') {
+  // 로딩 중인 경우
+  if (status === 'loading') {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <p className="text-gray-600">로딩 중...</p>

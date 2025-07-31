@@ -6,7 +6,6 @@ export class FetchAdapter implements AuthAdapter {
   private options: AuthAdapterOptions
   private listeners: Set<(user: AuthUser | null) => void> = new Set()
   private currentUser: AuthUser | null = null
-  private pollingInterval: number | null = null
 
   constructor(options: AuthAdapterOptions = {}) {
     this.options = {
@@ -102,30 +101,13 @@ export class FetchAdapter implements AuthAdapter {
   subscribeToChanges(callback: (user: AuthUser | null) => void): () => void {
     this.listeners.add(callback)
     
-    // 폴링 시작 (30초마다 세션 확인 - 더 긴 주기로 변경)
-    if (!this.pollingInterval && typeof window !== 'undefined') {
-      this.pollingInterval = window.setInterval(() => {
-        // 현재 활성 탭에서만 폴링 실행
-        if (!document.hidden) {
-          this.getSession().catch(error => {
-            console.error('[FetchAdapter] Polling error:', error)
-          })
-        }
-      }, 30000) // 30초로 변경
-    }
-    
-    // 초기 세션 정보는 이미 AuthContext에서 로드하므로 여기서는 생략
-    // 중복 호출을 방지하기 위해 callback 호출 제거
+    // 폴링 비활성화 - 무한 루프 방지
+    // Quiz 앱은 페이지 로드 시에만 세션 확인
+    // 필요시 수동으로 getSession() 호출
     
     // 구독 해제 함수 반환
     return () => {
       this.listeners.delete(callback)
-      
-      // 더 이상 리스너가 없으면 폴링 중지
-      if (this.listeners.size === 0 && this.pollingInterval) {
-        clearInterval(this.pollingInterval)
-        this.pollingInterval = null
-      }
     }
   }
 
