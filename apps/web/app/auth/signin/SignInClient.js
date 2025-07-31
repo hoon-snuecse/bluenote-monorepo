@@ -10,6 +10,7 @@ export default function SignInClient() {
   const callbackUrl = searchParams.get('callbackUrl') || '/';
   const error = searchParams.get('error');
   const [isLoading, setIsLoading] = useState(false);
+  const [hasAutoSignIn, setHasAutoSignIn] = useState(false);
   const { user, status, signIn } = useAuth();
 
   useEffect(() => {
@@ -18,13 +19,6 @@ export default function SignInClient() {
       router.push(callbackUrl);
     }
   }, [user, status, callbackUrl, router]);
-
-  useEffect(() => {
-    // 에러 메시지 표시
-    if (error) {
-      console.error('로그인 에러:', error);
-    }
-  }, [error]);
 
   const handleSignIn = async () => {
     try {
@@ -36,6 +30,21 @@ export default function SignInClient() {
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    // 자동으로 Google 로그인 시작 (에러가 없고 아직 시도하지 않은 경우)
+    if (!error && !hasAutoSignIn && status === 'unauthenticated') {
+      setHasAutoSignIn(true);
+      handleSignIn();
+    }
+  }, [error, hasAutoSignIn, status]);
+
+  useEffect(() => {
+    // 에러 메시지 표시
+    if (error) {
+      console.error('로그인 에러:', error);
+    }
+  }, [error]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
