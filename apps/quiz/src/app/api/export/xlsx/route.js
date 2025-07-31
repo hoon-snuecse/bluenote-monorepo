@@ -1,15 +1,62 @@
 import { NextResponse } from 'next/server'
 import * as XLSX from 'xlsx'
+import { createClient } from '@/lib/supabase'
+import { getServerSession } from '@bluenote/auth'
+import { authOptions } from '@/lib/auth'
 
 export async function POST(request) {
   try {
-    const { questions, title } = await request.json()
+    const session = await getServerSession(authOptions)
+    if (!session) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const { questions, title, quizId } = await request.json()
     
-    console.log('Export XLSX - received questions:', questions?.length)
-    console.log('First question structure:', questions?.[0])
+    let questionsData = questions
+    let quizTitle = title
+    
+    // quizId가 제공된 경우 데이터베이스에서 퀴즈 조회
+    if (quizId && !questions) {
+      const supabase = createClient()
+      
+      // 퀴즈 정보 조회 (공유된 퀴즈도 조회 가능)
+      const { data: quiz, error: quizError } = await supabase
+        .from('quizzes')
+        .select('title')
+        .eq('id', quizId)
+        .single()
+        
+      if (quizError) {
+        console.error('Quiz fetch error:', quizError)
+        return NextResponse.json({ error: '퀴즈를 찾을 수 없습니다.' }, { status: 404 })
+      }
+      
+      quizTitle = quiz.title
+      
+      // 문항 조회
+      const { data: questionsFromDb, error: questionsError } = await supabase
+        .from('questions')
+        .select(`
+          *,
+          question_options (*)
+        `)
+        .eq('quiz_id', quizId)
+        .order('question_order', { ascending: true })
+        
+      if (questionsError) {
+        console.error('Questions fetch error:', questionsError)
+        return NextResponse.json({ error: '문항을 불러올 수 없습니다.' }, { status: 500 })
+      }
+      
+      questionsData = questionsFromDb
+    }
+    
+    console.log('Export XLSX - processing questions:', questionsData?.length)
+    console.log('First question structure:', questionsData?.[0])
     
     // 첫 번째 문항으로 데이터 구조 파악
-    const sampleQuestion = questions?.[0]
+    const sampleQuestion = questionsData?.[0]
     const isQuizBuilderFormat = sampleQuestion && 'question' in sampleQuestion
 
     // 워크북 생성
@@ -28,7 +75,7 @@ export async function POST(request) {
       ]
     ]
 
-    questions.forEach((question) => {
+    questionsData.forEach((question) => {
       const answers = ['', '', '', '']
       const correctAnswers = []
 
@@ -83,7 +130,7 @@ export async function POST(request) {
       ['번호', '문제', '유형', '난이도', '시간제한', '정답', '해설']
     ]
 
-    questions.forEach((question, index) => {
+    questionsData.forEach((question, index) => {
       let correctAnswer = ''
       
       if (question.options && Array.isArray(question.options)) {
@@ -126,7 +173,7 @@ export async function POST(request) {
     return new Response(Buffer.from(excelBuffer), {
       headers: {
         'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        'Content-Disposition': `attachment; filename="${title || 'quiz'}_kahoot.xlsx"`
+        'Content-Disposition': `attachment; filename="${quizTitle || 'quiz'}_kahoot.xlsx"`
       }
     })
   } catch (error) {

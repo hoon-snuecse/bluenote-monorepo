@@ -115,12 +115,12 @@ export default function CommunityPage() {
         return
       }
 
-      const response = await fetch(`/api/community/download/${quizId}`, {
+      const response = await fetch(`/api/export/${format}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ format }),
+        body: JSON.stringify({ quizId }),
       })
 
       if (!response.ok) {
@@ -136,7 +136,7 @@ export default function CommunityPage() {
       a.href = url
       
       // 적절한 파일명 설정
-      const quiz = sharedQuizzes.find(q => q.quiz_id === quizId)
+      const quiz = sharedQuizzes.find(q => q.quiz_id === quizId || q.id === quizId)
       const filename = format === 'html' 
         ? `${quiz?.title || 'quiz'}_teacher_guide.html`
         : `${quiz?.title || 'quiz'}_kahoot.${format}`
@@ -147,7 +147,7 @@ export default function CommunityPage() {
       
       // 다운로드 수 업데이트
       const updatedQuizzes = sharedQuizzes.map(q => 
-        q.quiz_id === quizId 
+        (q.quiz_id === quizId || q.id === quizId)
           ? { ...q, download_count: (q.download_count || 0) + 1 }
           : q
       )
@@ -425,7 +425,7 @@ export default function CommunityPage() {
                 {/* 액션 버튼 - 한 줄로 배치 */}
                 <div className="mt-3 flex gap-1">
                   <Link
-                    href={`/community/${quiz.id}`}
+                    href={`/community/${quiz.quiz_id || quiz.id}`}
                     className="flex-1 rounded bg-gray-100 px-1.5 py-0.5 text-xs font-medium text-gray-700 border border-gray-300 hover:bg-gray-200 text-center"
                   >
                     자세히
