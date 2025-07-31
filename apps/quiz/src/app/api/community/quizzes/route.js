@@ -16,8 +16,8 @@ export async function GET(request) {
     const session = await getServerSession(authOptions)
     const currentUserEmail = session?.user?.email
 
-    // 1. 공개된 퀴즈 가져오기 (shared_quizzes에서)
-    let publicQuery = supabase
+    // 1. 공개된 퀴즈 또는 본인 퀴즈 가져오기 (shared_quizzes에서)
+    let sharedQuery = supabase
       .from('shared_quizzes')
       .select(`
         id,
@@ -36,22 +36,28 @@ export async function GET(request) {
         rating_count,
         is_public
       `)
-      .eq('is_public', true)
+
+    // 공개 퀴즈 또는 본인 퀴즈만 가져오기
+    if (currentUserEmail) {
+      sharedQuery = sharedQuery.or(`is_public.eq.true,user_email.eq.${currentUserEmail}`)
+    } else {
+      sharedQuery = sharedQuery.eq('is_public', true)
+    }
 
     // 카테고리 필터
     if (category !== 'all') {
-      publicQuery = publicQuery.eq('subject_category', category)
+      sharedQuery = sharedQuery.eq('subject_category', category)
     }
 
     // 학년 필터
     if (grade !== 'all') {
-      publicQuery = publicQuery.eq('grade_level', grade)
+      sharedQuery = sharedQuery.eq('grade_level', grade)
     }
 
-    const { data: publicQuizzes, error: publicError } = await publicQuery
+    const { data: sharedQuizzes, error: sharedError } = await sharedQuery
 
-    if (publicError) {
-      console.error('Error fetching public quizzes:', publicError)
+    if (sharedError) {
+      console.error('Error fetching shared quizzes:', sharedError)
     }
 
     // 2. 본인 퀴즈 가져오기 (공유 여부 상관없이)
@@ -121,10 +127,10 @@ export async function GET(request) {
     }
 
     // 3. 공개 퀴즈와 내 퀴즈 병합 (중복 제거)
-    const publicQuizIds = new Set((publicQuizzes || []).map(q => q.quiz_id))
+    const sharedQuizIds = new Set((sharedQuizzes || []).map(q => q.quiz_id))
     
-    // 공개 퀴즈 포맷팅
-    const formattedPublicQuizzes = (publicQuizzes || []).map(sq => ({
+    // 공유 퀴즈 포맷팅
+    const formattedSharedQuizzes = (sharedQuizzes || []).map(sq => ({
       id: sq.id,
       quiz_id: sq.quiz_id,
       title: sq.title,
@@ -140,15 +146,15 @@ export async function GET(request) {
       download_count: sq.download_count || 0,
       rating_average: sq.rating_average || 0,
       rating_count: sq.rating_count || 0,
-      is_shared: true,
+      is_shared: sq.is_public,
       is_mine: sq.user_email === currentUserEmail
     }))
 
-    // 내 퀴즈 중 공개되지 않은 것들만 추가
-    const myPrivateQuizzes = myQuizzes.filter(q => !publicQuizIds.has(q.quiz_id))
+    // 내 퀴즈 중 shared_quizzes에 없는 것들만 추가
+    const myPrivateQuizzes = myQuizzes.filter(q => !sharedQuizIds.has(q.quiz_id))
     
     // 모든 퀴즈 합치기
-    let allQuizzes = [...formattedPublicQuizzes, ...myPrivateQuizzes]
+    let allQuizzes = [...formattedSharedQuizzes, ...myPrivateQuizzes]
 
     // 정렬
     switch (sort) {
