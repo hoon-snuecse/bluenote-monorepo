@@ -170,9 +170,9 @@ export default function CommunityPage() {
         </p>
       </div>
 
-      {/* 선택 모드 컨트롤 */}
-      {session && (
-        <div className="flex items-center justify-between mb-4">
+      {/* 선택 모드 컨트롤 및 퀴즈 생성 버튼 */}
+      <div className="flex items-center justify-between mb-4">
+        {session ? (
           <div className="flex items-center gap-2">
             {isSelectionMode ? (
               <>
@@ -222,8 +222,16 @@ export default function CommunityPage() {
               </button>
             )}
           </div>
-        </div>
-      )}
+        ) : (
+          <div />
+        )}
+        <button
+          onClick={() => window.location.href = '/create'}
+          className="px-4 py-1.5 text-sm bg-green-600 text-white rounded hover:bg-green-700 font-medium"
+        >
+          퀴즈문항생성
+        </button>
+      </div>
 
       {/* 검색 및 필터 */}
       <div className="space-y-4 rounded-lg bg-white p-4 shadow">
