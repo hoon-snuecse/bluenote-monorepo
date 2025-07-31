@@ -31,7 +31,7 @@ const gowunDodum = Gowun_Dodum({
 });
 
 export const metadata: Metadata = {
-  title: "학생 평가 보고서",
+  title: "글쓰기 평가 시스템",
   description: "AI 기반 글쓰기 평가 시스템",
   manifest: "/manifest.json",
 };

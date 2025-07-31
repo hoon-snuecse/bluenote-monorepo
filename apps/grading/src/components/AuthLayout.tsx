@@ -38,7 +38,7 @@ export function AuthLayout({ children }: AuthLayoutProps) {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 pt-16">
       <main className="py-6">
         {children}
       </main>

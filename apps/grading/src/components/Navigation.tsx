@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useUser } from '@/contexts/UserContext';
 import { usePathname } from 'next/navigation';
-import { LogOut, FileText, ClipboardCheck, Settings, BarChart3 } from 'lucide-react';
+import { LogOut, PenTool, User } from 'lucide-react';
 
 export function Navigation() {
   const { user, logout } = useUser();
@@ -14,62 +14,48 @@ export function Navigation() {
     return null;
   }
 
-  const navItems = [
-    { href: '/assignments', label: '과제 관리', icon: FileText },
-    { href: '/grading', label: '평가 대시보드', icon: ClipboardCheck },
-    { href: '/analytics', label: '통계 분석', icon: BarChart3 },
-    { href: '/settings', label: '설정', icon: Settings },
-  ];
-
   return (
-    <nav className="bg-white shadow-sm border-b">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-16">
-          <div className="flex">
-            <div className="flex-shrink-0 flex items-center gap-4">
-              <h1 className="text-xl font-bold">AI 글쓰기 평가 시스템</h1>
-              <a 
-                href="https://www.bluenote.site/prg" 
-                className="text-sm text-gray-600 hover:text-gray-800 underline"
-                title="메인 사이트로 돌아가기"
-              >
-                ← BlueNote로 돌아가기
-              </a>
-            </div>
-            <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
-              {navItems.map((item) => {
-                const Icon = item.icon;
-                const isActive = pathname.startsWith(item.href);
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
-                      isActive
-                        ? 'border-blue-500 text-gray-900'
-                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                    }`}
-                  >
-                    <Icon className="w-4 h-4 mr-2" />
-                    {item.label}
-                  </Link>
-                );
-              })}
+    <nav className="fixed top-0 left-0 right-0 z-50 border-b-2 border-gray-300 bg-white shadow-md">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="flex h-16 justify-between items-center">
+          <div className="flex items-center">
+            <div className="flex shrink-0 items-center">
+              <Link href="/" className="flex items-center gap-2 group">
+                <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center text-white font-bold text-sm shadow-md group-hover:shadow-lg transition-all duration-200 group-hover:scale-105">
+                  <PenTool className="w-5 h-5" />
+                </div>
+                <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                  글쓰기 평가 시스템
+                </span>
+              </Link>
             </div>
           </div>
-          <div className="flex items-center">
-            <div className="flex items-center space-x-4">
-              <span className="text-sm text-gray-700">
-                {user.name} ({user.schoolName || '학교 미등록'})
-              </span>
-              <button
-                onClick={logout}
-                className="text-gray-500 hover:text-gray-700 flex items-center"
-              >
-                <LogOut className="w-4 h-4 mr-1" />
-                로그아웃
-              </button>
+          
+          {/* 사용자 정보 및 로그아웃 버튼 */}
+          <div className="flex items-center gap-4">
+            {/* BlueNote로 돌아가기 링크 */}
+            <a 
+              href="https://www.bluenote.site/prg" 
+              className="text-sm text-gray-600 hover:text-gray-800 underline"
+              title="메인 사이트로 돌아가기"
+            >
+              ← BlueNote로 돌아가기
+            </a>
+            
+            {/* 사용자 정보 */}
+            <div className="flex items-center gap-2 text-sm text-gray-700">
+              <User className="w-4 h-4" />
+              <span>{user.name} ({user.schoolName || '학교 미등록'})</span>
             </div>
+            
+            {/* 로그아웃 버튼 */}
+            <button
+              onClick={logout}
+              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-800 transition-colors"
+            >
+              <LogOut className="w-4 h-4" />
+              <span>로그아웃</span>
+            </button>
           </div>
         </div>
       </div>
