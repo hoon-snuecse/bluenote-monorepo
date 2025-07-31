@@ -22,6 +22,17 @@ export async function POST(request) {
     if (quizId && !questions) {
       const supabase = createClient()
       
+      // RLS 컨텍스트 설정
+      try {
+        if (session.user?.email) {
+          await supabase.rpc('set_current_user_email', { 
+            email: session.user.email 
+          })
+        }
+      } catch (rlsError) {
+        console.log('RLS context setting skipped:', rlsError.message)
+      }
+      
       // 퀴즈 정보 조회 (직접 quizzes 테이블에서 조회)
       const { data: quiz, error: quizError } = await supabase
         .from('quizzes')
@@ -189,7 +200,7 @@ export async function POST(request) {
     // Excel 파일 생성
     const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' })
 
-    return new Response(Buffer.from(excelBuffer), {
+    return new Response(excelBuffer, {
       headers: {
         'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
         'Content-Disposition': `attachment; filename="${quizTitle || 'quiz'}_kahoot.xlsx"`
@@ -197,8 +208,13 @@ export async function POST(request) {
     })
   } catch (error) {
     console.error('Export XLSX error:', error)
+    console.error('Error stack:', error.stack)
     return NextResponse.json(
-      { error: 'Excel 내보내기 중 오류가 발생했습니다.' },
+      { 
+        error: 'Excel 내보내기 중 오류가 발생했습니다.',
+        details: error.message,
+        stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+      },
       { status: 500 }
     )
   }

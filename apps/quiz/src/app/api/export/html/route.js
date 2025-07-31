@@ -19,6 +19,17 @@ export async function POST(request) {
     if (quizId && !questions) {
       const supabase = createClient()
       
+      // RLS 컨텍스트 설정
+      try {
+        if (session.user?.email) {
+          await supabase.rpc('set_current_user_email', { 
+            email: session.user.email 
+          })
+        }
+      } catch (rlsError) {
+        console.log('RLS context setting skipped:', rlsError.message)
+      }
+      
       // 퀴즈 정보 조회 (직접 quizzes 테이블에서 조회)
       const { data: quiz, error: quizError } = await supabase
         .from('quizzes')
