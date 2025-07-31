@@ -11,7 +11,9 @@ import {
   Search,
   Plus,
   BookOpen,
-  Sparkles
+  Sparkles,
+  Share2,
+  Globe
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@bluenote/ui'
 
@@ -57,7 +59,7 @@ export default function SavedQuizzesPage() {
     if (!confirm('이 퀴즈를 삭제하시겠습니까?')) return
 
     try {
-      const response = await fetch(`/api/quizzes/${quizId}/delete`, {
+      const response = await fetch(`/api/quizzes/${quizId}`, {
         method: 'DELETE'
       })
 
@@ -70,6 +72,31 @@ export default function SavedQuizzesPage() {
     } catch (error) {
       console.error('Delete error:', error)
       alert('삭제 중 오류가 발생했습니다.')
+    }
+  }
+
+  const handleShare = async (quiz) => {
+    try {
+      const response = await fetch(`/api/quizzes/${quiz.id}/share`, {
+        method: quiz.is_shared ? 'DELETE' : 'POST'
+      })
+
+      if (response.ok) {
+        const result = await response.json()
+        // 퀴즈 목록 업데이트
+        setMyQuizzes(myQuizzes.map(q => 
+          q.id === quiz.id 
+            ? { ...q, is_shared: result.quiz.is_shared }
+            : q
+        ))
+        alert(quiz.is_shared ? '퀴즈 공유가 취소되었습니다.' : '퀴즈가 공유되었습니다.')
+      } else {
+        const error = await response.json()
+        alert(error.error || '공유 처리 중 오류가 발생했습니다.')
+      }
+    } catch (error) {
+      console.error('Share error:', error)
+      alert('공유 처리 중 오류가 발생했습니다.')
     }
   }
 
@@ -249,18 +276,38 @@ export default function SavedQuizzesPage() {
               <Card key={quiz.id}>
                 <CardHeader>
                   <div className="flex items-start justify-between">
-                    <div>
+                    <div className="flex-1">
                       <CardTitle className="text-lg">{quiz.title}</CardTitle>
                       <p className="mt-1 text-sm text-gray-600">
                         {quiz.topic || quiz.subject}
                       </p>
+                      {quiz.is_shared && (
+                        <span className="mt-1 inline-flex items-center gap-1 text-xs text-green-600">
+                          <Globe className="h-3 w-3" />
+                          공유됨
+                        </span>
+                      )}
                     </div>
-                    <button
-                      onClick={() => handleDelete(quiz.id)}
-                      className="text-gray-400 hover:text-red-600"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => handleShare(quiz)}
+                        className={`${
+                          quiz.is_shared 
+                            ? 'text-green-600 hover:text-green-700' 
+                            : 'text-gray-400 hover:text-blue-600'
+                        }`}
+                        title={quiz.is_shared ? '공유 취소' : '공유하기'}
+                      >
+                        <Share2 className="h-4 w-4" />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(quiz.id)}
+                        className="text-gray-400 hover:text-red-600"
+                        title="삭제"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
                   </div>
                 </CardHeader>
                 <CardContent>
