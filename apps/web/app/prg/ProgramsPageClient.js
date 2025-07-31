@@ -49,7 +49,7 @@ export default function ProgramsPageClient() {
       title: "Kahoot 퀴즈 메이커",
       subtitle: "AI Quiz Generator for Kahoot",
       description: "AI의 도움을 받아 Kahoot용 대화형 퀴즈를 쉽고 빠르게 생성하는 도구",
-      href: "https://quiz.bluenote.site",
+      href: "https://quiz.bluenote.site/create",
       status: "active",
       requireAuth: true,
       hasAI: true,
