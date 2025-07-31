@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 // import { useSession } from 'next-auth/react' // Temporarily removed due to React Hooks error
-import { createClient } from '@/lib/supabase'
+// import { createClient } from '@/lib/supabase' // API 사용으로 불필요
 import { ChevronLeft, Download, Star, Calendar, User, FileText } from 'lucide-react'
 import QuestionPreview from '@/components/QuestionPreview/QuestionPreview'
 
@@ -89,70 +89,32 @@ export default function CommunityQuizDetailPage() {
   const fetchQuizDetail = async () => {
     try {
       console.log('Fetching quiz detail for id:', id)
-      console.log('Session status:', session)
-      const supabase = createClient()
       
-      // 세션이 있으면 RLS 컨텍스트 설정
-      if (session?.user?.email) {
-        console.log('Setting RLS context for:', session.user.email)
-        await supabase.rpc('set_current_user_email', { 
-          email: session.user.email 
-        })
-      }
+      // API를 통해 모든 정보를 한번에 가져오기 (RLS 우회)
+      const response = await fetch(`/api/community/quiz-detail?id=${id}`)
       
-      // shared_quizzes와 quizzes를 join해서 가져오기
-      const { data: sharedQuizWithQuiz, error: sharedError } = await supabase
-        .from('shared_quizzes')
-        .select(`
-          *,
-          quizzes!inner (
-            id,
-            title,
-            description,
-            user_email,
-            is_shared,
-            created_at,
-            updated_at
-          )
-        `)
-        .eq('id', id)
-        .single()
-        
-      if (sharedError || !sharedQuizWithQuiz) {
-        console.error('Shared quiz not found:', sharedError)
-        setError('퀴즈를 찾을 수 없습니다.')
+      if (!response.ok) {
+        const error = await response.json()
+        console.error('Failed to fetch quiz detail:', error)
+        setError(error.error || '퀴즈를 불러올 수 없습니다.')
         return
       }
       
-      console.log('Found shared quiz with quiz data:', sharedQuizWithQuiz)
-      const sharedQuizBasic = sharedQuizWithQuiz
-      const quizInfo = sharedQuizWithQuiz.quizzes
+      const { sharedQuiz, questions } = await response.json()
+      console.log('Quiz detail loaded:', { sharedQuiz, questionsCount: questions.length })
       
-      // 퀴즈 정보 설정 (join으로 이미 가져왔음)
+      // 퀴즈 정보 설정
       setQuiz({
-        ...sharedQuizBasic,
-        ...quizInfo,
-        id: sharedQuizBasic.quiz_id,
-        shared_at: sharedQuizBasic.created_at,
-        downloads: sharedQuizBasic.download_count || 0,
-        average_rating: sharedQuizBasic.rating_average || 0
+        ...sharedQuiz,
+        ...sharedQuiz.quiz,
+        id: sharedQuiz.quiz_id,
+        shared_at: sharedQuiz.created_at,
+        downloads: sharedQuiz.download_count || 0,
+        average_rating: sharedQuiz.rating_average || 0
       })
       
-      // API를 통해 문항 정보 조회 (공유된 퀴즈의 문항은 API로만 조회)
-      try {
-        const questionsResponse = await fetch(`/api/community/quiz-questions?quizId=${sharedQuizBasic.quiz_id}`)
-        if (questionsResponse.ok) {
-          const data = await questionsResponse.json()
-          setQuestions(data.questions || [])
-          console.log('Questions loaded:', data.questions?.length)
-        } else {
-          console.error('Failed to fetch questions:', await questionsResponse.text())
-          setQuestions([])
-        }
-      } catch (error) {
-        console.error('문항 조회 오류:', error)
-        setQuestions([])
-      }
+      // 문항 설정
+      setQuestions(questions || [])
 
       // 조회수 증가 (views 컬럼이 있는 경우에만)
       // TODO: 데이터베이스에 views 컬럼 추가 후 주석 해제
@@ -205,21 +167,18 @@ export default function CommunityQuizDetailPage() {
       window.URL.revokeObjectURL(url)
       document.body.removeChild(a)
 
-      // 다운로드 수 증가
-      const supabase = createClient()
-      await supabase
-        .from('shared_quizzes')
-        .update({ downloads: (quiz.downloads || 0) + 1 })
-        .eq('id', id)
-
-      // 다운로드 기록 저장
-      await supabase
-        .from('quiz_downloads')
-        .insert({
-          quiz_id: quiz.quiz_id || quiz.id,
-          user_email: session.user.email, // email 기반으로 저장
+      // 다운로드 수 증가 및 기록 저장 (API 호출)
+      await fetch('/api/community/update-download-count', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          sharedQuizId: id,
+          quizId: quiz.quiz_id || quiz.id,
           format: format
-        })
+        }),
+      })
 
     } catch (error) {
       console.error('다운로드 오류:', error)
