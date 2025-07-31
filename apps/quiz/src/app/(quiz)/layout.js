@@ -9,8 +9,8 @@ export default function QuizLayout({ children }) {
   const [hasRedirected, setHasRedirected] = useState(false)
   const pathname = usePathname()
   
-  // 커뮤니티 페이지는 인증 없이도 접근 가능
-  const isPublicPage = pathname.startsWith('/community')
+  // 커뮤니티 페이지와 홈페이지는 인증 없이도 접근 가능
+  const isPublicPage = pathname.startsWith('/community') || pathname === '/'
   
   useEffect(() => {
     console.log('[Quiz Layout] Current status:', status, 'pathname:', pathname, 'hasRedirected:', hasRedirected)

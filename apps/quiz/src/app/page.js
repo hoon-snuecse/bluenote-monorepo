@@ -2,11 +2,19 @@
 
 import Link from 'next/link'
 import { useAuth } from '@bluenote/auth'
+import { useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 
 export default function HomePage() {
   const { user, status } = useAuth()
+  const router = useRouter()
 
-  // 자동 리다이렉트 제거 - 사용자가 직접 선택하도록 함
+  // 로그인된 사용자는 community로 자동 리다이렉트
+  useEffect(() => {
+    if (status === 'authenticated') {
+      router.push('/community')
+    }
+  }, [status, router])
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-gray-50 px-4 py-12 sm:px-6 lg:px-8">

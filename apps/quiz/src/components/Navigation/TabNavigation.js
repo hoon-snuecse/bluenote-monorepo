@@ -99,7 +99,7 @@ export function TabNavigation() {
         <div className="flex h-16 justify-between items-center">
           <div className="flex items-center">
             <div className="flex shrink-0 items-center">
-              <Link href="/" className="flex items-center gap-2 group">
+              <Link href="/community" className="flex items-center gap-2 group">
                 <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center text-white font-bold text-sm shadow-md group-hover:shadow-lg transition-all duration-200 group-hover:scale-105">
                   K
                 </div>
