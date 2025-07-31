@@ -160,6 +160,9 @@ export default function CommunityQuizDetailPage() {
         return
       }
 
+      console.log('sharedQuiz data:', sharedQuiz)
+      console.log('questions data:', sharedQuiz.quizzes.questions)
+      
       setQuiz({
         ...sharedQuiz,
         ...sharedQuiz.quizzes,
