@@ -376,10 +376,6 @@ export async function POST(request, { params }) {
     }
 
   } catch (error) {
-      error: error.message,
-      stack: error.stack,
-      name: error.name
-    })
     return NextResponse.json(
       { 
         error: '다운로드 중 오류가 발생했습니다.',

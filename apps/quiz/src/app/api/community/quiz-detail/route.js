@@ -35,11 +35,6 @@ export async function GET(request) {
       .single()
       
     if (quizError || !quizData) {
-        error: quizError,
-        quiz_id: sharedQuiz.quiz_id,
-        errorMessage: quizError?.message,
-        errorCode: quizError?.code
-      })
       return NextResponse.json({ error: '퀴즈 정보를 찾을 수 없습니다.' }, { status: 404 })
     }
     
