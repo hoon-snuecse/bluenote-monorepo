@@ -39,23 +39,39 @@ export async function POST(request) {
       // mobile, tablet, console, smarttv, wearable, embedded 등
       device = result.device.type.charAt(0).toUpperCase() + result.device.type.slice(1);
       
-      // 디바이스 모델명이 있으면 추가
-      if (result.device.model) {
+      // 모바일 디바이스의 경우 모델명 추가
+      if (result.device.model && result.device.type !== 'desktop') {
         device = result.device.model;
       }
     } else if (result.os.name) {
       // 디바이스 타입이 없으면 OS 정보 사용
-      device = result.os.name;
-      
-      // macOS의 경우 더 구체적인 정보 제공
-      if (result.os.name === 'Mac OS' && result.cpu.architecture) {
-        device = 'macOS';
-        // Apple Silicon인지 Intel인지 구분 가능
-        if (result.cpu.architecture === 'arm64') {
-          device = 'macOS (Apple Silicon)';
-        }
-      } else if (result.os.name === 'Windows') {
-        device = `Windows ${result.os.version || ''}`.trim();
+      switch(result.os.name) {
+        case 'macOS':
+          device = 'macOS';
+          // Apple Silicon인지 Intel인지 구분 가능
+          if (result.cpu.architecture === 'arm64') {
+            device = 'macOS (Apple Silicon)';
+          } else if (result.cpu.architecture === 'amd64' || result.cpu.architecture === 'x64') {
+            device = 'macOS (Intel)';
+          }
+          break;
+        case 'Windows':
+          device = `Windows ${result.os.version || ''}`.trim();
+          break;
+        case 'Linux':
+          device = 'Linux';
+          break;
+        case 'Ubuntu':
+          device = 'Ubuntu';
+          break;
+        case 'Android':
+          device = 'Android';
+          break;
+        case 'iOS':
+          device = 'iOS';
+          break;
+        default:
+          device = result.os.name || 'Desktop';
       }
     } else {
       // 기본값은 Desktop
