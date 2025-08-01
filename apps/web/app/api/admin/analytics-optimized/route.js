@@ -177,9 +177,10 @@ export async function GET() {
       const [todayStatsResult, weekStatsResult, totalStatsResult] = await Promise.all([
         supabase
           .from('user_daily_stats')
-          .select('user_email, login_count, last_login_at, last_device, last_browser, grading_sonnet_count, grading_opus_count')
+          .select('user_email, login_count, last_login_at, last_device, last_browser, grading_sonnet_count, grading_opus_count, updated_at')
           .in('user_email', userEmails)
-          .eq('date', today.toISOString().split('T')[0]),
+          .eq('date', today.toISOString().split('T')[0])
+          .order('updated_at', { ascending: false }),
         
         supabase
           .from('user_daily_stats')
@@ -196,19 +197,35 @@ export async function GET() {
 
       const userStatsMap = {};
       
-      // Process stats
+      // Process stats - 중복된 사용자는 가장 최근 업데이트 기준으로 사용
       if (todayStatsResult.data) {
+        // sociogram 계정 디버깅
+        const sociogramStats = todayStatsResult.data.filter(stat => stat.user_email === 'sociogram@gmail.com');
+        if (sociogramStats.length > 0) {
+          console.log('[Analytics] sociogram@gmail.com today stats:', sociogramStats.map(s => ({
+            device: s.last_device,
+            browser: s.last_browser,
+            updated_at: s.updated_at,
+            last_login: s.last_login_at
+          })));
+        }
+        
         todayStatsResult.data.forEach(stat => {
-          userStatsMap[stat.user_email] = {
-            today: stat.login_count || 0,
-            week: 0,
-            total: 0,
-            lastLogin: stat.last_login_at,
-            lastDevice: stat.last_device || 'Unknown',
-            lastBrowser: stat.last_browser || 'Unknown',
-            gradingSonnet: stat.grading_sonnet_count || 0,
-            gradingOpus: stat.grading_opus_count || 0
-          };
+          // 이미 존재하는 경우 더 최근 updated_at을 가진 데이터만 사용
+          if (!userStatsMap[stat.user_email] || 
+              (stat.updated_at && userStatsMap[stat.user_email].updated_at < stat.updated_at)) {
+            userStatsMap[stat.user_email] = {
+              today: stat.login_count || 0,
+              week: 0,
+              total: 0,
+              lastLogin: stat.last_login_at,
+              lastDevice: stat.last_device || 'Unknown',
+              lastBrowser: stat.last_browser || 'Unknown',
+              gradingSonnet: stat.grading_sonnet_count || 0,
+              gradingOpus: stat.grading_opus_count || 0,
+              updated_at: stat.updated_at
+            };
+          }
         });
       }
       
