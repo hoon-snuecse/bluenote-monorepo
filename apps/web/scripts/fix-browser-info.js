@@ -12,7 +12,7 @@ config({ path: join(__dirname, '..', '.env.local') });
 import { createAdminClient } from '../lib/supabase/admin.js';
 
 async function fixBrowserInfo() {
-  console.log('Fixing browser info for hoon@iw.es.kr...');
+  console.log('Fixing browser info for hoon@snuecse.org...');
   
   try {
     const supabase = createAdminClient();
@@ -21,18 +21,18 @@ async function fixBrowserInfo() {
     const { error } = await supabase
       .from('user_daily_stats')
       .update({
-        last_device: 'Desktop',
-        last_browser: 'Chrome',
+        last_device: 'macOS',
+        last_browser: 'Safari',
         last_login_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       })
-      .eq('user_email', 'hoon@iw.es.kr')
+      .eq('user_email', 'hoon@snuecse.org')
       .eq('date', today);
     
     if (error) {
       console.error('Error updating:', error);
     } else {
-      console.log('Successfully updated to Desktop/Chrome');
+      console.log('Successfully updated to macOS/Safari');
     }
     
   } catch (error) {

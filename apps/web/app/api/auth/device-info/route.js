@@ -43,15 +43,26 @@ export async function POST(request) {
       browser = 'Opera';
     } else if (/firefox|fxios/i.test(userAgent)) {
       browser = 'Firefox';
-    } else if (/chrome|chromium|crios/i.test(userAgent) && !/edg|opr/i.test(userAgent)) {
-      browser = 'Chrome';
     } else if (/safari/i.test(userAgent) && !/chrome|chromium|crios/i.test(userAgent)) {
+      // Safari는 Chrome이 포함되지 않은 경우에만 Safari로 판단
       browser = 'Safari';
+    } else if (/chrome|chromium|crios/i.test(userAgent)) {
+      // Chrome은 Safari 체크 후에 확인
+      browser = 'Chrome';
     }
     
-    // macOS 감지
+    // macOS 감지 및 구체적 디바이스 정보
     if (/macintosh|mac os x/i.test(userAgent)) {
-      device = 'macOS';
+      // MacBook 시리즈 감지
+      if (/macbook pro/i.test(userAgent)) {
+        device = 'MacBook Pro';
+      } else if (/macbook air/i.test(userAgent)) {
+        device = 'MacBook Air';
+      } else if (/macbook/i.test(userAgent)) {
+        device = 'MacBook';
+      } else {
+        device = 'macOS';
+      }
     }
     
     // Supabase에 업데이트
