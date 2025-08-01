@@ -16,9 +16,13 @@ export async function POST(request) {
     const { device, browser, os } = userAgent(request);
     const rawUserAgent = request.headers.get('user-agent') || '';
     
-    console.log('Device Info API - email:', session.user.email);
-    console.log('Device Info API - Raw User-Agent:', rawUserAgent);
-    console.log('Device Info API - userAgent result:', { device, browser, os });
+    console.log('[Device Info API] Request for:', session.user.email);
+    console.log('[Device Info API] Raw User-Agent:', rawUserAgent);
+    console.log('[Device Info API] Next.js userAgent result:', { 
+      device: device,
+      browser: browser,
+      os: os 
+    });
     
     // 디바이스 정보 추출
     let deviceInfo = 'Unknown';
@@ -61,10 +65,12 @@ export async function POST(request) {
     const supabase = createAdminClient();
     const today = new Date().toISOString().split('T')[0];
     
-    console.log('[Device Info API] Final values:', { 
+    console.log('[Device Info API] Final parsed values:', { 
+      email: session.user.email,
       device: deviceInfo, 
       browser: browserInfo, 
-      date: today 
+      date: today,
+      rawUserAgent: rawUserAgent.substring(0, 100) + '...'
     });
     
     const { data: updateData, error } = await supabase
