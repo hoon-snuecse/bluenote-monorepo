@@ -1,4 +1,4 @@
-import AdminAnalyticsClient2 from './AdminAnalyticsClient2';
+import AdminAnalyticsOptimized from './AdminAnalyticsOptimized';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -9,5 +9,11 @@ export const metadata = {
 };
 
 export default function AdminAnalyticsPage() {
-  return <AdminAnalyticsClient2 />;
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+      <div className="container mx-auto px-4 pb-8">
+        <AdminAnalyticsOptimized />
+      </div>
+    </div>
+  );
 }
