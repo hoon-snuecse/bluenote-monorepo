@@ -90,7 +90,7 @@ export async function GET() {
           .limit(5), // 10 -> 5로 줄임
         supabase
           .from('shed_posts')
-          .select('id, title, created_at, date', { count: 'exact' })
+          .select('id, title, created_at', { count: 'exact' })
           .order('created_at', { ascending: false })
           .limit(5),
         supabase
