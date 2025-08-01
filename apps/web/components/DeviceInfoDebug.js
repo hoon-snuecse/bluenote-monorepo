@@ -4,7 +4,8 @@ import { useSession } from 'next-auth/react';
 import { useState } from 'react';
 
 export function DeviceInfoDebug() {
-  const { data: session } = useSession();
+  const sessionData = useSession();
+  const session = sessionData?.data;
   const [response, setResponse] = useState(null);
   const [loading, setLoading] = useState(false);
   
