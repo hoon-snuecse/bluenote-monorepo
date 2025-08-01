@@ -1,4 +1,5 @@
 import AdminAnalyticsOptimized from './AdminAnalyticsOptimized';
+import { DeviceInfoDebug } from '@/components/DeviceInfoDebug';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -14,6 +15,7 @@ export default function AdminAnalyticsPage() {
       <div className="container mx-auto px-4 pb-8">
         <AdminAnalyticsOptimized />
       </div>
+      <DeviceInfoDebug />
     </div>
   );
 }

@@ -82,13 +82,17 @@ export async function POST(request) {
     const supabase = createAdminClient();
     const today = new Date().toISOString().split('T')[0];
     
-    console.log('Device Info API - parsed result:', {
+    console.log('[Device Info API] User-Agent:', userAgent);
+    console.log('[Device Info API] Parsed result:', {
       browser: result.browser,
       os: result.os,
       device: result.device,
       cpu: result.cpu
     });
-    console.log('Device Info API - detected:', { device, browser, date: today });
+    console.log('[Device Info API] Detection logic:');
+    console.log('  - device.type:', result.device.type || 'undefined');
+    console.log('  - os.name:', result.os.name || 'undefined');
+    console.log('[Device Info API] Final values:', { device, browser, date: today });
     
     const { error } = await supabase
       .from('user_daily_stats')
