@@ -1,17 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { authMiddleware } from '@/lib/auth-middleware';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { getServerSession } from '@/lib/auth';
+import prisma from '@/lib/prisma';
 
 export async function GET(req: NextRequest) {
   try {
-    const authResult = await authMiddleware(req);
-    if ('error' in authResult) {
-      return NextResponse.json({ error: authResult.error }, { status: 401 });
+    // 인증 체크
+    const session = await getServerSession();
+    if (!session) {
+      return NextResponse.json(
+        { error: '인증이 필요합니다.' },
+        { status: 401 }
+      );
     }
 
-    const { user } = authResult;
+    const userEmail = session.user?.email;
+    if (!userEmail) {
+      return NextResponse.json(
+        { error: '사용자 이메일을 찾을 수 없습니다.' },
+        { status: 403 }
+      );
+    }
     const { searchParams } = new URL(req.url);
 
     // 쿼리 파라미터
@@ -28,7 +36,7 @@ export async function GET(req: NextRequest) {
     const where: any = {
       isShared: true,
       // 자신의 과제는 제외
-      userId: { not: user.id },
+      userEmail: { not: userEmail },
       // 샘플 과제는 제외
       isSample: false,
     };
@@ -132,7 +140,5 @@ export async function GET(req: NextRequest) {
       { error: '공유 과제 목록 조회 중 오류가 발생했습니다.' },
       { status: 500 }
     );
-  } finally {
-    await prisma.$disconnect();
   }
 }

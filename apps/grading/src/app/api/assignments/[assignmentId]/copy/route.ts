@@ -1,20 +1,28 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { authMiddleware } from '@/lib/auth-middleware';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { getServerSession } from '@/lib/auth';
+import prisma from '@/lib/prisma';
 
 export async function POST(
-  req: NextRequest,
+  _req: NextRequest,
   { params }: { params: { assignmentId: string } }
 ) {
   try {
-    const authResult = await authMiddleware(req);
-    if ('error' in authResult) {
-      return NextResponse.json({ error: authResult.error }, { status: 401 });
+    // 인증 체크
+    const session = await getServerSession();
+    if (!session) {
+      return NextResponse.json(
+        { error: '인증이 필요합니다.' },
+        { status: 401 }
+      );
     }
 
-    const { user } = authResult;
+    const userEmail = session.user?.email;
+    if (!userEmail) {
+      return NextResponse.json(
+        { error: '사용자 이메일을 찾을 수 없습니다.' },
+        { status: 403 }
+      );
+    }
     const { assignmentId } = params;
 
     // 원본 과제 조회
@@ -41,15 +49,15 @@ export async function POST(
     const copiedAssignment = await prisma.assignment.create({
       data: {
         title: `${originalAssignment.title} (복사본)`,
-        schoolName: user.schoolName || originalAssignment.schoolName,
+        schoolName: originalAssignment.schoolName,
         gradeLevel: originalAssignment.gradeLevel,
         writingType: originalAssignment.writingType,
         evaluationDomains: originalAssignment.evaluationDomains,
         evaluationLevels: originalAssignment.evaluationLevels,
         levelCount: originalAssignment.levelCount,
         gradingCriteria: originalAssignment.gradingCriteria,
-        userId: user.id,
-        userEmail: user.email,
+        userId: null, // 새로 복사하는 사용자는 User 테이블에 없을 수도 있음
+        userEmail: userEmail,
         isShared: false, // 복사본은 기본적으로 비공개
         isSample: false, // 복사본은 샘플이 아님
       },
@@ -72,7 +80,5 @@ export async function POST(
       { error: '과제 복사 중 오류가 발생했습니다.' },
       { status: 500 }
     );
-  } finally {
-    await prisma.$disconnect();
   }
 }
