@@ -2,7 +2,8 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { createAdminClient } from '@/lib/supabase/admin';
-import UAParser from 'ua-parser-js';
+import pkg from 'ua-parser-js';
+const UAParser = pkg.default || pkg;
 
 export async function POST(request) {
   try {
@@ -20,6 +21,7 @@ export async function POST(request) {
     console.log('Device Info API - userAgent:', userAgent);
     
     // ua-parser-js로 User-Agent 파싱
+    console.log('[Device Info API] UAParser type:', typeof UAParser);
     const parser = new UAParser(userAgent);
     const result = parser.getResult();
     
