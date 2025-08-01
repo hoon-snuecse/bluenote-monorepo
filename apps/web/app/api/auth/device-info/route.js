@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { createAdminClient } from '@/lib/supabase/admin';
+import UAParser from 'ua-parser-js';
 
 export async function POST(request) {
   try {
@@ -18,57 +19,59 @@ export async function POST(request) {
     console.log('Device Info API - email:', session.user.email);
     console.log('Device Info API - userAgent:', userAgent);
     
+    // ua-parser-js로 User-Agent 파싱
+    const parser = new UAParser(userAgent);
+    const result = parser.getResult();
+    
+    // 디바이스 정보 추출
     let device = 'Unknown';
     let browser = 'Unknown';
     
-    // 디바이스 타입 감지
-    if (/mobile/i.test(userAgent)) {
-      if (/iphone|ipad|ipod/i.test(userAgent)) {
-        device = 'iOS';
-      } else if (/android/i.test(userAgent)) {
-        device = 'Android';
-      } else {
-        device = 'Mobile';
+    // 브라우저 정보
+    if (result.browser.name) {
+      browser = result.browser.name;
+      // 버전 정보도 포함하고 싶다면:
+      // browser = `${result.browser.name} ${result.browser.version || ''}`.trim();
+    }
+    
+    // 디바이스 정보
+    if (result.device.type) {
+      // mobile, tablet, console, smarttv, wearable, embedded 등
+      device = result.device.type.charAt(0).toUpperCase() + result.device.type.slice(1);
+      
+      // 디바이스 모델명이 있으면 추가
+      if (result.device.model) {
+        device = result.device.model;
       }
-    } else if (/tablet/i.test(userAgent)) {
-      device = 'Tablet';
-    } else {
-      device = 'Desktop';
-    }
-    
-    // 브라우저 감지 (순서가 중요 - 더 구체적인 것부터 확인)
-    if (/edg/i.test(userAgent)) {
-      browser = 'Edge';
-    } else if (/opr|opera/i.test(userAgent)) {
-      browser = 'Opera';
-    } else if (/firefox|fxios/i.test(userAgent)) {
-      browser = 'Firefox';
-    } else if (/safari/i.test(userAgent) && !/chrome|chromium|crios/i.test(userAgent)) {
-      // Safari는 Chrome이 포함되지 않은 경우에만 Safari로 판단
-      browser = 'Safari';
-    } else if (/chrome|chromium|crios/i.test(userAgent)) {
-      // Chrome은 Safari 체크 후에 확인
-      browser = 'Chrome';
-    }
-    
-    // macOS 감지 및 구체적 디바이스 정보
-    if (/macintosh|mac os x/i.test(userAgent)) {
-      // MacBook 시리즈 감지
-      if (/macbook pro/i.test(userAgent)) {
-        device = 'MacBook Pro';
-      } else if (/macbook air/i.test(userAgent)) {
-        device = 'MacBook Air';
-      } else if (/macbook/i.test(userAgent)) {
-        device = 'MacBook';
-      } else {
+    } else if (result.os.name) {
+      // 디바이스 타입이 없으면 OS 정보 사용
+      device = result.os.name;
+      
+      // macOS의 경우 더 구체적인 정보 제공
+      if (result.os.name === 'Mac OS' && result.cpu.architecture) {
         device = 'macOS';
+        // Apple Silicon인지 Intel인지 구분 가능
+        if (result.cpu.architecture === 'arm64') {
+          device = 'macOS (Apple Silicon)';
+        }
+      } else if (result.os.name === 'Windows') {
+        device = `Windows ${result.os.version || ''}`.trim();
       }
+    } else {
+      // 기본값은 Desktop
+      device = 'Desktop';
     }
     
     // Supabase에 업데이트
     const supabase = createAdminClient();
     const today = new Date().toISOString().split('T')[0];
     
+    console.log('Device Info API - parsed result:', {
+      browser: result.browser,
+      os: result.os,
+      device: result.device,
+      cpu: result.cpu
+    });
     console.log('Device Info API - detected:', { device, browser, date: today });
     
     const { error } = await supabase
