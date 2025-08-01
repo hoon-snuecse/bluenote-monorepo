@@ -14,8 +14,10 @@ export async function POST(request) {
     
     // Next.js 내장 userAgent 사용
     const { device, browser, os } = userAgent(request);
+    const rawUserAgent = request.headers.get('user-agent') || '';
     
     console.log('Device Info API - email:', session.user.email);
+    console.log('Device Info API - Raw User-Agent:', rawUserAgent);
     console.log('Device Info API - userAgent result:', { device, browser, os });
     
     // 디바이스 정보 추출
@@ -27,22 +29,25 @@ export async function POST(request) {
       browserInfo = browser.name;
     }
     
-    // 디바이스 정보
-    if (device.type === 'mobile') {
-      deviceInfo = 'Mobile';
-    } else if (device.type === 'tablet') {
-      deviceInfo = 'Tablet';
-    } else if (os.name) {
-      // 데스크톱의 경우 OS 정보 사용
+    // 디바이스 정보 - OS 우선 확인
+    if (os.name) {
       if (os.name.includes('Mac')) {
         deviceInfo = 'macOS';
       } else if (os.name.includes('Windows')) {
         deviceInfo = 'Windows';
       } else if (os.name.includes('Linux')) {
         deviceInfo = 'Linux';
+      } else if (os.name.includes('Android')) {
+        deviceInfo = 'Android';
+      } else if (os.name.includes('iOS')) {
+        deviceInfo = 'iOS';
       } else {
-        deviceInfo = os.name || 'Desktop';
+        deviceInfo = os.name;
       }
+    } else if (device.type === 'mobile') {
+      deviceInfo = 'Mobile';
+    } else if (device.type === 'tablet') {
+      deviceInfo = 'Tablet';
     } else {
       deviceInfo = 'Desktop';
     }

@@ -263,6 +263,13 @@ export async function GET() {
     // 8. Content stats 처리
     const [researchResult, shedResult, teachingResult, analyticsResult] = contentResults;
     
+    console.log('[Analytics] Content counts:', {
+      research: researchResult.count,
+      shed: shedResult.count,
+      teaching: teachingResult.count,
+      analytics: analyticsResult.count
+    });
+    
     response.contentStats.research = researchResult.count || 0;
     response.contentStats.shed = shedResult.count || 0;
     response.contentStats.teaching = teachingResult.count || 0;
