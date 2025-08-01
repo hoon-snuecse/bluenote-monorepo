@@ -87,8 +87,9 @@ export async function POST(request) {
     
     console.log('[Device Info API] Update result:', { 
       email: session.user.email,
-      updateData,
-      error 
+      updateCount: updateData?.length || 0,
+      firstRecord: updateData?.[0],
+      error: error?.message || null
     });
     
     if (error) {
