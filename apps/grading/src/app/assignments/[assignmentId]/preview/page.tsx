@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@bluenote/ui';
 import { Button } from '@bluenote/ui';
 import { ArrowLeft, Copy, School, Calendar, BookOpen, Users, Globe, Shield, Eye } from 'lucide-react';
-import { RubricTable } from '@/components/RubricTable';
 
 export default function PreviewPage({ params }: { params: { assignmentId: string } }) {
   const router = useRouter();
@@ -195,21 +194,22 @@ export default function PreviewPage({ params }: { params: { assignmentId: string
           </CardContent>
         </Card>
 
-        {/* 루브릭 표시 */}
+        {/* 채점 기준 표시 */}
         {assignment.gradingCriteria && (
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">채점 기준표 (루브릭)</CardTitle>
+              <CardTitle className="text-lg">채점 기준</CardTitle>
             </CardHeader>
             <CardContent>
-              <RubricTable 
-                rubricData={JSON.parse(assignment.gradingCriteria)}
-                readOnly={true}
-              />
+              <div className="bg-gray-50 rounded-lg p-4">
+                <pre className="whitespace-pre-wrap text-sm text-gray-700 font-mono">
+                  {assignment.gradingCriteria}
+                </pre>
+              </div>
               <div className="mt-4 p-4 bg-amber-50 rounded-lg border border-amber-200">
                 <div className="flex items-center gap-2 text-amber-800 text-sm">
                   <Shield className="w-4 h-4" />
-                  <p>이 루브릭은 읽기 전용입니다. 복사 후 자유롭게 수정할 수 있습니다.</p>
+                  <p>이 채점 기준은 읽기 전용입니다. 복사 후 자유롭게 수정할 수 있습니다.</p>
                 </div>
               </div>
             </CardContent>
