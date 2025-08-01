@@ -4,6 +4,7 @@ import { createEvaluator } from '@/lib/ai-evaluator';
 import { sendEvaluationUpdate } from './stream/route';
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
+import { checkAssignmentPermission } from '@/lib/assignment-auth';
 
 // AI 평가 실행 및 저장
 export async function POST(request: NextRequest) {
@@ -11,6 +12,13 @@ export async function POST(request: NextRequest) {
     // 세션에서 사용자 정보 가져오기
     const session = await getServerSession(authOptions);
     const userEmail = session?.user?.email;
+    
+    if (!userEmail) {
+      return NextResponse.json(
+        { success: false, error: '인증이 필요합니다.' },
+        { status: 401 }
+      );
+    }
     
     const data = await request.json();
     console.log('평가 요청 데이터:', {
@@ -41,6 +49,15 @@ export async function POST(request: NextRequest) {
       temperature = 0.1
     } = data;
     
+    // 권한 확인
+    const permission = await checkAssignmentPermission(assignmentId, userEmail);
+    if (!permission.canEvaluate) {
+      return NextResponse.json(
+        { success: false, error: '이 과제를 평가할 권한이 없습니다.' },
+        { status: 403 }
+      );
+    }
+    
     // 설정에서 API 키 가져오기
     const settings = await prisma.systemSettings.findUnique({
       where: { key: 'apiKeys' }
@@ -55,6 +72,11 @@ export async function POST(request: NextRequest) {
     // 과제 정보 가져오기
     const assignment = await prisma.assignment.findUnique({
       where: { id: assignmentId }
+    });
+    
+    // 사용자 정보 가져오기
+    const user = await prisma.user.findUnique({
+      where: { email: userEmail }
     });
     
     // AI 평가기 생성 - Mock 모델을 명시적으로 선택한 경우만 Mock 사용
@@ -128,7 +150,8 @@ export async function POST(request: NextRequest) {
         improvementSuggestions: evaluationResult.improvementSuggestions || [],
         strengths: evaluationResult.strengths || [],
         evaluatedBy: evaluatorType === 'mock' ? 'Mock' : aiModel,
-        evaluatedByUser: userEmail  // 평가한 사용자 이메일 추가
+        evaluatedByUser: userEmail,  // 평가한 사용자 이메일
+        userId: user?.id  // 평가한 사용자 ID
       }
     });
     

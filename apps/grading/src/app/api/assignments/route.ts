@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { getServerSession } from '@/lib/auth';
+import { getViewableAssignments } from '@/lib/assignment-auth';
 
 // 과제 목록 조회
 export async function GET() {
@@ -23,28 +24,45 @@ export async function GET() {
       );
     }
     
-    const assignments = await prisma.assignment.findMany({
-      orderBy: [
-        { isSample: 'asc' }, // 샘플이 아닌 것이 먼저
-        { sampleOrder: 'asc' }, // 샘플 중에서는 순서대로
-        { createdAt: 'desc' } // 나머지는 생성일 역순
-      ]
-    });
+    // 사용자 이메일 가져오기
+    const userEmail = session.user?.email;
+    if (!userEmail) {
+      return NextResponse.json(
+        { success: false, error: '사용자 이메일을 찾을 수 없습니다.' },
+        { status: 403 }
+      );
+    }
+
+    // 사용자가 볼 수 있는 과제만 가져오기
+    const assignments = await getViewableAssignments(userEmail);
 
     // JSON 필드가 제대로 파싱되었는지 확인하고 변환
-    const parsedAssignments = assignments.map(assignment => ({
-      ...assignment,
-      evaluationDomains: Array.isArray(assignment.evaluationDomains) 
-        ? assignment.evaluationDomains 
-        : JSON.parse(assignment.evaluationDomains as string),
-      evaluationLevels: Array.isArray(assignment.evaluationLevels)
-        ? assignment.evaluationLevels
-        : JSON.parse(assignment.evaluationLevels as string),
-      gradingCriteria: assignment.gradingCriteria,
-      isSample: assignment.isSample || false,
-      sampleOrder: assignment.sampleOrder || null,
-      sampleCategory: assignment.sampleCategory || null
-    }));
+    const parsedAssignments = assignments.map(assignment => {
+      // 공유받은 과제인지 확인
+      const isSharedToMe = assignment.sharedAssignments && assignment.sharedAssignments.length > 0;
+      const sharedInfo = isSharedToMe ? assignment.sharedAssignments[0] : null;
+
+      return {
+        ...assignment,
+        evaluationDomains: Array.isArray(assignment.evaluationDomains) 
+          ? assignment.evaluationDomains 
+          : JSON.parse(assignment.evaluationDomains as string),
+        evaluationLevels: Array.isArray(assignment.evaluationLevels)
+          ? assignment.evaluationLevels
+          : JSON.parse(assignment.evaluationLevels as string),
+        gradingCriteria: assignment.gradingCriteria,
+        isSample: assignment.isSample || false,
+        sampleOrder: assignment.sampleOrder || null,
+        sampleCategory: assignment.sampleCategory || null,
+        // 권한 정보 추가
+        isOwner: assignment.userEmail === userEmail,
+        isSharedToMe,
+        sharedPermission: sharedInfo?.permission || null,
+        sharedByEmail: sharedInfo?.sharedByEmail || null,
+        sharedAt: sharedInfo?.createdAt || null,
+        submissionCount: assignment._count?.submissions || 0
+      };
+    });
 
     return NextResponse.json({ 
       success: true, 
@@ -84,7 +102,15 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    const teacherId = session.user.id || 'default-teacher-id';
+    const userId = session.user.id;
+    const userEmail = session.user.email;
+    
+    if (!userId || !userEmail) {
+      return NextResponse.json(
+        { success: false, error: '사용자 정보가 올바르지 않습니다.' },
+        { status: 403 }
+      );
+    }
     
     // 필수 필드 검증
     if (!data.title || !data.schoolName || !data.gradeLevel || !data.writingType) {
@@ -128,7 +154,9 @@ export async function POST(request: NextRequest) {
             evaluationDomains: data.evaluationDomains || [],
             evaluationLevels: data.evaluationLevels || [],
             levelCount: typeof data.levelCount === 'string' ? parseInt(data.levelCount) : (data.levelCount || 4),
-            gradingCriteria: data.gradingCriteria || ''
+            gradingCriteria: data.gradingCriteria || '',
+            userId: userId,
+            userEmail: userEmail
           }
         });
         

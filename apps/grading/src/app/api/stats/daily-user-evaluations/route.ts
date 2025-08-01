@@ -15,7 +15,8 @@ export async function GET() {
       select: {
         evaluatedBy: true,
         evaluatedByUser: true,
-        evaluatedAt: true
+        evaluatedAt: true,
+        userId: true
       },
       where: {
         evaluatedByUser: {

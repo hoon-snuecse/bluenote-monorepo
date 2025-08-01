@@ -5,9 +5,10 @@ import { useRouter, useParams } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@bluenote/ui';
 import { Button } from '@bluenote/ui';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@bluenote/ui';
-import { ArrowLeft, Check, FileText } from 'lucide-react';
+import { ArrowLeft, Check, FileText, Share2 } from 'lucide-react';
 import { TemplateManager } from '@/components/TemplateManager';
 import { EvaluationTemplate } from '@/hooks/useTemplates';
+import { ShareAssignmentDialog } from '@/components/ShareAssignmentDialog';
 
 type GradeLevel = '초등학교 3학년' | '초등학교 4학년' | '초등학교 5학년' | '초등학교 6학년';
 type WritingType = '설명문' | '논설문' | '생활문' | '독서감상문' | '기행문';
@@ -40,6 +41,8 @@ export default function EditAssignmentPage() {
   const [isGeneratingCriteria, setIsGeneratingCriteria] = useState(false);
   const [templateDialogOpen, setTemplateDialogOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [shareDialogOpen, setShareDialogOpen] = useState(false);
+  const [assignmentTitle, setAssignmentTitle] = useState('');
   
   // 평가 수준 개수별 기본값
   const defaultLevelsByCount: Record<'3' | '4' | '5', string[]> = {
@@ -68,6 +71,9 @@ export default function EditAssignmentPage() {
             gradeLevel: assignment.gradeLevel,
             writingType: assignment.writingType,
           });
+          
+          // 과제 제목 저장 (공유 대화상자용)
+          setAssignmentTitle(assignment.title);
           
           // 평가 영역 설정 (빈 문자열 추가하여 추가 가능하도록)
           setEvaluationDomains([...assignment.evaluationDomains, '']);
@@ -377,7 +383,17 @@ ${typeInfo.keyElements.map(element => `- ${element}: ${formData.writingType}에 
         {/* Form */}
         <Card className="bg-white/70 backdrop-blur-sm border border-slate-200/50">
           <CardHeader className="bg-gradient-to-r from-blue-500/10 to-blue-600/10">
-            <CardTitle className="text-2xl text-center">과제 수정</CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-2xl">과제 수정</CardTitle>
+              <Button 
+                variant="outline" 
+                onClick={() => setShareDialogOpen(true)}
+                className="flex items-center gap-2"
+              >
+                <Share2 className="w-4 h-4" />
+                공유 관리
+              </Button>
+            </div>
           </CardHeader>
           <CardContent className="pt-6">
             <form onSubmit={handleSubmit} className="space-y-6">
@@ -603,6 +619,14 @@ ${typeInfo.keyElements.map(element => `- ${element}: ${formData.writingType}에 
             </form>
           </CardContent>
         </Card>
+        
+        {/* 공유 대화상자 */}
+        <ShareAssignmentDialog
+          assignmentId={assignmentId}
+          assignmentTitle={assignmentTitle || formData.title}
+          isOpen={shareDialogOpen}
+          onClose={() => setShareDialogOpen(false)}
+        />
       </div>
     </div>
   );

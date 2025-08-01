@@ -14,7 +14,8 @@ export async function GET() {
     const evaluations = await prisma.evaluation.findMany({
       select: {
         evaluatedBy: true,
-        evaluatedByUser: true
+        evaluatedByUser: true,
+        userId: true
       },
       where: {
         evaluatedByUser: {

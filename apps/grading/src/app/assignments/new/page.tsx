@@ -37,6 +37,9 @@ export default function NewAssignmentPage() {
   const [gradingCriteria, setGradingCriteria] = useState('');
   const [isGeneratingCriteria, setIsGeneratingCriteria] = useState(false);
   const [templateDialogOpen, setTemplateDialogOpen] = useState(false);
+  const [isShared, setIsShared] = useState(false);
+  const [shareEmails, setShareEmails] = useState<string>('');
+  const [sharePermission, setSharePermission] = useState<'read' | 'evaluate' | 'write'>('read');
   
   // 평가 수준 개수별 기본값
   const defaultLevelsByCount: Record<'3' | '4' | '5', string[]> = {
@@ -90,7 +93,27 @@ export default function NewAssignmentPage() {
       const result = await response.json();
       console.log('Assignment creation result:', result);
       
-      if (result.success) {
+      if (result.success && result.assignment) {
+        // 공유 설정이 있으면 공유 처리
+        if (isShared && shareEmails.trim()) {
+          const emails = shareEmails.split(',').map(email => email.trim()).filter(email => email);
+          
+          for (const email of emails) {
+            try {
+              await fetch(`/api/assignments/${result.assignment.id}/share`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  email: email,
+                  permission: sharePermission
+                })
+              });
+            } catch (error) {
+              console.error(`Failed to share with ${email}:`, error);
+            }
+          }
+        }
+        
         // 성공 시 과제 목록 페이지로 이동
         router.push('/assignments');
       } else {
@@ -512,6 +535,53 @@ ${typeInfo.keyElements.map(element => `- ${element}: ${formData.writingType}에 
                   className="w-full px-4 py-3 border border-slate-200/50 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/30 bg-white/70 backdrop-blur-sm text-base resize-none font-mono text-sm"
                   placeholder="위의 정보를 입력하고 '채점 기준 생성' 버튼을 클릭하면 AI가 자동으로 채점 기준을 생성합니다."
                 />
+              </div>
+
+              {/* 공유 설정 */}
+              <div className="bg-blue-50/50 rounded-lg p-4 space-y-3">
+                <div className="flex items-center gap-3">
+                  <input
+                    type="checkbox"
+                    id="isShared"
+                    checked={isShared}
+                    onChange={(e) => setIsShared(e.target.checked)}
+                    className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                  />
+                  <label htmlFor="isShared" className="text-base font-medium text-slate-700 cursor-pointer">
+                    생성 시 다른 사용자와 공유
+                  </label>
+                </div>
+                
+                {isShared && (
+                  <div className="pl-7 space-y-3">
+                    <div>
+                      <label className="block text-sm font-medium text-slate-600 mb-1">
+                        공유할 사용자 이메일 (쉼표로 구분)
+                      </label>
+                      <input
+                        type="text"
+                        value={shareEmails}
+                        onChange={(e) => setShareEmails(e.target.value)}
+                        placeholder="user1@example.com, user2@example.com"
+                        className="w-full px-4 py-2 border border-slate-200/50 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/30 bg-white/70 backdrop-blur-sm text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-600 mb-1">
+                        공유 권한
+                      </label>
+                      <select
+                        value={sharePermission}
+                        onChange={(e) => setSharePermission(e.target.value as 'read' | 'evaluate' | 'write')}
+                        className="px-4 py-2 border border-slate-200/50 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/30 bg-white/70 backdrop-blur-sm text-sm"
+                      >
+                        <option value="read">읽기만</option>
+                        <option value="evaluate">평가만</option>
+                        <option value="write">편집 가능</option>
+                      </select>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Creation Date */}

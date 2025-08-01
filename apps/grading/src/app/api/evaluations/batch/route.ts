@@ -5,6 +5,7 @@ import { prisma } from '@/lib/prisma'
 import { v4 as uuidv4 } from 'uuid'
 import { evaluateWithClaude } from '@/utils/ai-evaluator'
 import { broadcastBatchUpdate } from './stream/route'
+import { checkAssignmentPermission } from '@/lib/assignment-auth'
 
 // 메모리 기반 큐 (실제 환경에서는 Redis 등 사용 권장)
 const evaluationQueue: Map<string, any> = new Map()
@@ -24,6 +25,23 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: '과제 ID와 학생 목록이 필요합니다.' },
         { status: 400 }
+      )
+    }
+
+    // 권한 확인
+    const userEmail = session.user?.email
+    if (!userEmail) {
+      return NextResponse.json(
+        { error: '인증이 필요합니다.' },
+        { status: 401 }
+      )
+    }
+
+    const permission = await checkAssignmentPermission(assignmentId, userEmail)
+    if (!permission.canEvaluate) {
+      return NextResponse.json(
+        { error: '이 과제를 평가할 권한이 없습니다.' },
+        { status: 403 }
       )
     }
 

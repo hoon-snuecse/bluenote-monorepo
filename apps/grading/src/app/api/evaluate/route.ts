@@ -3,12 +3,21 @@ import prisma from '@/lib/prisma';
 import { evaluateWithClaude, EvaluationRequest } from '@/lib/claude-api';
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
+import { checkAssignmentPermission } from '@/lib/assignment-auth';
 
 export async function POST(request: NextRequest) {
   try {
     // 세션에서 사용자 정보 가져오기
     const session = await getServerSession(authOptions);
     const userEmail = session?.user?.email;
+    const userId = session?.user?.id;
+    
+    if (!session || !userEmail) {
+      return NextResponse.json(
+        { error: '인증이 필요합니다.' },
+        { status: 401 }
+      );
+    }
     
     const { submissionId, assignmentId, model } = await request.json();
     console.log('Evaluate API called:', { submissionId, assignmentId, model, userEmail });
@@ -17,6 +26,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: 'Submission ID and Assignment ID required' },
         { status: 400 }
+      );
+    }
+    
+    // 평가 권한 확인
+    const permission = await checkAssignmentPermission(assignmentId, userEmail);
+    if (!permission.canEvaluate) {
+      return NextResponse.json(
+        { error: '이 과제를 평가할 권한이 없습니다.' },
+        { status: 403 }
       );
     }
 
@@ -102,7 +120,8 @@ export async function POST(request: NextRequest) {
           improvementSuggestions: aiEvaluation.improvements,
           strengths: aiEvaluation.strengths,
           evaluatedBy: model || 'claude-sonnet-4-20250514',
-          evaluatedByUser: userEmail  // 평가한 사용자 이메일 추가
+          evaluatedByUser: userEmail,  // 평가한 사용자 이메일 추가
+          userId: userId  // 평가한 사용자 ID 추가
         }
       });
 

@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import { getServerSession } from '@/lib/auth';
+import { checkAssignmentPermission } from '@/lib/assignment-auth';
 
 export async function GET(
   request: NextRequest,
@@ -7,6 +9,24 @@ export async function GET(
 ) {
   try {
     console.log('[Submissions API] GET request for assignmentId:', params.assignmentId);
+    
+    // 인증 확인
+    const session = await getServerSession();
+    if (!session) {
+      return NextResponse.json(
+        { success: false, error: '인증이 필요합니다.', submissions: [] },
+        { status: 401 }
+      );
+    }
+    
+    // 권한 확인
+    const permission = await checkAssignmentPermission(params.assignmentId, session.user?.email);
+    if (!permission.canView) {
+      return NextResponse.json(
+        { success: false, error: '이 과제의 제출물을 볼 권한이 없습니다.', submissions: [] },
+        { status: 403 }
+      );
+    }
     
     // First check if assignment exists
     const assignment = await prisma.assignment.findUnique({
@@ -90,18 +110,23 @@ export async function POST(
   try {
     console.log('[Submissions API] POST request for assignmentId:', params.assignmentId);
     
-    // 인증 확인 - 임시로 주석 처리
-    // const session = await getServerSession();
-    // console.log('[Submissions API] Session:', session ? 'exists' : 'null');
-    // console.log('[Submissions API] User ID:', session?.user?.id || 'none');
+    // 인증 확인
+    const session = await getServerSession();
+    if (!session) {
+      return NextResponse.json(
+        { success: false, error: '인증이 필요합니다.' },
+        { status: 401 }
+      );
+    }
     
-    // if (!session?.user?.id) {
-    //   console.log('[Submissions API] Unauthorized - no session or user ID');
-    //   return NextResponse.json(
-    //     { success: false, error: 'Unauthorized - Please login' },
-    //     { status: 401 }
-    //   );
-    // }
+    // 권한 확인 - write 또는 evaluate 권한이 있어야 제출물 생성 가능
+    const permission = await checkAssignmentPermission(params.assignmentId, session.user?.email);
+    if (!permission.canEdit && !permission.canEvaluate) {
+      return NextResponse.json(
+        { success: false, error: '이 과제에 제출물을 추가할 권한이 없습니다.' },
+        { status: 403 }
+      );
+    }
 
     const body = await request.json();
     const {
@@ -226,6 +251,24 @@ export async function DELETE(
 ) {
   try {
     console.log('[Submissions API] DELETE request for assignmentId:', params.assignmentId);
+    
+    // 인증 확인
+    const session = await getServerSession();
+    if (!session) {
+      return NextResponse.json(
+        { success: false, error: '인증이 필요합니다.' },
+        { status: 401 }
+      );
+    }
+    
+    // 권한 확인 - write 권한이 있어야 제출물 삭제 가능
+    const permission = await checkAssignmentPermission(params.assignmentId, session.user?.email);
+    if (!permission.canEdit) {
+      return NextResponse.json(
+        { success: false, error: '이 과제의 제출물을 삭제할 권한이 없습니다.' },
+        { status: 403 }
+      );
+    }
     
     const body = await request.json();
     const { submissionIds } = body;

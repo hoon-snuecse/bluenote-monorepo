@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { AuthLayout } from '@/components/AuthLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@bluenote/ui';
-import { Plus, Edit, Trash2, Users, Calendar, FileText, BookOpen, School, Link, ChartBar, FileSearch, Upload, Sparkles } from 'lucide-react';
+import { Plus, Edit, Trash2, Users, Calendar, FileText, BookOpen, School, Link, ChartBar, FileSearch, Upload, Sparkles, Share2, UserPlus } from 'lucide-react';
+import { ShareAssignmentDialog } from '@/components/ShareAssignmentDialog';
 
 interface AssignmentData {
   id: string;
@@ -20,6 +21,14 @@ interface AssignmentData {
   isSample?: boolean;
   sampleOrder?: number;
   sampleCategory?: string;
+  // 공유 관련 필드
+  isOwner?: boolean;
+  isShared?: boolean;
+  isSharedToMe?: boolean;
+  sharedPermission?: string;
+  sharedByEmail?: string;
+  sharedAt?: string;
+  submissionCount?: number;
 }
 
 export default function AssignmentsPage() {
@@ -35,6 +44,8 @@ function AssignmentsContent() {
   const [myAssignments, setMyAssignments] = useState<AssignmentData[]>([]);
   const [sampleAssignments, setSampleAssignments] = useState<AssignmentData[]>([]);
   const [loading, setLoading] = useState(true);
+  const [shareDialogOpen, setShareDialogOpen] = useState(false);
+  const [selectedAssignment, setSelectedAssignment] = useState<{ id: string; title: string } | null>(null);
 
   useEffect(() => {
     fetchAssignments();
@@ -87,6 +98,11 @@ function AssignmentsContent() {
     const link = `${window.location.origin}/submit/${assignmentId}`;
     navigator.clipboard.writeText(link);
     alert('제출 링크가 클립보드에 복사되었습니다!');
+  };
+
+  const handleShareAssignment = (assignment: AssignmentData) => {
+    setSelectedAssignment({ id: assignment.id, title: assignment.title });
+    setShareDialogOpen(true);
   };
 
 
@@ -271,6 +287,15 @@ function AssignmentsContent() {
                         >
                           <Link className="w-4 h-4 text-blue-600" />
                         </button>
+                        {assignment.isOwner && (
+                          <button
+                            onClick={() => handleShareAssignment(assignment)}
+                            className="p-2 hover:bg-green-50/50 rounded-lg transition-colors"
+                            title="과제 공유"
+                          >
+                            <Share2 className="w-4 h-4 text-green-600" />
+                          </button>
+                        )}
                         <button
                           onClick={() => handleEditAssignment(assignment.id)}
                           className="p-2 hover:bg-slate-100/50 rounded-lg transition-colors"
@@ -296,6 +321,19 @@ function AssignmentsContent() {
                       <p className="text-sm text-slate-600">
                         <span className="font-medium">평가 영역:</span> {assignment.evaluationDomains.join(', ')}
                       </p>
+                      {assignment.isSharedToMe && (
+                        <div className="mt-2 px-2 py-1 bg-green-50 text-green-700 text-xs rounded-md inline-flex items-center gap-1">
+                          <UserPlus className="w-3 h-3" />
+                          <span>{assignment.sharedByEmail}님이 공유</span>
+                          <span className="text-green-600">({assignment.sharedPermission === 'write' ? '편집 가능' : assignment.sharedPermission === 'evaluate' ? '평가만' : '읽기만'})</span>
+                        </div>
+                      )}
+                      {assignment.isShared && assignment.isOwner && (
+                        <div className="mt-2 px-2 py-1 bg-blue-50 text-blue-700 text-xs rounded-md inline-flex items-center gap-1">
+                          <Share2 className="w-3 h-3" />
+                          <span>공유된 과제</span>
+                        </div>
+                      )}
                     </div>
                     
                     <div className="flex items-center gap-4 text-sm text-slate-500 mb-6">
@@ -332,6 +370,20 @@ function AssignmentsContent() {
             </div>
           )}
         </div>
+        
+        {/* 공유 대화상자 */}
+        {selectedAssignment && (
+          <ShareAssignmentDialog
+            assignmentId={selectedAssignment.id}
+            assignmentTitle={selectedAssignment.title}
+            isOpen={shareDialogOpen}
+            onClose={() => {
+              setShareDialogOpen(false);
+              setSelectedAssignment(null);
+              fetchAssignments(); // 공유 후 목록 새로고침
+            }}
+          />
+        )}
       </div>
     </div>
   );

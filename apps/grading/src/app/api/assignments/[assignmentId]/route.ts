@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import { getServerSession } from '@/lib/auth';
+import { checkAssignmentPermission } from '@/lib/assignment-auth';
 
 // 개별 과제 조회
 export async function GET(
@@ -7,9 +9,34 @@ export async function GET(
   { params }: { params: { assignmentId: string } }
 ) {
   try {
+    // 인증 체크
+    const session = await getServerSession();
+    if (!session) {
+      return NextResponse.json(
+        { success: false, error: '인증이 필요합니다.' },
+        { status: 401 }
+      );
+    }
+
+    // 권한 확인
+    const permission = await checkAssignmentPermission(params.assignmentId, session.user?.email);
+    if (!permission.canView) {
+      return NextResponse.json(
+        { success: false, error: '이 과제를 볼 권한이 없습니다.' },
+        { status: 403 }
+      );
+    }
+
     const assignment = await prisma.assignment.findUnique({
       where: {
         id: params.assignmentId
+      },
+      include: {
+        _count: {
+          select: {
+            submissions: true
+          }
+        }
       }
     });
 
@@ -29,7 +56,10 @@ export async function GET(
       evaluationLevels: Array.isArray(assignment.evaluationLevels)
         ? assignment.evaluationLevels
         : JSON.parse(assignment.evaluationLevels as string),
-      gradingCriteria: assignment.gradingCriteria // gradingCriteria 포함
+      gradingCriteria: assignment.gradingCriteria,
+      // 권한 정보 추가
+      permission: permission,
+      submissionCount: assignment._count?.submissions || 0
     };
 
     return NextResponse.json({ 
@@ -51,6 +81,24 @@ export async function PUT(
   { params }: { params: { assignmentId: string } }
 ) {
   try {
+    // 인증 체크
+    const session = await getServerSession();
+    if (!session) {
+      return NextResponse.json(
+        { success: false, error: '인증이 필요합니다.' },
+        { status: 401 }
+      );
+    }
+
+    // 권한 확인
+    const permission = await checkAssignmentPermission(params.assignmentId, session.user?.email);
+    if (!permission.canEdit) {
+      return NextResponse.json(
+        { success: false, error: '이 과제를 수정할 권한이 없습니다.' },
+        { status: 403 }
+      );
+    }
+
     const data = await request.json();
     
     const assignment = await prisma.assignment.update({
@@ -100,6 +148,23 @@ export async function DELETE(
   { params }: { params: { assignmentId: string } }
 ) {
   try {
+    // 인증 체크
+    const session = await getServerSession();
+    if (!session) {
+      return NextResponse.json(
+        { success: false, error: '인증이 필요합니다.' },
+        { status: 401 }
+      );
+    }
+
+    // 권한 확인
+    const permission = await checkAssignmentPermission(params.assignmentId, session.user?.email);
+    if (!permission.canDelete) {
+      return NextResponse.json(
+        { success: false, error: '이 과제를 삭제할 권한이 없습니다.' },
+        { status: 403 }
+      );
+    }
     // 관련된 제출물과 평가도 함께 삭제됨 (onDelete: Cascade)
     await prisma.assignment.delete({
       where: {

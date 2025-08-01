@@ -22,13 +22,27 @@ model Assignment {
   isSample          Boolean      @default(false)
   sampleOrder       Int?
   sampleCategory    String?
+  
+  // 권한 관련 필드 (기존 데이터를 위해 nullable로 시작)
+  userId            String?      
+  userEmail         String?      
+  isShared          Boolean      @default(false)
+  sharedAt          DateTime?
+  
   createdAt         DateTime     @default(now())
   updatedAt         DateTime     @updatedAt
+  
+  // 관계
+  user              User?        @relation(fields: [userId], references: [id])
   submissions       Submission[]
+  sharedAssignments SharedAssignment[]
 
   @@index([schoolName])
   @@index([createdAt])
   @@index([isSample])
+  @@index([userId])
+  @@index([userEmail])
+  @@index([isShared])
 }
 
 model Submission {
@@ -65,8 +79,12 @@ model Evaluation {
   evaluatedAt            DateTime   @default(now())
   evaluatedBy            String?    // AI 모델명
   evaluatedByUser        String?    // 평가한 사용자 이메일
+  userId                 String?    // 평가한 사용자 ID
   studentDbId            String?
+  
+  // 관계
   submission             Submission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  user                   User?      @relation(fields: [userId], references: [id])
 
   @@index([submissionId])
   @@index([assignmentId])
@@ -74,6 +92,7 @@ model Evaluation {
   @@index([studentDbId])
   @@index([evaluatedAt])
   @@index([evaluatedByUser])
+  @@index([userId])
 }
 
 model AccessToken {
@@ -111,17 +130,36 @@ model SystemSettings {
   updatedAt DateTime @updatedAt
 }
 
+model SharedAssignment {
+  id            String     @id @default(cuid())
+  assignmentId  String     
+  sharedToEmail String     // 공유받은 사용자 이메일
+  sharedByEmail String     // 공유한 사용자 이메일
+  permission    String     @default("read") // "read" | "evaluate" | "write"
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  
+  assignment    Assignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  
+  @@unique([assignmentId, sharedToEmail])
+  @@index([sharedToEmail])
+  @@index([sharedByEmail])
+}
+
 model User {
-  id          String    @id @default(cuid())
-  email       String    @unique
-  password    String
+  id          String       @id @default(cuid())
+  email       String       @unique
   name        String
-  role        UserRole  @default(TEACHER)
+  role        UserRole     @default(TEACHER)
   schoolName  String?
-  isActive    Boolean   @default(true)
+  isActive    Boolean      @default(true)
   lastLoginAt DateTime?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  
+  // 관계
+  assignments Assignment[] // 생성한 과제들
+  evaluations Evaluation[] // 수행한 평가들
 
   @@index([email])
   @@index([schoolName])
