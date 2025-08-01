@@ -14,116 +14,135 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // 2. Service Role 클라이언트 생성
-    const supabase = createAdminClient();
+    // 2. Service Role 클라이언트 사용
+    let supabase;
+    try {
+      supabase = createAdminClient();
+    } catch (error) {
+      console.error('Failed to create admin client:', error);
+      return NextResponse.json(
+        { error: 'Service configuration error', message: error.message },
+        { status: 500 }
+      );
+    }
     
-    // 날짜 계산
+    const response = {
+      totalUsers: 0,
+      totalLogins: 0,
+      todayLogins: 0,
+      totalClaudeUsage: 0,
+      todayClaudeUsage: 0,
+      totalGradingSonnet: 0,
+      todayGradingSonnet: 0,
+      totalGradingOpus: 0,
+      todayGradingOpus: 0,
+      userActivity: [],
+      recentPosts: [],
+      contentStats: {
+        research: 0,
+        teaching: 0,
+        analytics: 0,
+        shed: 0
+      },
+      sonnetTopUsers: [],
+      opusTopUsers: [],
+      dailyStats: []
+    };
+
+    // 3. 날짜 설정
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    const todayStr = today.toISOString().split('T')[0];
-    
     const weekAgo = new Date(today);
     weekAgo.setDate(weekAgo.getDate() - 6);
-    const weekAgoStr = weekAgo.toISOString().split('T')[0];
-    
-    const weekAgoForLogin = new Date(today);
-    weekAgoForLogin.setDate(weekAgoForLogin.getDate() - 7);
-    
-    // 3. 모든 쿼리를 병렬로 실행
+
+    // 4. 병렬 쿼리 실행
     const [
-      // 일별 통계 (최근 7일)
       dailyStatsResult,
-      // 전체 사용자 수
       userCountResult,
-      // 사용자 활동 (상위 15명)
       usersResult,
-      // 콘텐츠 통계
-      contentStatsResult,
-      // Grading 앱 통계
-      gradingStatsResult
+      contentResults,
+      gradingResults
     ] = await Promise.all([
-      // 일별 통계
+      // Daily stats
       supabase
         .from('daily_stats')
         .select('*')
-        .gte('date', weekAgoStr)
+        .gte('date', weekAgo.toISOString().split('T')[0])
         .order('date', { ascending: true }),
       
-      // 전체 사용자 수
+      // User count
       supabase
         .from('user_permissions')
         .select('*', { count: 'exact', head: true }),
       
-      // 사용자 정보와 통계를 한 번에 가져오기
+      // User list
       supabase
         .from('user_permissions')
-        .select(`
-          email,
-          role,
-          user_daily_stats!inner (
-            date,
-            login_count,
-            grading_sonnet_count,
-            grading_opus_count,
-            last_login_at,
-            last_device,
-            last_browser
-          )
-        `)
-        .order('user_daily_stats(last_login_at)', { ascending: false })
+        .select('email, role')
         .limit(15),
       
-      // 콘텐츠 통계를 병렬로 가져오기
+      // Content stats (all posts queries in parallel)
       Promise.all([
-        supabase.from('research_posts').select('id, title, created_at', { count: 'exact' }).order('created_at', { ascending: false }).limit(5),
-        supabase.from('shed_posts').select('id, title, created_at', { count: 'exact' }).order('created_at', { ascending: false }).limit(5),
-        supabase.from('teaching_posts').select('id, title, created_at', { count: 'exact' }).order('created_at', { ascending: false }).limit(5),
-        supabase.from('analytics_posts').select('id, title, created_at', { count: 'exact' }).order('created_at', { ascending: false }).limit(5)
+        supabase
+          .from('research_posts')
+          .select('*', { count: 'exact' })
+          .order('created_at', { ascending: false })
+          .limit(10),
+        supabase
+          .from('shed_posts')
+          .select('*', { count: 'exact' })
+          .order('created_at', { ascending: false })
+          .limit(10),
+        supabase
+          .from('teaching_posts')
+          .select('*', { count: 'exact' })
+          .order('created_at', { ascending: false })
+          .limit(10),
+        supabase
+          .from('analytics_posts')
+          .select('*', { count: 'exact' })
+          .order('created_at', { ascending: false })
+          .limit(10)
       ]),
       
-      // Grading 앱 통계
-      fetch(`${process.env.NEXT_PUBLIC_GRADING_APP_URL || 'https://grading.bluenote.site'}/api/stats/users`, {
-        headers: {
-          'Authorization': `Bearer ${process.env.GRADING_API_KEY || process.env.NEXT_PUBLIC_API_KEY}`,
-          'Content-Type': 'application/json',
-        },
-        next: { revalidate: 60 } // 1분 캐시
-      }).then(res => res.ok ? res.json() : { userStats: {} }).catch(() => ({ userStats: {} }))
+      // Grading stats from external API
+      (async () => {
+        try {
+          const baseUrl = process.env.NODE_ENV === 'production'
+            ? 'https://grading.bluenote.site'
+            : 'http://localhost:3002';
+
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 5000);
+          
+          const [gradingRes, userStatsRes] = await Promise.all([
+            fetch(`${baseUrl}/api/stats`, { 
+              cache: 'no-store',
+              signal: controller.signal
+            }),
+            fetch(`${baseUrl}/api/stats/user-evaluations`, { 
+              cache: 'no-store',
+              signal: controller.signal
+            })
+          ]);
+          
+          clearTimeout(timeoutId);
+          
+          return {
+            grading: gradingRes.ok ? await gradingRes.json() : null,
+            userStats: userStatsRes.ok ? await userStatsRes.json() : null
+          };
+        } catch (error) {
+          console.log('Grading stats fetch failed (non-critical):', error.message);
+          return { grading: null, userStats: null };
+        }
+      })()
     ]);
 
-    // 응답 데이터 구성
-    const response = {
-      stats: {
-        totalUsers: userCountResult.count || 0,
-        totalLogins: 0,
-        todayLogins: 0,
-        totalClaudeUsage: 0,
-        todayClaudeUsage: 0,
-        totalGradingSonnet: 0,
-        todayGradingSonnet: 0,
-        totalGradingOpus: 0,
-        todayGradingOpus: 0,
-        userActivity: [],
-        recentPosts: [],
-        contentStats: {
-          research: 0,
-          teaching: 0,
-          analytics: 0,
-          shed: 0
-        },
-        sonnetTopUsers: [],
-        opusTopUsers: [],
-        dailyStats: []
-      },
-      performanceMetrics: {
-        queryTime: 0,
-        totalTime: 0
-      }
-    };
-
-    // 일별 통계 처리
-    if (!dailyStatsResult.error && dailyStatsResult.data) {
-      response.stats.dailyStats = dailyStatsResult.data.map(day => ({
+    // 5. Daily stats 처리
+    const { data: dailyStatsData, error: dailyError } = dailyStatsResult;
+    if (!dailyError && dailyStatsData) {
+      response.dailyStats = dailyStatsData.map(day => ({
         date: new Date(day.date).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' }),
         fullDate: day.date,
         claude: day.claude_usage_count || 0,
@@ -132,193 +151,246 @@ export async function GET() {
         uniqueLogins: day.unique_login_count || 0
       }));
 
-      // 누적 통계 계산
-      dailyStatsResult.data.forEach(day => {
-        response.stats.totalLogins += day.login_count || 0;
-        response.stats.totalClaudeUsage += day.claude_usage_count || 0;
+      dailyStatsData.forEach(day => {
+        response.totalLogins += day.login_count || 0;
+        response.totalClaudeUsage += day.claude_usage_count || 0;
         
-        if (day.date === todayStr) {
-          response.stats.todayLogins = day.login_count || 0;
-          response.stats.todayClaudeUsage = day.claude_usage_count || 0;
+        if (day.date === today.toISOString().split('T')[0]) {
+          response.todayLogins = day.login_count || 0;
+          response.todayClaudeUsage = day.claude_usage_count || 0;
         }
       });
     }
 
-    // 사용자 활동 처리
-    if (!usersResult.error && usersResult.data) {
+    // 6. User count 처리
+    const { count: totalUserCount, error: countError } = userCountResult;
+    if (!countError && totalUserCount !== null) {
+      response.totalUsers = totalUserCount;
+    }
+
+    // 7. User activity 처리
+    const { data: users, error: usersError } = usersResult;
+    console.log('Users result:', { users, usersError, count: users?.length });
+    
+    if (!usersError && users) {
+      const userEmails = users.map(u => u.email);
+      console.log('User emails:', userEmails);
+      
+      // User daily stats 병렬 쿼리
+      const [todayStatsResult, weekStatsResult, totalStatsResult] = await Promise.all([
+        supabase
+          .from('user_daily_stats')
+          .select('*')
+          .in('user_email', userEmails)
+          .eq('date', today.toISOString().split('T')[0]),
+        
+        supabase
+          .from('user_daily_stats')
+          .select('user_email, login_count, grading_sonnet_count, grading_opus_count')
+          .in('user_email', userEmails)
+          .gte('date', weekAgo.toISOString().split('T')[0]),
+        
+        supabase
+          .from('user_daily_stats')
+          .select('user_email, login_count, grading_sonnet_count, grading_opus_count')
+          .in('user_email', userEmails)
+      ]);
+
+      console.log('User stats results:', {
+        todayStats: todayStatsResult.data?.length,
+        weekStats: weekStatsResult.data?.length,
+        totalStats: totalStatsResult.data?.length
+      });
+
       const userStatsMap = {};
       
-      // 사용자별 통계 집계
-      usersResult.data.forEach(user => {
-        const stats = {
-          today: 0,
-          week: 0,
-          total: 0,
-          lastLogin: null,
-          lastDevice: 'Unknown',
-          lastBrowser: 'Unknown',
-          gradingSonnet: 0,
-          gradingOpus: 0
-        };
-        
-        // user_daily_stats 데이터 처리
-        if (user.user_daily_stats && user.user_daily_stats.length > 0) {
-          user.user_daily_stats.forEach(dailyStat => {
-            const statDate = new Date(dailyStat.date);
-            
-            // 오늘 통계
-            if (dailyStat.date === todayStr) {
-              stats.today = dailyStat.login_count || 0;
-              stats.lastLogin = dailyStat.last_login_at;
-              stats.lastDevice = dailyStat.last_device || 'Unknown';
-              stats.lastBrowser = dailyStat.last_browser || 'Unknown';
-            }
-            
-            // 주간 통계
-            if (statDate >= weekAgoForLogin) {
-              stats.week += dailyStat.login_count || 0;
-            }
-            
-            // 전체 통계
-            stats.total += dailyStat.login_count || 0;
-            stats.gradingSonnet += dailyStat.grading_sonnet_count || 0;
-            stats.gradingOpus += dailyStat.grading_opus_count || 0;
-          });
-          
-          // 가장 최근 로그인 정보
-          const latestStat = user.user_daily_stats[0];
-          if (latestStat) {
-            stats.lastLogin = stats.lastLogin || latestStat.last_login_at;
-            stats.lastDevice = stats.lastDevice === 'Unknown' ? (latestStat.last_device || 'Unknown') : stats.lastDevice;
-            stats.lastBrowser = stats.lastBrowser === 'Unknown' ? (latestStat.last_browser || 'Unknown') : stats.lastBrowser;
+      // Process stats
+      if (todayStatsResult.data) {
+        todayStatsResult.data.forEach(stat => {
+          userStatsMap[stat.user_email] = {
+            today: stat.login_count || 0,
+            week: 0,
+            total: 0,
+            lastLogin: stat.last_login_at,
+            lastDevice: stat.last_device || 'Unknown',
+            lastBrowser: stat.last_browser || 'Unknown',
+            gradingSonnet: stat.grading_sonnet_count || 0,
+            gradingOpus: stat.grading_opus_count || 0
+          };
+        });
+      }
+      
+      if (weekStatsResult.data) {
+        weekStatsResult.data.forEach(stat => {
+          if (!userStatsMap[stat.user_email]) {
+            userStatsMap[stat.user_email] = {
+              today: 0, week: 0, total: 0,
+              lastLogin: null, lastDevice: 'Unknown', lastBrowser: 'Unknown',
+              gradingSonnet: 0, gradingOpus: 0
+            };
           }
+          userStatsMap[stat.user_email].week += stat.login_count || 0;
+        });
+      }
+      
+      if (totalStatsResult.data) {
+        totalStatsResult.data.forEach(stat => {
+          if (!userStatsMap[stat.user_email]) {
+            userStatsMap[stat.user_email] = {
+              today: 0, week: 0, total: 0,
+              lastLogin: null, lastDevice: 'Unknown', lastBrowser: 'Unknown',
+              gradingSonnet: 0, gradingOpus: 0
+            };
+          }
+          userStatsMap[stat.user_email].total += stat.login_count || 0;
+          userStatsMap[stat.user_email].gradingSonnet += stat.grading_sonnet_count || 0;
+          userStatsMap[stat.user_email].gradingOpus += stat.grading_opus_count || 0;
+        });
+      }
+      
+      response.userActivity = users.map(user => ({
+        email: user.email,
+        role: user.role,
+        loginStats: {
+          today: userStatsMap[user.email]?.today || 0,
+          week: userStatsMap[user.email]?.week || 0,
+          total: userStatsMap[user.email]?.total || 0,
+          lastLogin: userStatsMap[user.email]?.lastLogin || null
+        },
+        gradingStats: {
+          sonnet: userStatsMap[user.email]?.gradingSonnet || 0,
+          opus: userStatsMap[user.email]?.gradingOpus || 0
+        },
+        deviceInfo: {
+          device: userStatsMap[user.email]?.lastDevice || 'Unknown',
+          browser: userStatsMap[user.email]?.lastBrowser || 'Unknown'
         }
-        
-        userStatsMap[user.email] = stats;
+      }));
+      
+      console.log('Final userActivity count:', response.userActivity.length);
+    }
+
+    // 8. Content stats 처리
+    const [researchResult, shedResult, teachingResult, analyticsResult] = contentResults;
+    
+    response.contentStats.research = researchResult.count || 0;
+    response.contentStats.shed = shedResult.count || 0;
+    response.contentStats.teaching = teachingResult.count || 0;
+    response.contentStats.analytics = analyticsResult.count || 0;
+
+    // Merge all posts for recent posts
+    const allPosts = [];
+    
+    if (researchResult.data) {
+      researchResult.data.forEach(post => {
+        allPosts.push({ ...post, section: 'research' });
+      });
+    }
+    
+    if (shedResult.data) {
+      shedResult.data.forEach(post => {
+        allPosts.push({ ...post, section: 'shed' });
+      });
+    }
+    
+    if (teachingResult.data) {
+      teachingResult.data.forEach(post => {
+        allPosts.push({ ...post, section: 'teaching' });
+      });
+    }
+    
+    if (analyticsResult.data) {
+      analyticsResult.data.forEach(post => {
+        allPosts.push({ ...post, section: 'analytics' });
+      });
+    }
+    
+    allPosts.sort((a, b) => {
+      const dateA = new Date(a.created_at || a.date || 0);
+      const dateB = new Date(b.created_at || b.date || 0);
+      return dateB - dateA;
+    });
+    
+    response.recentPosts = allPosts.slice(0, 5);
+
+    // 9. Grading stats 처리
+    if (gradingResults.grading) {
+      const gradingData = gradingResults.grading;
+      if (gradingData.evaluations?.byModel) {
+        response.totalGradingSonnet = gradingData.evaluations.byModel.sonnet?.total || 0;
+        response.todayGradingSonnet = gradingData.evaluations.byModel.sonnet?.today || 0;
+        response.totalGradingOpus = gradingData.evaluations.byModel.opus?.total || 0;
+        response.todayGradingOpus = gradingData.evaluations.byModel.opus?.today || 0;
+      }
+    }
+    
+    if (gradingResults.userStats?.userStats) {
+      const userEntries = Object.entries(gradingResults.userStats.userStats);
+      
+      response.userActivity.forEach(user => {
+        if (gradingResults.userStats.userStats[user.email]) {
+          user.gradingStats.sonnet = gradingResults.userStats.userStats[user.email].sonnet || 0;
+          user.gradingStats.opus = gradingResults.userStats.userStats[user.email].opus || 0;
+        }
       });
       
-      // Grading 앱 통계 병합
-      if (gradingStatsResult.userStats) {
-        Object.entries(gradingStatsResult.userStats).forEach(([email, gradingStats]) => {
-          if (userStatsMap[email]) {
-            userStatsMap[email].gradingSonnet = gradingStats.sonnet || userStatsMap[email].gradingSonnet;
-            userStatsMap[email].gradingOpus = gradingStats.opus || userStatsMap[email].gradingOpus;
-          } else {
-            // Grading 앱에만 있는 사용자 추가
-            userStatsMap[email] = {
+      userEntries.forEach(([email, stats]) => {
+        if (!response.userActivity.find(u => u.email === email)) {
+          response.userActivity.push({
+            email: email,
+            role: 'user',
+            loginStats: {
               today: 0,
               week: 0,
               total: 0,
-              lastLogin: null,
-              lastDevice: 'Unknown',
-              lastBrowser: 'Unknown',
-              gradingSonnet: gradingStats.sonnet || 0,
-              gradingOpus: gradingStats.opus || 0
-            };
-          }
-        });
-      }
-      
-      // 사용자 활동 배열 생성
-      response.stats.userActivity = Object.entries(userStatsMap).map(([email, stats]) => ({
-        email,
-        role: usersResult.data.find(u => u.email === email)?.role || 'user',
-        loginStats: {
-          today: stats.today,
-          week: stats.week,
-          total: stats.total,
-          lastLogin: stats.lastLogin
-        },
-        gradingStats: {
-          sonnet: stats.gradingSonnet,
-          opus: stats.gradingOpus
-        },
-        deviceInfo: {
-          device: stats.lastDevice,
-          browser: stats.lastBrowser
+              lastLogin: null
+            },
+            gradingStats: {
+              sonnet: stats.sonnet || 0,
+              opus: stats.opus || 0
+            },
+            deviceInfo: {
+              device: 'Unknown',
+              browser: 'Unknown'
+            }
+          });
         }
-      }));
+      });
+      
+      response.sonnetTopUsers = userEntries
+        .filter(([email, stats]) => stats.sonnet > 0)
+        .sort((a, b) => b[1].sonnet - a[1].sonnet)
+        .slice(0, 5)
+        .map(([email, stats]) => ({
+          name: email,
+          count: stats.sonnet
+        }));
+      
+      response.opusTopUsers = userEntries
+        .filter(([email, stats]) => stats.opus > 0)
+        .sort((a, b) => b[1].opus - a[1].opus)
+        .slice(0, 5)
+        .map(([email, stats]) => ({
+          name: email,
+          count: stats.opus
+        }));
     }
 
-    // 콘텐츠 통계 처리
-    if (contentStatsResult) {
-      const [research, shed, teaching, analytics] = contentStatsResult;
-      
-      response.stats.contentStats = {
-        research: research.count || 0,
-        teaching: teaching.count || 0,
-        analytics: analytics.count || 0,
-        shed: shed.count || 0
-      };
-      
-      // 최근 게시물 병합 및 정렬
-      const allPosts = [];
-      
-      if (research.data) {
-        research.data.forEach(post => {
-          allPosts.push({ ...post, section: 'research' });
-        });
-      }
-      if (shed.data) {
-        shed.data.forEach(post => {
-          allPosts.push({ ...post, section: 'shed' });
-        });
-      }
-      if (teaching.data) {
-        teaching.data.forEach(post => {
-          allPosts.push({ ...post, section: 'teaching' });
-        });
-      }
-      if (analytics.data) {
-        analytics.data.forEach(post => {
-          allPosts.push({ ...post, section: 'analytics' });
-        });
-      }
-      
-      // 날짜순 정렬 후 상위 5개 선택
-      response.stats.recentPosts = allPosts
-        .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
-        .slice(0, 5);
-    }
-
-    // Grading 통계 집계
-    response.stats.userActivity.forEach(user => {
-      response.stats.totalGradingSonnet += user.gradingStats.sonnet;
-      response.stats.totalGradingOpus += user.gradingStats.opus;
-    });
-
-    // 모델별 상위 사용자
-    const sonnetUsers = response.stats.userActivity
-      .filter(u => u.gradingStats.sonnet > 0)
-      .sort((a, b) => b.gradingStats.sonnet - a.gradingStats.sonnet)
-      .slice(0, 5);
-    
-    const opusUsers = response.stats.userActivity
-      .filter(u => u.gradingStats.opus > 0)
-      .sort((a, b) => b.gradingStats.opus - a.gradingStats.opus)
-      .slice(0, 5);
-    
-    response.stats.sonnetTopUsers = sonnetUsers.map(u => ({
-      name: u.email.split('@')[0],
-      count: u.gradingStats.sonnet
-    }));
-    
-    response.stats.opusTopUsers = opusUsers.map(u => ({
-      name: u.email.split('@')[0],
-      count: u.gradingStats.opus
-    }));
-
-    // 성능 측정
+    // 10. Performance metrics
     const endTime = Date.now();
-    response.performanceMetrics = {
-      queryTime: endTime - startTime,
-      totalTime: endTime - startTime
+    const performanceMetrics = {
+      totalTime: endTime - startTime,
+      timestamp: new Date().toISOString()
     };
 
-    return NextResponse.json(response);
-    
+    return NextResponse.json({ 
+      stats: response,
+      performanceMetrics 
+    });
+
   } catch (error) {
-    console.error('Analytics API Error:', error);
+    console.error('Analytics Optimized API Error:', error);
+    console.error('Error stack:', error.stack);
     return NextResponse.json(
       { error: 'Internal server error', message: error.message },
       { status: 500 }

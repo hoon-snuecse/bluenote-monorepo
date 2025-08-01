@@ -79,6 +79,8 @@ export default function AdminAnalyticsOptimized() {
       }
 
       const data = await response.json();
+      console.log('Analytics API response:', data);
+      console.log('User activity data:', data.stats?.userActivity);
       setStats(data.stats);
       setPerformanceMetrics(data.performanceMetrics);
     } catch (error) {
