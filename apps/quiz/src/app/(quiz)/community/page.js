@@ -165,6 +165,11 @@ export default function CommunityPage() {
   }
 
   const handleSelectQuiz = (quizId) => {
+    // 체크박스 클릭 시 자동으로 선택 모드 활성화
+    if (!isSelectionMode) {
+      setIsSelectionMode(true)
+    }
+    
     setSelectedQuizzes(prev => 
       prev.includes(quizId) 
         ? prev.filter(id => id !== quizId)
@@ -287,7 +292,7 @@ export default function CommunityPage() {
                   alert('한 번에 하나의 퀴즈만 편집할 수 있습니다.')
                 }
               }}
-              disabled={!isSelectionMode || selectedQuizzes.length !== 1}
+              disabled={selectedQuizzes.length !== 1}
               className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
             >
               <span>✏️</span>
@@ -297,7 +302,7 @@ export default function CommunityPage() {
             {/* 삭제 버튼 - 선택 모드와 관계없이 항상 표시 */}
             <button
               onClick={handleDeleteSelected}
-              disabled={!isSelectionMode || selectedQuizzes.length === 0}
+              disabled={selectedQuizzes.length === 0}
               className="px-3 py-1.5 text-sm bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
             >
               <Trash2 className="w-3 h-3" />
