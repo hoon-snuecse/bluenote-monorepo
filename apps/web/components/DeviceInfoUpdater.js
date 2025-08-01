@@ -4,9 +4,14 @@ import { useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 
 export function DeviceInfoUpdater() {
-  const { data: session, status } = useSession();
+  const sessionData = useSession();
   
   useEffect(() => {
+    // SessionProvider 내부에서만 작동
+    if (!sessionData) return;
+    
+    const { data: session, status } = sessionData;
+    
     console.log('DeviceInfoUpdater - status:', status, 'email:', session?.user?.email);
     
     // 로그인된 상태에서만 실행
@@ -37,7 +42,7 @@ export function DeviceInfoUpdater() {
         });
       }
     }
-  }, [session, status]);
+  }, [sessionData]);
   
   // 화면에 렌더링할 것이 없음
   return null;
