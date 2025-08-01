@@ -1,20 +1,20 @@
 'use client';
 
-import { useSession } from 'next-auth/react';
+import { useNextAuth } from '@bluenote/auth';
 import { useState } from 'react';
 
 export function ForceDeviceUpdate() {
-  const { data: session } = useSession();
+  const { user } = useNextAuth();
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
 
   const forceUpdate = async () => {
-    if (!session?.user?.email) return;
+    if (!user?.email) return;
     
     setLoading(true);
     try {
       // sessionStorage 클리어
-      const sessionKey = `device-info-updated-${session.user.email}`;
+      const sessionKey = `device-info-updated-${user.email}`;
       sessionStorage.removeItem(sessionKey);
       
       // API 호출
@@ -36,7 +36,7 @@ export function ForceDeviceUpdate() {
     }
   };
 
-  if (!session) return null;
+  if (!user) return null;
 
   return (
     <div className="fixed bottom-4 right-4 bg-slate-800 p-4 rounded-lg shadow-lg z-50">
