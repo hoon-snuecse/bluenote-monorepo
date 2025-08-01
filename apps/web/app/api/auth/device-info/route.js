@@ -41,12 +41,17 @@ export async function POST(request) {
       browser = 'Edge';
     } else if (/opr|opera/i.test(userAgent)) {
       browser = 'Opera';
-    } else if (/chrome/i.test(userAgent) && !/safari/i.test(userAgent)) {
-      browser = 'Chrome';
     } else if (/firefox|fxios/i.test(userAgent)) {
       browser = 'Firefox';
-    } else if (/safari/i.test(userAgent) && !/chrome/i.test(userAgent)) {
+    } else if (/chrome|chromium|crios/i.test(userAgent) && !/edg|opr/i.test(userAgent)) {
+      browser = 'Chrome';
+    } else if (/safari/i.test(userAgent) && !/chrome|chromium|crios/i.test(userAgent)) {
       browser = 'Safari';
+    }
+    
+    // macOS 감지
+    if (/macintosh|mac os x/i.test(userAgent)) {
+      device = 'macOS';
     }
     
     // Supabase에 업데이트
