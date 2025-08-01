@@ -321,6 +321,38 @@ export async function GET() {
         if (userStatsData.userStats) {
           const userEntries = Object.entries(userStatsData.userStats);
           
+          // Merge grading stats from grading app into user activity
+          response.userActivity.forEach(user => {
+            if (userStatsData.userStats[user.email]) {
+              user.gradingStats.sonnet = userStatsData.userStats[user.email].sonnet || 0;
+              user.gradingStats.opus = userStatsData.userStats[user.email].opus || 0;
+            }
+          });
+          
+          // Also add grading app users not in the current list
+          userEntries.forEach(([email, stats]) => {
+            if (!response.userActivity.find(u => u.email === email)) {
+              response.userActivity.push({
+                email: email,
+                role: 'user',
+                loginStats: {
+                  today: 0,
+                  week: 0,
+                  total: 0,
+                  lastLogin: null
+                },
+                gradingStats: {
+                  sonnet: stats.sonnet || 0,
+                  opus: stats.opus || 0
+                },
+                deviceInfo: {
+                  device: 'Unknown',
+                  browser: 'Unknown'
+                }
+              });
+            }
+          });
+          
           response.sonnetTopUsers = userEntries
             .filter(([email, stats]) => stats.sonnet > 0)
             .sort((a, b) => b[1].sonnet - a[1].sonnet)
