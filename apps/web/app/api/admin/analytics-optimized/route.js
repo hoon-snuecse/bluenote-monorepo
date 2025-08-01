@@ -263,11 +263,11 @@ export async function GET() {
     // 8. Content stats 처리
     const [researchResult, shedResult, teachingResult, analyticsResult] = contentResults;
     
-    console.log('[Analytics] Content counts:', {
-      research: researchResult.count,
-      shed: shedResult.count,
-      teaching: teachingResult.count,
-      analytics: analyticsResult.count
+    console.log('[Analytics] Content query results:', {
+      research: { count: researchResult.count, data: researchResult.data?.length, error: researchResult.error },
+      shed: { count: shedResult.count, data: shedResult.data?.length, error: shedResult.error },
+      teaching: { count: teachingResult.count, data: teachingResult.data?.length, error: teachingResult.error },
+      analytics: { count: analyticsResult.count, data: analyticsResult.data?.length, error: analyticsResult.error }
     });
     
     response.contentStats.research = researchResult.count || 0;

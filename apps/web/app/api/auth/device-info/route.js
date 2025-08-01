@@ -24,32 +24,37 @@ export async function POST(request) {
     let deviceInfo = 'Unknown';
     let browserInfo = 'Unknown';
     
-    // 브라우저 정보
-    if (browser.name) {
-      browserInfo = browser.name;
-    }
-    
-    // 디바이스 정보 - OS 우선 확인
-    if (os.name) {
-      if (os.name.includes('Mac')) {
-        deviceInfo = 'macOS';
-      } else if (os.name.includes('Windows')) {
-        deviceInfo = 'Windows';
-      } else if (os.name.includes('Linux')) {
-        deviceInfo = 'Linux';
-      } else if (os.name.includes('Android')) {
-        deviceInfo = 'Android';
-      } else if (os.name.includes('iOS')) {
-        deviceInfo = 'iOS';
-      } else {
-        deviceInfo = os.name;
+    // Raw User-Agent로 직접 파싱 (Next.js userAgent가 부정확한 경우 대비)
+    if (rawUserAgent) {
+      // 브라우저 감지
+      if (rawUserAgent.includes('Firefox')) {
+        browserInfo = 'Firefox';
+      } else if (rawUserAgent.includes('Edg')) {
+        browserInfo = 'Edge';
+      } else if (rawUserAgent.includes('Chrome') && !rawUserAgent.includes('Edg')) {
+        browserInfo = 'Chrome';
+      } else if (rawUserAgent.includes('Safari') && !rawUserAgent.includes('Chrome')) {
+        browserInfo = 'Safari';
+      } else if (browser.name) {
+        browserInfo = browser.name;
       }
-    } else if (device.type === 'mobile') {
-      deviceInfo = 'Mobile';
-    } else if (device.type === 'tablet') {
-      deviceInfo = 'Tablet';
-    } else {
-      deviceInfo = 'Desktop';
+      
+      // OS/디바이스 감지
+      if (rawUserAgent.includes('Macintosh') || rawUserAgent.includes('Mac OS')) {
+        deviceInfo = 'macOS';
+      } else if (rawUserAgent.includes('Windows')) {
+        deviceInfo = 'Windows';
+      } else if (rawUserAgent.includes('Android')) {
+        deviceInfo = 'Android';
+      } else if (rawUserAgent.includes('iPhone') || rawUserAgent.includes('iPad')) {
+        deviceInfo = 'iOS';
+      } else if (rawUserAgent.includes('Linux')) {
+        deviceInfo = 'Linux';
+      } else if (os.name) {
+        deviceInfo = os.name;
+      } else {
+        deviceInfo = 'Desktop';
+      }
     }
     
     // Supabase에 업데이트
