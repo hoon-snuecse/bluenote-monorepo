@@ -16,13 +16,6 @@ export async function POST(request) {
     const { device, browser, os } = userAgent(request);
     const rawUserAgent = request.headers.get('user-agent') || '';
     
-    console.log('[Device Info API] Request for:', session.user.email);
-    console.log('[Device Info API] Raw User-Agent:', rawUserAgent);
-    console.log('[Device Info API] Next.js userAgent result:', { 
-      device: device,
-      browser: browser,
-      os: os 
-    });
     
     // 디바이스 정보 추출
     let deviceInfo = 'Unknown';
@@ -65,31 +58,8 @@ export async function POST(request) {
     const supabase = createAdminClient();
     const today = new Date().toISOString().split('T')[0];
     
-    console.log('[Device Info API] Final parsed values:', { 
-      email: session.user.email,
-      device: deviceInfo, 
-      browser: browserInfo, 
-      date: today,
-      rawUserAgent: rawUserAgent.substring(0, 100) + '...'
-    });
     
-    // 먼저 오늘 레코드가 있는지 확인
-    const { data: existingData, error: checkError } = await supabase
-      .from('user_daily_stats')
-      .select('*')
-      .eq('user_email', session.user.email)
-      .eq('date', today);
-    
-    console.log('[Device Info API] Existing records check:', {
-      email: session.user.email,
-      date: today,
-      recordCount: existingData?.length || 0,
-      existingDevice: existingData?.[0]?.last_device,
-      existingBrowser: existingData?.[0]?.last_browser,
-      error: checkError?.message
-    });
-    
-    const { data: updateData, error } = await supabase
+    const { error } = await supabase
       .from('user_daily_stats')
       .update({
         last_device: deviceInfo,
@@ -98,25 +68,14 @@ export async function POST(request) {
         updated_at: new Date().toISOString()
       })
       .eq('user_email', session.user.email)
-      .eq('date', today)
-      .select();
+      .eq('date', today);
     
-    console.log('[Device Info API] Update result:', { 
-      email: session.user.email,
-      updateCount: updateData?.length || 0,
-      firstRecord: updateData?.[0],
-      error: error?.message || null
-    });
     
     if (error) {
       console.error('Error updating device info:', error);
       return NextResponse.json({ error: 'Failed to update device info' }, { status: 500 });
     }
     
-    // 업데이트된 데이터가 없으면 레코드가 없는 것일 수 있음
-    if (!updateData || updateData.length === 0) {
-      console.log('[Device Info API] No records updated - might need to create new record');
-    }
     
     return NextResponse.json({ 
       success: true,

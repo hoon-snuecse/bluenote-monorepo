@@ -18,7 +18,6 @@ import {
   RefreshCw
 } from 'lucide-react';
 import Link from 'next/link';
-import { ForceDeviceUpdate } from '@/components/ForceDeviceUpdate';
 
 // 스켈레톤 컴포넌트
 function SkeletonCard() {
@@ -464,8 +463,6 @@ export default function AdminAnalyticsOptimized() {
         )}
       </div>
 
-      {/* 디바이스 정보 강제 업데이트 버튼 */}
-      <ForceDeviceUpdate />
     </div>
   );
 }

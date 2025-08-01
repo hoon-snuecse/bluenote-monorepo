@@ -199,16 +199,6 @@ export async function GET() {
       
       // Process stats - 중복된 사용자는 가장 최근 업데이트 기준으로 사용
       if (todayStatsResult.data) {
-        // sociogram 계정 디버깅
-        const sociogramStats = todayStatsResult.data.filter(stat => stat.user_email === 'sociogram@gmail.com');
-        if (sociogramStats.length > 0) {
-          console.log('[Analytics] sociogram@gmail.com today stats:', sociogramStats.map(s => ({
-            device: s.last_device,
-            browser: s.last_browser,
-            updated_at: s.updated_at,
-            last_login: s.last_login_at
-          })));
-        }
         
         todayStatsResult.data.forEach(stat => {
           // 이미 존재하는 경우 더 최근 updated_at을 가진 데이터만 사용
@@ -280,12 +270,6 @@ export async function GET() {
     // 8. Content stats 처리
     const [researchResult, shedResult, teachingResult, analyticsResult] = contentResults;
     
-    console.log('[Analytics] Content query results:', {
-      research: { count: researchResult.count, data: researchResult.data?.length, error: researchResult.error },
-      shed: { count: shedResult.count, data: shedResult.data?.length, error: shedResult.error },
-      teaching: { count: teachingResult.count, data: teachingResult.data?.length, error: teachingResult.error },
-      analytics: { count: analyticsResult.count, data: analyticsResult.data?.length, error: analyticsResult.error }
-    });
     
     response.contentStats.research = researchResult.count || 0;
     response.contentStats.shed = shedResult.count || 0;
