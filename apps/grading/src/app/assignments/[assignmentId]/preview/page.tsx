@@ -18,18 +18,14 @@ export default function PreviewPage({ params }: { params: { assignmentId: string
 
   const fetchAssignment = async () => {
     try {
-      const response = await fetch(`/api/assignments/${params.assignmentId}`);
+      // 미리보기 전용 API 사용 (인증 불필요)
+      const response = await fetch(`/api/assignments/${params.assignmentId}/preview`);
       const data = await response.json();
       
       if (data.success && data.assignment) {
-        // 공유된 과제가 아니면 접근 제한
-        if (!data.assignment.isShared && !data.assignment.isSample) {
-          setError('이 과제는 공유되지 않은 과제입니다.');
-          return;
-        }
         setAssignment(data.assignment);
       } else {
-        setError('과제를 불러올 수 없습니다.');
+        setError(data.error || '과제를 불러올 수 없습니다.');
       }
     } catch (error) {
       console.error('과제 조회 오류:', error);
