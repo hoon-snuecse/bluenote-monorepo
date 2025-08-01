@@ -2,6 +2,7 @@ import './globals.css'
 import Navigation from './components/NavigationWrapper'
 import Footer from './components/Footer'
 import Providers from './components/Providers'
+import { DeviceInfoUpdater } from '@/components/DeviceInfoUpdater'
 
 export const metadata = {
   metadataBase: new URL(process.env.NEXTAUTH_URL || 'http://localhost:3000'),
@@ -77,6 +78,7 @@ export default function RootLayout({ children }) {
       </head>
       <body suppressHydrationWarning={true}>
         <Providers>
+          <DeviceInfoUpdater />
           <div className="relative z-10">
             <Navigation />
             <main>

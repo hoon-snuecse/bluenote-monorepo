@@ -10,7 +10,12 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "sync:login-stats": "node scripts/sync-login-stats.js",
+    "sync:grading": "node scripts/sync-grading-stats.js",
+    "update:login-sample": "node scripts/update-login-stats-sample.js",
+    "update:login-week": "node scripts/update-login-stats-week.js",
+    "update:device-info": "node scripts/update-device-info.js"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.55.1",
