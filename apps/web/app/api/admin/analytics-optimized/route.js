@@ -85,24 +85,24 @@ export async function GET() {
       Promise.all([
         supabase
           .from('research_posts')
-          .select('*', { count: 'exact' })
+          .select('id, title, created_at', { count: 'exact' })
           .order('created_at', { ascending: false })
-          .limit(10),
+          .limit(5), // 10 -> 5로 줄임
         supabase
           .from('shed_posts')
-          .select('*', { count: 'exact' })
+          .select('id, title, created_at, date', { count: 'exact' })
           .order('created_at', { ascending: false })
-          .limit(10),
+          .limit(5),
         supabase
           .from('teaching_posts')
-          .select('*', { count: 'exact' })
+          .select('id, title, created_at', { count: 'exact' })
           .order('created_at', { ascending: false })
-          .limit(10),
+          .limit(5),
         supabase
           .from('analytics_posts')
-          .select('*', { count: 'exact' })
+          .select('id, title, created_at', { count: 'exact' })
           .order('created_at', { ascending: false })
-          .limit(10)
+          .limit(5)
       ]),
       
       // Grading stats from external API
@@ -113,7 +113,7 @@ export async function GET() {
             : 'http://localhost:3002';
 
           const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 5000);
+          const timeoutId = setTimeout(() => controller.abort(), 2000); // 5초 -> 2초로 단축
           
           const [gradingRes, userStatsRes] = await Promise.all([
             fetch(`${baseUrl}/api/stats`, { 
@@ -170,17 +170,14 @@ export async function GET() {
 
     // 7. User activity 처리
     const { data: users, error: usersError } = usersResult;
-    console.log('Users result:', { users, usersError, count: users?.length });
-    
     if (!usersError && users) {
       const userEmails = users.map(u => u.email);
-      console.log('User emails:', userEmails);
       
-      // User daily stats 병렬 쿼리
+      // User daily stats 병렬 쿼리 - 필요한 필드만 선택
       const [todayStatsResult, weekStatsResult, totalStatsResult] = await Promise.all([
         supabase
           .from('user_daily_stats')
-          .select('*')
+          .select('user_email, login_count, last_login_at, last_device, last_browser, grading_sonnet_count, grading_opus_count')
           .in('user_email', userEmails)
           .eq('date', today.toISOString().split('T')[0]),
         
@@ -196,11 +193,6 @@ export async function GET() {
           .in('user_email', userEmails)
       ]);
 
-      console.log('User stats results:', {
-        todayStats: todayStatsResult.data?.length,
-        weekStats: weekStatsResult.data?.length,
-        totalStats: totalStatsResult.data?.length
-      });
 
       const userStatsMap = {};
       
@@ -266,8 +258,6 @@ export async function GET() {
           browser: userStatsMap[user.email]?.lastBrowser || 'Unknown'
         }
       }));
-      
-      console.log('Final userActivity count:', response.userActivity.length);
     }
 
     // 8. Content stats 처리
