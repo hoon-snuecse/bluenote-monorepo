@@ -57,7 +57,7 @@ export async function GET(request) {
     const { data: sharedQuizzes, error: sharedError } = await sharedQuery
 
     if (sharedError) {
-      console.error('Error fetching shared quizzes:', sharedError)
+      // Error fetching shared quizzes
     }
 
     // 2. 본인 퀴즈 가져오기 (공유 여부 상관없이)
@@ -95,7 +95,7 @@ export async function GET(request) {
       const { data, error: myError } = await myQuery
 
       if (myError) {
-        console.error('Error fetching my quizzes:', myError)
+        // Error fetching my quizzes
       } else if (data) {
         // 내 퀴즈 데이터 포맷팅
         myQuizzes = data.map(quiz => {
@@ -175,7 +175,6 @@ export async function GET(request) {
     return NextResponse.json({ quizzes: allQuizzes })
 
   } catch (error) {
-    console.error('Community quizzes error:', error)
     return NextResponse.json(
       { error: '커뮤니티 퀴즈를 불러오는 중 오류가 발생했습니다.' },
       { status: 500 }

@@ -9,8 +9,6 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Sync token required' }, { status: 400 });
     }
 
-    console.log('[Quiz Sync] Attempting to sync session with token');
-
     // Web 앱의 session-sync 엔드포인트 호출
     const response = await fetch('https://www.bluenote.site/api/auth/session-sync?token=' + syncToken, {
       method: 'GET',
@@ -21,13 +19,10 @@ export async function POST(request) {
 
     if (!response.ok) {
       const error = await response.text();
-      console.log('[Quiz Sync] Failed to validate token:', error);
       return NextResponse.json({ error: 'Invalid sync token' }, { status: 401 });
     }
 
     const sessionData = await response.json();
-    
-    console.log('[Quiz Sync] Session synced successfully for:', sessionData.user.email);
 
     // Quiz 앱용 세션 쿠키 설정
     const cookieStore = cookies();
@@ -55,7 +50,6 @@ export async function POST(request) {
       user: sessionData.user
     });
   } catch (error) {
-    console.error('[Quiz Sync] Error:', error);
     return NextResponse.json({ error: 'Sync failed' }, { status: 500 });
   }
 }
@@ -68,7 +62,6 @@ export async function DELETE() {
     
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('[Quiz Sync] Error clearing session:', error);
     return NextResponse.json({ error: 'Failed to clear session' }, { status: 500 });
   }
 }

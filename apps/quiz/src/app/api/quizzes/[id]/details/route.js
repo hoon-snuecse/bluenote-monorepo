@@ -29,7 +29,6 @@ export async function GET(request, { params }) {
       .single()
 
     if (quizError || !quiz) {
-      console.error('Quiz fetch error:', quizError)
       return NextResponse.json(
         { error: '퀴즈를 찾을 수 없거나 권한이 없습니다.' },
         { status: 404 }
@@ -47,7 +46,6 @@ export async function GET(request, { params }) {
       .order('order_index', { ascending: true })
 
     if (questionsError) {
-      console.error('Questions fetch error:', questionsError)
       return NextResponse.json(
         { error: '문항을 불러오는 중 오류가 발생했습니다.' },
         { status: 500 }
@@ -66,7 +64,6 @@ export async function GET(request, { params }) {
     })
 
   } catch (error) {
-    console.error('Get quiz details error:', error)
     return NextResponse.json(
       { error: '퀴즈 정보를 불러오는 중 오류가 발생했습니다.' },
       { status: 500 }

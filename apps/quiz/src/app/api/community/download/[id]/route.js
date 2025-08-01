@@ -28,7 +28,6 @@ export async function POST(request, { params }) {
       .single()
 
     if (sharedError || !sharedQuiz) {
-      console.error('Shared quiz fetch error:', sharedError)
       return NextResponse.json(
         { error: '공유된 퀴즈를 찾을 수 없습니다.', details: sharedError?.message },
         { status: 404 }
@@ -57,7 +56,6 @@ export async function POST(request, { params }) {
       .order('order_index')
 
     if (questionsError) {
-      console.error('Questions fetch error:', questionsError)
       return NextResponse.json(
         { error: '문항을 불러올 수 없습니다.', details: questionsError.message },
         { status: 500 }
@@ -368,7 +366,6 @@ export async function POST(request, { params }) {
         { status: 400 }
       )
     } catch (formatError) {
-      console.error(`Format ${format} error:`, formatError)
       return NextResponse.json(
         { 
           error: `${format} 형식 생성 중 오류가 발생했습니다.`,
@@ -379,7 +376,6 @@ export async function POST(request, { params }) {
     }
 
   } catch (error) {
-    console.error('Download error details:', {
       error: error.message,
       stack: error.stack,
       name: error.name

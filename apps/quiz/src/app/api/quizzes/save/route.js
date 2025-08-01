@@ -47,15 +47,6 @@ export async function POST(request) {
       .single()
 
     if (quizError) {
-      console.error('Quiz creation error:', {
-        error: quizError,
-        data: {
-          user_email: session.user.email,
-          title,
-          topic,
-          total_questions: questions.length
-        }
-      })
       return NextResponse.json(
         { error: '퀴즈 저장 중 오류가 발생했습니다.', details: quizError.message },
         { status: 500 }
@@ -80,11 +71,6 @@ export async function POST(request) {
       .insert(questionsToInsert)
 
     if (questionsError) {
-      console.error('Questions insertion error:', {
-        error: questionsError,
-        questionsToInsert: questionsToInsert[0], // 첫 번째 문항 확인
-        totalQuestions: questionsToInsert.length
-      })
       // 실패 시 퀴즈도 삭제
       await supabase.from('quizzes').delete().eq('id', quiz.id)
       return NextResponse.json(
@@ -132,7 +118,7 @@ export async function POST(request) {
         .insert(finalOptions)
 
       if (optionsError) {
-        console.error('Options insertion error:', optionsError)
+        // Options insertion error
       }
     }
 
@@ -158,7 +144,7 @@ export async function POST(request) {
       })
 
     if (shareError) {
-      console.error('Share error:', shareError)
+      // Share error
     }
 
     return NextResponse.json({
@@ -168,7 +154,6 @@ export async function POST(request) {
     })
 
   } catch (error) {
-    console.error('Save quiz error:', error)
     return NextResponse.json(
       { error: '퀴즈 저장 중 오류가 발생했습니다.' },
       { status: 500 }

@@ -12,14 +12,13 @@ export async function GET(request) {
         
         // 세션 만료 확인
         if (new Date(sessionData.expires) > new Date()) {
-          console.log('[Quiz Session API] Found valid quiz session');
           return Response.json({
             user: sessionData.user,
             authenticated: true
           });
         }
       } catch (error) {
-        console.error('[Quiz Session API] Error parsing quiz session:', error);
+        // Error parsing quiz session
       }
     }
     
@@ -27,8 +26,6 @@ export async function GET(request) {
     const mainSessionToken = cookieStore.get('next-auth.session-token');
     
     if (mainSessionToken) {
-      console.log('[Quiz Session API] Found main site session, sync needed');
-      
       // 동기화가 필요함을 표시
       return Response.json({ 
         user: null, 
@@ -39,14 +36,12 @@ export async function GET(request) {
     }
     
     // 3. 세션이 없는 경우
-    console.log('[Quiz Session API] No session found');
     return Response.json({ 
       user: null, 
       authenticated: false 
     });
     
   } catch (error) {
-    console.error('[Quiz Session API] Error:', error);
     return Response.json({ 
       error: 'Internal server error',
       user: null, 

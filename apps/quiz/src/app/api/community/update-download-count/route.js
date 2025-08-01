@@ -34,7 +34,6 @@ export async function POST(request) {
         .eq('id', sharedQuizId)
 
       if (updateError) {
-        console.error('Failed to update download count:', updateError)
       }
     }
 
@@ -48,13 +47,11 @@ export async function POST(request) {
       })
 
     if (insertError) {
-      console.error('Failed to insert download record:', insertError)
     }
 
     return NextResponse.json({ success: true })
     
   } catch (error) {
-    console.error('API error:', error)
     return NextResponse.json({ error: '서버 오류가 발생했습니다.' }, { status: 500 })
   }
 }

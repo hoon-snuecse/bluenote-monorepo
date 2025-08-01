@@ -6,13 +6,11 @@ export async function GET(request) {
     const { searchParams } = new URL(request.url)
     const sharedQuizId = searchParams.get('id')
     
-    console.log('API called with params:', { sharedQuizId })
     
     if (!sharedQuizId) {
       return NextResponse.json({ error: 'Shared Quiz ID is required' }, { status: 400 })
     }
 
-    console.log('Fetching shared quiz detail for id:', sharedQuizId)
     
     // 일반 클라이언트 사용 (RLS 규칙 준수)
     const supabase = createClient()
@@ -25,14 +23,11 @@ export async function GET(request) {
       .single()
       
     if (sharedError || !sharedQuiz) {
-      console.error('Shared quiz not found:', sharedError)
       return NextResponse.json({ error: '퀴즈를 찾을 수 없습니다.' }, { status: 404 })
     }
     
-    console.log('Found shared quiz:', sharedQuiz)
     
     // quiz_id로 퀴즈 정보 가져오기
-    console.log('Fetching quiz with id:', sharedQuiz.quiz_id)
     const { data: quizData, error: quizError } = await supabase
       .from('quizzes')
       .select('*')
@@ -40,7 +35,6 @@ export async function GET(request) {
       .single()
       
     if (quizError || !quizData) {
-      console.error('Quiz not found:', {
         error: quizError,
         quiz_id: sharedQuiz.quiz_id,
         errorMessage: quizError?.message,
@@ -68,7 +62,6 @@ export async function GET(request) {
       .order('order_index', { ascending: true })
     
     if (questionsError) {
-      console.error('Questions fetch error:', questionsError)
       // 문항 조회 실패해도 퀴즈 정보는 반환
       return NextResponse.json({ 
         sharedQuiz,
@@ -76,7 +69,6 @@ export async function GET(request) {
       })
     }
     
-    console.log('Found questions:', questions?.length)
     
     return NextResponse.json({ 
       sharedQuiz,
@@ -84,7 +76,6 @@ export async function GET(request) {
     })
     
   } catch (error) {
-    console.error('API error:', error)
     return NextResponse.json({ error: '서버 오류가 발생했습니다.' }, { status: 500 })
   }
 }

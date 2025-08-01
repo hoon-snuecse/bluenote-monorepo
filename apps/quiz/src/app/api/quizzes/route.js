@@ -48,7 +48,6 @@ export async function GET(request) {
     const { data: sampleQuizzes, error: sampleError } = sampleQuizzesResult
 
     if (myError || sampleError) {
-      console.error('Error fetching quizzes:', myError || sampleError)
       return NextResponse.json({ 
         error: (myError || sampleError).message 
       }, { status: 500 })
@@ -67,7 +66,6 @@ export async function GET(request) {
       }
     })
   } catch (error) {
-    console.error('Error in GET /api/quizzes:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
@@ -112,7 +110,6 @@ export async function POST(request) {
       .single()
 
     if (quizError) {
-      console.error('Error creating quiz:', quizError)
       return NextResponse.json({ error: quizError.message }, { status: 500 })
     }
 
@@ -134,7 +131,6 @@ export async function POST(request) {
       .select()
 
     if (questionsError) {
-      console.error('Error creating questions:', questionsError)
       // 퀴즈 삭제 (롤백)
       await supabase.from('quizzes').delete().eq('id', quiz.id)
       return NextResponse.json({ error: questionsError.message }, { status: 500 })
@@ -159,7 +155,6 @@ export async function POST(request) {
       .insert(optionsToInsert)
 
     if (optionsError) {
-      console.error('Error creating options:', optionsError)
       // 문항과 퀴즈 삭제 (롤백)
       await supabase.from('questions').delete().eq('quiz_id', quiz.id)
       await supabase.from('quizzes').delete().eq('id', quiz.id)
@@ -183,7 +178,6 @@ export async function POST(request) {
       message: '퀴즈가 성공적으로 생성되었습니다.'
     })
   } catch (error) {
-    console.error('Error in POST /api/quizzes:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

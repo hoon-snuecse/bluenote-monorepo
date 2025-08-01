@@ -3,14 +3,12 @@ import { NextResponse } from 'next/server';
 
 export async function POST(request) {
   try {
-    console.log('[Quiz Server Sync] Starting server-side sync');
     
     // 서버 사이드에서 쿠키 가져오기
     const cookieStore = cookies();
     const sessionToken = cookieStore.get('next-auth.session-token');
     
     if (!sessionToken) {
-      console.log('[Quiz Server Sync] No session token found');
       return NextResponse.json({ error: 'No session token' }, { status: 401 });
     }
     
@@ -25,18 +23,15 @@ export async function POST(request) {
     });
 
     if (!response.ok) {
-      console.log('[Quiz Server Sync] Failed to get session from main site');
       return NextResponse.json({ error: 'Failed to get session' }, { status: 401 });
     }
 
     const session = await response.json();
     
     if (!session || !session.user) {
-      console.log('[Quiz Server Sync] No valid session found');
       return NextResponse.json({ error: 'No session found' }, { status: 401 });
     }
 
-    console.log('[Quiz Server Sync] Session found for user:', session.user.email);
 
     // Quiz 앱용 세션 쿠키 설정
     const isProduction = process.env.NODE_ENV === 'production';
@@ -63,7 +58,6 @@ export async function POST(request) {
       user: session.user
     });
   } catch (error) {
-    console.error('[Quiz Server Sync] Error:', error);
     return NextResponse.json({ error: 'Sync failed' }, { status: 500 });
   }
 }

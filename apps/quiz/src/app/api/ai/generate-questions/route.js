@@ -6,9 +6,7 @@ import Anthropic from '@anthropic-ai/sdk'
 // Claude API 키 확인
 const apiKey = process.env.ANTHROPIC_API_KEY || process.env.CLAUDE_API_KEY
 
-if (!apiKey) {
-  console.error('ANTHROPIC_API_KEY or CLAUDE_API_KEY is not set')
-}
+// API 키 확인은 anthropic 클라이언트 생성 시 처리
 
 // Claude API 클라이언트 초기화
 const anthropic = apiKey ? new Anthropic({ apiKey }) : null
@@ -22,7 +20,6 @@ export async function POST(request) {
 
     // API 키 확인
     if (!anthropic) {
-      console.error('Anthropic client not initialized - API key missing')
       return NextResponse.json({ 
         error: 'AI 서비스가 설정되지 않았습니다. 관리자에게 문의해주세요.',
         details: 'API key not configured'
@@ -40,15 +37,6 @@ export async function POST(request) {
       aiModel 
     } = await request.json()
     
-    console.log('Generating questions for:', { 
-      topic, 
-      grade, 
-      trueFalseCount, 
-      multipleChoiceCount,
-      difficulties: { high: difficultyHigh, medium: difficultyMedium, low: difficultyLow },
-      aiModel 
-    })
-
     // 전체 문항 수 및 난이도 합계 검증
     const totalQuestions = trueFalseCount + multipleChoiceCount
     const totalDifficulty = difficultyHigh + difficultyMedium + difficultyLow
@@ -123,8 +111,6 @@ export async function POST(request) {
 
 JSON 형식으로만 응답하고, 다른 텍스트는 포함하지 마세요.`
 
-    console.log('Calling Claude API with prompt length:', prompt.length)
-    
     const response = await anthropic.messages.create({
       model: aiModel, // 사용자가 선택한 모델 사용
       max_tokens: 4000,
@@ -136,8 +122,6 @@ JSON 형식으로만 응답하고, 다른 텍스트는 포함하지 마세요.`
         }
       ]
     })
-    
-    console.log('Claude API response received')
 
     // Claude 응답에서 JSON 추출
     const content = response.content[0].text
@@ -185,14 +169,6 @@ JSON 형식으로만 응답하고, 다른 텍스트는 포함하지 마세요.`
       message: '문항이 성공적으로 생성되었습니다.'
     })
   } catch (error) {
-    console.error('Error generating questions:', {
-      message: error.message,
-      name: error.name,
-      status: error.status,
-      type: error.type,
-      stack: error.stack
-    })
-    
     // Anthropic API 에러 처리
     if (error.status === 401) {
       return NextResponse.json({ 

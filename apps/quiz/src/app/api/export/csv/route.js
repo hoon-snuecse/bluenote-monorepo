@@ -27,11 +27,10 @@ export async function POST(request) {
           })
         }
       } catch (rlsError) {
-        console.log('RLS context setting skipped:', rlsError.message)
+        // RLS context setting skipped
       }
       
       // 퀴즈 정보 조회 - 본인 퀴즈이거나 공유된 퀴즈만 접근 가능
-      console.log('CSV Export - Looking for quiz with id:', quizId)
       
       let { data: quiz, error: quizError } = await supabase
         .from('quizzes')
@@ -40,13 +39,11 @@ export async function POST(request) {
         .single()
         
       if (quizError || !quiz) {
-        console.error('Quiz fetch error:', quizError)
         return NextResponse.json({ error: '퀴즈를 찾을 수 없습니다.' }, { status: 404 })
       }
       
-      // 본인 퀴즈가 아니고 공유되지 않은 경우 접근 제한
+      // 본인 퀴즈가 아니고 공유되지 앎은 경우 접근 제한
       if (quiz.user_email !== session.user.email && !quiz.is_shared) {
-        console.log('Access denied - not owner and not shared')
         return NextResponse.json({ error: '권한이 없습니다.' }, { status: 403 })
       }
       
@@ -63,15 +60,12 @@ export async function POST(request) {
         .order('order_index', { ascending: true })
         
       if (questionsError) {
-        console.error('Questions fetch error:', questionsError)
         return NextResponse.json({ error: '문항을 불러올 수 없습니다.' }, { status: 500 })
       }
       
       questionsData = questionsFromDb
     }
     
-    console.log('Export CSV - processing questions:', questionsData?.length)
-    console.log('First question structure:', questionsData?.[0])
     
     // 첫 번째 문항으로 데이터 구조 파악
     const sampleQuestion = questionsData?.[0]
@@ -157,7 +151,6 @@ export async function POST(request) {
       }
     })
   } catch (error) {
-    console.error('Export CSV error:', error)
     return NextResponse.json(
       { error: 'CSV 내보내기 중 오류가 발생했습니다.' },
       { status: 500 }

@@ -230,17 +230,28 @@ export default function CommunityPage() {
       <div className="flex items-center justify-between mb-4">
         {session ? (
           <div className="flex items-center gap-2">
-            {isSelectionMode ? (
+            <button
+              onClick={() => {
+                if (isSelectionMode) {
+                  // 선택 모드 해제
+                  setIsSelectionMode(false)
+                  setSelectedQuizzes([])
+                } else {
+                  // 선택 모드 활성화
+                  setIsSelectionMode(true)
+                }
+              }}
+              className={`px-3 py-1.5 text-sm rounded ${
+                isSelectionMode 
+                  ? 'bg-gray-200 text-gray-700 hover:bg-gray-300' 
+                  : 'bg-blue-600 text-white hover:bg-blue-700'
+              }`}
+            >
+              {isSelectionMode ? '취소' : '선택'}
+            </button>
+            
+            {isSelectionMode && (
               <>
-                <button
-                  onClick={() => {
-                    setIsSelectionMode(false)
-                    setSelectedQuizzes([])
-                  }}
-                  className="px-3 py-1.5 text-sm bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
-                >
-                  취소
-                </button>
                 <button
                   onClick={() => {
                     // 본인 퀴즈만 필터링하여 전체 선택
@@ -260,37 +271,38 @@ export default function CommunityPage() {
                 >
                   선택 해제
                 </button>
-                <button
-                  onClick={() => {
-                    if (selectedQuizzes.length === 1) {
-                      // 편집 페이지로 이동
-                      const quizId = selectedQuizzes[0]
-                      window.location.href = `/edit/${quizId}`
-                    }
-                  }}
-                  disabled={selectedQuizzes.length !== 1}
-                  className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
-                >
-                  <span>✏️</span>
-                  편집하기
-                </button>
-                <button
-                  onClick={handleDeleteSelected}
-                  disabled={selectedQuizzes.length === 0}
-                  className="px-3 py-1.5 text-sm bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
-                >
-                  <Trash2 className="w-3 h-3" />
-                  삭제 ({selectedQuizzes.length})
-                </button>
               </>
-            ) : (
-              <button
-                onClick={() => setIsSelectionMode(true)}
-                className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
-              >
-                선택
-              </button>
             )}
+            
+            {/* 편집하기 버튼 - 선택 모드와 관계없이 항상 표시 */}
+            <button
+              onClick={() => {
+                if (selectedQuizzes.length === 1) {
+                  // 편집 페이지로 이동
+                  const quizId = selectedQuizzes[0]
+                  window.location.href = `/edit/${quizId}`
+                } else if (selectedQuizzes.length === 0) {
+                  alert('편집할 퀴즈를 선택해주세요.')
+                } else {
+                  alert('한 번에 하나의 퀴즈만 편집할 수 있습니다.')
+                }
+              }}
+              disabled={!isSelectionMode || selectedQuizzes.length !== 1}
+              className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+            >
+              <span>✏️</span>
+              편집하기
+            </button>
+            
+            {/* 삭제 버튼 - 선택 모드와 관계없이 항상 표시 */}
+            <button
+              onClick={handleDeleteSelected}
+              disabled={!isSelectionMode || selectedQuizzes.length === 0}
+              className="px-3 py-1.5 text-sm bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+            >
+              <Trash2 className="w-3 h-3" />
+              삭제 ({selectedQuizzes.length})
+            </button>
           </div>
         ) : (
           <div />

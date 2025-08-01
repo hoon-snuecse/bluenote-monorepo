@@ -73,7 +73,6 @@ export async function DELETE(request, { params }) {
       .eq('id', id)
 
     if (deleteError) {
-      console.error('Delete quiz error:', deleteError)
       return NextResponse.json(
         { error: '퀴즈 삭제 중 오류가 발생했습니다.' },
         { status: 500 }
@@ -86,7 +85,6 @@ export async function DELETE(request, { params }) {
     })
 
   } catch (error) {
-    console.error('Delete quiz error:', error)
     return NextResponse.json(
       { error: '퀴즈 삭제 중 오류가 발생했습니다.' },
       { status: 500 }

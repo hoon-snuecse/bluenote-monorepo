@@ -10,7 +10,6 @@ export async function GET(request) {
       return NextResponse.json({ error: 'Quiz ID is required' }, { status: 400 })
     }
 
-    console.log('Fetching questions for quiz:', quizId)
     // 일반 클라이언트 사용 (RLS 규칙 준수)
     const supabase = createClient()
     
@@ -22,7 +21,6 @@ export async function GET(request) {
       .single()
       
     if (quizError || !quiz) {
-      console.error('Quiz not found:', quizError)
       return NextResponse.json({ error: '퀴즈를 찾을 수 없습니다.' }, { status: 404 })
     }
     
@@ -41,15 +39,12 @@ export async function GET(request) {
       .order('order_index', { ascending: true })
     
     if (error) {
-      console.error('Questions fetch error:', error)
       return NextResponse.json({ error: '문항을 불러올 수 없습니다.' }, { status: 500 })
     }
     
-    console.log('Found questions:', questions?.length)
     return NextResponse.json({ questions: questions || [] })
     
   } catch (error) {
-    console.error('API error:', error)
     return NextResponse.json({ error: '서버 오류가 발생했습니다.' }, { status: 500 })
   }
 }

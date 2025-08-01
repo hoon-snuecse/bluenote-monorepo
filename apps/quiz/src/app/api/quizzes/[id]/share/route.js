@@ -20,7 +20,6 @@ export async function POST(request, { params }) {
       })
     }
 
-    console.log('POST /share - Attempting to share quiz:', id, 'by user:', session.user.email)
 
     // 1. 먼저 퀴즈 소유권 확인
     const { data: checkQuiz, error: checkError } = await supabase
@@ -30,7 +29,6 @@ export async function POST(request, { params }) {
       .single()
 
     if (checkError || !checkQuiz) {
-      console.error('Quiz not found:', checkError)
       return NextResponse.json(
         { error: '퀴즈를 찾을 수 없습니다.' },
         { status: 404 }
@@ -38,7 +36,6 @@ export async function POST(request, { params }) {
     }
 
     if (checkQuiz.user_email !== session.user.email) {
-      console.error('Not owner:', checkQuiz.user_email, '!==', session.user.email)
       return NextResponse.json(
         { error: '권한이 없습니다.' },
         { status: 403 }
@@ -54,7 +51,6 @@ export async function POST(request, { params }) {
       .single()
 
     if (quizError) {
-      console.error('Quiz update error:', quizError)
       return NextResponse.json(
         { error: '퀴즈 업데이트 중 오류가 발생했습니다.' },
         { status: 500 }
@@ -79,7 +75,6 @@ export async function POST(request, { params }) {
         .eq('id', existingShare.id)
 
       if (updateError) {
-        console.error('Shared quiz update error:', updateError)
         // is_shared는 이미 true로 설정되었으므로 rollback 필요
         await supabase
           .from('quizzes')
@@ -93,7 +88,6 @@ export async function POST(request, { params }) {
       }
     } else {
       // 새로 공유하는 경우
-      // 문항 수 계산
       const { data: questions } = await supabase
         .from('questions')
         .select('question_type')
@@ -118,7 +112,6 @@ export async function POST(request, { params }) {
         })
 
       if (insertError) {
-        console.error('Shared quiz insert error:', insertError)
         // is_shared는 이미 true로 설정되었으므로 rollback 필요
         await supabase
           .from('quizzes')
@@ -142,7 +135,6 @@ export async function POST(request, { params }) {
     })
 
   } catch (error) {
-    console.error('Share quiz error:', error)
     return NextResponse.json(
       { error: '퀴즈 공유 중 오류가 발생했습니다.' },
       { status: 500 }
@@ -167,7 +159,6 @@ export async function DELETE(request, { params }) {
       })
     }
 
-    console.log('DELETE /share - Attempting to unshare quiz:', id, 'by user:', session.user.email)
 
     // 1. 먼저 퀴즈 소유권 확인
     const { data: checkQuiz, error: checkError } = await supabase
@@ -177,7 +168,6 @@ export async function DELETE(request, { params }) {
       .single()
 
     if (checkError || !checkQuiz) {
-      console.error('Quiz not found:', checkError)
       return NextResponse.json(
         { error: '퀴즈를 찾을 수 없습니다.' },
         { status: 404 }
@@ -185,7 +175,6 @@ export async function DELETE(request, { params }) {
     }
 
     if (checkQuiz.user_email !== session.user.email) {
-      console.error('Not owner:', checkQuiz.user_email, '!==', session.user.email)
       return NextResponse.json(
         { error: '권한이 없습니다.' },
         { status: 403 }
@@ -201,7 +190,6 @@ export async function DELETE(request, { params }) {
       .single()
 
     if (quizError) {
-      console.error('Quiz update error:', quizError)
       return NextResponse.json(
         { error: '퀴즈 업데이트 중 오류가 발생했습니다.' },
         { status: 500 }
@@ -218,7 +206,6 @@ export async function DELETE(request, { params }) {
       .eq('quiz_id', id)
 
     if (updateError) {
-      console.error('Shared quiz update error:', updateError)
       // is_shared는 이미 false로 설정되었으므로 rollback 필요
       await supabase
         .from('quizzes')
@@ -241,7 +228,6 @@ export async function DELETE(request, { params }) {
     })
 
   } catch (error) {
-    console.error('Unshare quiz error:', error)
     return NextResponse.json(
       { error: '퀴즈 공유 취소 중 오류가 발생했습니다.' },
       { status: 500 }

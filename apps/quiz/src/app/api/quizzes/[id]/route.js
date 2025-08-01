@@ -44,7 +44,6 @@ export async function PATCH(request, { params }) {
       .single()
 
     if (error || !data) {
-      console.error('Quiz update error:', error)
       return NextResponse.json(
         { error: '퀴즈를 업데이트할 수 없습니다.' },
         { status: 400 }
@@ -57,7 +56,6 @@ export async function PATCH(request, { params }) {
     })
 
   } catch (error) {
-    console.error('Update quiz error:', error)
     return NextResponse.json(
       { error: '퀴즈 업데이트 중 오류가 발생했습니다.' },
       { status: 500 }
@@ -89,7 +87,6 @@ export async function DELETE(request, { params }) {
       .eq('id', id)
 
     if (error) {
-      console.error('Quiz delete error:', error)
       return NextResponse.json(
         { error: '퀴즈를 삭제할 수 없습니다.' },
         { status: 400 }
@@ -101,7 +98,6 @@ export async function DELETE(request, { params }) {
     })
 
   } catch (error) {
-    console.error('Delete quiz error:', error)
     return NextResponse.json(
       { error: '퀴즈 삭제 중 오류가 발생했습니다.' },
       { status: 500 }

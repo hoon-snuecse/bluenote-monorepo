@@ -59,7 +59,6 @@ export async function PUT(request, { params }) {
     // 에러 확인
     const hasError = results.some(result => result.error)
     if (hasError) {
-      console.error('Questions order update error:', results)
       return NextResponse.json(
         { error: '문항 순서 업데이트 중 오류가 발생했습니다.' },
         { status: 500 }
@@ -71,7 +70,6 @@ export async function PUT(request, { params }) {
     })
 
   } catch (error) {
-    console.error('Update questions order error:', error)
     return NextResponse.json(
       { error: '문항 순서 업데이트 중 오류가 발생했습니다.' },
       { status: 500 }

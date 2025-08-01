@@ -63,7 +63,6 @@ export default function QuizBuilder() {
 
       if (!response.ok) {
         const errorData = await response.json()
-        console.error('API Error:', errorData)
         throw new Error(errorData.error || '문항 생성 실패')
       }
 
@@ -73,7 +72,6 @@ export default function QuizBuilder() {
         throw new Error('잘못된 응답 형식입니다')
       }
       
-      console.log('Generated questions:', data.questions.length)
       
       // sessionStorage에 저장하고 바로 미리보기 페이지로 이동
       sessionStorage.setItem('tempQuestions', JSON.stringify(data.questions))
@@ -83,7 +81,6 @@ export default function QuizBuilder() {
       // 미리보기 페이지로 이동
       window.location.href = '/my-quizzes'
     } catch (err) {
-      console.error('문항 생성 오류:', err)
       setError(err.message || '문항 생성 중 오류가 발생했습니다')
     } finally {
       setIsGenerating(false)

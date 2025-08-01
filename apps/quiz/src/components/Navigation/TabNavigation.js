@@ -50,8 +50,18 @@ function UserInfo() {
   }, [])
   
   const handleSignOut = async () => {
-    if (signOut) {
-      await signOut({ callbackUrl: '/' })
+    try {
+      // 1. Quiz 앱 세션 삭제
+      await fetch('/api/auth/sync', {
+        method: 'DELETE',
+        credentials: 'include'
+      })
+      
+      // 2. 메인 사이트로 이동하여 로그아웃
+      window.location.href = 'https://www.bluenote.site/api/auth/signout?callbackUrl=https://quiz.bluenote.site/'
+    } catch (error) {
+      // 에러 발생 시에도 메인 사이트로 이동
+      window.location.href = 'https://www.bluenote.site/api/auth/signout?callbackUrl=https://quiz.bluenote.site/'
     }
   }
   
@@ -90,7 +100,6 @@ export function TabNavigation() {
   const pathname = usePathname()
   
   useEffect(() => {
-    console.log('[TabNavigation] mounted, pathname:', pathname)
   }, [pathname])
 
   return (
