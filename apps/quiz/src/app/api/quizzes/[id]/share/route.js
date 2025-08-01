@@ -20,20 +20,44 @@ export async function POST(request, { params }) {
       })
     }
 
-    // 1. 퀴즈 소유권 확인 및 is_shared 업데이트
+    console.log('POST /share - Attempting to share quiz:', id, 'by user:', session.user.email)
+
+    // 1. 먼저 퀴즈 소유권 확인
+    const { data: checkQuiz, error: checkError } = await supabase
+      .from('quizzes')
+      .select('id, user_email, is_shared')
+      .eq('id', id)
+      .single()
+
+    if (checkError || !checkQuiz) {
+      console.error('Quiz not found:', checkError)
+      return NextResponse.json(
+        { error: '퀴즈를 찾을 수 없습니다.' },
+        { status: 404 }
+      )
+    }
+
+    if (checkQuiz.user_email !== session.user.email) {
+      console.error('Not owner:', checkQuiz.user_email, '!==', session.user.email)
+      return NextResponse.json(
+        { error: '권한이 없습니다.' },
+        { status: 403 }
+      )
+    }
+
+    // 2. is_shared 업데이트
     const { data: quiz, error: quizError } = await supabase
       .from('quizzes')
       .update({ is_shared: true })
       .eq('id', id)
-      .eq('user_email', session.user.email) // RLS로도 체크되지만 명시적으로도 체크
       .select()
       .single()
 
-    if (quizError || !quiz) {
+    if (quizError) {
       console.error('Quiz update error:', quizError)
       return NextResponse.json(
-        { error: '퀴즈를 찾을 수 없거나 권한이 없습니다.' },
-        { status: 404 }
+        { error: '퀴즈 업데이트 중 오류가 발생했습니다.' },
+        { status: 500 }
       )
     }
 
@@ -143,20 +167,44 @@ export async function DELETE(request, { params }) {
       })
     }
 
-    // 1. 퀴즈 소유권 확인 및 is_shared 업데이트
+    console.log('DELETE /share - Attempting to unshare quiz:', id, 'by user:', session.user.email)
+
+    // 1. 먼저 퀴즈 소유권 확인
+    const { data: checkQuiz, error: checkError } = await supabase
+      .from('quizzes')
+      .select('id, user_email, is_shared')
+      .eq('id', id)
+      .single()
+
+    if (checkError || !checkQuiz) {
+      console.error('Quiz not found:', checkError)
+      return NextResponse.json(
+        { error: '퀴즈를 찾을 수 없습니다.' },
+        { status: 404 }
+      )
+    }
+
+    if (checkQuiz.user_email !== session.user.email) {
+      console.error('Not owner:', checkQuiz.user_email, '!==', session.user.email)
+      return NextResponse.json(
+        { error: '권한이 없습니다.' },
+        { status: 403 }
+      )
+    }
+
+    // 2. is_shared 업데이트
     const { data: quiz, error: quizError } = await supabase
       .from('quizzes')
       .update({ is_shared: false })
       .eq('id', id)
-      .eq('user_email', session.user.email)
       .select()
       .single()
 
-    if (quizError || !quiz) {
+    if (quizError) {
       console.error('Quiz update error:', quizError)
       return NextResponse.json(
-        { error: '퀴즈를 찾을 수 없거나 권한이 없습니다.' },
-        { status: 404 }
+        { error: '퀴즈 업데이트 중 오류가 발생했습니다.' },
+        { status: 500 }
       )
     }
 

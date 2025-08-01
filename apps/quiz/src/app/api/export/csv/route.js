@@ -30,34 +30,24 @@ export async function POST(request) {
         console.log('RLS context setting skipped:', rlsError.message)
       }
       
-      // 퀴즈 정보 조회 (직접 quizzes 테이블에서 조회)
+      // 퀴즈 정보 조회 - 본인 퀴즈이거나 공유된 퀴즈만 접근 가능
       console.log('CSV Export - Looking for quiz with id:', quizId)
-      const { data: quiz, error: quizError } = await supabase
+      
+      let { data: quiz, error: quizError } = await supabase
         .from('quizzes')
         .select('title, is_shared, user_email')
         .eq('id', quizId)
         .single()
         
-      if (quizError) {
+      if (quizError || !quiz) {
         console.error('Quiz fetch error:', quizError)
-        console.error('Quiz ID was:', quizId)
-        console.error('Error details:', quizError.message, quizError.code)
         return NextResponse.json({ error: '퀴즈를 찾을 수 없습니다.' }, { status: 404 })
       }
       
-      // 공유되지 않은 퀴즈이고 본인 퀴즈가 아닌 경우 접근 제한
-      if (!quiz.is_shared) {
-        // 본인 퀴즈인지 확인
-        const { data: ownQuiz } = await supabase
-          .from('quizzes')
-          .select('id')
-          .eq('id', quizId)
-          .eq('user_email', session.user.email)
-          .single()
-          
-        if (!ownQuiz) {
-          return NextResponse.json({ error: '권한이 없습니다.' }, { status: 403 })
-        }
+      // 본인 퀴즈가 아니고 공유되지 않은 경우 접근 제한
+      if (quiz.user_email !== session.user.email && !quiz.is_shared) {
+        console.log('Access denied - not owner and not shared')
+        return NextResponse.json({ error: '권한이 없습니다.' }, { status: 403 })
       }
       
       quizTitle = quiz.title
