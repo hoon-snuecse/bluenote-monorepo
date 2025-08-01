@@ -167,8 +167,9 @@ export function ShareAssignmentDialog({
 
     try {
       const response = await fetch(`/api/assignments/${assignmentId}/share`, {
-        method: isPublicShared ? 'DELETE' : 'POST',
+        method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isShared: !isPublicShared })
       });
 
       const data = await response.json();

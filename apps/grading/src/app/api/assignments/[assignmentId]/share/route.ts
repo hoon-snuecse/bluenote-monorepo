@@ -210,6 +210,7 @@ export async function POST(
   }
 }
 
+
 // 공유 취소
 export async function DELETE(
   request: NextRequest,
