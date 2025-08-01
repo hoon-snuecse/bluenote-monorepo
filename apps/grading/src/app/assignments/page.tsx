@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { AuthLayout } from '@/components/AuthLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@bluenote/ui';
-import { Plus, Edit, Trash2, Users, Calendar, FileText, BookOpen, School, Link, ChartBar, FileSearch, Upload, Sparkles, Share2, UserPlus } from 'lucide-react';
+import { Plus, Edit, Trash2, Users, Calendar, FileText, BookOpen, School, Link, ChartBar, FileSearch, Upload, Sparkles, Share2, UserPlus, Globe } from 'lucide-react';
 import { ShareAssignmentDialog } from '@/components/ShareAssignmentDialog';
 
 interface AssignmentData {
@@ -170,6 +170,12 @@ function AssignmentsContent() {
                       <BookOpen className="w-4 h-4" />
                       <span>{assignment.writingType}</span>
                     </div>
+                    {assignment.isShared && (
+                      <div className="flex items-center gap-1 text-xs text-blue-600 mt-1">
+                        <Globe className="w-3 h-3" />
+                        <span>전체 공유중</span>
+                      </div>
+                    )}
                   </div>
                   <div className="flex gap-1 ml-2">
                     <button
@@ -178,6 +184,13 @@ function AssignmentsContent() {
                       title="제출 링크 복사"
                     >
                       <Link className="w-4 h-4 text-blue-600" />
+                    </button>
+                    <button
+                      onClick={() => handleShareAssignment(assignment)}
+                      className="p-2 hover:bg-green-50/50 rounded-lg transition-colors"
+                      title="과제 공유"
+                    >
+                      <Share2 className="w-4 h-4 text-green-600" />
                     </button>
                     <button
                       onClick={() => handleEditAssignment(assignment.id)}
@@ -328,10 +341,10 @@ function AssignmentsContent() {
                           <span className="text-green-600">({assignment.sharedPermission === 'write' ? '편집 가능' : assignment.sharedPermission === 'evaluate' ? '평가만' : '읽기만'})</span>
                         </div>
                       )}
-                      {assignment.isShared && assignment.isOwner && (
+                      {assignment.isShared && (
                         <div className="mt-2 px-2 py-1 bg-blue-50 text-blue-700 text-xs rounded-md inline-flex items-center gap-1">
-                          <Share2 className="w-3 h-3" />
-                          <span>공유된 과제</span>
+                          <Globe className="w-3 h-3" />
+                          <span>전체 공유중</span>
                         </div>
                       )}
                     </div>
