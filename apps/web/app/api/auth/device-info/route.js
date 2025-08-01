@@ -73,6 +73,22 @@ export async function POST(request) {
       rawUserAgent: rawUserAgent.substring(0, 100) + '...'
     });
     
+    // 먼저 오늘 레코드가 있는지 확인
+    const { data: existingData, error: checkError } = await supabase
+      .from('user_daily_stats')
+      .select('*')
+      .eq('user_email', session.user.email)
+      .eq('date', today);
+    
+    console.log('[Device Info API] Existing records check:', {
+      email: session.user.email,
+      date: today,
+      recordCount: existingData?.length || 0,
+      existingDevice: existingData?.[0]?.last_device,
+      existingBrowser: existingData?.[0]?.last_browser,
+      error: checkError?.message
+    });
+    
     const { data: updateData, error } = await supabase
       .from('user_daily_stats')
       .update({
