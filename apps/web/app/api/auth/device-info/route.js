@@ -67,7 +67,7 @@ export async function POST(request) {
       date: today 
     });
     
-    const { error } = await supabase
+    const { data: updateData, error } = await supabase
       .from('user_daily_stats')
       .update({
         last_device: deviceInfo,
@@ -76,11 +76,23 @@ export async function POST(request) {
         updated_at: new Date().toISOString()
       })
       .eq('user_email', session.user.email)
-      .eq('date', today);
+      .eq('date', today)
+      .select();
+    
+    console.log('[Device Info API] Update result:', { 
+      email: session.user.email,
+      updateData,
+      error 
+    });
     
     if (error) {
       console.error('Error updating device info:', error);
       return NextResponse.json({ error: 'Failed to update device info' }, { status: 500 });
+    }
+    
+    // 업데이트된 데이터가 없으면 레코드가 없는 것일 수 있음
+    if (!updateData || updateData.length === 0) {
+      console.log('[Device Info API] No records updated - might need to create new record');
     }
     
     return NextResponse.json({ 
