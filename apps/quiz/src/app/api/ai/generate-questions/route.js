@@ -13,46 +13,30 @@ const anthropic = apiKey ? new Anthropic({ apiKey }) : null
 
 export async function POST(request) {
   try {
-    // 쿠키에서 세션 토큰 직접 확인
-    const cookieStore = await cookies();
-    const isProd = process.env.NODE_ENV === 'production';
+    // JWT 토큰으로 인증 확인
+    console.log('[generate-questions] Starting authentication check');
     
-    // 가능한 쿠키 이름들
-    const tokenCookieNames = isProd 
-      ? ['__Secure-next-auth.session-token', '__Host-next-auth.session-token', 'next-auth.session-token']
-      : ['next-auth.session-token'];
-    
-    let sessionToken = null;
-    for (const cookieName of tokenCookieNames) {
-      const cookie = cookieStore.get(cookieName);
-      if (cookie) {
-        sessionToken = cookie.value;
-        console.log('[generate-questions] Found session token with cookie:', cookieName);
-        break;
-      }
-    }
-    
-    if (!sessionToken) {
-      console.log('[generate-questions] No session token found in cookies');
-      console.log('[generate-questions] Available cookies:', Array.from(cookieStore.getAll()).map(c => c.name));
-      return NextResponse.json({ error: 'Unauthorized - No session' }, { status: 401 })
-    }
-    
-    // JWT 토큰 검증
     const token = await getToken({ 
       req: request,
       secret: process.env.NEXTAUTH_SECRET,
-      secureCookie: isProd
+      secureCookie: process.env.NODE_ENV === 'production',
+      cookieName: process.env.NODE_ENV === 'production' 
+        ? '__Secure-next-auth.session-token' 
+        : 'next-auth.session-token'
     })
     
-    if (!token) {
-      console.log('[generate-questions] Token validation failed');
-      console.log('[generate-questions] Environment:', process.env.NODE_ENV);
-      console.log('[generate-questions] Secret exists:', !!process.env.NEXTAUTH_SECRET);
-      return NextResponse.json({ error: 'Unauthorized - Invalid token' }, { status: 401 })
+    console.log('[generate-questions] Token result:', token ? 'Token found' : 'No token');
+    
+    if (!token || !token.email) {
+      // 쿠키 디버깅 정보
+      const cookieStore = await cookies();
+      const allCookies = Array.from(cookieStore.getAll());
+      console.log('[generate-questions] All cookies:', allCookies.map(c => c.name));
+      console.log('[generate-questions] Authentication failed - no valid token');
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
     
-    console.log('[generate-questions] Token found for:', token.email)
+    console.log('[generate-questions] Authenticated user:', token.email)
 
     // API 키 확인
     if (!anthropic) {

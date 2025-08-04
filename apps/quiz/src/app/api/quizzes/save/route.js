@@ -165,7 +165,7 @@ export async function POST(request) {
       .from('shared_quizzes')
       .insert({
         quiz_id: quiz.id,
-        user_email: session.user.email,
+        user_email: userEmail,
         title: quiz.title,
         description: quiz.description,
         subject_category: topic || '일반',

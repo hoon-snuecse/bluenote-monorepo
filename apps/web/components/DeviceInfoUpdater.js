@@ -4,13 +4,10 @@ import { useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 
 export function DeviceInfoUpdater() {
-  const sessionData = useSession();
+  const { data: session, status } = useSession();
   
   useEffect(() => {
     // SessionProvider 내부에서만 작동
-    if (!sessionData) return;
-    
-    const { data: session, status } = sessionData;
     
     console.log('DeviceInfoUpdater - status:', status, 'email:', session?.user?.email);
     
