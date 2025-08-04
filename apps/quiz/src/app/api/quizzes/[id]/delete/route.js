@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
 import { createServiceClient } from '@/lib/supabase'
 
 export async function DELETE(request, { params }) {

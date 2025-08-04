@@ -1,34 +1,22 @@
 import { NextResponse } from 'next/server'
-import { cookies } from 'next/headers'
-import { getToken } from 'next-auth/jwt'
+import { getServerSession } from '@/lib/auth'
 import { createClient } from '@/lib/supabase'
 
 export async function POST(request) {
   try {
     // 세션 확인
-    console.log('[save quiz] Checking session');
+    const session = await getServerSession()
     
-    // JWT 토큰 검증
-    const token = await getToken({ 
-      req: request,
-      secret: process.env.NEXTAUTH_SECRET,
-      secureCookie: process.env.NODE_ENV === 'production'
-    })
-    
-    if (!token?.email) {
-      // 쿠키 디버깅
-      const cookieStore = await cookies();
-      const allCookies = Array.from(cookieStore.getAll());
-      console.log('[save quiz] No valid token. All cookies:', allCookies.map(c => c.name));
-      
+    if (!session?.user?.email) {
+      console.log('[save quiz] No session found')
       return NextResponse.json(
         { error: '로그인이 필요합니다.' },
         { status: 401 }
       )
     }
     
-    console.log('[save quiz] Authenticated user:', token.email);
-    const userEmail = token.email
+    console.log('[save quiz] Authenticated user:', session.user.email)
+    const userEmail = session.user.email
 
     const { questions, title, topic, grade } = await request.json()
 

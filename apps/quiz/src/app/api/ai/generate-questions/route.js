@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server'
-import { cookies } from 'next/headers'
-import { getToken } from 'next-auth/jwt'
+import { getServerSession } from '@/lib/auth'
 import Anthropic from '@anthropic-ai/sdk'
 
 // Claude API 키 확인
@@ -13,58 +12,15 @@ const anthropic = apiKey ? new Anthropic({ apiKey }) : null
 
 export async function POST(request) {
   try {
-    // 세션 확인 - 메인 웹 앱의 세션 토큰 확인
-    console.log('[generate-questions] Checking session');
+    // 세션 확인
+    const session = await getServerSession()
     
-    // 쿠키 직접 확인
-    const cookieStore = await cookies();
-    const isProd = process.env.NODE_ENV === 'production';
-    
-    // 가능한 모든 쿠키 이름 확인
-    const possibleCookieNames = [
-      '__Secure-next-auth.session-token',
-      '__Host-next-auth.session-token', 
-      'next-auth.session-token',
-      '__Secure-authjs.session-token',
-      'authjs.session-token'
-    ];
-    
-    let sessionToken = null;
-    for (const name of possibleCookieNames) {
-      const cookie = cookieStore.get(name);
-      if (cookie) {
-        sessionToken = cookie.value;
-        console.log('[generate-questions] Found session cookie:', name);
-        break;
-      }
+    if (!session?.user?.email) {
+      console.log('[generate-questions] No session found')
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
     
-    if (!sessionToken) {
-      const allCookies = Array.from(cookieStore.getAll());
-      console.log('[generate-questions] No session found. All cookies:', allCookies.map(c => c.name));
-      return NextResponse.json({ error: 'Unauthorized - No session' }, { status: 401 })
-    }
-    
-    // JWT 토큰 검증 시도
-    let token = null;
-    try {
-      token = await getToken({ 
-        req: request,
-        secret: process.env.NEXTAUTH_SECRET,
-        secureCookie: isProd,
-        salt: isProd ? '__Secure-next-auth.session-token' : 'next-auth.session-token'
-      });
-    } catch (error) {
-      console.log('[generate-questions] Token verification error:', error.message);
-    }
-    
-    // 토큰이 없어도 세션 쿠키가 있으면 허용 (임시)
-    if (!token) {
-      console.log('[generate-questions] No valid token but session cookie exists, proceeding');
-      // 세션 쿠키가 있으므로 진행
-    } else {
-      console.log('[generate-questions] Authenticated user:', token.email);
-    }
+    console.log('[generate-questions] Authenticated user:', session.user.email)
 
     // API 키 확인
     if (!anthropic) {
