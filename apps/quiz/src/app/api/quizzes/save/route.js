@@ -5,13 +5,18 @@ import { createClient } from '@/lib/supabase'
 export async function POST(request) {
   try {
     // JWT 토큰으로 세션 확인
+    const isProd = process.env.NODE_ENV === 'production';
     const token = await getToken({ 
       req: request,
-      secret: process.env.NEXTAUTH_SECRET
+      secret: process.env.NEXTAUTH_SECRET,
+      secureCookie: isProd,
+      cookieName: isProd 
+        ? '__Secure-next-auth.session-token' 
+        : 'next-auth.session-token'
     })
     
     if (!token?.email) {
-      console.log('[save quiz] No token found')
+      console.log('[save quiz] No token found, environment:', process.env.NODE_ENV)
       return NextResponse.json(
         { error: '로그인이 필요합니다.' },
         { status: 401 }

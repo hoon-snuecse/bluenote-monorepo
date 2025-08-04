@@ -13,13 +13,19 @@ const anthropic = apiKey ? new Anthropic({ apiKey }) : null
 export async function POST(request) {
   try {
     // JWT 토큰으로 세션 확인
+    const isProd = process.env.NODE_ENV === 'production';
     const token = await getToken({ 
       req: request,
-      secret: process.env.NEXTAUTH_SECRET
+      secret: process.env.NEXTAUTH_SECRET,
+      secureCookie: isProd,
+      cookieName: isProd 
+        ? '__Secure-next-auth.session-token' 
+        : 'next-auth.session-token'
     })
     
     if (!token) {
-      console.log('[generate-questions] No token found')
+      console.log('[generate-questions] No token found, environment:', process.env.NODE_ENV)
+      console.log('[generate-questions] Secret exists:', !!process.env.NEXTAUTH_SECRET)
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
     
