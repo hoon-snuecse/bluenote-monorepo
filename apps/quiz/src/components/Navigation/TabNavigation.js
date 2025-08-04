@@ -29,24 +29,24 @@ const tabs = [
 function UserInfo() {
   const [userEmail, setUserEmail] = useState(null)
   const [loading, setLoading] = useState(true)
-  const [signOut, setSignOut] = useState(null)
   
   useEffect(() => {
-    // 클라이언트 사이드에서만 실행
-    if (typeof window !== 'undefined') {
-      // 동적 import로 next-auth/react 가져오기
-      import('next-auth/react').then(({ getSession, signOut: nextAuthSignOut }) => {
-        setSignOut(() => nextAuthSignOut)
-        getSession().then(session => {
-          if (session?.user?.email) {
-            setUserEmail(session.user.email)
-          }
-          setLoading(false)
-        }).catch(() => {
-          setLoading(false)
-        })
-      })
+    // 세션 정보 가져오기
+    const fetchSession = async () => {
+      try {
+        const response = await fetch('/api/auth/session')
+        const data = await response.json()
+        if (data.user?.email) {
+          setUserEmail(data.user.email)
+        }
+      } catch (error) {
+        console.error('Failed to fetch session:', error)
+      } finally {
+        setLoading(false)
+      }
     }
+    
+    fetchSession()
   }, [])
   
   const handleSignOut = async () => {
@@ -103,7 +103,7 @@ export function TabNavigation() {
   }, [pathname])
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 border-b-2 border-gray-300 bg-white shadow-md">
+    <nav className="fixed top-16 left-0 right-0 z-40 border-b-2 border-gray-300 bg-white shadow-md">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 justify-between items-center">
           <div className="flex items-center">
