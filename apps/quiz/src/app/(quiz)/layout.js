@@ -1,11 +1,12 @@
 'use client'
 
-import { useAuth } from '@bluenote/auth'
+import { useSession } from 'next-auth/react'
 import { useEffect, useState } from 'react'
 import { usePathname } from 'next/navigation'
 
 export default function QuizLayout({ children }) {
-  const { user, status } = useAuth()
+  const { data: session, status } = useSession()
+  const user = session?.user
   const [hasRedirected, setHasRedirected] = useState(false)
   const pathname = usePathname()
   

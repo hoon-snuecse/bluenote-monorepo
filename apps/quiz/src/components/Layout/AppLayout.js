@@ -1,8 +1,17 @@
 'use client'
 
-import MainNavigation from '@/components/Navigation/MainNavigation'
+import dynamic from 'next/dynamic'
 import { TabNavigation } from '@/components/Navigation/TabNavigation'
 import { usePathname } from 'next/navigation'
+
+// MainNavigation을 dynamic import로 변경하여 빌드 시 에러 방지
+const MainNavigation = dynamic(
+  () => import('@/components/Navigation/MainNavigation'),
+  { 
+    ssr: false,
+    loading: () => <div className="h-16 bg-white border-b border-gray-200" />
+  }
+)
 
 export function AppLayout({ children }) {
   const pathname = usePathname()

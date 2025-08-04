@@ -1,12 +1,13 @@
 'use client'
 
 import Link from 'next/link'
-import { useAuth } from '@bluenote/auth'
+import { useSession } from 'next-auth/react'
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 
 export default function HomePage() {
-  const { user, status } = useAuth()
+  const { data: session, status } = useSession()
+  const user = session?.user
   const router = useRouter()
 
   // 로그인된 사용자는 community로 자동 리다이렉트
