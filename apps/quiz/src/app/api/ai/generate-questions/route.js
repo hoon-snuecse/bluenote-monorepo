@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { getToken } from 'next-auth/jwt'
 import Anthropic from '@anthropic-ai/sdk'
 
 // Claude API 키 확인
@@ -13,10 +12,18 @@ const anthropic = apiKey ? new Anthropic({ apiKey }) : null
 
 export async function POST(request) {
   try {
-    const session = await getServerSession(authOptions)
-    if (!session) {
+    // JWT 토큰으로 세션 확인
+    const token = await getToken({ 
+      req: request,
+      secret: process.env.NEXTAUTH_SECRET
+    })
+    
+    if (!token) {
+      console.log('[generate-questions] No token found')
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
+    
+    console.log('[generate-questions] Token found for:', token.email)
 
     // API 키 확인
     if (!anthropic) {

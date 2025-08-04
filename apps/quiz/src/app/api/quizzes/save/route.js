@@ -1,18 +1,24 @@
 import { NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { getToken } from 'next-auth/jwt'
 import { createClient } from '@/lib/supabase'
 
 export async function POST(request) {
   try {
-    // 세션 확인
-    const session = await getServerSession(authOptions)
-    if (!session?.user?.email) {
+    // JWT 토큰으로 세션 확인
+    const token = await getToken({ 
+      req: request,
+      secret: process.env.NEXTAUTH_SECRET
+    })
+    
+    if (!token?.email) {
+      console.log('[save quiz] No token found')
       return NextResponse.json(
         { error: '로그인이 필요합니다.' },
         { status: 401 }
       )
     }
+    
+    const userEmail = token.email
 
     const { questions, title, topic, grade } = await request.json()
 
@@ -30,7 +36,7 @@ export async function POST(request) {
     const { data: quiz, error: quizError } = await supabase
       .from('quizzes')
       .insert({
-        user_email: session.user.email,
+        user_email: userEmail,
         title,
         topic: topic || '일반',
         description: `AI로 생성된 ${questions.length}개 문항`,
