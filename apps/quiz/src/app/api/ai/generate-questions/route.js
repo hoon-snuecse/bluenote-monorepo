@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { cookies } from 'next/headers'
 import { getToken } from 'next-auth/jwt'
 import Anthropic from '@anthropic-ai/sdk'
 
@@ -12,21 +13,43 @@ const anthropic = apiKey ? new Anthropic({ apiKey }) : null
 
 export async function POST(request) {
   try {
-    // JWT 토큰으로 세션 확인
+    // 쿠키에서 세션 토큰 직접 확인
+    const cookieStore = await cookies();
     const isProd = process.env.NODE_ENV === 'production';
+    
+    // 가능한 쿠키 이름들
+    const tokenCookieNames = isProd 
+      ? ['__Secure-next-auth.session-token', '__Host-next-auth.session-token', 'next-auth.session-token']
+      : ['next-auth.session-token'];
+    
+    let sessionToken = null;
+    for (const cookieName of tokenCookieNames) {
+      const cookie = cookieStore.get(cookieName);
+      if (cookie) {
+        sessionToken = cookie.value;
+        console.log('[generate-questions] Found session token with cookie:', cookieName);
+        break;
+      }
+    }
+    
+    if (!sessionToken) {
+      console.log('[generate-questions] No session token found in cookies');
+      console.log('[generate-questions] Available cookies:', Array.from(cookieStore.getAll()).map(c => c.name));
+      return NextResponse.json({ error: 'Unauthorized - No session' }, { status: 401 })
+    }
+    
+    // JWT 토큰 검증
     const token = await getToken({ 
       req: request,
       secret: process.env.NEXTAUTH_SECRET,
-      secureCookie: isProd,
-      cookieName: isProd 
-        ? '__Secure-next-auth.session-token' 
-        : 'next-auth.session-token'
+      secureCookie: isProd
     })
     
     if (!token) {
-      console.log('[generate-questions] No token found, environment:', process.env.NODE_ENV)
-      console.log('[generate-questions] Secret exists:', !!process.env.NEXTAUTH_SECRET)
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      console.log('[generate-questions] Token validation failed');
+      console.log('[generate-questions] Environment:', process.env.NODE_ENV);
+      console.log('[generate-questions] Secret exists:', !!process.env.NEXTAUTH_SECRET);
+      return NextResponse.json({ error: 'Unauthorized - Invalid token' }, { status: 401 })
     }
     
     console.log('[generate-questions] Token found for:', token.email)

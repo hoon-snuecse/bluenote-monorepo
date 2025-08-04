@@ -1,22 +1,46 @@
 import { NextResponse } from 'next/server'
+import { cookies } from 'next/headers'
 import { getToken } from 'next-auth/jwt'
 import { createClient } from '@/lib/supabase'
 
 export async function POST(request) {
   try {
-    // JWT 토큰으로 세션 확인
+    // 쿠키에서 세션 토큰 직접 확인
+    const cookieStore = await cookies();
     const isProd = process.env.NODE_ENV === 'production';
+    
+    // 가능한 쿠키 이름들
+    const tokenCookieNames = isProd 
+      ? ['__Secure-next-auth.session-token', '__Host-next-auth.session-token', 'next-auth.session-token']
+      : ['next-auth.session-token'];
+    
+    let sessionToken = null;
+    for (const cookieName of tokenCookieNames) {
+      const cookie = cookieStore.get(cookieName);
+      if (cookie) {
+        sessionToken = cookie.value;
+        console.log('[save quiz] Found session token with cookie:', cookieName);
+        break;
+      }
+    }
+    
+    if (!sessionToken) {
+      console.log('[save quiz] No session token found in cookies');
+      return NextResponse.json(
+        { error: '로그인이 필요합니다.' },
+        { status: 401 }
+      )
+    }
+    
+    // JWT 토큰 검증
     const token = await getToken({ 
       req: request,
       secret: process.env.NEXTAUTH_SECRET,
-      secureCookie: isProd,
-      cookieName: isProd 
-        ? '__Secure-next-auth.session-token' 
-        : 'next-auth.session-token'
+      secureCookie: isProd
     })
     
     if (!token?.email) {
-      console.log('[save quiz] No token found, environment:', process.env.NODE_ENV)
+      console.log('[save quiz] Token validation failed');
       return NextResponse.json(
         { error: '로그인이 필요합니다.' },
         { status: 401 }
