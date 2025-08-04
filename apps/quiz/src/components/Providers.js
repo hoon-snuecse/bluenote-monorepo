@@ -1,13 +1,13 @@
 'use client'
 
-import { AuthProvider } from '@bluenote/auth'
+import { SessionProvider } from 'next-auth/react'
 
 export function Providers({ children }) {
-  // Fetch API 어댑터를 사용하는 AuthProvider
-  // Quiz 앱은 React 버전 충돌로 인해 FetchAdapter를 기본으로 사용
+  // NextAuth SessionProvider를 직접 사용
+  // refetchInterval을 짧게 설정하여 세션 동기화 개선
   return (
-    <AuthProvider options={{ apiEndpoint: '/api/auth' }}>
+    <SessionProvider refetchInterval={60} refetchOnWindowFocus={true}>
       {children}
-    </AuthProvider>
+    </SessionProvider>
   )
 }

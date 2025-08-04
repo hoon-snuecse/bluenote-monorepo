@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
-import { useAuth } from '@bluenote/auth';
+import { useSession } from 'next-auth/react';
 import { 
   Home, 
   FlaskConical,
@@ -26,17 +26,9 @@ export default function MainNavigation() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   
-  // useAuth 훅 사용 시도
-  let user = null;
-  let status = 'loading';
-  
-  try {
-    const authData = useAuth();
-    user = authData.user;
-    status = authData.status;
-  } catch (error) {
-    console.error('[MainNavigation] useAuth error:', error);
-  }
+  // useSession 훅 사용
+  const { data: session, status } = useSession();
+  const user = session?.user || null;
   
   const pathname = usePathname();
   
