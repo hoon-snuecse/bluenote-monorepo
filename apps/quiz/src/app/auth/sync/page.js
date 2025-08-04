@@ -14,6 +14,18 @@ function SyncContent() {
       try {
         console.log('[Sync Page] Starting server-side sync');
         
+        // 이미 퀴즈 세션이 있는지 먼저 확인
+        const sessionCheck = await fetch('/api/auth/session')
+        const sessionData = await sessionCheck.json()
+        
+        if (sessionData.authenticated && sessionData.user) {
+          // 이미 세션이 있으면 바로 리다이렉트
+          console.log('[Sync Page] Session already exists, redirecting')
+          const callbackUrl = searchParams.get('callbackUrl') || '/create'
+          router.push(callbackUrl)
+          return
+        }
+        
         // 서버 사이드 동기화 요청 (쿠키는 자동으로 전송됨)
         const syncResponse = await fetch('/api/auth/server-sync', {
           method: 'POST',
@@ -25,6 +37,16 @@ function SyncContent() {
         
         if (!syncResponse.ok) {
           throw new Error('Failed to sync session')
+        }
+        
+        const syncData = await syncResponse.json()
+        
+        // 동기화 성공 시 sessionStorage에도 저장
+        if (syncData.user) {
+          sessionStorage.setItem('userSession', JSON.stringify({
+            user: syncData.user,
+            authenticated: true
+          }))
         }
         
         console.log('[Sync Page] Session synced successfully')

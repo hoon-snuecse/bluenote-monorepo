@@ -1,11 +1,13 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Loader2, Sparkles } from 'lucide-react'
 import { useAuth } from '@bluenote/auth'
 
 export default function QuizBuilder() {
   const { user, status } = useAuth()
+  const [sessionUser, setSessionUser] = useState(null)
+  const [isCheckingSession, setIsCheckingSession] = useState(true)
   const [topic, setTopic] = useState('')
   const [grade, setGrade] = useState('middle1')
   
@@ -23,6 +25,50 @@ export default function QuizBuilder() {
   
   const [isGenerating, setIsGenerating] = useState(false)
   const [error, setError] = useState(null)
+  
+  // 세션 체크 - useAuth의 user를 직접 사용
+  useEffect(() => {
+    console.log('[QuizBuilder] Auth status:', status, 'User:', user)
+    
+    if (status === 'loading') {
+      // 아직 로딩 중
+      return
+    }
+    
+    if (status === 'authenticated' && user) {
+      // useAuth에서 인증된 사용자 정보를 받음
+      setSessionUser(user)
+      setIsCheckingSession(false)
+      return
+    }
+    
+    // 세션이 없는 경우 API로 다시 확인
+    const checkSession = async () => {
+      try {
+        const response = await fetch('/api/auth/session')
+        const data = await response.json()
+        console.log('[QuizBuilder] Session API response:', data)
+        
+        if (data.authenticated && data.user) {
+          setSessionUser(data.user)
+          sessionStorage.setItem('userSession', JSON.stringify(data))
+          setIsCheckingSession(false)
+        } else {
+          // 세션이 없으면 로그인 페이지로
+          console.log('[QuizBuilder] No session found, redirecting to signin')
+          window.location.href = '/auth/signin?callbackUrl=/create'
+        }
+      } catch (err) {
+        console.error('Session check error:', err)
+      } finally {
+        setIsCheckingSession(false)
+      }
+    }
+    
+    if (status === 'unauthenticated') {
+      checkSession()
+    }
+  }, [status, user])
   
   // 전체 문항 수 계산
   const totalQuestions = trueFalseCount + multipleChoiceCount
@@ -88,7 +134,7 @@ export default function QuizBuilder() {
   }
 
   // 로딩 중일 때 표시
-  if (status === 'loading') {
+  if (status === 'loading' || isCheckingSession) {
     return (
       <div className="flex items-center justify-center p-8">
         <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
@@ -97,13 +143,15 @@ export default function QuizBuilder() {
     )
   }
 
-  // 미인증 상태일 때 표시
-  if (!user) {
+  // 미인증 상태일 때 표시 - useAuth와 sessionUser 둘 다 확인
+  const isAuthenticated = user || sessionUser
+  
+  if (!isAuthenticated) {
     return (
       <div className="text-center p-8">
         <p className="text-gray-600 mb-4">퀴즈를 생성하려면 로그인이 필요합니다.</p>
         <a 
-          href="/auth/sync" 
+          href="/auth/sync?callbackUrl=/create" 
           className="inline-block px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
         >
           로그인하기
