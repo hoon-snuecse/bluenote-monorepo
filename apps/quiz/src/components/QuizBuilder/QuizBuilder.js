@@ -7,7 +7,6 @@ import { useSession } from 'next-auth/react'
 export default function QuizBuilder() {
   const { data: session, status } = useSession()
   const user = session?.user || null
-  const [isCheckingSession, setIsCheckingSession] = useState(true)
   const [topic, setTopic] = useState('')
   const [grade, setGrade] = useState('middle1')
   
@@ -26,28 +25,12 @@ export default function QuizBuilder() {
   const [isGenerating, setIsGenerating] = useState(false)
   const [error, setError] = useState(null)
   
-  // 세션 체크
+  // 디버그 로그
   useEffect(() => {
-    console.log('[QuizBuilder] Auth status:', status, 'User:', user)
-    
-    if (status === 'loading') {
-      // 아직 로딩 중
-      return
-    }
-    
-    if (status === 'authenticated' && user) {
-      // 인증된 사용자
-      setIsCheckingSession(false)
-      return
-    }
-    
-    // 세션이 없는 경우
-    if (status === 'unauthenticated') {
-      setIsCheckingSession(false)
-      return
-    }
-        
-  }, [status, user])
+    console.log('[QuizBuilder] Auth status:', status)
+    console.log('[QuizBuilder] Session:', session)
+    console.log('[QuizBuilder] User:', user)
+  }, [status, session, user])
   
   // 전체 문항 수 계산
   const totalQuestions = trueFalseCount + multipleChoiceCount
@@ -113,7 +96,7 @@ export default function QuizBuilder() {
   }
 
   // 로딩 중일 때 표시
-  if (status === 'loading' || isCheckingSession) {
+  if (status === 'loading') {
     return (
       <div className="flex items-center justify-center p-8">
         <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
@@ -123,8 +106,9 @@ export default function QuizBuilder() {
   }
 
   // 미인증 상태일 때 표시
-  if (!user) {
-    const loginUrl = process.env.NODE_ENV === 'production' 
+  if (status === 'unauthenticated' || !user) {
+    const isProduction = typeof window !== 'undefined' && window.location.hostname === 'quiz.bluenote.site'
+    const loginUrl = isProduction 
       ? 'https://www.bluenote.site/auth/signin?callbackUrl=https://quiz.bluenote.site/create'
       : 'http://localhost:3000/auth/signin?callbackUrl=http://localhost:3003/create'
       
