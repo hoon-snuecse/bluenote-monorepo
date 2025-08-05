@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getSession } from '@bluenote/supabase-auth/server'
-import { createServiceClient } from '@/lib/supabase'
+import { createServerClient } from '@bluenote/supabase-auth/server'
 
 export async function DELETE(request, { params }) {
   try {
@@ -14,7 +14,7 @@ export async function DELETE(request, { params }) {
     }
 
     const { id } = params
-    const supabase = createServiceClient()
+    const supabase = createServerClient()
 
     // 퀴즈 소유자 확인
     const { data: quiz, error: quizError } = await supabase

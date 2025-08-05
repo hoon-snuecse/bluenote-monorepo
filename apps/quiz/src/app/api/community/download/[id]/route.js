@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getSession } from '@bluenote/supabase-auth/server'
-import { createServiceClient } from '@/lib/supabase'
+import { createServerClient } from '@bluenote/supabase-auth/server'
 import * as XLSX from 'xlsx'
 
 export async function POST(request, { params }) {
@@ -17,7 +17,7 @@ export async function POST(request, { params }) {
     const { id } = params
     const { format } = await request.json()
 
-    const supabase = createServiceClient()
+    const supabase = createServerClient()
 
     // 먼저 shared_quizzes에서 실제 quiz_id 가져오기
     const { data: sharedQuiz, error: sharedError } = await supabase
