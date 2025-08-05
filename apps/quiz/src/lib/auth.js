@@ -34,10 +34,27 @@ export const authOptions = {
       }
       return session
     },
+    async redirect({ url, baseUrl }) {
+      // 외부 URL로의 리다이렉트 허용
+      if (url.startsWith('https://www.bluenote.site') || url.startsWith('https://quiz.bluenote.site')) {
+        return url
+      }
+      // 개발 환경에서 localhost 리다이렉트 허용
+      if (url.includes('localhost')) {
+        return url
+      }
+      // 기본적으로 baseUrl로 리다이렉트
+      if (url.startsWith('/')) {
+        return `${baseUrl}${url}`
+      }
+      return baseUrl
+    },
   },
   pages: {
-    signIn: '/signin',
-    error: '/error',
+    signIn: process.env.NODE_ENV === 'production' 
+      ? 'https://www.bluenote.site/auth/signin'
+      : 'http://localhost:3000/auth/signin',
+    error: '/auth/error',
   },
   cookies: {
     sessionToken: {
