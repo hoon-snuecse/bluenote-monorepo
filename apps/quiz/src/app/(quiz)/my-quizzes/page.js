@@ -161,53 +161,26 @@ export default function PreviewPage() {
     }
 
     try {
-      // 먼저 /api/quizzes로 퀴즈 생성
-      const response = await fetch('/api/quizzes', {
+      // 커뮤니티 저장 전용 API 사용
+      const response = await fetch('/api/quizzes/save-community', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ 
+          questions, 
           title: quizTitle,
-          description: `AI로 생성된 ${questions.length}개 문항`,
-          questions: questions.map((q, index) => ({
-            question: q.question,
-            type: q.type,
-            timeLimit: q.timeLimit || 30,
-            points: 1000,
-            explanation: q.explanation,
-            metadata: q.metadata,
-            options: q.options
-          })),
-          tags: [],
-          metadata: {
-            grade: questions[0]?.metadata?.grade || 'general',
-            topic: quizTopic || quizTitle
-          }
+          topic: quizTopic || quizTitle,
+          grade: questions[0]?.metadata?.grade || 'general'
         }),
       })
 
       const data = await response.json()
 
-      if (response.ok && data.data) {
-        // 퀴즈가 생성되면 커뮤니티에 공유
-        const shareResponse = await fetch('/api/share/quiz', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ 
-            quizId: data.data.id
-          }),
-        })
-        
-        if (shareResponse.ok) {
-          alert('퀴즈가 커뮤니티에 저장되었습니다!')
-          // 커뮤니티 탭으로 이동
-          window.location.href = '/community'
-        } else {
-          alert('퀴즈는 생성되었지만 커뮤니티 공유에 실패했습니다.')
-        }
+      if (response.ok) {
+        alert('퀴즈가 커뮤니티에 저장되었습니다!')
+        // 커뮤니티 탭으로 이동
+        window.location.href = '/community'
       } else {
         console.error('Save error:', data)
         alert(data.error || '저장 중 오류가 발생했습니다.')
