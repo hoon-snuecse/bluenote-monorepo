@@ -312,18 +312,18 @@ export default function CommunityPage() {
         ) : (
           <div />
         )}
-        {session && (
-          <Link
-            href="/create"
-            className="px-4 py-1.5 text-sm bg-green-600 text-white rounded hover:bg-green-700 font-medium inline-block"
-            onClick={() => {
-              // 세션 상태를 sessionStorage에 저장하여 create 페이지에서 사용
+        <Link
+          href="/create"
+          className="px-4 py-1.5 text-sm bg-green-600 text-white rounded hover:bg-green-700 font-medium inline-block"
+          onClick={() => {
+            // 세션 상태를 sessionStorage에 저장하여 create 페이지에서 사용
+            if (session) {
               sessionStorage.setItem('userSession', JSON.stringify(session))
-            }}
-          >
-            퀴즈문항만들기
-          </Link>
-        )}
+            }
+          }}
+        >
+          퀴즈문항만들기
+        </Link>
       </div>
 
       {/* 검색 및 필터 */}
