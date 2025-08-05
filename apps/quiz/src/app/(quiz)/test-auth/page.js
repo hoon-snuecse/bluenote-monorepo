@@ -17,13 +17,14 @@ export default function TestAuthPage() {
   })
 
   useEffect(() => {
-    if (!authLoading) {
+    if (!authLoading && session) {
       runTests()
     }
   }, [authLoading, session])
 
   const runTests = async () => {
     const supabase = createClient()
+    console.log('Running tests with session:', session)
 
     // 1. Auth 테스트
     if (session) {
@@ -41,7 +42,9 @@ export default function TestAuthPage() {
 
     // 2. JWT 테스트
     try {
+      console.log('Testing JWT claims...')
       const { data: jwtData, error: jwtError } = await supabase.rpc('get_jwt_claims')
+      console.log('JWT test result:', { jwtData, jwtError })
       if (jwtError) throw jwtError
       
       setTests(prev => ({
@@ -52,6 +55,7 @@ export default function TestAuthPage() {
         }
       }))
     } catch (error) {
+      console.error('JWT test error:', error)
       setTests(prev => ({
         ...prev,
         jwt: { status: 'error', message: error.message }
@@ -60,7 +64,9 @@ export default function TestAuthPage() {
 
     // 3. RLS 정책 테스트 - 현재 사용자 확인
     try {
+      console.log('Testing RLS email...')
       const { data: rlsData, error: rlsError } = await supabase.rpc('test_rls_email')
+      console.log('RLS test result:', { rlsData, rlsError })
       if (rlsError) throw rlsError
       
       setTests(prev => ({
@@ -71,6 +77,7 @@ export default function TestAuthPage() {
         }
       }))
     } catch (error) {
+      console.error('RLS test error:', error)
       setTests(prev => ({
         ...prev,
         rls: { status: 'error', message: error.message }
