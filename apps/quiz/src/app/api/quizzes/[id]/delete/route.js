@@ -1,11 +1,11 @@
 import { NextResponse } from 'next/server'
-import { getServerSession } from '@/lib/auth'
+import { getSession } from '@bluenote/supabase-auth/server'
 import { createServiceClient } from '@/lib/supabase'
 
 export async function DELETE(request, { params }) {
   try {
     // 세션 확인
-    const session = await getServerSession()
+    const session = await getSession()
     if (!session?.user?.email) {
       return NextResponse.json(
         { error: '로그인이 필요합니다.' },

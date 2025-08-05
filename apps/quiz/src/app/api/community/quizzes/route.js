@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase'
-import { getServerSession } from '@/lib/auth'
+import { getSession } from '@bluenote/supabase-auth/server'
 
 export async function GET(request) {
   try {
@@ -12,7 +12,7 @@ export async function GET(request) {
     const supabase = createClient()
     
     // 현재 사용자 세션 가져오기
-    const session = await getServerSession()
+    const session = await getSession()
     const currentUserEmail = session?.user?.email
     
     // RLS 컨텍스트 설정 (로그인한 경우에만)

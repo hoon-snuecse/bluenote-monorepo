@@ -1,9 +1,9 @@
-import { getServerSession } from '@/lib/auth'
+import { getSession } from '@bluenote/supabase-auth/server'
 
 export async function GET(request) {
   try {
     // NextAuth 세션 가져오기
-    const session = await getServerSession()
+    const session = await getSession()
     
     if (session) {
       return Response.json({

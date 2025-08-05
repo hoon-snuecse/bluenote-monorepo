@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { getServerSession } from '@/lib/auth'
+import { getSession } from '@bluenote/supabase-auth/server'
 import Anthropic from '@anthropic-ai/sdk'
 
 // Claude API 키 확인
@@ -13,7 +13,7 @@ const anthropic = apiKey ? new Anthropic({ apiKey }) : null
 export async function POST(request) {
   try {
     // 세션 확인
-    const session = await getServerSession()
+    const session = await getSession()
     
     if (!session?.user?.email) {
       console.log('[generate-questions] No session found')
