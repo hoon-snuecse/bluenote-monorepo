@@ -94,16 +94,6 @@ export default function QuizBuilder() {
     }
   }
 
-  // 로딩 중일 때 표시
-  if (!session && !user) {
-    return (
-      <div className="flex items-center justify-center p-8">
-        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
-        <span className="ml-3 text-gray-600">로딩 중...</span>
-      </div>
-    )
-  }
-
   // 미인증 상태일 때 표시
   if (!session || !user) {
     const isProduction = typeof window !== 'undefined' && window.location.hostname === 'quiz.bluenote.site'
