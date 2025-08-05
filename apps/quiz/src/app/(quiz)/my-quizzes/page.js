@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useSession } from 'next-auth/react'
+import { useSupabaseAuth } from '@bluenote/supabase-auth'
 import { 
   FileSpreadsheet, 
   Download, 
@@ -20,7 +20,7 @@ import {
 } from 'lucide-react'
 
 export default function PreviewPage() {
-  const { data: session, status } = useSession()
+  const { session } = useSupabaseAuth()
   const [questions, setQuestions] = useState([])
   const [quizTitle, setQuizTitle] = useState('')
   const [quizTopic, setQuizTopic] = useState('')

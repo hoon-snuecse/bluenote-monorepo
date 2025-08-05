@@ -2,10 +2,10 @@
 
 import { useState, useEffect } from 'react'
 import { Loader2, Sparkles } from 'lucide-react'
-import { useSession } from 'next-auth/react'
+import { useSupabaseAuth } from '@bluenote/supabase-auth'
 
 export default function QuizBuilder() {
-  const { data: session, status } = useSession()
+  const { session } = useSupabaseAuth()
   const user = session?.user || null
   const [topic, setTopic] = useState('')
   const [grade, setGrade] = useState('middle1')
@@ -27,10 +27,9 @@ export default function QuizBuilder() {
   
   // 디버그 로그
   useEffect(() => {
-    console.log('[QuizBuilder] Auth status:', status)
     console.log('[QuizBuilder] Session:', session)
     console.log('[QuizBuilder] User:', user)
-  }, [status, session, user])
+  }, [session, user])
   
   // 전체 문항 수 계산
   const totalQuestions = trueFalseCount + multipleChoiceCount

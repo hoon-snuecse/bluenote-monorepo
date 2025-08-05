@@ -1,10 +1,10 @@
 'use client'
 
 import { useState } from 'react'
-import { useSession } from 'next-auth/react'
+import { useSupabaseAuth } from '@bluenote/supabase-auth'
 
 export default function TestJWTPage() {
-  const { data: session, status } = useSession()
+  const { session } = useSupabaseAuth()
   const [testResult, setTestResult] = useState(null)
   const [loading, setLoading] = useState(false)
 

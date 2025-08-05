@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { useSession } from '@bluenote/auth'
+import { useSupabaseAuth } from '@bluenote/supabase-auth'
 import { 
   Download, 
   Star, 
@@ -20,7 +20,7 @@ import {
 } from 'lucide-react'
 
 export default function CommunityPage() {
-  const { data: session, status } = useSession()
+  const { session } = useSupabaseAuth()
   const [sharedQuizzes, setSharedQuizzes] = useState([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')

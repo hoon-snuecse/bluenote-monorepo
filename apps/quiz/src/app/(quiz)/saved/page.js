@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, Suspense } from 'react'
-import { useSession } from 'next-auth/react'
+import { useSupabaseAuth } from '@bluenote/supabase-auth'
 import Link from 'next/link'
 import { 
   FileSpreadsheet, 
@@ -19,19 +19,19 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from '@bluenote/ui'
 
 function SavedQuizzesContent() {
-  const { data: session, status } = useSession()
+  const { session } = useSupabaseAuth()
   const [myQuizzes, setMyQuizzes] = useState([])
   const [sampleQuizzes, setSampleQuizzes] = useState([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
 
   useEffect(() => {
-    if (status === 'authenticated') {
+    if (session) {
       loadQuizzes()
-    } else if (status === 'unauthenticated') {
+    } else {
       setLoading(false)
     }
-  }, [status])
+  }, [session])
 
   const loadQuizzes = async () => {
     try {
