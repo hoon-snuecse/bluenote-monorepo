@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useSession } from 'next-auth/react'
 import Link from 'next/link'
 import { 
@@ -18,7 +18,7 @@ import {
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@bluenote/ui'
 
-export default function SavedQuizzesPage() {
+function SavedQuizzesContent() {
   const { data: session, status } = useSession()
   const [myQuizzes, setMyQuizzes] = useState([])
   const [sampleQuizzes, setSampleQuizzes] = useState([])
@@ -347,5 +347,20 @@ export default function SavedQuizzesPage() {
         )}
       </div>
     </div>
+  )
+}
+
+export default function SavedQuizzesPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center py-12">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">로딩 중...</p>
+        </div>
+      </div>
+    }>
+      <SavedQuizzesContent />
+    </Suspense>
   )
 }

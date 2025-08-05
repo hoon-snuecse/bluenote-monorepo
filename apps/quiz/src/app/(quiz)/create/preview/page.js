@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
-// import { useSession } from 'next-auth/react' // Temporarily removed due to React Hooks error
+import { useSession } from 'next-auth/react'
 import { 
   CheckCircle2, 
   Circle, 
@@ -20,17 +20,8 @@ import {
   exportTeacherGuideHTML 
 } from '@/lib/exporters'
 
-export default function QuizPreviewPage() {
-  // const { data: session } = useSession() // Temporarily removed
-  const [session, setSession] = useState(null)
-  
-  // Fetch session manually
-  useEffect(() => {
-    fetch('/api/auth/session')
-      .then(res => res.json())
-      .then(data => setSession(data))
-      .catch(() => setSession(null))
-  }, [])
+function QuizPreviewContent() {
+  const { data: session } = useSession()
   const searchParams = useSearchParams()
   const quizId = searchParams.get('quiz_id')
   
@@ -48,74 +39,73 @@ export default function QuizPreviewPage() {
   const loadQuizData = async () => {
     try {
       const response = await fetch(`/api/quizzes/${quizId}`)
+      const data = await response.json()
+      
       if (response.ok) {
-        const data = await response.json()
         setQuizInfo(data.quiz)
         setQuestions(data.questions)
-        // 기본적으로 모든 문항 선택
-        setSelectedQuestions(new Set(data.questions.map(q => q.id)))
+        setSelectedQuestions(new Set(data.questions.map((_, index) => index)))
       }
     } catch (error) {
-      console.error('Failed to load quiz:', error)
+      console.error('Failed to load quiz data:', error)
     } finally {
       setLoading(false)
     }
   }
 
-  const toggleQuestion = (questionId) => {
-    const newSelected = new Set(selectedQuestions)
-    if (newSelected.has(questionId)) {
-      newSelected.delete(questionId)
+  const handleSelectAll = () => {
+    if (selectedQuestions.size === questions.length) {
+      setSelectedQuestions(new Set())
     } else {
-      newSelected.add(questionId)
+      setSelectedQuestions(new Set(questions.map((_, index) => index)))
+    }
+  }
+
+  const handleToggleQuestion = (index) => {
+    const newSelected = new Set(selectedQuestions)
+    if (newSelected.has(index)) {
+      newSelected.delete(index)
+    } else {
+      newSelected.add(index)
     }
     setSelectedQuestions(newSelected)
   }
 
-  const toggleAll = () => {
-    if (selectedQuestions.size === questions.length) {
-      setSelectedQuestions(new Set())
-    } else {
-      setSelectedQuestions(new Set(questions.map(q => q.id)))
-    }
-  }
-
-  const handleExport = (format) => {
-    if (selectedQuestions.size === 0) {
-      alert('최소 1개 이상의 문항을 선택해주세요.')
+  const handleExport = async (format) => {
+    const selectedQs = questions.filter((_, index) => selectedQuestions.has(index))
+    
+    if (selectedQs.length === 0) {
+      alert('내보낼 문항을 선택해주세요.')
       return
     }
 
-    // 선택된 문항만 필터링
-    const selectedQuestionsList = questions.filter(q => selectedQuestions.has(q.id))
-    
-    // 내보내기 형식에 맞게 데이터 변환
-    const exportQuestions = selectedQuestionsList.map(q => ({
-      question: q.question_text,
-      type: q.question_type,
-      timeLimit: q.time_limit,
-      options: q.options.map(opt => ({
-        text: opt.option_text,
-        isCorrect: opt.is_correct
-      })),
-      explanation: q.explanation || ''
-    }))
+    try {
+      let blob
+      const title = quizInfo?.title || 'quiz'
+      
+      switch (format) {
+        case 'csv':
+          blob = await exportToKahootCSV(selectedQs, title)
+          break
+        case 'excel':
+          blob = await exportToKahootExcel(selectedQs, title)
+          break
+        case 'html':
+          blob = await exportTeacherGuideHTML(selectedQs, title)
+          break
+      }
 
-    const exportTitle = quizInfo?.title || '새 퀴즈'
-
-    switch (format) {
-      case 'csv':
-        exportToKahootCSV(exportQuestions, exportTitle)
-        break
-      case 'xlsx':
-        exportToKahootExcel(exportQuestions, exportTitle)
-        break
-      case 'html':
-        exportTeacherGuideHTML(exportQuestions, exportTitle, {
-          grade: quizInfo?.metadata?.grade || '전학년',
-          topic: quizInfo?.metadata?.topic || '-'
-        })
-        break
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `${title}_${format === 'html' ? 'teacher_guide' : 'kahoot'}.${format === 'excel' ? 'xlsx' : format}`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      window.URL.revokeObjectURL(url)
+    } catch (error) {
+      console.error('Export failed:', error)
+      alert('내보내기 중 오류가 발생했습니다.')
     }
   }
 
@@ -124,200 +114,152 @@ export default function QuizPreviewPage() {
       <div className="flex items-center justify-center py-12">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">퀴즈 불러오는 중...</p>
+          <p className="mt-4 text-gray-600">퀴즈를 불러오는 중...</p>
         </div>
       </div>
     )
   }
 
+  if (!quizId || !quizInfo) {
+    return (
+      <div className="text-center py-12">
+        <p className="text-gray-500">퀴즈를 찾을 수 없습니다.</p>
+      </div>
+    )
+  }
+
   return (
-    <div className="mx-auto max-w-6xl">
+    <div className="space-y-6">
       {/* 헤더 */}
-      <div className="mb-6 flex items-center justify-between">
-        <div className="flex items-center space-x-4">
-          <button
-            onClick={() => window.history.back()}
-            className="inline-flex items-center text-sm text-gray-600 hover:text-gray-900"
-          >
-            <ChevronLeft className="mr-1 h-4 w-4" />
-            돌아가기
-          </button>
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">문항 선택 및 미리보기</h1>
-            <p className="mt-1 text-sm text-gray-600">
-              {quizInfo?.title} ({selectedQuestions.size}/{questions.length}개 선택됨)
-            </p>
-          </div>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">{quizInfo.title}</h1>
+          <p className="mt-1 text-sm text-gray-600">
+            {questions.length}개 문항 중 {selectedQuestions.size}개 선택됨
+          </p>
         </div>
-        
-        {/* 액션 버튼들 */}
-        <div className="flex items-center space-x-3">
-          <button
-            onClick={() => handleExport('xlsx')}
-            disabled={selectedQuestions.size === 0}
-            className="inline-flex items-center rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <FileSpreadsheet className="mr-2 h-4 w-4" />
-            Excel 다운로드
-          </button>
-          <button
-            onClick={() => handleExport('csv')}
-            disabled={selectedQuestions.size === 0}
-            className="inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <Download className="mr-2 h-4 w-4" />
-            CSV 다운로드
-          </button>
-          <button
-            onClick={() => handleExport('html')}
-            disabled={selectedQuestions.size === 0}
-            className="inline-flex items-center rounded-md bg-purple-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <FileText className="mr-2 h-4 w-4" />
-            교사 가이드
-          </button>
-        </div>
+        <a
+          href="/create"
+          className="inline-flex items-center text-sm text-gray-600 hover:text-gray-900"
+        >
+          <ChevronLeft className="mr-1 h-4 w-4" />
+          퀴즈 생성으로 돌아가기
+        </a>
       </div>
 
-      {/* 전체 선택 */}
-      <div className="mb-4 flex items-center justify-between rounded-lg bg-gray-50 p-4">
-        <label className="flex items-center cursor-pointer">
-          <input
-            type="checkbox"
-            checked={selectedQuestions.size === questions.length}
-            onChange={toggleAll}
-            className="mr-3 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-          />
-          <span className="font-medium text-gray-700">전체 선택</span>
-        </label>
-        <div className="flex items-center space-x-4 text-sm text-gray-600">
-          <span>OX형: {questions.filter(q => q.question_type === 'true_false').length}개</span>
-          <span>4지선다: {questions.filter(q => q.question_type === 'multiple_choice').length}개</span>
-        </div>
+      {/* 액션 버튼들 */}
+      <div className="flex gap-4 bg-white rounded-lg shadow p-6">
+        <button
+          onClick={() => handleExport('csv')}
+          disabled={selectedQuestions.size === 0}
+          className="inline-flex items-center rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <FileSpreadsheet className="mr-2 h-4 w-4" />
+          CSV 다운로드
+        </button>
+        <button
+          onClick={() => handleExport('excel')}
+          disabled={selectedQuestions.size === 0}
+          className="inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <Download className="mr-2 h-4 w-4" />
+          Excel 다운로드
+        </button>
+        <button
+          onClick={() => handleExport('html')}
+          disabled={selectedQuestions.size === 0}
+          className="inline-flex items-center rounded-md bg-purple-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <FileText className="mr-2 h-4 w-4" />
+          교사용 가이드 (HTML)
+        </button>
+        
+        {session && (
+          <button
+            className="ml-auto inline-flex items-center rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+          >
+            <Save className="mr-2 h-4 w-4" />
+            커뮤니티에 저장하기
+          </button>
+        )}
       </div>
 
       {/* 문항 목록 */}
-      <div className="space-y-4">
-        {questions.map((question, index) => (
-          <div
-            key={question.id}
-            className={`rounded-lg border bg-white p-6 transition-all ${
-              selectedQuestions.has(question.id) 
-                ? 'border-blue-500 shadow-md' 
-                : 'border-gray-200'
-            }`}
-          >
-            <div className="flex items-start">
-              <button
-                onClick={() => toggleQuestion(question.id)}
-                className="mr-4 mt-1"
-              >
-                {selectedQuestions.has(question.id) ? (
-                  <CheckCircle2 className="h-5 w-5 text-blue-600" />
-                ) : (
-                  <Circle className="h-5 w-5 text-gray-400" />
-                )}
-              </button>
-              
-              <div className="flex-1">
-                {/* 문항 헤더 */}
-                <div className="mb-3 flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
-                    <span className="font-medium text-gray-900">
-                      문항 {index + 1}
-                    </span>
-                    <span className={`rounded-full px-2 py-1 text-xs ${
-                      question.question_type === 'true_false' 
-                        ? 'bg-green-100 text-green-700' 
-                        : 'bg-blue-100 text-blue-700'
-                    }`}>
-                      {question.question_type === 'true_false' ? 'OX형' : '4지선다'}
-                    </span>
-                    <span className="inline-flex items-center text-xs text-gray-500">
-                      <Clock className="mr-1 h-3 w-3" />
-                      {question.time_limit}초
-                    </span>
-                  </div>
-                  <span className={`text-xs ${
-                    question.difficulty === 'easy' ? 'text-green-600' :
-                    question.difficulty === 'hard' ? 'text-red-600' :
-                    'text-yellow-600'
-                  }`}>
-                    {question.difficulty === 'easy' ? '쉬움' :
-                     question.difficulty === 'hard' ? '어려움' : '보통'}
-                  </span>
-                </div>
-
-                {/* 문항 내용 */}
-                <p className="mb-4 text-gray-900">{question.question_text}</p>
-
-                {/* 선택지 */}
-                <div className="mb-4 grid grid-cols-2 gap-2">
-                  {question.options.map((option, optIndex) => (
-                    <div
-                      key={option.id}
-                      className={`rounded-md px-3 py-2 text-sm ${
-                        option.is_correct
-                          ? 'bg-green-50 text-green-800 font-medium'
-                          : 'bg-gray-50 text-gray-700'
-                      }`}
-                    >
-                      {optIndex + 1}. {option.option_text}
-                    </div>
-                  ))}
-                </div>
-
-                {/* 힌트 및 해설 */}
-                {(question.hint || question.explanation) && (
-                  <div className="rounded-md bg-gray-50 p-3 text-sm">
-                    {question.hint && (
-                      <div className="mb-2">
-                        <span className="font-medium text-gray-700">힌트:</span>{' '}
-                        <span className="text-gray-600">{question.hint}</span>
-                      </div>
-                    )}
-                    {question.explanation && (
-                      <div>
-                        <span className="font-medium text-gray-700">해설:</span>{' '}
-                        <span className="text-gray-600">{question.explanation}</span>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* 하단 고정 바 */}
-      <div className="sticky bottom-0 mt-8 border-t bg-white p-4">
-        <div className="mx-auto flex max-w-6xl items-center justify-between">
-          <p className="text-sm text-gray-600">
-            {selectedQuestions.size}개 문항이 선택되었습니다
-          </p>
-          <div className="flex items-center space-x-3">
+      <div className="bg-white rounded-lg shadow">
+        <div className="p-6 border-b border-gray-200">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-medium text-gray-900">문항 선택</h2>
             <button
-              onClick={() => {
-                // 저장 로직
-                alert('퀴즈가 저장되었습니다!')
-              }}
-              className="inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50"
+              onClick={handleSelectAll}
+              className="text-sm text-blue-600 hover:text-blue-700"
             >
-              <Save className="mr-2 h-4 w-4" />
-              퀴즈 저장
-            </button>
-            <button
-              onClick={() => handleExport('xlsx')}
-              disabled={selectedQuestions.size === 0}
-              className="inline-flex items-center rounded-md bg-blue-600 px-6 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <Download className="mr-2 h-4 w-4" />
-              선택한 문항 내보내기
+              {selectedQuestions.size === questions.length ? '전체 해제' : '전체 선택'}
             </button>
           </div>
         </div>
+        
+        <div className="divide-y divide-gray-200">
+          {questions.map((question, index) => (
+            <div key={index} className="p-6 hover:bg-gray-50">
+              <div className="flex items-start gap-4">
+                <button
+                  onClick={() => handleToggleQuestion(index)}
+                  className="mt-1 flex-shrink-0"
+                >
+                  {selectedQuestions.has(index) ? (
+                    <CheckCircle2 className="h-5 w-5 text-blue-600" />
+                  ) : (
+                    <Circle className="h-5 w-5 text-gray-400" />
+                  )}
+                </button>
+                
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-gray-900">
+                    {index + 1}. {question.question}
+                  </p>
+                  <div className="mt-2 space-y-1">
+                    {question.answers.map((answer, ansIndex) => (
+                      <div
+                        key={ansIndex}
+                        className={`text-sm ${
+                          answer.correct 
+                            ? 'text-green-600 font-medium' 
+                            : 'text-gray-600'
+                        }`}
+                      >
+                        {String.fromCharCode(65 + ansIndex)}. {answer.text}
+                        {answer.correct && ' ✓'}
+                      </div>
+                    ))}
+                  </div>
+                  <div className="mt-2 flex items-center gap-4 text-xs text-gray-500">
+                    <span className="inline-flex items-center">
+                      <Clock className="mr-1 h-3 w-3" />
+                      {question.timeLimit || 30}초
+                    </span>
+                    <span>{question.type === 'quiz' ? '4지선다' : 'OX형'}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
+  )
+}
+
+export default function QuizPreviewPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center py-12">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">로딩 중...</p>
+        </div>
+      </div>
+    }>
+      <QuizPreviewContent />
+    </Suspense>
   )
 }
