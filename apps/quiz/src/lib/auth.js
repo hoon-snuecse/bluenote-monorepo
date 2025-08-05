@@ -1,76 +1,30 @@
-import NextAuth from 'next-auth'
-import GoogleProvider from 'next-auth/providers/google'
-import { getServerSession as getNextAuthSession } from 'next-auth'
+import { createAuthOptions, getServerSession as getNextAuthSession } from '@bluenote/auth'
 
-// NextAuth 설정
-export const authOptions = {
-  providers: [
-    GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-    }),
-  ],
-  secret: process.env.NEXTAUTH_SECRET,
-  session: {
-    strategy: 'jwt',
-    maxAge: 30 * 24 * 60 * 60, // 30 days
+// Quiz 앱용 인증 콜백 함수들
+const authCallbacks = {
+  // Quiz 앱은 기본적으로 모든 로그인한 사용자 허용
+  checkUserPermission: async (email) => {
+    return true; // 모든 Google 로그인 사용자 허용
   },
-  callbacks: {
-    async jwt({ token, user, account }) {
-      if (account && user) {
-        token.id = user.id
-        token.email = user.email
-        token.name = user.name
-        token.picture = user.image
-      }
-      return token
-    },
-    async session({ session, token }) {
-      if (session?.user) {
-        session.user.id = token.id
-        session.user.email = token.email
-        session.user.name = token.name
-        session.user.image = token.picture
-      }
-      return session
-    },
-    async redirect({ url, baseUrl }) {
-      // 외부 URL로의 리다이렉트 허용
-      if (url.startsWith('https://www.bluenote.site') || url.startsWith('https://quiz.bluenote.site')) {
-        return url
-      }
-      // 개발 환경에서 localhost 리다이렉트 허용
-      if (url.includes('localhost')) {
-        return url
-      }
-      // 기본적으로 baseUrl로 리다이렉트
-      if (url.startsWith('/')) {
-        return `${baseUrl}${url}`
-      }
-      return baseUrl
-    },
+  
+  // 사용자 권한 정보 가져오기
+  getUserPermissions: async (email) => {
+    // Quiz 앱은 특별한 권한 체계가 없으므로 기본값 반환
+    return {
+      role: 'user',
+      can_write: true,
+      claude_daily_limit: 10, // Quiz 앱의 AI 사용 제한
+    };
   },
-  pages: {
-    signIn: process.env.NODE_ENV === 'production' 
-      ? 'https://www.bluenote.site/auth/signin'
-      : 'http://localhost:3000/auth/signin',
-    error: '/auth/error',
+  
+  // 로그인 기록
+  logSignIn: async (email) => {
+    console.log(`[Quiz App] User ${email} signed in`);
   },
-  cookies: {
-    sessionToken: {
-      name: process.env.NODE_ENV === 'production' 
-        ? '__Secure-next-auth.session-token'
-        : 'next-auth.session-token',
-      options: {
-        httpOnly: true,
-        sameSite: 'lax',
-        path: '/',
-        secure: process.env.NODE_ENV === 'production',
-        domain: process.env.NODE_ENV === 'production' ? '.bluenote.site' : undefined,
-      },
-    },
-  },
-}
+};
+
+// @bluenote/auth 패키지의 공유 인증 설정 사용
+export const authOptions = createAuthOptions(authCallbacks)
 
 // 서버 사이드에서 세션 가져오기
 export async function getServerSession(req, res) {

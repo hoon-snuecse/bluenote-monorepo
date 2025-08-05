@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase'
-import { getServerSession, authOptions } from '@/lib/auth'
+import { getServerSession } from '@/lib/auth'
 
 export async function GET(request) {
   try {
@@ -12,8 +12,15 @@ export async function GET(request) {
     const supabase = createClient()
     
     // 현재 사용자 세션 가져오기
-    const session = await getServerSession(authOptions)
+    const session = await getServerSession()
     const currentUserEmail = session?.user?.email
+    
+    // RLS 컨텍스트 설정 (로그인한 경우에만)
+    if (currentUserEmail) {
+      await supabase.rpc('set_current_user_email', { 
+        email: currentUserEmail 
+      })
+    }
 
     // 1. 공개된 퀴즈 또는 본인 퀴즈 가져오기 (shared_quizzes에서)
     let sharedQuery = supabase

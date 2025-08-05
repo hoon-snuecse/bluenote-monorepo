@@ -1,10 +1,9 @@
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { getServerSession } from '@/lib/auth'
 
 export async function GET(request) {
   try {
     // NextAuth 세션 가져오기
-    const session = await getServerSession(authOptions)
+    const session = await getServerSession()
     
     if (session) {
       return Response.json({

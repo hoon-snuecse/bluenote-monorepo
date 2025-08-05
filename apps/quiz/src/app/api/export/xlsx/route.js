@@ -1,11 +1,11 @@
 import { NextResponse } from 'next/server'
 import * as XLSX from 'xlsx'
 import { createClient } from '@/lib/supabase'
-import { getServerSession, authOptions } from '@/lib/auth'
+import { getServerSession } from '@/lib/auth'
 
 export async function POST(request) {
   try {
-    const session = await getServerSession(authOptions)
+    const session = await getServerSession()
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }

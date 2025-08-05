@@ -1,12 +1,11 @@
 import { NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { getServerSession } from '@/lib/auth'
 import { createClient } from '@/lib/supabase'
 
 // GET: 사용자의 퀴즈 목록 조회
 export async function GET(request) {
   try {
-    const session = await getServerSession(authOptions)
+    const session = await getServerSession()
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
@@ -73,7 +72,7 @@ export async function GET(request) {
 // POST: 새 퀴즈 생성
 export async function POST(request) {
   try {
-    const session = await getServerSession(authOptions)
+    const session = await getServerSession()
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
