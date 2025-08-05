@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getServerSession } from '@/lib/auth'
-import { createClient, createServiceClient } from '@/lib/supabase'
+import { createClient } from '@/lib/supabase'
 
 export async function POST(request) {
   try {
@@ -28,15 +28,20 @@ export async function POST(request) {
       )
     }
 
-    // Service Role 클라이언트 사용 (RLS 우회)
-    console.log('[save quiz] Environment check:', {
-      hasServiceKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
-      serviceKeyLength: process.env.SUPABASE_SERVICE_ROLE_KEY?.length,
-      supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL
-    })
+    // 일반 클라이언트 사용
+    const supabase = createClient()
     
-    const supabase = createServiceClient()
-    console.log('[save quiz] Using service role client for user:', userEmail)
+    // RLS 컨텍스트 설정을 위한 직접 SQL 실행
+    console.log('[save quiz] Setting RLS context for user:', userEmail)
+    const { data: setContextData, error: setContextError } = await supabase
+      .rpc('set_current_user_email', { email: userEmail })
+    
+    if (setContextError) {
+      console.error('[save quiz] Failed to set RLS context:', setContextError)
+      // 에러가 나도 계속 진행
+    }
+    
+    console.log('[save quiz] RLS context set result:', setContextData)
     
     // 퀴즈 메타데이터 저장
     console.log('[save quiz] Attempting to save quiz with user_email:', userEmail)
