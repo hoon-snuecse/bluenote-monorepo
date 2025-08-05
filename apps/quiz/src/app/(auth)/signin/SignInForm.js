@@ -24,10 +24,13 @@ export default function SignInForm() {
     try {
       setLoading(true)
       setError(null)
-      // 서버 라우트를 통해 OAuth 시작
-      window.location.href = '/auth/google'
+      
+      // 직접 Supabase OAuth 호출
+      await signInWithGoogle({
+        redirectTo: `${window.location.origin}/auth/callback`
+      })
     } catch (err) {
-      setError(err.message)
+      setError(err.message || 'Login failed')
       setLoading(false)
     }
   }

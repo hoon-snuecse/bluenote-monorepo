@@ -1,10 +1,18 @@
-import { createServerClient } from '@bluenote/supabase-auth/server'
+import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
 
+// 환경 변수
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
 export async function GET(request) {
-  const supabase = createServerClient()
-  const origin = request.headers.get('origin') || 'https://quiz.bluenote.site'
+  const requestUrl = new URL(request.url)
+  const origin = requestUrl.origin
   
+  // 직접 Supabase 클라이언트 생성
+  const supabase = createClient(supabaseUrl, supabaseAnonKey)
+  
+  // OAuth URL 생성
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
     options: {
@@ -18,12 +26,13 @@ export async function GET(request) {
 
   if (error) {
     console.error('OAuth initiation error:', error)
-    return NextResponse.redirect(new URL('/auth/error', origin))
+    return NextResponse.redirect(new URL('/auth/error?error=' + encodeURIComponent(error.message), origin))
   }
 
   if (data?.url) {
+    console.log('Redirecting to Google OAuth:', data.url)
     return NextResponse.redirect(data.url)
   }
 
-  return NextResponse.redirect(new URL('/auth/error', origin))
+  return NextResponse.redirect(new URL('/auth/error?error=OAuth URL not generated', origin))
 }
