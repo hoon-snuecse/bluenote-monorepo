@@ -96,16 +96,11 @@ export default function QuizBuilder() {
 
   // 미인증 상태일 때 표시
   if (!session || !user) {
-    const isProduction = typeof window !== 'undefined' && window.location.hostname === 'quiz.bluenote.site'
-    const loginUrl = isProduction 
-      ? 'https://www.bluenote.site/auth/signin?callbackUrl=https://quiz.bluenote.site/create'
-      : 'http://localhost:3000/auth/signin?callbackUrl=http://localhost:3003/create'
-      
     return (
       <div className="text-center p-8">
         <p className="text-gray-600 mb-4">퀴즈를 생성하려면 로그인이 필요합니다.</p>
         <a 
-          href={loginUrl}
+          href="/auth/signin"
           className="inline-block px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
         >
           로그인하기

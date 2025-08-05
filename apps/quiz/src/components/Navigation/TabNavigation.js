@@ -51,17 +51,20 @@ function UserInfo() {
   
   const handleSignOut = async () => {
     try {
-      // 1. Quiz 앱 세션 삭제
-      await fetch('/api/auth/sync', {
-        method: 'DELETE',
+      // Supabase 로그아웃 API 호출
+      const response = await fetch('/api/auth/signout', {
+        method: 'POST',
         credentials: 'include'
       })
       
-      // 2. 메인 사이트로 이동하여 로그아웃
-      window.location.href = 'https://www.bluenote.site/api/auth/signout?callbackUrl=https://quiz.bluenote.site/'
+      if (response.ok) {
+        // 로그아웃 성공 시 홈으로 리다이렉트
+        window.location.href = '/'
+      }
     } catch (error) {
-      // 에러 발생 시에도 메인 사이트로 이동
-      window.location.href = 'https://www.bluenote.site/api/auth/signout?callbackUrl=https://quiz.bluenote.site/'
+      console.error('Sign out error:', error)
+      // 에러 발생 시에도 홈으로 이동
+      window.location.href = '/'
     }
   }
   

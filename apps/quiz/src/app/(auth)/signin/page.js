@@ -14,9 +14,8 @@ export default function SignInPage() {
     try {
       setLoading(true)
       setError(null)
-      await signInWithGoogle({
-        redirectTo: `${window.location.origin}/auth/callback`
-      })
+      // 서버 라우트를 통해 OAuth 시작
+      window.location.href = '/auth/google'
     } catch (err) {
       setError(err.message)
       setLoading(false)
