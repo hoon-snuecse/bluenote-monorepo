@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { getServerSession } from '@/lib/auth'
+import { getSession } from '@bluenote/supabase-auth/server'
 import { createClient } from '@supabase/supabase-js'
 
 // 직접 Supabase 클라이언트 생성 (디버깅용)
@@ -27,7 +27,7 @@ function createDirectClient() {
 export async function POST(request) {
   try {
     // 세션 확인
-    const session = await getServerSession()
+    const session = await getSession()
     
     if (!session?.user?.email) {
       return NextResponse.json({ error: '로그인이 필요합니다.' }, { status: 401 })

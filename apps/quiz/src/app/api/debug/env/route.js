@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server'
-import { getServerSession } from '@/lib/auth'
+import { getSession } from '@bluenote/supabase-auth/server'
 
 export async function GET(request) {
   try {
     // 세션 확인 (관리자만 접근 가능)
-    const session = await getServerSession()
+    const session = await getSession()
     
     if (!session?.user?.email) {
       return NextResponse.json(
