@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useSession } from 'next-auth/react'
 import Link from 'next/link'
 import { 
   FileSpreadsheet, 
@@ -18,25 +19,19 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from '@bluenote/ui'
 
 export default function SavedQuizzesPage() {
-  const [session, setSession] = useState(null)
+  const { data: session, status } = useSession()
   const [myQuizzes, setMyQuizzes] = useState([])
   const [sampleQuizzes, setSampleQuizzes] = useState([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
-  
-  // Fetch session manually
-  useEffect(() => {
-    fetch('/api/auth/session')
-      .then(res => res.json())
-      .then(data => setSession(data))
-      .catch(() => setSession(null))
-  }, [])
 
   useEffect(() => {
-    if (session?.authenticated) {
+    if (status === 'authenticated') {
       loadQuizzes()
+    } else if (status === 'unauthenticated') {
+      setLoading(false)
     }
-  }, [session])
+  }, [status])
 
   const loadQuizzes = async () => {
     try {
