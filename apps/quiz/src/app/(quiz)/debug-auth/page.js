@@ -66,8 +66,18 @@ export default function DebugAuthPage() {
         addLog(`Session exists: ${session ? 'YES' : 'NO'}`)
         if (session) {
           addLog(`User email: ${session.user?.email}`)
+          addLog(`Session expires: ${new Date(session.expires_at * 1000).toLocaleString()}`)
         }
       }
+      
+      // 쿠키 체크
+      const cookies = document.cookie.split(';').map(c => c.trim())
+      const sbCookies = cookies.filter(c => c.startsWith('sb-'))
+      addLog(`Supabase cookies found: ${sbCookies.length}`)
+      sbCookies.forEach(cookie => {
+        const [name] = cookie.split('=')
+        addLog(`Cookie: ${name}`)
+      })
     } catch (err) {
       addLog(`Session check exception: ${err.message}`)
     }
