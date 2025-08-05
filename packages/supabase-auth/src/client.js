@@ -1,5 +1,4 @@
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 
 // 환경 변수 확인
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -22,15 +21,11 @@ export function createClient() {
 
 // 클라이언트 컴포넌트용 브라우저 클라이언트
 export function createBrowserClient() {
-  return createClientComponentClient({
-    supabaseUrl,
-    supabaseKey: supabaseAnonKey,
-    options: {
-      auth: {
-        autoRefreshToken: true,
-        persistSession: true,
-        detectSessionInUrl: true
-      }
+  return createSupabaseClient(supabaseUrl, supabaseAnonKey, {
+    auth: {
+      autoRefreshToken: true,
+      persistSession: true,
+      detectSessionInUrl: true,
+      storage: typeof window !== 'undefined' ? window.localStorage : undefined
     }
   })
-}
