@@ -29,6 +29,19 @@ export async function POST(request) {
     }
 
     const supabase = createClient()
+    
+    // RLS 컨텍스트 설정
+    const { error: rpcError } = await supabase.rpc('set_current_user_email', { 
+      email: userEmail 
+    })
+    
+    if (rpcError) {
+      console.error('[save quiz] RPC error:', rpcError)
+      return NextResponse.json(
+        { error: 'RLS 설정 중 오류가 발생했습니다.', details: rpcError.message },
+        { status: 500 }
+      )
+    }
 
     // 퀴즈 메타데이터 저장
     const { data: quiz, error: quizError } = await supabase
@@ -45,7 +58,8 @@ export async function POST(request) {
           ai_model: questions[0]?.metadata?.ai_model || 'claude'
         },
         status: 'published',
-        is_public: true
+        is_public: true,
+        is_shared: true
       })
       .select()
       .single()
@@ -129,6 +143,11 @@ export async function POST(request) {
     // 커뮤니티에 공유
     const truefalseCount = questions.filter(q => q.type === 'true_false').length
     const multipleChoiceCount = questions.filter(q => q.type === 'multiple_choice').length
+    
+    // RLS 컨텍스트 다시 설정 (안전을 위해)
+    await supabase.rpc('set_current_user_email', { 
+      email: userEmail 
+    })
     
     const { error: shareError } = await supabase
       .from('shared_quizzes')
