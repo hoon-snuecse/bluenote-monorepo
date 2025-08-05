@@ -226,7 +226,7 @@ export default function TestAuthPage() {
         <h3 className="font-medium text-blue-900 mb-2">테스트 설명</h3>
         <ul className="text-sm text-blue-800 space-y-1">
           <li>• JWT 토큰: Supabase Auth에서 생성된 JWT 토큰의 claims 확인</li>
-          <li>• RLS 이메일: auth.jwt() ->> 'email' 함수가 올바른 이메일을 반환하는지 확인</li>
+          <li>• RLS 이메일: auth.jwt() -{'>>'} 'email' 함수가 올바른 이메일을 반환하는지 확인</li>
           <li>• CRUD 권한: RLS 정책에 따른 데이터베이스 작업 권한 확인</li>
         </ul>
       </div>
