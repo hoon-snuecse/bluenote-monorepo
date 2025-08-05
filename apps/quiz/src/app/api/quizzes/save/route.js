@@ -45,19 +45,22 @@ export async function POST(request) {
     
     // 퀴즈 메타데이터 저장
     console.log('[save quiz] Attempting to save quiz with user_email:', userEmail)
+    
+    // /api/quizzes의 POST와 동일한 방식으로 시도
     const { data: quiz, error: quizError } = await supabase
       .from('quizzes')
       .insert({
-        user_email: userEmail,
         title,
-        topic: topic || '일반',
         description: `AI로 생성된 ${questions.length}개 문항`,
-        total_questions: questions.length,
+        user_email: userEmail,
+        tags: [],
         metadata: {
           grade: grade || 'general',
           created_by: 'ai',
           ai_model: questions[0]?.metadata?.ai_model || 'claude'
         },
+        total_questions: questions.length,
+        topic: topic || '일반',
         status: 'published',
         is_public: true,
         is_shared: true,
