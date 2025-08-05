@@ -1,5 +1,6 @@
 import { createServerClient } from '@bluenote/supabase-auth/server'
 import { NextResponse } from 'next/server'
+import { cookies } from 'next/headers'
 
 export async function GET(request) {
   const requestUrl = new URL(request.url)
@@ -25,6 +26,7 @@ export async function GET(request) {
 
   if (code) {
     try {
+      const cookieStore = cookies()
       const supabase = createServerClient()
       
       // 코드를 세션으로 교환
@@ -43,9 +45,20 @@ export async function GET(request) {
         session: data?.session ? 'exists' : 'missing'
       })
       
-      // 세션이 생성되었으면 /create로 리다이렉트
+      // 세션이 생성되었으면 원래 요청한 페이지로 리다이렉트
       if (data?.session) {
-        return NextResponse.redirect(new URL('/create', requestUrl.origin))
+        // callbackUrl 쿠키 확인
+        const callbackUrl = cookieStore.get('auth-callback-url')?.value
+        const redirectTo = callbackUrl || '/create'
+        
+        console.log('Redirecting to:', redirectTo)
+        
+        // callbackUrl 쿠키 삭제
+        if (callbackUrl) {
+          cookieStore.delete('auth-callback-url')
+        }
+        
+        return NextResponse.redirect(new URL(redirectTo, requestUrl.origin))
       }
     } catch (err) {
       console.error('Callback processing error:', err)

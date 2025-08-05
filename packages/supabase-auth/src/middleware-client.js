@@ -7,8 +7,8 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
 // 미들웨어용 Supabase 클라이언트
 export function createServerClient(request, response) {
-  // 쿠키 처리를 위한 객체 생성
-  let supabaseResponse = response || NextResponse.next({
+  // 쿠키 처리를 위한 객체 생성 - response가 없으면 생성
+  const supabaseResponse = response || NextResponse.next({
     request: {
       headers: request.headers,
     },
@@ -56,5 +56,7 @@ export function createServerClient(request, response) {
     }
   )
 
+  // 미들웨어에서 사용할 때 response를 반환하기 위해 supabase 객체에 response 첨부
+  supabase._response = supabaseResponse
   return supabase
 }

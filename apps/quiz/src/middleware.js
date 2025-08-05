@@ -5,8 +5,6 @@ import { createServerClient } from '@bluenote/supabase-auth/middleware'
 const publicPaths = [
   '/',
   '/auth',
-  '/signin',
-  '/error',
   '/api/auth',
   '/api/health',
   '/_next',
@@ -14,6 +12,7 @@ const publicPaths = [
   // 커뮤니티는 공개 접근 가능
   '/community',
   '/api/share/quiz', // 퀴즈 공유 API
+  '/debug-auth', // 디버그 페이지
 ]
 
 // 인증이 필요한 경로들
@@ -29,8 +28,10 @@ const protectedPaths = [
 export async function middleware(request) {
   const pathname = request.nextUrl.pathname
   
+  console.log('[Middleware] Processing path:', pathname)
+  
   // auth callback은 항상 통과
-  if (pathname === '/auth/callback') {
+  if (pathname === '/auth/callback' || pathname === '/auth/google') {
     return NextResponse.next()
   }
   
@@ -44,11 +45,17 @@ export async function middleware(request) {
   
   if (isProtectedPath) {
     // response 객체 생성
-    const response = NextResponse.next()
+    let response = NextResponse.next({
+      request: {
+        headers: request.headers,
+      },
+    })
     
     // Supabase Auth 세션 확인
     const supabase = createServerClient(request, response)
-    const { data: { session } } = await supabase.auth.getSession()
+    const { data: { session }, error } = await supabase.auth.getSession()
+    
+    console.log('[Middleware] Session check:', { path: pathname, hasSession: !!session, error })
     
     // 세션이 없으면 로그인 페이지로 리다이렉트
     if (!session) {
@@ -58,7 +65,8 @@ export async function middleware(request) {
       return NextResponse.redirect(url)
     }
     
-    return response
+    // 세션이 있으면 response 반환 (쿠키 업데이트 포함)
+    return supabase._response || response
   }
   
   return NextResponse.next()
