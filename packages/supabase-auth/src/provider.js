@@ -54,15 +54,28 @@ export function SupabaseAuthProvider({ children, redirectTo = '/' }) {
   // 로그인 함수
   const signInWithGoogle = async (options = {}) => {
     try {
-      // 현재 앱의 origin을 그대로 사용 (각 앱이 자신의 도메인 유지)
-      const redirectUrl = options.redirectTo || `${window.location.origin}/auth/callback`
+      // 현재 앱의 origin을 state에 저장하여 콜백에서 사용
+      const currentOrigin = window.location.origin
+      const isProduction = !currentOrigin.includes('localhost')
       
-      console.log('OAuth redirect URL:', redirectUrl)
+      // 프로덕션에서는 메인 도메인의 콜백 URL 사용, state로 원래 앱 구분
+      const callbackUrl = isProduction 
+        ? 'https://bluenote.site/auth/callback'
+        : `${currentOrigin}/auth/callback`
+      
+      console.log('OAuth settings:', { currentOrigin, callbackUrl })
       
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: redirectUrl,
+          redirectTo: callbackUrl,
+          queryParams: {
+            // state 파라미터에 원래 앱 정보 저장
+            state: JSON.stringify({
+              returnTo: currentOrigin,
+              redirectPath: options.redirectPath || '/create'
+            })
+          },
           ...options
         }
       })
