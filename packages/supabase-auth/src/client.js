@@ -22,5 +22,15 @@ export function createClient() {
 
 // 클라이언트 컴포넌트용 브라우저 클라이언트
 export function createBrowserClient() {
-  return createClientComponentClient()
+  return createClientComponentClient({
+    supabaseUrl,
+    supabaseKey: supabaseAnonKey,
+    options: {
+      auth: {
+        autoRefreshToken: true,
+        persistSession: true,
+        detectSessionInUrl: true
+      }
+    }
+  })
 }

@@ -2,6 +2,7 @@ import { Inter, Noto_Sans_KR } from 'next/font/google'
 import './globals.css'
 import { Providers } from '@/components/Providers'
 import { AppLayout } from '@/components/Layout/AppLayout'
+import DomainChecker from '@/components/DomainChecker'
 
 const inter = Inter({ 
   subsets: ['latin'],
@@ -32,6 +33,7 @@ export default function RootLayout({ children }) {
   return (
     <html lang="ko" className={`${inter.variable} ${notoSansKR.variable}`}>
       <body className="font-sans antialiased">
+        <DomainChecker />
         <Providers>
           <AppLayout>
             {children}

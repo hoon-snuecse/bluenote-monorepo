@@ -14,7 +14,9 @@ export default function SignInPage() {
     try {
       setLoading(true)
       setError(null)
-      await signInWithGoogle()
+      await signInWithGoogle({
+        redirectTo: `${window.location.origin}/auth/callback`
+      })
     } catch (err) {
       setError(err.message)
       setLoading(false)
