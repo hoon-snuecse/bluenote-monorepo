@@ -29,3 +29,4 @@ export function createBrowserClient() {
       storage: typeof window !== 'undefined' ? window.localStorage : undefined
     }
   })
+}
