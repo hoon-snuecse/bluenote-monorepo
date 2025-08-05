@@ -8,25 +8,35 @@ if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error('Missing Supabase environment variables')
 }
 
+// 싱글톤 인스턴스
+let clientInstance = null
+let browserClientInstance = null
+
 // 기본 클라이언트 생성 (서버/클라이언트 공통)
 export function createClient() {
-  return createSupabaseClient(supabaseUrl, supabaseAnonKey, {
-    auth: {
-      autoRefreshToken: true,
-      persistSession: true,
-      detectSessionInUrl: true
-    }
-  })
+  if (!clientInstance) {
+    clientInstance = createSupabaseClient(supabaseUrl, supabaseAnonKey, {
+      auth: {
+        autoRefreshToken: true,
+        persistSession: true,
+        detectSessionInUrl: true
+      }
+    })
+  }
+  return clientInstance
 }
 
 // 클라이언트 컴포넌트용 브라우저 클라이언트
 export function createBrowserClient() {
-  return createSupabaseClient(supabaseUrl, supabaseAnonKey, {
-    auth: {
-      autoRefreshToken: true,
-      persistSession: true,
-      detectSessionInUrl: true,
-      storage: typeof window !== 'undefined' ? window.localStorage : undefined
-    }
-  })
+  if (!browserClientInstance) {
+    browserClientInstance = createSupabaseClient(supabaseUrl, supabaseAnonKey, {
+      auth: {
+        autoRefreshToken: true,
+        persistSession: true,
+        detectSessionInUrl: true,
+        storage: typeof window !== 'undefined' ? window.localStorage : undefined
+      }
+    })
+  }
+  return browserClientInstance
 }
