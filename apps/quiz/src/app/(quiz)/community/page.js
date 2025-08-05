@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-// import { useSession } from 'next-auth/react' // Temporarily removed due to React Hooks error
+import { useSession } from 'next-auth/react'
 import { 
   Download, 
   Star, 
@@ -20,65 +20,7 @@ import {
 } from 'lucide-react'
 
 export default function CommunityPage() {
-  // const { data: session } = useSession() // Temporarily removed
-  const [session, setSession] = useState(null)
-  
-  // Fetch session manually with sync handling
-  useEffect(() => {
-    const fetchSession = async () => {
-      try {
-        // 1. 먼저 퀴즈앱 세션 확인
-        const quizSessionRes = await fetch('/api/auth/session')
-        const quizSessionData = await quizSessionRes.json()
-        
-        if (quizSessionData.authenticated && quizSessionData.user) {
-          // 퀴즈앱 세션이 있으면 사용
-          setSession(quizSessionData)
-          return
-        }
-        
-        // 2. 퀴즈앱 세션이 없으면 메인 사이트 세션 확인
-        if (quizSessionData.needsSync || quizSessionData.hasMainSession) {
-          try {
-            const mainSiteUrl = process.env.NODE_ENV === 'production' 
-              ? 'https://www.bluenote.site' 
-              : 'http://localhost:3000'
-            
-            const mainSessionRes = await fetch(`${mainSiteUrl}/api/auth/session-check`, {
-              credentials: 'include',
-              headers: {
-                'Accept': 'application/json',
-              }
-            })
-            
-            if (mainSessionRes.ok) {
-              const mainSessionData = await mainSessionRes.json()
-              
-              if (mainSessionData.authenticated && mainSessionData.session) {
-                // 메인 세션 데이터를 사용
-                setSession({
-                  user: mainSessionData.session.user || mainSessionData.user,
-                  authenticated: true
-                })
-                return
-              }
-            }
-          } catch (error) {
-            console.error('메인 사이트 세션 확인 실패:', error)
-          }
-        }
-        
-        // 3. 세션이 없는 경우
-        setSession(null)
-        
-      } catch (error) {
-        console.error('세션 확인 오류:', error)
-        setSession(null)
-      }
-    }
-    
-    fetchSession()
-  }, [])
+  const { data: session, status } = useSession()
   const [sharedQuizzes, setSharedQuizzes] = useState([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
@@ -261,7 +203,7 @@ export default function CommunityPage() {
                   onClick={() => {
                     // 본인 퀴즈만 필터링하여 전체 선택
                     const myQuizIds = filteredQuizzes
-                      .filter(quiz => quiz.user_email === session.user.email)
+                      .filter(quiz => quiz.user_email === session?.user?.email)
                       .map(quiz => quiz.quiz_id)
                     setSelectedQuizzes(myQuizIds)
                   }}
@@ -318,7 +260,9 @@ export default function CommunityPage() {
           onClick={() => {
             // 세션 상태를 sessionStorage에 저장하여 create 페이지에서 사용
             if (session) {
-              sessionStorage.setItem('userSession', JSON.stringify(session))
+              if (session) {
+                sessionStorage.setItem('userSession', JSON.stringify(session))
+              }
             }
           }}
         >
