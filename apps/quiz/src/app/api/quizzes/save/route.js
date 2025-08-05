@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getServerSession } from '@/lib/auth'
-import { createClient } from '@/lib/supabase'
+import { createClient, createServiceClient } from '@/lib/supabase'
 
 export async function POST(request) {
   try {
@@ -28,22 +28,12 @@ export async function POST(request) {
       )
     }
 
-    const supabase = createClient()
+    // Service Role 클라이언트 사용 (RLS 우회)
+    const supabase = createServiceClient()
+    console.log('[save quiz] Using service role client for user:', userEmail)
     
-    // RLS 컨텍스트 설정
-    const { error: rpcError } = await supabase.rpc('set_current_user_email', { 
-      email: userEmail 
-    })
-    
-    if (rpcError) {
-      console.error('[save quiz] RPC error:', rpcError)
-      return NextResponse.json(
-        { error: 'RLS 설정 중 오류가 발생했습니다.', details: rpcError.message },
-        { status: 500 }
-      )
-    }
-
     // 퀴즈 메타데이터 저장
+    console.log('[save quiz] Attempting to save quiz with user_email:', userEmail)
     const { data: quiz, error: quizError } = await supabase
       .from('quizzes')
       .insert({
@@ -59,7 +49,8 @@ export async function POST(request) {
         },
         status: 'published',
         is_public: true,
-        is_shared: true
+        is_shared: true,
+        is_sample: false
       })
       .select()
       .single()
@@ -143,11 +134,6 @@ export async function POST(request) {
     // 커뮤니티에 공유
     const truefalseCount = questions.filter(q => q.type === 'true_false').length
     const multipleChoiceCount = questions.filter(q => q.type === 'multiple_choice').length
-    
-    // RLS 컨텍스트 다시 설정 (안전을 위해)
-    await supabase.rpc('set_current_user_email', { 
-      email: userEmail 
-    })
     
     const { error: shareError } = await supabase
       .from('shared_quizzes')
