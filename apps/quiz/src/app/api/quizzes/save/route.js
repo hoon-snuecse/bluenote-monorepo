@@ -29,6 +29,12 @@ export async function POST(request) {
     }
 
     // Service Role 클라이언트 사용 (RLS 우회)
+    console.log('[save quiz] Environment check:', {
+      hasServiceKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
+      serviceKeyLength: process.env.SUPABASE_SERVICE_ROLE_KEY?.length,
+      supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL
+    })
+    
     const supabase = createServiceClient()
     console.log('[save quiz] Using service role client for user:', userEmail)
     
@@ -56,8 +62,19 @@ export async function POST(request) {
       .single()
 
     if (quizError) {
+      console.error('[save quiz] Quiz insert error:', {
+        message: quizError.message,
+        code: quizError.code,
+        details: quizError.details,
+        hint: quizError.hint
+      })
       return NextResponse.json(
-        { error: '퀴즈 저장 중 오류가 발생했습니다.', details: quizError.message },
+        { 
+          error: '퀴즈 저장 중 오류가 발생했습니다.', 
+          details: quizError.message,
+          code: quizError.code,
+          hint: quizError.hint
+        },
         { status: 500 }
       )
     }
@@ -163,8 +180,12 @@ export async function POST(request) {
     })
 
   } catch (error) {
+    console.error('[save quiz] Unexpected error:', error)
     return NextResponse.json(
-      { error: '퀴즈 저장 중 오류가 발생했습니다.' },
+      { 
+        error: '퀴즈 저장 중 오류가 발생했습니다.',
+        details: error.message 
+      },
       { status: 500 }
     )
   }
