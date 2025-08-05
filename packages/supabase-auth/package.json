@@ -1,0 +1,29 @@
+{
+  "name": "@bluenote/supabase-auth",
+  "version": "1.0.0",
+  "description": "Shared Supabase authentication for Bluenote apps",
+  "main": "src/index.js",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.js",
+    "./server": "./server.js",
+    "./middleware": "./middleware.js"
+  },
+  "scripts": {
+    "dev": "echo 'No dev script needed for auth package'",
+    "lint": "eslint src/"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.39.0",
+    "@supabase/auth-helpers-nextjs": "^0.8.7",
+    "@supabase/auth-helpers-react": "^0.4.2"
+  },
+  "peerDependencies": {
+    "next": ">=13.0.0",
+    "react": ">=18.0.0",
+    "react-dom": ">=18.0.0"
+  },
+  "devDependencies": {
+    "@bluenote/config": "workspace:*"
+  }
+}

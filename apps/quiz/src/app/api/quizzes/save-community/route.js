@@ -1,11 +1,11 @@
 import { NextResponse } from 'next/server'
-import { getServerSession } from '@/lib/auth'
-import { createServiceClient } from '@/lib/supabase'
+import { getSession } from '@bluenote/supabase-auth/server'
+import { createServerClient } from '@bluenote/supabase-auth/server'
 
 export async function POST(request) {
   try {
-    // 세션 확인
-    const session = await getServerSession()
+    // Supabase Auth 세션 확인
+    const session = await getSession()
     
     if (!session?.user?.email) {
       console.log('[save-community] No session found')
@@ -28,20 +28,9 @@ export async function POST(request) {
       )
     }
 
-    // Service Role 클라이언트 사용 (RLS 우회)
-    console.log('[save-community] Creating service client')
-    let supabase
-    
-    try {
-      supabase = createServiceClient()
-      console.log('[save-community] Service client created successfully')
-    } catch (error) {
-      console.error('[save-community] Failed to create service client:', error)
-      // Service client 실패 시 일반 client 사용
-      const { createClient } = await import('@/lib/supabase')
-      supabase = createClient()
-      console.log('[save-community] Falling back to regular client')
-    }
+    // 서버 클라이언트 사용 (JWT 인증 포함)
+    console.log('[save-community] Creating server client')
+    const supabase = createServerClient()
 
     // 퀴즈 메타데이터 저장
     console.log('[save-community] Inserting quiz data')

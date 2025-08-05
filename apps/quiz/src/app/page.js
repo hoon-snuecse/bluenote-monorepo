@@ -1,21 +1,20 @@
 'use client'
 
 import Link from 'next/link'
-import { useSession } from 'next-auth/react'
+import { useSupabaseAuth } from '@bluenote/supabase-auth'
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 
 export default function HomePage() {
-  const { data: session, status } = useSession()
-  const user = session?.user
+  const { user, loading } = useSupabaseAuth()
   const router = useRouter()
 
   // 로그인된 사용자는 community로 자동 리다이렉트
   useEffect(() => {
-    if (status === 'authenticated') {
+    if (!loading && user) {
       router.push('/community')
     }
-  }, [status, router])
+  }, [loading, user, router])
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-gray-50 px-4 py-12 sm:px-6 lg:px-8">
@@ -30,7 +29,7 @@ export default function HomePage() {
         </div>
         
         <div className="mt-8 space-y-4">
-          {status === 'authenticated' ? (
+          {!loading && user ? (
             <>
               <Link
                 href="/create"

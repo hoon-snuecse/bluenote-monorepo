@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { FileText, Save, Globe, User, LogOut } from 'lucide-react'
-import { useSession, signOut } from '@bluenote/auth'
+import { useSupabaseAuth } from '@bluenote/supabase-auth'
 
 const tabs = [
   {
@@ -28,11 +28,11 @@ const tabs = [
 
 export function Navigation() {
   const pathname = usePathname()
-  const { data: session, status } = useSession()
+  const { user, loading, signOut } = useSupabaseAuth()
   
   const handleSignOut = async () => {
-    // @bluenote/auth의 signOut 사용
-    await signOut({ callbackUrl: '/' })
+    // Supabase Auth signOut 사용
+    await signOut()
   }
 
   return (
@@ -77,12 +77,12 @@ export function Navigation() {
           
           {/* 사용자 정보 및 로그아웃 버튼 */}
           <div className="flex items-center gap-4">
-            {status === 'authenticated' && session?.user && (
+            {!loading && user && (
               <>
                 {/* 사용자 정보 */}
                 <div className="flex items-center gap-2 text-sm text-gray-700">
                   <User className="w-4 h-4" />
-                  <span>{session.user.email}</span>
+                  <span>{user.email}</span>
                 </div>
                 
                 {/* 로그아웃 버튼 */}

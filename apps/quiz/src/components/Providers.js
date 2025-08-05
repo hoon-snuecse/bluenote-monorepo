@@ -1,12 +1,12 @@
 'use client'
 
-import { SessionProvider } from '@bluenote/auth'
+import { SupabaseAuthProvider } from '@bluenote/supabase-auth'
 
 export function Providers({ children }) {
-  // @bluenote/auth의 SessionProvider 사용하여 Web 앱과 세션 공유
+  // Supabase Auth Provider로 전환
   return (
-    <SessionProvider>
+    <SupabaseAuthProvider redirectTo="/create">
       {children}
-    </SessionProvider>
+    </SupabaseAuthProvider>
   )
 }

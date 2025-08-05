@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { getToken } from 'next-auth/jwt'
+import { createServerClient } from '@bluenote/supabase-auth/middleware'
 
 // 인증이 필요없는 공개 경로들
 const publicPaths = [
@@ -20,6 +20,7 @@ const publicPaths = [
 const protectedPaths = [
   '/create',
   '/saved',
+  '/my-quizzes',
   '/api/quizzes',
   '/api/ai',
   '/api/export',
@@ -37,21 +38,22 @@ export async function middleware(request) {
   const isProtectedPath = protectedPaths.some(path => pathname.startsWith(path))
   
   if (isProtectedPath) {
-    // NextAuth JWT 토큰 확인
-    const token = await getToken({ 
-      req: request, 
-      secret: process.env.NEXTAUTH_SECRET,
-      // @bluenote/auth 공유 세션 쿠키 이름
-      cookieName: 'next-auth.session-token'
-    })
+    // response 객체 생성
+    const response = NextResponse.next()
     
-    // 토큰이 없으면 로그인 페이지로 리다이렉트
-    if (!token) {
+    // Supabase Auth 세션 확인
+    const supabase = createServerClient(request, response)
+    const { data: { session } } = await supabase.auth.getSession()
+    
+    // 세션이 없으면 로그인 페이지로 리다이렉트
+    if (!session) {
       const url = request.nextUrl.clone()
       url.pathname = '/auth/signin'
       url.searchParams.set('callbackUrl', pathname)
       return NextResponse.redirect(url)
     }
+    
+    return response
   }
   
   return NextResponse.next()
