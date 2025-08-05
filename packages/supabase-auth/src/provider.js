@@ -54,14 +54,9 @@ export function SupabaseAuthProvider({ children, redirectTo = '/' }) {
   // 로그인 함수
   const signInWithGoogle = async (options = {}) => {
     try {
-      // 현재 앱의 origin을 state에 저장하여 콜백에서 사용
+      // 각 앱이 자체적으로 OAuth 콜백을 처리
       const currentOrigin = window.location.origin
-      const isProduction = !currentOrigin.includes('localhost')
-      
-      // 프로덕션에서는 메인 도메인의 콜백 URL 사용, state로 원래 앱 구분
-      const callbackUrl = isProduction 
-        ? 'https://bluenote.site/auth/callback'
-        : `${currentOrigin}/auth/callback`
+      const callbackUrl = `${currentOrigin}/auth/callback`
       
       console.log('OAuth settings:', { currentOrigin, callbackUrl })
       
@@ -69,13 +64,6 @@ export function SupabaseAuthProvider({ children, redirectTo = '/' }) {
         provider: 'google',
         options: {
           redirectTo: callbackUrl,
-          queryParams: {
-            // state 파라미터에 원래 앱 정보 저장
-            state: JSON.stringify({
-              returnTo: currentOrigin,
-              redirectPath: options.redirectPath || '/create'
-            })
-          },
           ...options
         }
       })
