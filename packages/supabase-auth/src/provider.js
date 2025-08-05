@@ -30,10 +30,12 @@ export function SupabaseAuthProvider({ children, redirectTo = '/' }) {
     // 인증 상태 변경 리스너
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log('Auth state changed:', event, session?.user?.email)
         setSession(session)
         
-        // 로그인 성공 시 리다이렉트
-        if (event === 'SIGNED_IN' && redirectTo) {
+        // 로그인 성공 시 리다이렉트 (초기 OAuth 콜백은 제외)
+        if (event === 'SIGNED_IN' && redirectTo && !window.location.pathname.includes('/auth/callback')) {
+          console.log('Redirecting to:', redirectTo)
           router.push(redirectTo)
         }
         
@@ -50,12 +52,18 @@ export function SupabaseAuthProvider({ children, redirectTo = '/' }) {
   }, [supabase, router, redirectTo])
 
   // 로그인 함수
-  const signInWithGoogle = async () => {
+  const signInWithGoogle = async (options = {}) => {
     try {
+      // 현재 앱의 origin을 그대로 사용 (각 앱이 자신의 도메인 유지)
+      const redirectUrl = options.redirectTo || `${window.location.origin}/auth/callback`
+      
+      console.log('OAuth redirect URL:', redirectUrl)
+      
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`
+          redirectTo: redirectUrl,
+          ...options
         }
       })
       
