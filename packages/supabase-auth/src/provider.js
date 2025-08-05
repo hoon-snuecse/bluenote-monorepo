@@ -8,7 +8,7 @@ const SupabaseAuthContext = createContext({})
 
 export function SupabaseAuthProvider({ children, redirectTo = '/' }) {
   const [supabase] = useState(() => createBrowserClient())
-  const [user, setUser] = useState(null)
+  const [session, setSession] = useState(null)
   const [loading, setLoading] = useState(true)
   const router = useRouter()
 
@@ -17,7 +17,7 @@ export function SupabaseAuthProvider({ children, redirectTo = '/' }) {
     const checkUser = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession()
-        setUser(session?.user ?? null)
+        setSession(session)
       } catch (error) {
         console.error('Error checking user session:', error)
       } finally {
@@ -30,7 +30,7 @@ export function SupabaseAuthProvider({ children, redirectTo = '/' }) {
     // 인증 상태 변경 리스너
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        setUser(session?.user ?? null)
+        setSession(session)
         
         // 로그인 성공 시 리다이렉트
         if (event === 'SIGNED_IN' && redirectTo) {
@@ -78,7 +78,8 @@ export function SupabaseAuthProvider({ children, redirectTo = '/' }) {
   }
 
   const value = {
-    user,
+    session,
+    user: session?.user ?? null,
     loading,
     supabase,
     signInWithGoogle,
