@@ -1,11 +1,11 @@
 import { NextResponse } from 'next/server'
-import { getServerSession } from '@/lib/auth'
+import { getServerSession, authOptions } from '@/lib/auth'
 import { createClient } from '@/lib/supabase'
 
 export async function POST(request) {
   try {
     // 세션 확인
-    const session = await getServerSession()
+    const session = await getServerSession(authOptions)
     
     if (!session?.user?.email) {
       console.log('[save quiz] No session found')

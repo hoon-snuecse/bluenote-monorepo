@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
 import { createClient } from '@/lib/supabase'
 
 // GET: 사용자의 퀴즈 목록 조회
@@ -29,7 +30,7 @@ export async function GET(request) {
       supabase
         .from('quizzes')
         .select('*, questions(count)', { count: 'exact' })
-        .eq('user_id', session.user.id)
+        .eq('user_email', session.user.email)
         .eq('is_sample', false)
         .or(search ? `title.ilike.%${search}%,description.ilike.%${search}%` : undefined)
         .order('created_at', { ascending: false })

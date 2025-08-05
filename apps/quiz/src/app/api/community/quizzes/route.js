@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase'
-import { getServerSession } from '@/lib/auth'
+import { getServerSession, authOptions } from '@/lib/auth'
 
 export async function GET(request) {
   try {
@@ -12,7 +12,7 @@ export async function GET(request) {
     const supabase = createClient()
     
     // 현재 사용자 세션 가져오기
-    const session = await getServerSession()
+    const session = await getServerSession(authOptions)
     const currentUserEmail = session?.user?.email
 
     // 1. 공개된 퀴즈 또는 본인 퀴즈 가져오기 (shared_quizzes에서)
