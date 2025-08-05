@@ -29,6 +29,11 @@ const protectedPaths = [
 export async function middleware(request) {
   const pathname = request.nextUrl.pathname
   
+  // auth callback은 항상 통과
+  if (pathname === '/auth/callback') {
+    return NextResponse.next()
+  }
+  
   // public 경로는 통과
   if (publicPaths.some(path => pathname.startsWith(path))) {
     return NextResponse.next()
