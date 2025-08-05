@@ -95,7 +95,7 @@ export default function QuizBuilder() {
   }
 
   // 로딩 중일 때 표시
-  if (status === 'loading') {
+  if (!session && !user) {
     return (
       <div className="flex items-center justify-center p-8">
         <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
@@ -105,7 +105,7 @@ export default function QuizBuilder() {
   }
 
   // 미인증 상태일 때 표시
-  if (status === 'unauthenticated' || !user) {
+  if (!session || !user) {
     const isProduction = typeof window !== 'undefined' && window.location.hostname === 'quiz.bluenote.site'
     const loginUrl = isProduction 
       ? 'https://www.bluenote.site/auth/signin?callbackUrl=https://quiz.bluenote.site/create'
@@ -317,7 +317,7 @@ export default function QuizBuilder() {
         <div className="flex justify-end">
           <button
             type="submit"
-            disabled={isGenerating || status !== 'authenticated'}
+            disabled={isGenerating || !session}
             className="inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {isGenerating ? (

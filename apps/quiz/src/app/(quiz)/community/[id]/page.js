@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-// import { useSession } from 'next-auth/react' // Temporarily removed due to React Hooks error
+import { useSupabaseAuth } from '@bluenote/supabase-auth'
 import { createClient } from '@/lib/supabase'
 import { ChevronLeft, Download, Star, Calendar, User, FileText } from 'lucide-react'
 import QuestionPreview from '@/components/QuestionPreview/QuestionPreview'
@@ -10,65 +10,7 @@ import QuestionPreview from '@/components/QuestionPreview/QuestionPreview'
 export default function CommunityQuizDetailPage() {
   const { id } = useParams()
   const router = useRouter()
-  // const { data: session } = useSession() // Temporarily removed
-  const [session, setSession] = useState(undefined) // undefined: 로딩중, null: 미인증
-  
-  // Fetch session manually with proper handling
-  useEffect(() => {
-    const fetchSession = async () => {
-      try {
-        // 1. 먼저 퀴즈앱 세션 확인
-        const quizSessionRes = await fetch('/api/auth/session')
-        const quizSessionData = await quizSessionRes.json()
-        
-        if (quizSessionData.authenticated && quizSessionData.user) {
-          // 퀴즈앱 세션이 있으면 사용
-          setSession(quizSessionData)
-          return
-        }
-        
-        // 2. 퀴즈앱 세션이 없으면 메인 사이트 세션 확인
-        if (quizSessionData.needsSync || quizSessionData.hasMainSession) {
-          try {
-            const mainSiteUrl = process.env.NODE_ENV === 'production' 
-              ? 'https://www.bluenote.site' 
-              : 'http://localhost:3000'
-            
-            const mainSessionRes = await fetch(`${mainSiteUrl}/api/auth/session-check`, {
-              credentials: 'include',
-              headers: {
-                'Accept': 'application/json',
-              }
-            })
-            
-            if (mainSessionRes.ok) {
-              const mainSessionData = await mainSessionRes.json()
-              
-              if (mainSessionData.authenticated && mainSessionData.session) {
-                // 메인 세션 데이터를 사용
-                setSession({
-                  user: mainSessionData.session.user || mainSessionData.user,
-                  authenticated: true
-                })
-                return
-              }
-            }
-          } catch (error) {
-            console.error('메인 사이트 세션 확인 실패:', error)
-          }
-        }
-        
-        // 3. 세션이 없는 경우
-        setSession(null)
-        
-      } catch (error) {
-        console.error('세션 확인 오류:', error)
-        setSession(null)
-      }
-    }
-    
-    fetchSession()
-  }, [])
+  const { session } = useSupabaseAuth()
   const [quiz, setQuiz] = useState(null)
   const [questions, setQuestions] = useState([])
   const [loading, setLoading] = useState(true)
@@ -80,11 +22,11 @@ export default function CommunityQuizDetailPage() {
   })
 
   useEffect(() => {
-    // 세션 로드가 완료된 후에만 데이터 조회 (한 번만 실행)
-    if (id && session !== undefined && !quiz) {
+    // 세션 로드가 완료된 후에만 데이터 조회
+    if (id) {
       fetchQuizDetail()
     }
-  }, [id, session !== undefined]) // session 객체가 아닌 로드 완료 여부만 체크
+  }, [id])
 
   const fetchQuizDetail = async () => {
     try {
@@ -206,7 +148,7 @@ export default function CommunityQuizDetailPage() {
     }
   }
 
-  if (loading || session === undefined) {
+  if (loading) {
     return (
       <div className="flex justify-center items-center min-h-[50vh]">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>

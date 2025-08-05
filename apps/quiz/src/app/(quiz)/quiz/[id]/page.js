@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-// import { useSession } from 'next-auth/react' // Temporarily removed due to React Hooks error
+import { useSupabaseAuth } from '@bluenote/supabase-auth'
 import { useParams, useRouter } from 'next/navigation'
 import { 
   ArrowLeft,
@@ -14,16 +14,7 @@ import {
 } from 'lucide-react'
 
 export default function QuizDetailPage() {
-  // const { data: session } = useSession() // Temporarily removed
-  const [session, setSession] = useState(null)
-  
-  // Fetch session manually
-  useEffect(() => {
-    fetch('/api/auth/session')
-      .then(res => res.json())
-      .then(data => setSession(data))
-      .catch(() => setSession(null))
-  }, [])
+  const { session } = useSupabaseAuth()
   const params = useParams()
   const router = useRouter()
   const [quiz, setQuiz] = useState(null)
