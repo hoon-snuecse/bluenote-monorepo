@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { Coffee, Hammer, Camera, Music, Film, Plane, Plus, PenTool, ChevronRight, Calendar, Clock, Tag } from 'lucide-react';
 import Link from 'next/link';
-import { useNextAuth as useAuth } from '@bluenote/auth';
+import { useAuth } from '@/app/hooks/useAuth';
 
 export default function ShedPageClient() {
   const { user } = useAuth();

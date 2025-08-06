@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { GraduationCap, BarChart2, Network, Plus, PenTool, ChevronRight, Calendar, Clock, Tag } from 'lucide-react';
 import Link from 'next/link';
-import { useNextAuth as useAuth } from '@bluenote/auth';
+import { useAuth } from '@/app/hooks/useAuth';
 
 export default function ResearchPageClient() {
   const { user, status } = useAuth();

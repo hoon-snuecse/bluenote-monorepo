@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { BookOpen, Users, Lightbulb, Plus, PenTool, ChevronRight, Tag } from 'lucide-react';
 import Link from 'next/link';
-import { useNextAuth as useAuth } from '@bluenote/auth';
+import { useAuth } from '@/app/hooks/useAuth';
 
 export default function TeachingPageClient() {
   const { user } = useAuth();

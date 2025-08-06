@@ -1,6 +1,6 @@
 'use client';
 
-import { useNextAuth as useAuth } from '@bluenote/auth';
+import { useAuth } from '@/app/hooks/useAuth';
 import { useState } from 'react';
 
 export default function SessionDebugPage() {

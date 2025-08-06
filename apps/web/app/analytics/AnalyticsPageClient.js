@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { BarChart2, Network, Database, Plus, PenTool, ChevronRight, Tag } from 'lucide-react';
 import Link from 'next/link';
-import { useNextAuth as useAuth } from '@bluenote/auth';
+import { useAuth } from '@/app/hooks/useAuth';
 
 export default function AnalyticsPageClient() {
   const { user } = useAuth();

@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { PenTool, FileQuestion, BarChart2, Brain, Lock, Sparkles } from 'lucide-react';
-import { useNextAuth as useAuth } from '@bluenote/auth';
+import { useAuth } from '@/app/hooks/useAuth';
 
 export default function ProgramsPageClient() {
   const [fadeIn, setFadeIn] = useState({

@@ -1,10 +1,10 @@
 'use client';
 
 import Link from 'next/link';
-import { useNextAuth as useAuth } from '@bluenote/auth';
+import { useAuth } from '@/app/hooks/useAuth';
 
 export default function SimpleNav() {
-  const { user, status } = useAuth();
+  const { user, status, signOut } = useAuth();
   
   if (status === 'loading') {
     return (
@@ -37,9 +37,9 @@ export default function SimpleNav() {
                 </Link>
               )}
               <span>{user?.name || user?.email}</span>
-              <Link href="/api/auth/signout?callbackUrl=/" className="hover:text-blue-600">
+              <button onClick={() => signOut()} className="hover:text-blue-600">
                 Logout
-              </Link>
+              </button>
             </>
           ) : (
             <Link href="/auth/signin" className="hover:text-blue-600">

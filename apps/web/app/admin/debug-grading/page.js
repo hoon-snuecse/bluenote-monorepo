@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useNextAuth as useAuth } from '@bluenote/auth';
+import { useAuth } from '@/app/hooks/useAuth';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
