@@ -74,6 +74,16 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 
 ## 주의사항
 
-- Supabase의 Site URL은 **정확히** `https://www.bluenote.site`로 설정해야 합니다 (www 포함)
+- Supabase의 Site URL은 **정확히** `https://bluenote.site`로 설정해야 합니다 (www 없이)
 - Redirect URLs에는 모든 가능한 도메인 변형을 포함해야 합니다
 - Google Cloud Console과 Supabase 양쪽 모두에서 redirect URI를 설정해야 합니다
+
+## 문제 해결 진행 상황
+
+1. **skipBrowserRedirect 적용**: OAuth URL을 직접 제어하여 올바른 redirect_uri가 설정되는지 확인
+2. **디버그 로깅 추가**: OAuth URL과 redirect_uri 파라미터 로깅으로 문제 파악
+
+다음 단계:
+- 브라우저 콘솔에서 OAuth URL과 redirect_uri 확인
+- Supabase Dashboard에서 Redirect URLs 설정 확인
+- 여전히 문제가 있다면 Supabase Project Settings에서 Auth Providers 설정 재확인

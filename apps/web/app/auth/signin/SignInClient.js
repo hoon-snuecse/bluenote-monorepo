@@ -15,7 +15,7 @@ export default function SignInClient() {
     const currentOrigin = window.location.origin;
     console.log('[SignInClient] Current origin:', currentOrigin);
     
-    // Supabase OAuth flow 사용
+    // Supabase OAuth flow 사용 - skipBrowserRedirect로 URL 직접 제어
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
@@ -24,14 +24,20 @@ export default function SignInClient() {
         queryParams: {
           access_type: 'offline',
           prompt: 'consent',
-        }
+        },
+        skipBrowserRedirect: true // URL을 직접 제어
       }
     });
     
     if (error) {
       console.error('[SignInClient] Error signing in with Google:', error);
-    } else {
-      console.log('[SignInClient] OAuth URL generated:', data?.url);
+    } else if (data?.url) {
+      console.log('[SignInClient] OAuth URL generated:', data.url);
+      // URL이 올바른지 확인
+      const oauthUrl = new URL(data.url);
+      console.log('[SignInClient] OAuth redirect_uri:', oauthUrl.searchParams.get('redirect_uri'));
+      // 직접 리다이렉트
+      window.location.href = data.url;
     }
   };
 
