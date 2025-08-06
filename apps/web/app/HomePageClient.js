@@ -1,10 +1,15 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import TypingAnimation from './components/TypingAnimation';
 import FloatingElements from './components/FloatingElements';
 
 export default function HomePageClient() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const code = searchParams.get('code');
+  
   const [fadeIn, setFadeIn] = useState({
     hero: false,
     subtitle: false,
@@ -13,6 +18,17 @@ export default function HomePageClient() {
     quote2: false,
     quote3: false,
   });
+
+  useEffect(() => {
+    // OAuth code가 있으면 callback 경로로 리다이렉트
+    if (code) {
+      console.log('[HomePage] OAuth code detected, redirecting to callback');
+      // 모든 쿼리 파라미터를 유지하면서 리다이렉트
+      const params = new URLSearchParams(window.location.search);
+      router.replace(`/auth/callback?${params.toString()}`);
+      return;
+    }
+  }, [code, router]);
 
   const quotes = [
     {
