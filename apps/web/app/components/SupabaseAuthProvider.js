@@ -158,16 +158,18 @@ export function SupabaseAuthProvider({ children }) {
     }
   };
   
-  // 디버그 로깅
-  if (typeof window !== 'undefined') {
-    console.log('[SupabaseAuthProvider] Current auth state:', {
-      status,
-      hasSession: !!session,
-      userEmail: session?.user?.email,
-      isAdmin: session?.user?.isAdmin,
-      canWrite: session?.user?.canWrite
-    });
-  }
+  // 디버그 로깅은 useEffect에서만 수행
+  useEffect(() => {
+    if (typeof window !== 'undefined' && (status === 'authenticated' || status === 'unauthenticated')) {
+      console.log('[SupabaseAuthProvider] Auth state updated:', {
+        status,
+        hasSession: !!session,
+        userEmail: session?.user?.email,
+        isAdmin: session?.user?.isAdmin,
+        canWrite: session?.user?.canWrite
+      });
+    }
+  }, [status, session]);
 
   return (
     <AuthContext.Provider value={value}>

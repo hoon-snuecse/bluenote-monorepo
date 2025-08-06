@@ -59,13 +59,34 @@ function getCombinedCookie(name) {
 // 브라우저 클라이언트 생성 (쿠키 기반)
 export function createBrowserClient() {
   if (!browserClientInstance) {
+    console.log('[createBrowserClient] Creating new Supabase client instance');
+    
     // @supabase/ssr의 createBrowserClient는 브라우저 환경에서는
     // 자동으로 document.cookie를 사용하므로 cookies 객체를 전달하지 않음
     browserClientInstance = createSupabaseBrowserClient(
       supabaseUrl,
       supabaseAnonKey,
       {
-        cookieOptions: getCookieOptions()
+        cookieOptions: getCookieOptions(),
+        auth: {
+          flowType: 'pkce',
+          detectSessionInUrl: true,
+          persistSession: true,
+          storageKey: 'sb-ukxchcyvxnbmsfrsamjk-auth-token',
+          storage: {
+            // 쿠키 기반 storage adapter
+            getItem: async (key) => {
+              if (typeof document === 'undefined') return null;
+              return getCombinedCookie(key);
+            },
+            setItem: async (key, value) => {
+              // Supabase SSR이 자동으로 처리
+            },
+            removeItem: async (key) => {
+              // Supabase SSR이 자동으로 처리
+            }
+          }
+        }
       }
     )
   }

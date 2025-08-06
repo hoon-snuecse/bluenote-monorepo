@@ -11,7 +11,11 @@ export default function ClientDebugPage() {
   const [supabase] = useState(() => createBrowserClient());
 
   useEffect(() => {
+    let isMounted = true;
+    
     const checkSession = async () => {
+      if (!isMounted) return;
+      
       try {
         // Direct Supabase session check
         const { data: { session }, error } = await supabase.auth.getSession();
@@ -24,49 +28,61 @@ export default function ClientDebugPage() {
         const authTokenCookie = cookies.find(c => c.startsWith('sb-ukxchcyvxnbmsfrsamjk-auth-token'));
         const authTokenChunked = cookies.filter(c => c.includes('sb-ukxchcyvxnbmsfrsamjk-auth-token.'));
         
-        setSessionInfo({
-          directSession: session,
-          directUser: currentUser,
-          authHookUser: user,
-          authHookStatus: status,
-          sessionError: error?.message,
-          userError: userError?.message,
-          cookies: document.cookie,
-          supabaseCookies: cookies.filter(c => c.includes('sb-')),
-          authTokenCookie: authTokenCookie,
-          authTokenChunked: authTokenChunked,
-          hasAuthToken: !!authTokenCookie || authTokenChunked.length > 0,
-          timestamp: new Date().toISOString()
-        });
-        
-        console.log('[ClientDebug] Session check completed:', {
-          hasDirectSession: !!session,
-          hasDirectUser: !!currentUser,
-          hasAuthHookUser: !!user,
-          authHookStatus: status,
-          hasAuthToken: !!authTokenCookie || authTokenChunked.length > 0
-        });
+        if (isMounted) {
+          setSessionInfo({
+            directSession: session,
+            directUser: currentUser,
+            authHookUser: user,
+            authHookStatus: status,
+            sessionError: error?.message,
+            userError: userError?.message,
+            cookies: document.cookie,
+            supabaseCookies: cookies.filter(c => c.includes('sb-')),
+            authTokenCookie: authTokenCookie,
+            authTokenChunked: authTokenChunked,
+            hasAuthToken: !!authTokenCookie || authTokenChunked.length > 0,
+            timestamp: new Date().toISOString()
+          });
+          
+          console.log('[ClientDebug] Session check completed:', {
+            hasDirectSession: !!session,
+            hasDirectUser: !!currentUser,
+            hasAuthHookUser: !!user,
+            authHookStatus: status,
+            hasAuthToken: !!authTokenCookie || authTokenChunked.length > 0
+          });
+        }
       } catch (error) {
         console.error('[ClientDebug] Error checking session:', error);
-        setSessionInfo({
-          error: error.message,
-          timestamp: new Date().toISOString()
-        });
+        if (isMounted) {
+          setSessionInfo({
+            error: error.message,
+            timestamp: new Date().toISOString()
+          });
+        }
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
 
+    // Initial check
     checkSession();
 
     // Listen for auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log('[ClientDebug] Auth state change:', event, session ? 'Session exists' : 'No session');
-      checkSession();
+      if (isMounted) {
+        console.log('[ClientDebug] Auth state change:', event, session ? 'Session exists' : 'No session');
+        checkSession();
+      }
     });
 
-    return () => subscription.unsubscribe();
-  }, [user, status, supabase]);
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+    };
+  }, []); // 의존성 배열에서 user, status, supabase 제거하여 무한 루프 방지
 
   const forceRefresh = async () => {
     setLoading(true);
