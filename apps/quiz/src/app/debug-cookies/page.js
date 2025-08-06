@@ -19,8 +19,24 @@ export default function DebugCookiesPage() {
     // Supabase 세션 확인
     const checkSession = async () => {
       const supabase = createBrowserClient()
+      
+      // 디버깅을 위한 상세 로그
+      console.log('=== Supabase Debug Info ===')
+      console.log('Current URL:', window.location.href)
+      console.log('All cookies:', document.cookie)
+      
+      // auth token 쿠키 확인
+      const authTokenCookie = parsedCookies.find(c => c.name.includes('sb-') && c.name.includes('-auth-token'))
+      console.log('Auth token cookie found:', authTokenCookie?.name)
+      
+      // 세션 가져오기
       const { data: { session }, error } = await supabase.auth.getSession()
-      console.log('Session check:', { session, error })
+      console.log('Session check result:', { session, error })
+      
+      // 사용자 정보도 별도로 확인
+      const { data: { user }, error: userError } = await supabase.auth.getUser()
+      console.log('User check result:', { user, userError })
+      
       setSession(session)
       setLoading(false)
     }

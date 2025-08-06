@@ -16,7 +16,8 @@ export function createServerClient(request, response) {
 
   // 쿠키 옵션 통합
   const getCookieOptions = () => {
-    const isProduction = process.env.NODE_ENV === 'production'
+    const isProduction = process.env.NODE_ENV === 'production' || 
+                        process.env.VERCEL_ENV === 'production'
     return {
       domain: isProduction ? '.bluenote.site' : undefined,
       path: '/',
