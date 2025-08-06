@@ -26,12 +26,18 @@ export function SupabaseAuthProvider({ children }) {
       const { data: { session } } = await supabase.auth.getSession();
       
       if (session) {
+        console.log('[SupabaseAuthProvider] Session found:', session.user.email);
+        
         // 권한 정보 가져오기
-        const { data: permissions } = await supabase
+        const { data: permissions, error: permError } = await supabase
           .from('user_permissions')
           .select('role, can_write, claude_daily_limit')
           .eq('email', session.user.email)
           .single();
+        
+        if (permError) {
+          console.error('[SupabaseAuthProvider] Error fetching permissions:', permError);
+        }
         
         // 세션에 권한 정보 추가
         const enrichedSession = {
@@ -47,6 +53,7 @@ export function SupabaseAuthProvider({ children }) {
         setSession(enrichedSession);
         setStatus('authenticated');
       } else {
+        console.log('[SupabaseAuthProvider] No session found');
         setSession(null);
         setStatus('unauthenticated');
       }
@@ -59,12 +66,18 @@ export function SupabaseAuthProvider({ children }) {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (session) {
+        console.log('[SupabaseAuthProvider] Session found:', session.user.email);
+        
         // 권한 정보 가져오기
-        const { data: permissions } = await supabase
+        const { data: permissions, error: permError } = await supabase
           .from('user_permissions')
           .select('role, can_write, claude_daily_limit')
           .eq('email', session.user.email)
           .single();
+        
+        if (permError) {
+          console.error('[SupabaseAuthProvider] Error fetching permissions:', permError);
+        }
         
         // 세션에 권한 정보 추가
         const enrichedSession = {
@@ -80,6 +93,7 @@ export function SupabaseAuthProvider({ children }) {
         setSession(enrichedSession);
         setStatus('authenticated');
       } else {
+        console.log('[SupabaseAuthProvider] No session found');
         setSession(null);
         setStatus('unauthenticated');
       }
