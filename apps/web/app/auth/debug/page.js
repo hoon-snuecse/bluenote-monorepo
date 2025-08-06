@@ -9,12 +9,14 @@ export default function AuthDebugPage() {
 
   const testGoogleAuth = async () => {
     console.log('Testing Google OAuth...');
-    console.log('Origin:', window.location.origin);
+    if (typeof window !== 'undefined') {
+      console.log('Origin:', window.location.origin);
+    }
     
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
+        redirectTo: typeof window !== 'undefined' ? `${window.location.origin}/auth/callback` : 'http://localhost:3000/auth/callback',
         queryParams: {
           access_type: 'offline',
           prompt: 'consent',
@@ -35,8 +37,8 @@ export default function AuthDebugPage() {
   const getSupabaseUrls = () => {
     return {
       supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
-      origin: window.location.origin,
-      expectedCallback: `${window.location.origin}/auth/callback`
+      origin: typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000',
+      expectedCallback: typeof window !== 'undefined' ? `${window.location.origin}/auth/callback` : 'http://localhost:3000/auth/callback'
     };
   };
 
