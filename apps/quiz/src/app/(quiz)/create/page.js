@@ -1,19 +1,11 @@
-'use client'
+import { createServerClient } from '@bluenote/supabase-auth/server'
+import CreateQuizClient from './create-quiz-client'
 
-import dynamic from 'next/dynamic'
-import { Loader2 } from 'lucide-react'
-
-const QuizBuilder = dynamic(() => import('@/components/QuizBuilder'), {
-  ssr: false,
-  loading: () => (
-    <div className="flex items-center justify-center p-8">
-      <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
-      <span className="ml-3 text-gray-600">퀴즈 빌더 로딩 중...</span>
-    </div>
-  )
-})
-
-export default function CreateQuizPage() {
+export default async function CreateQuizPage() {
+  // 서버에서 세션 확인
+  const supabase = createServerClient()
+  const { data: { session } } = await supabase.auth.getSession()
+  
   return (
     <div className="space-y-6">
       <div>
@@ -24,7 +16,7 @@ export default function CreateQuizPage() {
       </div>
       
       <div className="rounded-lg bg-white p-6 shadow">
-        <QuizBuilder />
+        <CreateQuizClient initialSession={session} />
       </div>
     </div>
   )

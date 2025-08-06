@@ -23,7 +23,7 @@ export function createServerClient(request, response) {
       path: '/',
       sameSite: 'lax',
       secure: isProduction,
-      httpOnly: true, // 보안 강화
+      httpOnly: false, // 클라이언트 접근을 위해 false로 설정
       maxAge: 60 * 60 * 24 * 7 // 7 days
     }
   }

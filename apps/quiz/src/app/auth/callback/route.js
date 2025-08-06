@@ -14,7 +14,7 @@ export async function GET(request) {
   if (code) {
     const cookieStore = cookies()
     
-    // 쿠키 옵션
+    // 쿠키 옵션 - httpOnly를 false로 설정하여 클라이언트에서도 접근 가능하게 함
     const getCookieOptions = () => {
       const isProduction = process.env.NODE_ENV === 'production' || 
                           process.env.VERCEL_ENV === 'production'
@@ -23,7 +23,7 @@ export async function GET(request) {
         path: '/',
         sameSite: 'lax',
         secure: isProduction,
-        httpOnly: true,
+        httpOnly: false, // 클라이언트에서 접근 가능하도록 설정
         maxAge: 60 * 60 * 24 * 7 // 7 days
       }
     }
