@@ -28,6 +28,19 @@ export default function ClientDebugPage() {
         const authTokenCookie = cookies.find(c => c.startsWith('sb-ukxchcyvxnbmsfrsamjk-auth-token'));
         const authTokenChunked = cookies.filter(c => c.includes('sb-ukxchcyvxnbmsfrsamjk-auth-token.'));
         
+        // 청크된 쿠키 재조합 테스트
+        let reconstructedToken = null;
+        if (authTokenChunked.length > 0) {
+          const chunks = [];
+          for (let i = 0; i < authTokenChunked.length; i++) {
+            const chunk = cookies.find(c => c.startsWith(`sb-ukxchcyvxnbmsfrsamjk-auth-token.${i}=`));
+            if (chunk) {
+              chunks.push(chunk.split('=')[1]);
+            }
+          }
+          reconstructedToken = chunks.join('');
+        }
+        
         if (isMounted) {
           setSessionInfo({
             directSession: session,
@@ -40,6 +53,7 @@ export default function ClientDebugPage() {
             supabaseCookies: cookies.filter(c => c.includes('sb-')),
             authTokenCookie: authTokenCookie,
             authTokenChunked: authTokenChunked,
+            reconstructedToken: reconstructedToken,
             hasAuthToken: !!authTokenCookie || authTokenChunked.length > 0,
             timestamp: new Date().toISOString()
           });
@@ -132,6 +146,8 @@ export default function ClientDebugPage() {
   hasAuthToken: sessionInfo?.hasAuthToken,
   authTokenCookie: sessionInfo?.authTokenCookie,
   authTokenChunked: sessionInfo?.authTokenChunked,
+  reconstructedToken: sessionInfo?.reconstructedToken ? 
+    `${sessionInfo.reconstructedToken.substring(0, 50)}...` : null,
   allSupabaseCookies: sessionInfo?.supabaseCookies
 }, null, 2)}
           </pre>

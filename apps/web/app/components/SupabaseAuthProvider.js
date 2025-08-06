@@ -76,7 +76,23 @@ export function SupabaseAuthProvider({ children }) {
       try {
         console.log('[SupabaseAuthProvider] Loading initial session...');
         
-        // getSession은 쿠키에서 세션을 읽음
+        // 먼저 getUser로 시도
+        const { data: { user }, error: userError } = await supabase.auth.getUser();
+        
+        if (user && !userError) {
+          console.log('[SupabaseAuthProvider] User found via getUser:', user.email);
+          // getSession으로 전체 세션 가져오기
+          const { data: { session: currentSession } } = await supabase.auth.getSession();
+          if (currentSession) {
+            console.log('[SupabaseAuthProvider] Session found after getUser');
+            if (mounted) {
+              await loadSessionWithPermissions(currentSession);
+            }
+            return;
+          }
+        }
+        
+        // getSession으로 재시도
         const { data: { session: currentSession }, error } = await supabase.auth.getSession();
         
         if (error) {
