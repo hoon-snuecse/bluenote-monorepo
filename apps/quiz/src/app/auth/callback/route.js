@@ -1,4 +1,4 @@
-import { createServerClient } from '@bluenote/supabase-auth/server'
+import { createServerClient as createSupabaseServerClient } from '@supabase/ssr'
 import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 
@@ -12,19 +12,62 @@ export async function GET(request) {
   console.log('URL:', requestUrl.toString())
 
   if (code) {
-    // 공통 서버 클라이언트 사용 - 쿠키 도메인 설정 포함
-    const supabase = createServerClient()
+    const cookieStore = cookies()
+    
+    // 쿠키 옵션
+    const getCookieOptions = () => {
+      const isProduction = process.env.NODE_ENV === 'production' || 
+                          process.env.VERCEL_ENV === 'production'
+      return {
+        domain: isProduction ? '.bluenote.site' : undefined,
+        path: '/',
+        sameSite: 'lax',
+        secure: isProduction,
+        httpOnly: true,
+        maxAge: 60 * 60 * 24 * 7 // 7 days
+      }
+    }
+    
+    // Supabase 클라이언트 생성
+    const supabase = createSupabaseServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+      {
+        cookieOptions: getCookieOptions(),
+        cookies: {
+          get(name) {
+            return cookieStore.get(name)?.value
+          },
+          set(name, value, options) {
+            const cookieOptions = { ...getCookieOptions(), ...options }
+            cookieStore.set({ name, value, ...cookieOptions })
+          },
+          remove(name, options) {
+            const cookieOptions = { ...getCookieOptions(), ...options, maxAge: 0 }
+            cookieStore.set({ name, value: '', ...cookieOptions })
+          }
+        }
+      }
+    )
 
-    const { error } = await supabase.auth.exchangeCodeForSession(code)
+    const { data, error } = await supabase.auth.exchangeCodeForSession(code)
     
     if (error) {
       console.error('Exchange error:', error.message)
       return NextResponse.redirect(new URL(`/auth/error?error=${encodeURIComponent(error.message)}`, requestUrl.origin))
     }
     
-    console.log('Auth success - redirecting to:', next)
+    console.log('Auth success - session created:', !!data?.session)
+    console.log('Session user:', data?.session?.user?.email)
+    
     // 성공 시 리다이렉트
-    return NextResponse.redirect(new URL(next, requestUrl.origin))
+    const response = NextResponse.redirect(new URL(next, requestUrl.origin))
+    
+    // 디버그: 쿠키 확인
+    const authCookies = cookieStore.getAll().filter(c => c.name.includes('sb-'))
+    console.log('Auth cookies after exchange:', authCookies.map(c => c.name))
+    
+    return response
   }
 
   // code가 없으면 클라이언트 측 처리를 위한 HTML 반환
