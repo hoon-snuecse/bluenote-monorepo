@@ -23,12 +23,19 @@ export default function HomePageClient() {
     // OAuth code가 있으면 callback 경로로 리다이렉트
     if (code) {
       console.log('[HomePage] OAuth code detected, redirecting to callback');
+      console.log('[HomePage] Full URL:', window.location.href);
+      console.log('[HomePage] Search params:', window.location.search);
+      
       // 모든 쿼리 파라미터를 유지하면서 리다이렉트
       const params = new URLSearchParams(window.location.search);
-      router.replace(`/auth/callback?${params.toString()}`);
+      const callbackUrl = `/auth/callback?${params.toString()}`;
+      console.log('[HomePage] Redirecting to:', callbackUrl);
+      
+      // replace 대신 window.location.href 사용해보기
+      window.location.href = callbackUrl;
       return;
     }
-  }, [code, router]);
+  }, [code]);
 
   const quotes = [
     {

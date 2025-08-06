@@ -44,6 +44,13 @@ export default function SignInClient() {
   useEffect(() => {
     console.log('[SignInClient] callbackUrl:', callbackUrl, 'error:', error);
     
+    // URL에 code가 있으면 이미 OAuth 콜백 중이므로 로그인 시도하지 않음
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has('code')) {
+      console.log('[SignInClient] OAuth code detected in URL, skipping auto-login');
+      return;
+    }
+    
     // 에러가 없으면 바로 Google 로그인 시작
     if (!error) {
       console.log('[SignInClient] Starting Google sign in with callbackUrl:', callbackUrl);

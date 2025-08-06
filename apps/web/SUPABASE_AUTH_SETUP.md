@@ -82,8 +82,23 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 
 1. **skipBrowserRedirect 적용**: OAuth URL을 직접 제어하여 올바른 redirect_uri가 설정되는지 확인
 2. **디버그 로깅 추가**: OAuth URL과 redirect_uri 파라미터 로깅으로 문제 파악
+3. **OAuth 디버그 도구 추가**: `/auth/oauth-debug` 페이지에서 OAuth URL 생성 테스트
 
-다음 단계:
-- 브라우저 콘솔에서 OAuth URL과 redirect_uri 확인
-- Supabase Dashboard에서 Redirect URLs 설정 확인
-- 여전히 문제가 있다면 Supabase Project Settings에서 Auth Providers 설정 재확인
+## 로그인 루프 문제 해결 방법
+
+1. **OAuth 디버그 페이지 사용**:
+   ```
+   https://www.bluenote.site/auth/oauth-debug
+   ```
+   - OAuth URL 생성 테스트
+   - redirect_uri 파라미터 확인
+   - 수동 리다이렉트 테스트
+
+2. **Supabase Dashboard 확인 사항**:
+   - **Site URL**: `https://bluenote.site` (www 없이)
+   - **Redirect URLs**: 모든 도메인 콜백 URL 추가 필수
+
+3. **코드 수정 사항**:
+   - SignInClient에 code 중복 체크 추가
+   - HomePage에서 window.location.href로 직접 리다이렉트
+   - OAuth URL 생성 시 디버그 로깅 강화
