@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useSession } from 'next-auth/react';
+import { useSession } from '@/app/components/SupabaseAuthProvider';
 
 export function DeviceInfoUpdater() {
   const { data: session, status } = useSession();

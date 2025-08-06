@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getToken } from 'next-auth/jwt';
+import { createServerClient } from '@supabase/ssr';
 
 export async function middleware(req) {
   const path = req.nextUrl.pathname;
@@ -26,52 +26,59 @@ export async function middleware(req) {
     return NextResponse.next();
   }
   
-  // JWT 토큰 가져오기 - 프로덕션에서는 __Secure- 접두사 처리
-  const isProduction = process.env.VERCEL_ENV === 'production' || 
-                      process.env.NODE_ENV === 'production';
-  
-  // 프로덕션에서도 __Secure- 접두사 없이 처리
-  const cookieNames = ['next-auth.session-token'];
-  
-  let token = null;
-  
-  // 각 쿠키 이름으로 토큰 확인
-  for (const cookieName of cookieNames) {
-    try {
-      token = await getToken({ 
-        req, 
-        secret: process.env.NEXTAUTH_SECRET,
-        cookieName
-      });
-      
-      if (token) {
-        console.log('[Middleware] Found token with cookie:', cookieName);
-        break;
+  // Supabase 클라이언트 생성
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    {
+      cookies: {
+        get(name) {
+          return req.cookies.get(name)?.value;
+        },
+        set(name, value, options) {
+          // 미들웨어에서는 쿠키를 설정할 수 없음
+        },
+        remove(name, options) {
+          // 미들웨어에서는 쿠키를 제거할 수 없음
+        }
       }
-    } catch (err) {
-      // 이 쿠키로는 실패, 다음 시도
-      console.log('[Middleware] Failed to get token with cookie:', cookieName);
     }
+  );
+  
+  // 세션 확인
+  const { data: { session }, error } = await supabase.auth.getSession();
+  
+  if (error) {
+    console.error('[Middleware] Error getting session:', error);
   }
   
   // 디버그 로그
   console.log('[Middleware] Protected path:', path);
-  console.log('[Middleware] Token:', token ? {
-    email: token.email,
-    isAdmin: token.isAdmin,
-    canWrite: token.canWrite,
-    exp: token.exp
-  } : 'No token');
+  console.log('[Middleware] Session:', session ? {
+    email: session.user.email,
+    userId: session.user.id
+  } : 'No session');
   
-  // 토큰이 없으면 로그인 페이지로 리다이렉트
-  if (!token) {
+  // 세션이 없으면 로그인 페이지로 리다이렉트
+  if (!session) {
     const loginUrl = new URL('/auth/signin', req.url);
     loginUrl.searchParams.set('callbackUrl', req.url);
     return NextResponse.redirect(loginUrl);
   }
   
+  // 권한 정보 가져오기
+  const email = session.user.email;
+  const { data: permissions } = await supabase
+    .from('user_permissions')
+    .select('role, can_write')
+    .eq('email', email)
+    .single();
+  
+  const isAdmin = permissions?.role === 'admin';
+  const canWrite = permissions?.can_write || false;
+  
   // 관리자만 접근 가능한 경로
-  if (path.startsWith('/admin') && !token.isAdmin) {
+  if (path.startsWith('/admin') && !isAdmin) {
     return NextResponse.redirect(new URL('/unauthorized', req.url));
   }
   
@@ -85,7 +92,7 @@ export async function middleware(req) {
   
   // 글쓰기 권한 체크 - 데이터베이스 기반으로만
   const isWritePath = writePermissionPaths.some(writePath => path.startsWith(writePath));
-  if (isWritePath && !token.isAdmin && !token.canWrite) {
+  if (isWritePath && !isAdmin && !canWrite) {
     return NextResponse.redirect(new URL('/unauthorized', req.url));
   }
   

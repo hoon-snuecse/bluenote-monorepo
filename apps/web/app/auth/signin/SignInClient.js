@@ -2,12 +2,26 @@
 
 import { useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { signIn } from 'next-auth/react';
+import { createBrowserClient } from '@bluenote/supabase-auth/client';
 
 export default function SignInClient() {
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get('callbackUrl') || '/';
   const error = searchParams.get('error');
+  const supabase = createBrowserClient();
+
+  const handleGoogleSignIn = async () => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback?callbackUrl=${encodeURIComponent(callbackUrl)}`
+      }
+    });
+    
+    if (error) {
+      console.error('[SignInClient] Error signing in with Google:', error);
+    }
+  };
 
   useEffect(() => {
     console.log('[SignInClient] callbackUrl:', callbackUrl, 'error:', error);
@@ -15,7 +29,7 @@ export default function SignInClient() {
     // 에러가 없으면 바로 Google 로그인 시작
     if (!error) {
       console.log('[SignInClient] Starting Google sign in with callbackUrl:', callbackUrl);
-      signIn('google', { callbackUrl });
+      handleGoogleSignIn();
     }
   }, [error, callbackUrl]);
 
@@ -69,7 +83,7 @@ export default function SignInClient() {
 
           <div>
             <button
-              onClick={() => signIn('google', { callbackUrl })}
+              onClick={handleGoogleSignIn}
               className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 shadow-md transition-all duration-200"
             >
               <div className="flex items-center">

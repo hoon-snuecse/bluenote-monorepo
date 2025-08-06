@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { signIn } from 'next-auth/react';
+import { createBrowserClient } from '@bluenote/supabase-auth/client';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { LogIn } from 'lucide-react';
@@ -24,10 +24,21 @@ export default function LoginPageClient() {
       });
   }, []);
 
-  const handleGoogleLogin = () => {
-    // NextAuth signIn 함수 사용
+  const handleGoogleLogin = async () => {
+    // Supabase OAuth 사용
     const callbackUrl = searchParams.get('callbackUrl') || '/';
-    signIn('google', { callbackUrl });
+    const supabase = createBrowserClient();
+    
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback?callbackUrl=${encodeURIComponent(callbackUrl)}`
+      }
+    });
+    
+    if (error) {
+      console.error('Error signing in with Google:', error);
+    }
   };
 
   return (

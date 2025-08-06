@@ -18,13 +18,14 @@ import {
   Shield,
   Laptop
 } from 'lucide-react';
-import { useNextAuth as useAuth } from '@bluenote/auth';
+import { useSession, signOut } from './SupabaseAuthProvider';
 
 export default function Navigation() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const pathname = usePathname();
-  const { user, status, signIn, signOut } = useAuth();
+  const { data: session, status } = useSession();
+  const user = session?.user;
 
   // 스크롤 감지
   useEffect(() => {
@@ -147,7 +148,7 @@ export default function Navigation() {
                 <div className="px-4 py-2 text-sm text-slate-500">로딩중...</div>
               ) : user ? (
                 <button
-                  onClick={() => signOut()}
+                  onClick={signOut}
                   className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-800 transition-colors"
                 >
                   <LogOut className="w-4 h-4" />
@@ -226,8 +227,8 @@ export default function Navigation() {
             <div className="mt-4 pt-4 border-t border-slate-200">
               {user ? (
                 <button
-                  onClick={() => {
-                    signOut();
+                  onClick={async () => {
+                    await signOut();
                     setIsMenuOpen(false);
                   }}
                   className="flex items-center gap-3 w-full px-4 py-3 text-left text-slate-600 hover:bg-slate-50 rounded-lg"

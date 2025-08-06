@@ -1,6 +1,6 @@
 'use client';
 
-import { useSession } from 'next-auth/react';
+import { useSession } from '@/app/components/SupabaseAuthProvider';
 import { useState } from 'react';
 
 export function DeviceInfoDebug() {
