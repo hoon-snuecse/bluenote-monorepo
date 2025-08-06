@@ -13,19 +13,29 @@ export default function ClientCallbackHandler() {
     const handleCallback = async () => {
       try {
         console.log('Client callback handler started')
+        console.log('Full URL:', window.location.href)
+        console.log('Hash:', window.location.hash)
+        console.log('Search:', window.location.search)
+        
         const supabase = createBrowserClient()
         
         // URL fragment에서 토큰 확인 (Implicit Flow)
         const hashParams = new URLSearchParams(window.location.hash.substring(1))
         const accessToken = hashParams.get('access_token')
         const refreshToken = hashParams.get('refresh_token')
+        const errorInHash = hashParams.get('error')
+        const errorDescription = hashParams.get('error_description')
+        
+        if (errorInHash) {
+          throw new Error(`OAuth error: ${errorInHash} - ${errorDescription}`)
+        }
         
         if (accessToken) {
           console.log('Implicit flow tokens detected')
           setStatus('Setting up session from tokens...')
           
-          // Supabase가 자동으로 URL의 토큰을 감지하고 세션을 설정합니다
-          // detectSessionInUrl: true 옵션으로 인해 자동 처리됨
+          // 잠시 대기하여 Supabase가 토큰을 처리할 시간을 줌
+          await new Promise(resolve => setTimeout(resolve, 1000))
           
           // 세션 확인
           const { data: { session }, error: sessionError } = await supabase.auth.getSession()
@@ -46,11 +56,42 @@ export default function ClientCallbackHandler() {
               router.push(next)
             }, 1000)
           } else {
-            throw new Error('Session not created after implicit flow')
+            // 세션이 없으면 수동으로 설정 시도
+            console.log('No session found, attempting manual token setting...')
+            const { data, error } = await supabase.auth.setSession({
+              access_token: accessToken,
+              refresh_token: refreshToken || ''
+            })
+            
+            if (error) {
+              throw error
+            }
+            
+            if (data.session) {
+              console.log('Session manually set:', data.session.user.email)
+              setStatus('Login successful! Redirecting...')
+              
+              const urlParams = new URLSearchParams(window.location.search)
+              const next = urlParams.get('next') || '/create'
+              
+              setTimeout(() => {
+                router.push(next)
+              }, 1000)
+            } else {
+              throw new Error('Failed to set session manually')
+            }
           }
         } else {
-          // code 파라미터 확인 (Authorization Code Flow)
+          // URL 파라미터에서 에러 확인
           const urlParams = new URLSearchParams(window.location.search)
+          const error = urlParams.get('error')
+          const errorDesc = urlParams.get('error_description')
+          
+          if (error) {
+            throw new Error(`OAuth error: ${error} - ${errorDesc}`)
+          }
+          
+          // code 파라미터 확인 (Authorization Code Flow)
           const code = urlParams.get('code')
           
           if (code) {

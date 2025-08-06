@@ -35,7 +35,7 @@ export function createBrowserClient() {
         persistSession: true,
         detectSessionInUrl: true,
         storage: typeof window !== 'undefined' ? window.localStorage : undefined,
-        flowType: 'pkce'  // Authorization Code Flow with PKCE 사용
+        flowType: 'implicit'  // Implicit flow 사용 (Site URL 문제 회피)
       }
     })
   }
