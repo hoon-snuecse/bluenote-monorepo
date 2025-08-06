@@ -99,18 +99,26 @@ export default function DebugCookiesPage() {
         </div>
         
         <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-lg font-semibold mb-4">Supabase Auth 쿠키</h2>
+          <h2 className="text-lg font-semibold mb-4">모든 Supabase 관련 쿠키</h2>
           <div className="space-y-2">
             {cookies
-              .filter(c => c.name.includes('sb-') && c.name.includes('-auth-token'))
+              .filter(c => c.name.includes('sb-'))
               .map((cookie, idx) => (
                 <div key={idx} className="border-b pb-2">
                   <p className="text-sm font-medium">{cookie.name}</p>
                   <p className="text-xs text-gray-600">
                     길이: {cookie.value.length} 문자
                   </p>
+                  <p className="text-xs text-gray-500">
+                    {cookie.name.includes('auth-token') && '✅ 인증 토큰'}
+                    {cookie.name.includes('code-verifier') && '🔑 PKCE verifier'}
+                    {cookie.name.includes('refresh-token') && '🔄 리프레시 토큰'}
+                  </p>
                 </div>
               ))}
+            {cookies.filter(c => c.name.includes('sb-')).length === 0 && (
+              <p className="text-gray-500 text-sm">Supabase 쿠키가 없습니다</p>
+            )}
           </div>
         </div>
       </div>

@@ -50,22 +50,33 @@ export async function GET(request) {
       }
     )
 
+    // 이전 쿠키 상태 확인
+    const beforeCookies = cookieStore.getAll().filter(c => c.name.includes('sb-'))
+    console.log('Cookies before exchange:', beforeCookies.map(c => ({ name: c.name, length: c.value.length })))
+    
     const { data, error } = await supabase.auth.exchangeCodeForSession(code)
     
     if (error) {
       console.error('Exchange error:', error.message)
+      console.error('Exchange error details:', error)
       return NextResponse.redirect(new URL(`/auth/error?error=${encodeURIComponent(error.message)}`, requestUrl.origin))
     }
     
     console.log('Auth success - session created:', !!data?.session)
     console.log('Session user:', data?.session?.user?.email)
+    console.log('Session access token exists:', !!data?.session?.access_token)
+    console.log('Session refresh token exists:', !!data?.session?.refresh_token)
+    
+    // 세션 쿠키 직접 확인
+    const { data: { session: verifySession } } = await supabase.auth.getSession()
+    console.log('Verify session after exchange:', !!verifySession)
     
     // 성공 시 리다이렉트
     const response = NextResponse.redirect(new URL(next, requestUrl.origin))
     
     // 디버그: 쿠키 확인
-    const authCookies = cookieStore.getAll().filter(c => c.name.includes('sb-'))
-    console.log('Auth cookies after exchange:', authCookies.map(c => c.name))
+    const afterCookies = cookieStore.getAll().filter(c => c.name.includes('sb-'))
+    console.log('Cookies after exchange:', afterCookies.map(c => ({ name: c.name, length: c.value.length })))
     
     return response
   }
