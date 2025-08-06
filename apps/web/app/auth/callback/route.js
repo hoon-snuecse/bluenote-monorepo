@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createServerClient } from '@supabase/ssr';
+import { createServerClient } from '@bluenote/supabase-auth/server';
 import { cookies } from 'next/headers';
 
 export async function GET(request) {
@@ -16,48 +16,8 @@ export async function GET(request) {
   }
 
   if (code) {
-    const cookieStore = cookies();
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-      {
-        cookies: {
-          get(name) {
-            return cookieStore.get(name)?.value;
-          },
-          set(name, value, options) {
-            const isProduction = process.env.NODE_ENV === 'production' || 
-                               process.env.VERCEL_ENV === 'production';
-            cookieStore.set({
-              name,
-              value,
-              ...options,
-              domain: isProduction ? '.bluenote.site' : undefined,
-              path: '/',
-              sameSite: 'lax',
-              secure: isProduction,
-              httpOnly: false,
-              maxAge: 60 * 60 * 24 * 7 // 7 days
-            });
-          },
-          remove(name, options) {
-            const isProduction = process.env.NODE_ENV === 'production' || 
-                               process.env.VERCEL_ENV === 'production';
-            cookieStore.set({
-              name,
-              value: '',
-              ...options,
-              domain: isProduction ? '.bluenote.site' : undefined,
-              path: '/',
-              sameSite: 'lax',
-              secure: isProduction,
-              httpOnly: false,
-              maxAge: 0
-            });
-          }
-        }
-      }
-    );
+    // Use our package's createServerClient which has proper cookie options
+    const supabase = createServerClient();
 
     const { data, error } = await supabase.auth.exchangeCodeForSession(code);
     

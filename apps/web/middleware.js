@@ -1,6 +1,20 @@
 import { NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 
+// 쿠키 옵션 통합
+const getCookieOptions = () => {
+  const isProduction = process.env.NODE_ENV === 'production' || 
+                      process.env.VERCEL_ENV === 'production'
+  return {
+    domain: isProduction ? '.bluenote.site' : undefined,
+    path: '/',
+    sameSite: 'lax',
+    secure: isProduction,
+    httpOnly: false,
+    maxAge: 60 * 60 * 24 * 7 // 7 days
+  }
+}
+
 export async function middleware(req) {
   const path = req.nextUrl.pathname;
   
@@ -26,11 +40,12 @@ export async function middleware(req) {
     return NextResponse.next();
   }
   
-  // Supabase 클라이언트 생성
+  // Supabase 클라이언트 생성 with proper cookie options
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
     {
+      cookieOptions: getCookieOptions(),
       cookies: {
         get(name) {
           return req.cookies.get(name)?.value;
