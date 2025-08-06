@@ -11,10 +11,16 @@ export default function SignInClient() {
   const supabase = createBrowserClient();
 
   const handleGoogleSignIn = async () => {
+    // Supabase OAuth flow 사용
+    // redirectTo를 지정하지 않으면 Supabase가 자동으로 Site URL로 리다이렉트
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${window.location.origin}/auth/callback?callbackUrl=${encodeURIComponent(callbackUrl)}`
+        redirectTo: `${window.location.origin}/auth/callback?callbackUrl=${encodeURIComponent(callbackUrl)}`,
+        queryParams: {
+          access_type: 'offline',
+          prompt: 'consent',
+        }
       }
     });
     

@@ -6,6 +6,14 @@ export async function GET(request) {
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get('code');
   const callbackUrl = requestUrl.searchParams.get('callbackUrl') || '/';
+  const error = requestUrl.searchParams.get('error');
+  const errorDescription = requestUrl.searchParams.get('error_description');
+
+  // OAuth 에러 처리
+  if (error) {
+    console.error('[Auth Callback] OAuth error:', error, errorDescription);
+    return NextResponse.redirect(new URL(`/auth/signin?error=${error}`, request.url));
+  }
 
   if (code) {
     const cookieStore = cookies();
