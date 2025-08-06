@@ -13,6 +13,7 @@ const publicPaths = [
   '/community',
   '/api/share/quiz', // 퀴즈 공유 API
   '/debug-auth', // 디버그 페이지
+  '/debug-cookies', // 쿠키 디버그 페이지
 ]
 
 // 인증이 필요한 경로들

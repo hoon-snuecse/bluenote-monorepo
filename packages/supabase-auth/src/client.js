@@ -23,6 +23,25 @@ const getCookieOptions = () => {
   }
 }
 
+// chunked 쿠키를 합치는 헬퍼 함수
+function getCombinedCookie(name) {
+  if (typeof document === 'undefined') return null
+  
+  const cookies = document.cookie.split('; ')
+  const chunks = []
+  let index = 0
+  
+  while (true) {
+    const chunkName = `${name}.${index}`
+    const chunk = cookies.find(c => c.startsWith(`${chunkName}=`))
+    if (!chunk) break
+    chunks.push(chunk.split('=')[1])
+    index++
+  }
+  
+  return chunks.length > 0 ? chunks.join('') : null
+}
+
 // 브라우저 클라이언트 생성 (쿠키 기반)
 export function createBrowserClient() {
   if (!browserClientInstance) {
@@ -31,37 +50,33 @@ export function createBrowserClient() {
       supabaseAnonKey,
       {
         cookieOptions: getCookieOptions(),
-        // 쿠키 기반 storage adapter
         cookies: {
           get(name) {
-            if (typeof document === 'undefined') return ''
+            // chunked 쿠키 처리
+            const combined = getCombinedCookie(name)
+            if (combined) return decodeURIComponent(combined)
+            
+            // 일반 쿠키 처리
             const value = document.cookie
               .split('; ')
               .find(row => row.startsWith(`${name}=`))
               ?.split('=')[1]
-            return decodeURIComponent(value || '')
+            return value ? decodeURIComponent(value) : null
           },
           set(name, value, options) {
-            if (typeof document === 'undefined') return
             const cookieOptions = { ...getCookieOptions(), ...options }
-            const cookieStr = Object.entries(cookieOptions)
-              .filter(([_, v]) => v !== undefined)
-              .map(([k, v]) => {
-                if (k === 'maxAge') return `max-age=${v}`
-                if (k === 'secure' && v) return 'secure'
-                if (k === 'sameSite') return `samesite=${v}`
-                if (k === 'domain') return `domain=${v}`
-                if (k === 'path') return `path=${v}`
-                return ''
-              })
-              .filter(Boolean)
-              .join('; ')
-            document.cookie = `${name}=${encodeURIComponent(value)}; ${cookieStr}`
+            document.cookie = `${name}=${encodeURIComponent(value)}; path=${cookieOptions.path}; domain=${cookieOptions.domain}; max-age=${cookieOptions.maxAge}; samesite=${cookieOptions.sameSite}${cookieOptions.secure ? '; secure' : ''}`
           },
           remove(name, options) {
-            if (typeof document === 'undefined') return
-            const cookieOptions = { ...getCookieOptions(), ...options, maxAge: 0 }
-            this.set(name, '', cookieOptions)
+            const cookieOptions = { ...getCookieOptions(), ...options }
+            // chunked 쿠키 모두 제거
+            let index = 0
+            while (getCombinedCookie(`${name}.${index}`)) {
+              document.cookie = `${name}.${index}=; path=${cookieOptions.path}; domain=${cookieOptions.domain}; max-age=0`
+              index++
+            }
+            // 일반 쿠키 제거
+            document.cookie = `${name}=; path=${cookieOptions.path}; domain=${cookieOptions.domain}; max-age=0`
           }
         }
       }
