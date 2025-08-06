@@ -48,9 +48,22 @@ export default function ClientCallbackHandler() {
             console.log('Session established:', session.user.email)
             setStatus('Login successful! Redirecting...')
             
-            // URL에서 next 파라미터 확인
+            // URL에서 next 파라미터 확인 (state 또는 query param에서)
             const urlParams = new URLSearchParams(window.location.search)
-            const next = urlParams.get('next') || '/create'
+            let next = urlParams.get('next') || '/create'
+            
+            // state에서 next 파라미터 확인
+            const stateParam = hashParams.get('state')
+            if (stateParam) {
+              try {
+                const state = JSON.parse(decodeURIComponent(stateParam))
+                if (state.next) {
+                  next = state.next
+                }
+              } catch (e) {
+                console.error('Failed to parse state:', e)
+              }
+            }
             
             setTimeout(() => {
               router.push(next)
