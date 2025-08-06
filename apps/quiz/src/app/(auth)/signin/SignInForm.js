@@ -25,10 +25,10 @@ export default function SignInForm() {
       setLoading(true)
       setError(null)
       
-      // 직접 Supabase OAuth 호출
-      await signInWithGoogle({
-        redirectTo: `${window.location.origin}/auth/callback`
-      })
+      // direct-oauth route 사용 (Site URL 문제 회피)
+      const callbackUrl = searchParams.get('callbackUrl') || '/create'
+      const next = encodeURIComponent(callbackUrl)
+      window.location.href = `/auth/direct-oauth?next=${next}`
     } catch (err) {
       setError(err.message || 'Login failed')
       setLoading(false)

@@ -56,25 +56,10 @@ export default function TestDirectAuth() {
   
   const handleDirectOAuth = async () => {
     try {
-      addLog('Starting direct OAuth flow...')
+      addLog('Starting direct OAuth via route...')
       
-      // Supabase OAuth URL 직접 구성
-      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-      const redirectUri = `${window.location.origin}/auth/callback`
-      
-      // PKCE flow parameters
-      const params = new URLSearchParams({
-        provider: 'google',
-        redirect_to: redirectUri,
-        response_type: 'code',
-        code_challenge_method: 'S256',
-        // Supabase가 자동으로 code_challenge를 생성합니다
-      })
-      
-      const authUrl = `${supabaseUrl}/auth/v1/authorize?${params}`
-      
-      addLog(`Redirecting to: ${authUrl}`)
-      window.location.href = authUrl
+      // 직접 OAuth route 사용
+      window.location.href = '/auth/direct-oauth'
     } catch (error) {
       addLog(`Error: ${error.message}`)
     }

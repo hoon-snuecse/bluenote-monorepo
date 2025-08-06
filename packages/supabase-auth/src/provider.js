@@ -37,16 +37,28 @@ export function SupabaseAuthProvider({ children, redirectTo = '/' }) {
       const currentOrigin = window.location.origin
       console.log('Current origin:', currentOrigin)
       
-      const { error } = await supabase.auth.signInWithOAuth({
+      // 명시적으로 현재 앱의 callback URL 사용
+      // Site URL 설정과 관계없이 현재 origin 사용
+      const redirectUrl = `${currentOrigin}/auth/callback`
+      console.log('Redirect URL:', redirectUrl)
+      
+      const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${currentOrigin}/auth/callback`,
+          redirectTo: redirectUrl,
           scopes: 'openid email profile',
+          skipBrowserRedirect: false,
           ...options
         }
       })
 
       if (error) throw error
+      
+      // URL 확인
+      if (data?.url) {
+        console.log('OAuth URL generated:', data.url)
+      }
+      
     } catch (error) {
       console.error('Error signing in with Google:', error)
       throw error
