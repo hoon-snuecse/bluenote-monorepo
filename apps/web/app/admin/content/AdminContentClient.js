@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/app/hooks/useAuth';
 import { useRouter } from 'next/navigation';
 import { 
@@ -39,19 +39,7 @@ export default function AdminContentClient() {
     { id: 'shed', label: '일상', icon: Tag }
   ];
 
-  useEffect(() => {
-    if (status === 'loading') return;
-    
-    if (!user || !user.isAdmin) {
-      router.push('/');
-      return;
-    }
-
-    fetchPosts();
-    fetchStats();
-  }, [user, status, router, activeSection]);
-
-  const fetchPosts = async () => {
+  const fetchPosts = useCallback(async () => {
     setLoading(true);
     try {
       // 각 섹션별로 올바른 API 경로 사용
@@ -69,9 +57,9 @@ export default function AdminContentClient() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [activeSection]);
 
-  const fetchStats = async () => {
+  const fetchStats = useCallback(async () => {
     try {
       const statsPromises = sections.map(async (section) => {
         // 각 섹션별로 올바른 API 경로 사용
@@ -97,7 +85,19 @@ export default function AdminContentClient() {
     } catch (error) {
       console.error('Failed to fetch stats:', error);
     }
-  };
+  }, []); // sections는 컴포넌트 내에서 변경되지 않으므로 의존성 배열에 포함하지 않음
+
+  useEffect(() => {
+    if (status === 'loading') return;
+    
+    if (!user || !user.isAdmin) {
+      router.push('/');
+      return;
+    }
+
+    fetchPosts();
+    fetchStats();
+  }, [user, status, router, fetchPosts, fetchStats]);
 
   const handleDeletePost = async (id) => {
     if (!confirm('정말로 이 게시물을 삭제하시겠습니까?')) return;
