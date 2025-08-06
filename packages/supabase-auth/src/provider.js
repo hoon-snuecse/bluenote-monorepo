@@ -1,8 +1,8 @@
 'use client'
 
 import { createContext, useContext, useEffect, useState } from 'react'
-import { createBrowserClient } from './client.js'
 import { useRouter } from 'next/navigation'
+import { createBrowserClient } from './client'
 
 const SupabaseAuthContext = createContext({})
 
@@ -13,61 +13,34 @@ export function SupabaseAuthProvider({ children, redirectTo = '/' }) {
   const router = useRouter()
 
   useEffect(() => {
-    // 초기 세션 확인
-    const checkUser = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession()
-        setSession(session)
-      } catch (error) {
-        console.error('Error checking user session:', error)
-      } finally {
-        setLoading(false)
-      }
-    }
+    // 초기 세션 가져오기
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session)
+      setLoading(false)
+    })
 
-    checkUser()
+    // 세션 변경 감지
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session)
+      setLoading(false)
+    })
 
-    // 인증 상태 변경 리스너
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        console.log('Auth state changed:', event, session?.user?.email)
-        setSession(session)
-        
-        // 로그인 성공 시 리다이렉트 (초기 OAuth 콜백은 제외)
-        if (event === 'SIGNED_IN' && redirectTo && !window.location.pathname.includes('/auth/callback')) {
-          console.log('Redirecting to:', redirectTo)
-          router.push(redirectTo)
-        }
-        
-        // 로그아웃 시 홈으로
-        if (event === 'SIGNED_OUT') {
-          router.push('/')
-        }
-      }
-    )
-
-    return () => {
-      subscription.unsubscribe()
-    }
-  }, [supabase, router, redirectTo])
+    return () => subscription.unsubscribe()
+  }, [supabase])
 
   // 로그인 함수
   const signInWithGoogle = async (options = {}) => {
     try {
-      // 각 앱이 자체적으로 OAuth 콜백을 처리
-      const currentOrigin = window.location.origin
-      const callbackUrl = `${currentOrigin}/auth/callback`
-      
-      console.log('OAuth settings:', { currentOrigin, callbackUrl })
-      
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: callbackUrl,
+          redirectTo: `${window.location.origin}/auth/callback`,
           ...options
         }
       })
-      
+
       if (error) throw error
     } catch (error) {
       console.error('Error signing in with Google:', error)
@@ -80,6 +53,7 @@ export function SupabaseAuthProvider({ children, redirectTo = '/' }) {
     try {
       const { error } = await supabase.auth.signOut()
       if (error) throw error
+      router.push('/')
     } catch (error) {
       console.error('Error signing out:', error)
       throw error
@@ -88,11 +62,10 @@ export function SupabaseAuthProvider({ children, redirectTo = '/' }) {
 
   const value = {
     session,
-    user: session?.user ?? null,
     loading,
-    supabase,
     signInWithGoogle,
-    signOut
+    signOut,
+    supabase
   }
 
   return (
@@ -102,13 +75,10 @@ export function SupabaseAuthProvider({ children, redirectTo = '/' }) {
   )
 }
 
-// 커스텀 훅
 export function useSupabaseAuth() {
   const context = useContext(SupabaseAuthContext)
-  
-  if (!context) {
-    throw new Error('useSupabaseAuth must be used within SupabaseAuthProvider')
+  if (context === undefined) {
+    throw new Error('useSupabaseAuth must be used within a SupabaseAuthProvider')
   }
-  
   return context
 }

@@ -34,7 +34,8 @@ export function createBrowserClient() {
         autoRefreshToken: true,
         persistSession: true,
         detectSessionInUrl: true,
-        storage: typeof window !== 'undefined' ? window.localStorage : undefined
+        storage: typeof window !== 'undefined' ? window.localStorage : undefined,
+        flowType: 'pkce'  // Authorization Code Flow with PKCE 사용
       }
     })
   }

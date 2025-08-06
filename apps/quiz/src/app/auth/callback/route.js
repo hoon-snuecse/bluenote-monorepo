@@ -7,9 +7,8 @@ export async function GET(request) {
   const code = requestUrl.searchParams.get('code')
   const next = requestUrl.searchParams.get('next') || '/create'
 
-  console.log('=== Quiz app auth callback ===')
+  console.log('=== Quiz app auth callback route ===')
   console.log('Code:', code ? 'present' : 'missing')
-  console.log('Origin:', requestUrl.origin)
 
   if (code) {
     const cookieStore = cookies()
@@ -43,13 +42,13 @@ export async function GET(request) {
     
     if (error) {
       console.error('Exchange error:', error.message)
-      return NextResponse.redirect(new URL('/auth/error?error=' + error.message, requestUrl.origin))
+      return NextResponse.redirect(new URL(`/auth/error?error=${encodeURIComponent(error.message)}`, requestUrl.origin))
     }
     
     // 성공 시 리다이렉트
     return NextResponse.redirect(new URL(next, requestUrl.origin))
   }
 
-  // 코드가 없으면 에러
-  return NextResponse.redirect(new URL('/auth/error?error=no_code', requestUrl.origin))
+  // code가 없으면 클라이언트 페이지로 (Implicit flow 처리용)
+  return NextResponse.next()
 }
