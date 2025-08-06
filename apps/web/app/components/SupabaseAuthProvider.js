@@ -21,18 +21,69 @@ export function SupabaseAuthProvider({ children }) {
   const router = useRouter();
 
   useEffect(() => {
-    // 초기 세션 가져오기
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setStatus(session ? 'authenticated' : 'unauthenticated');
-    });
+    // 권한 정보를 포함한 세션 가져오기
+    const loadSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (session) {
+        // 권한 정보 가져오기
+        const { data: permissions } = await supabase
+          .from('user_permissions')
+          .select('role, can_write, claude_daily_limit')
+          .eq('email', session.user.email)
+          .single();
+        
+        // 세션에 권한 정보 추가
+        const enrichedSession = {
+          ...session,
+          user: {
+            ...session.user,
+            isAdmin: permissions?.role === 'admin',
+            canWrite: permissions?.can_write || false,
+            permissions
+          }
+        };
+        
+        setSession(enrichedSession);
+        setStatus('authenticated');
+      } else {
+        setSession(null);
+        setStatus('unauthenticated');
+      }
+    };
+    
+    loadSession();
 
     // 세션 변경 감지
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      setStatus(session ? 'authenticated' : 'unauthenticated');
+    } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      if (session) {
+        // 권한 정보 가져오기
+        const { data: permissions } = await supabase
+          .from('user_permissions')
+          .select('role, can_write, claude_daily_limit')
+          .eq('email', session.user.email)
+          .single();
+        
+        // 세션에 권한 정보 추가
+        const enrichedSession = {
+          ...session,
+          user: {
+            ...session.user,
+            isAdmin: permissions?.role === 'admin',
+            canWrite: permissions?.can_write || false,
+            permissions
+          }
+        };
+        
+        setSession(enrichedSession);
+        setStatus('authenticated');
+      } else {
+        setSession(null);
+        setStatus('unauthenticated');
+      }
+      
       router.refresh();
     });
 
