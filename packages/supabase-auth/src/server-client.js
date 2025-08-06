@@ -9,25 +9,36 @@ if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error('Missing Supabase environment variables')
 }
 
+// 쿠키 옵션 통합
+const getCookieOptions = () => {
+  const isProduction = process.env.NODE_ENV === 'production'
+  return {
+    domain: isProduction ? '.bluenote.site' : undefined,
+    path: '/',
+    sameSite: 'lax',
+    secure: isProduction,
+    httpOnly: true, // 보안 강화
+    maxAge: 60 * 60 * 24 * 7 // 7 days
+  }
+}
+
 // 서버 컴포넌트용 클라이언트
 export function createServerClient() {
   const cookieStore = cookies()
   
   return createSupabaseServerClient(supabaseUrl, supabaseAnonKey, {
+    cookieOptions: getCookieOptions(),
     cookies: {
       get(name) {
         return cookieStore.get(name)?.value
       },
       set(name, value, options) {
         try {
+          const cookieOptions = { ...getCookieOptions(), ...options }
           cookieStore.set({
             name,
             value,
-            ...options,
-            // 프로덕션에서는 서브도메인 간 쿠키 공유를 위해 도메인 설정
-            domain: process.env.NODE_ENV === 'production' ? '.bluenote.site' : undefined,
-            sameSite: 'lax',
-            secure: process.env.NODE_ENV === 'production'
+            ...cookieOptions,
           })
         } catch (error) {
           // Server Component에서는 쿠키 설정이 불가능할 수 있음
@@ -35,12 +46,11 @@ export function createServerClient() {
       },
       remove(name, options) {
         try {
+          const cookieOptions = { ...getCookieOptions(), ...options, maxAge: 0 }
           cookieStore.set({
             name,
             value: '',
-            ...options,
-            maxAge: 0,
-            domain: process.env.NODE_ENV === 'production' ? '.bluenote.site' : undefined
+            ...cookieOptions,
           })
         } catch (error) {
           // Server Component에서는 쿠키 설정이 불가능할 수 있음

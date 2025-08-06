@@ -24,10 +24,16 @@ export default function SignInForm() {
       setLoading(true)
       setError(null)
       
-      // direct-oauth route 사용 (Site URL 문제 회피)
       const callbackUrl = searchParams.get('callbackUrl') || '/create'
-      const next = encodeURIComponent(callbackUrl)
-      window.location.href = `/auth/direct-oauth?next=${next}`
+      
+      // 공통 클라이언트의 signInWithGoogle 사용
+      const { error } = await signInWithGoogle({
+        redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(callbackUrl)}`,
+      })
+      
+      if (error) {
+        throw error
+      }
     } catch (err) {
       setError(err.message || 'Login failed')
       setLoading(false)

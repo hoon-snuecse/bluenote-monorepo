@@ -14,42 +14,52 @@ export function createServerClient(request, response) {
     },
   })
 
+  // 쿠키 옵션 통합
+  const getCookieOptions = () => {
+    const isProduction = process.env.NODE_ENV === 'production'
+    return {
+      domain: isProduction ? '.bluenote.site' : undefined,
+      path: '/',
+      sameSite: 'lax',
+      secure: isProduction,
+      httpOnly: true, // 보안 강화
+      maxAge: 60 * 60 * 24 * 7 // 7 days
+    }
+  }
+
   const supabase = createSupabaseServerClient(
     supabaseUrl,
     supabaseAnonKey,
     {
+      cookieOptions: getCookieOptions(),
       cookies: {
         get(name) {
           return request.cookies.get(name)?.value
         },
         set(name, value, options) {
+          const cookieOptions = { ...getCookieOptions(), ...options }
           request.cookies.set({
             name,
             value,
-            ...options,
+            ...cookieOptions,
           })
           supabaseResponse.cookies.set({
             name,
             value,
-            ...options,
-            // 프로덕션에서 서브도메인 간 쿠키 공유
-            domain: process.env.NODE_ENV === 'production' ? '.bluenote.site' : undefined,
-            sameSite: 'lax',
-            secure: process.env.NODE_ENV === 'production',
+            ...cookieOptions,
           })
         },
         remove(name, options) {
+          const cookieOptions = { ...getCookieOptions(), ...options, maxAge: 0 }
           request.cookies.set({
             name,
             value: '',
-            ...options,
+            ...cookieOptions,
           })
           supabaseResponse.cookies.set({
             name,
             value: '',
-            ...options,
-            maxAge: 0,
-            domain: process.env.NODE_ENV === 'production' ? '.bluenote.site' : undefined,
+            ...cookieOptions,
           })
         },
       },
