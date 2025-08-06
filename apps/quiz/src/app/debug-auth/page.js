@@ -70,17 +70,30 @@ export default function DebugAuth() {
   const handleSignIn = async () => {
     try {
       const client = createBrowserClient()
+      console.log('Starting OAuth flow...')
+      console.log('Redirect URL:', `${window.location.origin}/auth/callback`)
+      
       const { data, error } = await client.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`
+          redirectTo: `${window.location.origin}/auth/callback`,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent'
+          }
         }
       })
       
+      console.log('OAuth initiation result:', { data, error })
+      
       if (error) {
+        console.error('OAuth error:', error)
         alert('Error: ' + error.message)
+      } else {
+        console.log('OAuth URL:', data?.url)
       }
     } catch (error) {
+      console.error('Sign in error:', error)
       alert('Error: ' + error.message)
     }
   }
