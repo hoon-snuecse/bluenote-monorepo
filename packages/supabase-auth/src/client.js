@@ -72,20 +72,7 @@ export function createBrowserClient() {
           flowType: 'pkce',
           detectSessionInUrl: true,
           persistSession: true,
-          storageKey: 'sb-ukxchcyvxnbmsfrsamjk-auth-token',
-          storage: {
-            // 쿠키 기반 storage adapter
-            getItem: async (key) => {
-              if (typeof document === 'undefined') return null;
-              return getCombinedCookie(key);
-            },
-            setItem: async (key, value) => {
-              // Supabase SSR이 자동으로 처리
-            },
-            removeItem: async (key) => {
-              // Supabase SSR이 자동으로 처리
-            }
-          }
+          storageKey: 'sb-ukxchcyvxnbmsfrsamjk-auth-token'
         }
       }
     )
