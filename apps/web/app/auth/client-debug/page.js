@@ -5,7 +5,7 @@ import { useAuth } from '@/app/hooks/useAuth';
 import { createBrowserClient } from '@bluenote/supabase-auth/client';
 
 export default function ClientDebugPage() {
-  const { user, status } = useAuth();
+  const authData = useAuth();
   const [sessionInfo, setSessionInfo] = useState(null);
   const [loading, setLoading] = useState(true);
   const [supabase] = useState(() => createBrowserClient());
@@ -32,8 +32,8 @@ export default function ClientDebugPage() {
           setSessionInfo({
             directSession: session,
             directUser: currentUser,
-            authHookUser: user,
-            authHookStatus: status,
+            authHookUser: authData?.user,
+            authHookStatus: authData?.status,
             sessionError: error?.message,
             userError: userError?.message,
             cookies: document.cookie,
@@ -47,8 +47,8 @@ export default function ClientDebugPage() {
           console.log('[ClientDebug] Session check completed:', {
             hasDirectSession: !!session,
             hasDirectUser: !!currentUser,
-            hasAuthHookUser: !!user,
-            authHookStatus: status,
+            hasAuthHookUser: !!authData?.user,
+            authHookStatus: authData?.status,
             hasAuthToken: !!authTokenCookie || authTokenChunked.length > 0
           });
         }
