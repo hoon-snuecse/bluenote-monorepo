@@ -26,6 +26,10 @@ export default function AuthTestPage() {
     window.location.href = '/auth/direct-oauth'
   }
   
+  const testGoogleDirect = () => {
+    window.location.href = '/auth/google-direct'
+  }
+  
   return (
     <div className="min-h-screen bg-gray-50 p-4">
       <div className="max-w-2xl mx-auto">
@@ -70,14 +74,32 @@ export default function AuthTestPage() {
           )}
         </div>
         
+        <div className="bg-white rounded-lg shadow p-6 mb-4">
+          <h2 className="text-lg font-semibold mb-4">Direct OAuth Routes</h2>
+          <div className="space-y-2">
+            <button
+              onClick={testDirectOAuth}
+              className="block w-full px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600"
+            >
+              Test /auth/direct-oauth (Supabase)
+            </button>
+            
+            <button
+              onClick={testGoogleDirect}
+              className="block w-full px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+            >
+              Test /auth/google-direct (Direct Google OAuth)
+            </button>
+          </div>
+        </div>
+        
         <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-lg font-semibold mb-4">Direct OAuth Route</h2>
-          <button
-            onClick={testDirectOAuth}
-            className="px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600"
-          >
-            Test /auth/direct-oauth
-          </button>
+          <h2 className="text-lg font-semibold mb-4">Issue Summary</h2>
+          <div className="text-sm text-gray-600 space-y-2">
+            <p>• Supabase Site URL이 https://bluenote.site로 설정되어 있어 OAuth 후 www.bluenote.site로 리다이렉트됨</p>
+            <p>• quiz.bluenote.site에서 로그인 시도해도 Site URL로 강제 이동</p>
+            <p>• Direct Google OAuth는 Supabase를 우회하여 직접 Google 인증 후 세션 생성</p>
+          </div>
         </div>
       </div>
     </div>
