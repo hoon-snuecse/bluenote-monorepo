@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { createBrowserClient } from '@bluenote/supabase-auth/client';
 import { useRouter } from 'next/navigation';
 
@@ -17,92 +17,123 @@ export function useSession() {
 export function SupabaseAuthProvider({ children }) {
   const [session, setSession] = useState(null);
   const [status, setStatus] = useState('loading');
-  const supabase = createBrowserClient();
+  const [supabase] = useState(() => createBrowserClient());
   const router = useRouter();
 
-  useEffect(() => {
-    // 권한 정보를 포함한 세션 가져오기
-    const loadSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+  // 세션과 권한 정보를 로드하는 함수
+  const loadSessionWithPermissions = useCallback(async (currentSession) => {
+    if (!currentSession) {
+      console.log('[SupabaseAuthProvider] No session to enrich');
+      setSession(null);
+      setStatus('unauthenticated');
+      return;
+    }
+
+    try {
+      console.log('[SupabaseAuthProvider] Loading permissions for:', currentSession.user.email);
       
-      if (session) {
-        console.log('[SupabaseAuthProvider] Session found:', session.user.email);
+      // 권한 정보 가져오기
+      const { data: permissions, error: permError } = await supabase
+        .from('user_permissions')
+        .select('role, can_write, claude_daily_limit')
+        .eq('email', currentSession.user.email)
+        .single();
+      
+      if (permError) {
+        console.error('[SupabaseAuthProvider] Error fetching permissions:', permError);
+      }
+      
+      // 세션에 권한 정보 추가
+      const enrichedSession = {
+        ...currentSession,
+        user: {
+          ...currentSession.user,
+          isAdmin: permissions?.role === 'admin',
+          canWrite: permissions?.can_write || false,
+          permissions
+        }
+      };
+      
+      console.log('[SupabaseAuthProvider] Session enriched:', {
+        email: enrichedSession.user.email,
+        isAdmin: enrichedSession.user.isAdmin,
+        canWrite: enrichedSession.user.canWrite
+      });
+      
+      setSession(enrichedSession);
+      setStatus('authenticated');
+    } catch (error) {
+      console.error('[SupabaseAuthProvider] Error in loadSessionWithPermissions:', error);
+      setStatus('unauthenticated');
+    }
+  }, [supabase]);
+
+  useEffect(() => {
+    let mounted = true;
+
+    // 초기 세션 로드
+    const loadInitialSession = async () => {
+      try {
+        console.log('[SupabaseAuthProvider] Loading initial session...');
         
-        // 권한 정보 가져오기
-        const { data: permissions, error: permError } = await supabase
-          .from('user_permissions')
-          .select('role, can_write, claude_daily_limit')
-          .eq('email', session.user.email)
-          .single();
+        // getSession은 쿠키에서 세션을 읽음
+        const { data: { session: currentSession }, error } = await supabase.auth.getSession();
         
-        if (permError) {
-          console.error('[SupabaseAuthProvider] Error fetching permissions:', permError);
+        if (error) {
+          console.error('[SupabaseAuthProvider] Error getting session:', error);
+          if (mounted) {
+            setStatus('unauthenticated');
+          }
+          return;
         }
         
-        // 세션에 권한 정보 추가
-        const enrichedSession = {
-          ...session,
-          user: {
-            ...session.user,
-            isAdmin: permissions?.role === 'admin',
-            canWrite: permissions?.can_write || false,
-            permissions
-          }
-        };
+        console.log('[SupabaseAuthProvider] Initial session loaded:', currentSession ? 'Found' : 'Not found');
         
-        setSession(enrichedSession);
-        setStatus('authenticated');
-      } else {
-        console.log('[SupabaseAuthProvider] No session found');
-        setSession(null);
-        setStatus('unauthenticated');
+        if (mounted && currentSession) {
+          await loadSessionWithPermissions(currentSession);
+        } else if (mounted) {
+          setStatus('unauthenticated');
+        }
+      } catch (error) {
+        console.error('[SupabaseAuthProvider] Error in loadInitialSession:', error);
+        if (mounted) {
+          setStatus('unauthenticated');
+        }
       }
     };
     
-    loadSession();
+    loadInitialSession();
 
     // 세션 변경 감지
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      if (session) {
-        console.log('[SupabaseAuthProvider] Session found:', session.user.email);
-        
-        // 권한 정보 가져오기
-        const { data: permissions, error: permError } = await supabase
-          .from('user_permissions')
-          .select('role, can_write, claude_daily_limit')
-          .eq('email', session.user.email)
-          .single();
-        
-        if (permError) {
-          console.error('[SupabaseAuthProvider] Error fetching permissions:', permError);
+    } = supabase.auth.onAuthStateChange(async (event, newSession) => {
+      console.log('[SupabaseAuthProvider] Auth state changed:', event, newSession ? 'Session found' : 'No session');
+      
+      if (!mounted) return;
+      
+      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED') {
+        if (newSession) {
+          await loadSessionWithPermissions(newSession);
         }
-        
-        // 세션에 권한 정보 추가
-        const enrichedSession = {
-          ...session,
-          user: {
-            ...session.user,
-            isAdmin: permissions?.role === 'admin',
-            canWrite: permissions?.can_write || false,
-            permissions
-          }
-        };
-        
-        setSession(enrichedSession);
-        setStatus('authenticated');
-      } else {
-        console.log('[SupabaseAuthProvider] No session found');
+      } else if (event === 'SIGNED_OUT') {
         setSession(null);
         setStatus('unauthenticated');
+      }
+      
+      // 초기 로드 시에도 세션 체크
+      if (event === 'INITIAL_SESSION' && newSession) {
+        await loadSessionWithPermissions(newSession);
       }
       
       router.refresh();
     });
 
-    return () => subscription.unsubscribe();
-  }, [supabase, router]);
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
+  }, [supabase, router, loadSessionWithPermissions]);
 
   // NextAuth 호환성을 위한 형식
   const value = {
@@ -110,12 +141,33 @@ export function SupabaseAuthProvider({ children }) {
       user: {
         email: session.user.email,
         id: session.user.id,
+        isAdmin: session.user.isAdmin,
+        canWrite: session.user.canWrite,
+        permissions: session.user.permissions,
         ...session.user.user_metadata
       },
       expires: new Date(session.expires_at * 1000).toISOString()
     } : null,
-    status
+    status,
+    update: async () => {
+      // Refresh session
+      const { data: { session: newSession }, error } = await supabase.auth.refreshSession();
+      if (newSession) {
+        await loadSessionWithPermissions(newSession);
+      }
+    }
   };
+  
+  // 디버그 로깅
+  if (typeof window !== 'undefined') {
+    console.log('[SupabaseAuthProvider] Current auth state:', {
+      status,
+      hasSession: !!session,
+      userEmail: session?.user?.email,
+      isAdmin: session?.user?.isAdmin,
+      canWrite: session?.user?.canWrite
+    });
+  }
 
   return (
     <AuthContext.Provider value={value}>

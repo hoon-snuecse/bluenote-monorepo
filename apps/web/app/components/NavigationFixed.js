@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
+import { useAuth } from '@/app/hooks/useAuth';
 import { 
   Home, 
   FlaskConical,
@@ -23,10 +24,20 @@ export default function NavigationFixed() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const pathname = usePathname();
+  const { user, status, signOut } = useAuth();
   
-  // 임시로 세션 관련 변수를 null로 설정
-  const session = null;
-  const status = 'unauthenticated';
+  // 세션 객체 생성 (NextAuth 호환)
+  const session = user ? { user } : null;
+  
+  // 디버그 로깅
+  useEffect(() => {
+    console.log('[NavigationFixed] Auth state:', {
+      status,
+      hasUser: !!user,
+      userEmail: user?.email,
+      isAdmin: user?.isAdmin
+    });
+  }, [status, user]);
 
   // 스크롤 감지
   useEffect(() => {
@@ -121,8 +132,8 @@ export default function NavigationFixed() {
               );
             })}
             
-            {/* Claude AI 채팅 버튼 (로그인한 경우만) - 임시로 비활성화 */}
-            {false && session && (
+            {/* Claude AI 채팅 버튼 (로그인한 경우만) */}
+            {session && (
               <Link
                 href="/ai/chat"
                 className="ml-2 flex items-center gap-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:from-purple-700 hover:to-blue-700 transition-all duration-200 shadow-md hover:shadow-lg"
@@ -132,8 +143,8 @@ export default function NavigationFixed() {
               </Link>
             )}
             
-            {/* 관리자 대시보드 버튼 (관리자만) - 임시로 비활성화 */}
-            {false && session?.user?.isAdmin && (
+            {/* 관리자 대시보드 버튼 (관리자만) */}
+            {session?.user?.isAdmin && (
               <Link
                 href="/admin/dashboard"
                 className="ml-2 flex items-center gap-2 bg-slate-800 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-slate-900 transition-all duration-200"
@@ -143,15 +154,29 @@ export default function NavigationFixed() {
               </Link>
             )}
             
-            {/* 로그인/로그아웃 버튼 - 임시로 로그인만 표시 */}
+            {/* 로그인/로그아웃 버튼 */}
             <div className="ml-4">
-              <Link
-                href="/auth/signin"
-                className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-300 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors"
-              >
-                <LogIn className="w-4 h-4" />
-                <span>로그인</span>
-              </Link>
+              {status === 'loading' ? (
+                <div className="px-4 py-2">
+                  <div className="animate-pulse bg-slate-200 rounded h-8 w-20"></div>
+                </div>
+              ) : session ? (
+                <button
+                  onClick={() => signOut()}
+                  className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-300 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors"
+                >
+                  <LogOut className="w-4 h-4" />
+                  <span>로그아웃</span>
+                </button>
+              ) : (
+                <Link
+                  href="/auth/signin"
+                  className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-300 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors"
+                >
+                  <LogIn className="w-4 h-4" />
+                  <span>로그인</span>
+                </Link>
+              )}
             </div>
           </div>
 
@@ -188,16 +213,53 @@ export default function NavigationFixed() {
               );
             })}
             
-            {/* 모바일 로그인 버튼 */}
-            <div className="mt-4 pt-4 border-t border-slate-200">
+            {/* 모바일 Claude AI 채팅 버튼 */}
+            {session && (
               <Link
-                href="/auth/signin"
+                href="/ai/chat"
                 onClick={() => setIsMenuOpen(false)}
-                className="flex items-center gap-3 w-full px-4 py-3 bg-white border border-slate-300 rounded-lg text-slate-700 hover:bg-slate-50"
+                className="flex items-center gap-3 px-4 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg"
               >
-                <LogIn className="w-5 h-5" />
-                <span>Google로 로그인</span>
+                <MessageCircle className="w-5 h-5" />
+                <span>Claude 채팅</span>
               </Link>
+            )}
+            
+            {/* 모바일 관리자 버튼 */}
+            {session?.user?.isAdmin && (
+              <Link
+                href="/admin/dashboard"
+                onClick={() => setIsMenuOpen(false)}
+                className="flex items-center gap-3 px-4 py-3 bg-slate-800 text-white rounded-lg"
+              >
+                <Shield className="w-5 h-5" />
+                <span>관리자</span>
+              </Link>
+            )}
+            
+            {/* 모바일 로그인/로그아웃 버튼 */}
+            <div className="mt-4 pt-4 border-t border-slate-200">
+              {session ? (
+                <button
+                  onClick={() => {
+                    setIsMenuOpen(false);
+                    signOut();
+                  }}
+                  className="flex items-center gap-3 w-full px-4 py-3 bg-white border border-slate-300 rounded-lg text-slate-700 hover:bg-slate-50"
+                >
+                  <LogOut className="w-5 h-5" />
+                  <span>로그아웃</span>
+                </button>
+              ) : (
+                <Link
+                  href="/auth/signin"
+                  onClick={() => setIsMenuOpen(false)}
+                  className="flex items-center gap-3 w-full px-4 py-3 bg-white border border-slate-300 rounded-lg text-slate-700 hover:bg-slate-50"
+                >
+                  <LogIn className="w-5 h-5" />
+                  <span>Google로 로그인</span>
+                </Link>
+              )}
             </div>
           </div>
         </div>

@@ -8,34 +8,60 @@ export default function ClientDebugPage() {
   const { user, status } = useAuth();
   const [sessionInfo, setSessionInfo] = useState(null);
   const [loading, setLoading] = useState(true);
-  const supabase = createBrowserClient();
+  const [supabase] = useState(() => createBrowserClient());
 
   useEffect(() => {
     const checkSession = async () => {
-      // Direct Supabase session check
-      const { data: { session }, error } = await supabase.auth.getSession();
-      
-      // Get current user
-      const { data: { user: currentUser } } = await supabase.auth.getUser();
-      
-      setSessionInfo({
-        directSession: session,
-        directUser: currentUser,
-        authHookUser: user,
-        authHookStatus: status,
-        error: error?.message,
-        cookies: document.cookie,
-        supabaseCookies: document.cookie.split(';').filter(c => c.includes('sb-'))
-      });
-      
-      setLoading(false);
+      try {
+        // Direct Supabase session check
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        // Get current user
+        const { data: { user: currentUser }, error: userError } = await supabase.auth.getUser();
+        
+        // Parse cookies to check for auth tokens
+        const cookies = document.cookie.split(';').map(c => c.trim());
+        const authTokenCookie = cookies.find(c => c.startsWith('sb-ukxchcyvxnbmsfrsamjk-auth-token'));
+        const authTokenChunked = cookies.filter(c => c.includes('sb-ukxchcyvxnbmsfrsamjk-auth-token.'));
+        
+        setSessionInfo({
+          directSession: session,
+          directUser: currentUser,
+          authHookUser: user,
+          authHookStatus: status,
+          sessionError: error?.message,
+          userError: userError?.message,
+          cookies: document.cookie,
+          supabaseCookies: cookies.filter(c => c.includes('sb-')),
+          authTokenCookie: authTokenCookie,
+          authTokenChunked: authTokenChunked,
+          hasAuthToken: !!authTokenCookie || authTokenChunked.length > 0,
+          timestamp: new Date().toISOString()
+        });
+        
+        console.log('[ClientDebug] Session check completed:', {
+          hasDirectSession: !!session,
+          hasDirectUser: !!currentUser,
+          hasAuthHookUser: !!user,
+          authHookStatus: status,
+          hasAuthToken: !!authTokenCookie || authTokenChunked.length > 0
+        });
+      } catch (error) {
+        console.error('[ClientDebug] Error checking session:', error);
+        setSessionInfo({
+          error: error.message,
+          timestamp: new Date().toISOString()
+        });
+      } finally {
+        setLoading(false);
+      }
     };
 
     checkSession();
 
     // Listen for auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log('Auth state change:', event, session);
+      console.log('[ClientDebug] Auth state change:', event, session ? 'Session exists' : 'No session');
       checkSession();
     });
 
@@ -84,9 +110,25 @@ export default function ClientDebugPage() {
         </div>
 
         <div className="bg-gray-100 p-4 rounded">
-          <h2 className="font-bold mb-2">Supabase Cookies:</h2>
+          <h2 className="font-bold mb-2">Cookie Analysis:</h2>
           <pre className="text-sm overflow-auto">
-{JSON.stringify(sessionInfo?.supabaseCookies, null, 2)}
+{JSON.stringify({
+  hasAuthToken: sessionInfo?.hasAuthToken,
+  authTokenCookie: sessionInfo?.authTokenCookie,
+  authTokenChunked: sessionInfo?.authTokenChunked,
+  allSupabaseCookies: sessionInfo?.supabaseCookies
+}, null, 2)}
+          </pre>
+        </div>
+
+        <div className="bg-gray-100 p-4 rounded">
+          <h2 className="font-bold mb-2">Errors:</h2>
+          <pre className="text-sm overflow-auto">
+{JSON.stringify({
+  sessionError: sessionInfo?.sessionError,
+  userError: sessionInfo?.userError,
+  generalError: sessionInfo?.error
+}, null, 2)}
           </pre>
         </div>
 
