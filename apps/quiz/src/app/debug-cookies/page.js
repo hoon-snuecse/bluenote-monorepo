@@ -7,12 +7,15 @@ export default function DebugCookiesPage() {
   const [cookies, setCookies] = useState([])
   const [session, setSession] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [mounted, setMounted] = useState(false)
   
   useEffect(() => {
+    setMounted(true)
+    
     // 쿠키 파싱
-    const parsedCookies = document.cookie.split('; ').map(cookie => {
-      const [name, value] = cookie.split('=')
-      return { name, value: decodeURIComponent(value || '') }
+    const parsedCookies = document.cookie.split('; ').filter(Boolean).map(cookie => {
+      const [name, ...valueParts] = cookie.split('=')
+      return { name, value: valueParts.join('=') || '' }
     })
     setCookies(parsedCookies)
     
@@ -44,6 +47,17 @@ export default function DebugCookiesPage() {
     checkSession()
   }, [])
   
+  // 클라이언트 사이드에서만 렌더링
+  if (!mounted) {
+    return (
+      <div className="min-h-screen bg-gray-50 p-4">
+        <div className="max-w-4xl mx-auto">
+          <p>Loading...</p>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 p-4">
       <div className="max-w-4xl mx-auto space-y-6">
@@ -51,7 +65,7 @@ export default function DebugCookiesPage() {
         
         <div className="bg-white rounded-lg shadow p-6">
           <h2 className="text-lg font-semibold mb-4">현재 도메인</h2>
-          <p className="text-sm text-gray-600">{typeof window !== 'undefined' ? window.location.hostname : 'N/A'}</p>
+          <p className="text-sm text-gray-600">{window.location.hostname}</p>
         </div>
         
         <div className="bg-white rounded-lg shadow p-6">
