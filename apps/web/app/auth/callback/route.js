@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
-import { createServerClient } from '@bluenote/supabase-auth/server';
+import { cookies } from 'next/headers';
+import { createServerClient as createSupabaseServerClient } from '@supabase/ssr';
 
 export async function GET(request) {
   const requestUrl = new URL(request.url);
@@ -7,6 +8,10 @@ export async function GET(request) {
   const callbackUrl = requestUrl.searchParams.get('callbackUrl') || '/';
   const error = requestUrl.searchParams.get('error');
   const errorDescription = requestUrl.searchParams.get('error_description');
+
+  console.log('[Auth Callback] Request URL:', request.url);
+  console.log('[Auth Callback] Code:', code ? 'Present' : 'None');
+  console.log('[Auth Callback] CallbackUrl:', callbackUrl);
 
   // OAuth 에러 처리
   if (error) {
@@ -17,8 +22,51 @@ export async function GET(request) {
   if (code) {
     console.log('[Auth Callback] Processing OAuth code');
     
-    // Use our package's createServerClient which has proper cookie options
-    const supabase = createServerClient();
+    // Cookie 옵션 설정
+    const cookieStore = cookies();
+    const getCookieOptions = () => {
+      const isProduction = process.env.NODE_ENV === 'production' || 
+                          process.env.VERCEL_ENV === 'production';
+      return {
+        domain: isProduction ? '.bluenote.site' : undefined,
+        path: '/',
+        sameSite: 'lax',
+        secure: isProduction,
+        httpOnly: false,
+        maxAge: 60 * 60 * 24 * 7 // 7 days
+      };
+    };
+    
+    // 직접 Supabase 클라이언트 생성
+    const supabase = createSupabaseServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+      {
+        cookies: {
+          get(name) {
+            return cookieStore.get(name)?.value;
+          },
+          set(name, value, options) {
+            try {
+              const finalOptions = { ...getCookieOptions(), ...options };
+              console.log(`[Auth Callback] Setting cookie ${name} with options:`, finalOptions);
+              cookieStore.set(name, value, finalOptions);
+            } catch (error) {
+              console.error(`[Auth Callback] Error setting cookie ${name}:`, error);
+            }
+          },
+          remove(name, options) {
+            try {
+              const finalOptions = { ...getCookieOptions(), ...options };
+              cookieStore.set(name, '', { ...finalOptions, maxAge: 0 });
+            } catch (error) {
+              console.error(`[Auth Callback] Error removing cookie ${name}:`, error);
+            }
+          },
+        },
+        cookieOptions: getCookieOptions()
+      }
+    );
 
     try {
       const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
@@ -53,8 +101,14 @@ export async function GET(request) {
       const { data: { session: verifySession } } = await supabase.auth.getSession();
       console.log('[Auth Callback] Session verification:', verifySession ? 'Session exists' : 'No session');
       
-      // 리다이렉트 응답 생성
-      const response = NextResponse.redirect(new URL(callbackUrl, request.url));
+      // 리다이렉트 응답 생성 - 절대 URL 사용
+      const redirectUrl = new URL(callbackUrl, request.url);
+      console.log('[Auth Callback] Redirecting to:', redirectUrl.toString());
+      
+      const response = NextResponse.redirect(redirectUrl);
+      
+      // 응답 헤더 로깅
+      console.log('[Auth Callback] Response headers:', response.headers);
       
       return response;
     } catch (error) {
