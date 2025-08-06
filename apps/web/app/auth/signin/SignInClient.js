@@ -11,12 +11,16 @@ export default function SignInClient() {
   const supabase = createBrowserClient();
 
   const handleGoogleSignIn = async () => {
+    // 현재 도메인 확인
+    const currentOrigin = window.location.origin;
+    console.log('[SignInClient] Current origin:', currentOrigin);
+    
     // Supabase OAuth flow 사용
-    // redirectTo를 지정하지 않으면 Supabase가 자동으로 Site URL로 리다이렉트
-    const { error } = await supabase.auth.signInWithOAuth({
+    const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${window.location.origin}/auth/callback?callbackUrl=${encodeURIComponent(callbackUrl)}`,
+        // 명시적으로 현재 도메인의 callback URL로 리다이렉트
+        redirectTo: `${currentOrigin}/auth/callback?callbackUrl=${encodeURIComponent(callbackUrl)}`,
         queryParams: {
           access_type: 'offline',
           prompt: 'consent',
@@ -26,6 +30,8 @@ export default function SignInClient() {
     
     if (error) {
       console.error('[SignInClient] Error signing in with Google:', error);
+    } else {
+      console.log('[SignInClient] OAuth URL generated:', data?.url);
     }
   };
 

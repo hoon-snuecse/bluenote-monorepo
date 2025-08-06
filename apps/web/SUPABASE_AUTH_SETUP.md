@@ -11,8 +11,11 @@
 
    ### Site URL
    ```
-   https://www.bluenote.site
+   https://bluenote.site
    ```
+   **중요**: Site URL은 `https://bluenote.site`로 유지합니다. 
+   - 이렇게 해야 quiz.bluenote.site, grading.bluenote.site 등 모든 서브도메인에서 정상 작동합니다
+   - 각 앱은 코드에서 명시적으로 자신의 도메인으로 redirectTo를 설정합니다
    
    ### Redirect URLs (모든 URL 추가)
    ```
