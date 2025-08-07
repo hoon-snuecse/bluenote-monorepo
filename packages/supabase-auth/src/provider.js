@@ -14,7 +14,13 @@ export function SupabaseAuthProvider({ children, redirectTo = '/' }) {
 
   useEffect(() => {
     // 초기 세션 가져오기
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    console.log('[SupabaseAuthProvider] Initializing auth state')
+    supabase.auth.getSession().then(({ data: { session }, error }) => {
+      if (error) {
+        console.error('[SupabaseAuthProvider] Error getting session:', error)
+      } else {
+        console.log('[SupabaseAuthProvider] Initial session:', session ? 'Found' : 'Not found')
+      }
       setSession(session)
       setLoading(false)
     })
@@ -22,7 +28,8 @@ export function SupabaseAuthProvider({ children, redirectTo = '/' }) {
     // 세션 변경 감지
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log('[SupabaseAuthProvider] Auth state changed:', event, session ? 'Session found' : 'No session')
       setSession(session)
       setLoading(false)
     })
@@ -105,5 +112,11 @@ export function useSupabaseAuth() {
       supabase: null
     }
   }
+  
+  // 디버그용 window 객체에 supabase 노출
+  if (typeof window !== 'undefined' && !window.supabase) {
+    window.supabase = context.supabase
+  }
+  
   return context
 }
