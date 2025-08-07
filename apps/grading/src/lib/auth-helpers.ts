@@ -24,7 +24,7 @@ export async function getSessionWithPermissions() {
     const { data: permissions, error } = await supabase
       .from('user_permissions')
       .select('role, can_write, claude_daily_limit')
-      .eq('email', user.email)
+      .eq('user_email', user.email)
       .single()
     
     if (error || !permissions) {
