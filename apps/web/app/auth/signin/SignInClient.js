@@ -25,7 +25,7 @@ export default function SignInClient() {
           access_type: 'offline',
           prompt: 'consent',
         },
-        skipBrowserRedirect: true // URL을 직접 제어
+        skipBrowserRedirect: false // 브라우저가 자동으로 리다이렉트 (로컬 테스트용)
       }
     });
     

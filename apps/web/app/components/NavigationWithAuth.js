@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
+import { createBrowserClient } from '@bluenote/supabase-auth/client';
 import { 
   Home, 
   FlaskConical,
@@ -24,22 +25,43 @@ import {
 export default function NavigationWithAuth() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
-  const [session, setSession] = useState(null);
+  const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const pathname = usePathname();
+  const [supabase] = useState(() => createBrowserClient());
 
-  // 세션 확인
+  // Supabase 세션 확인
   useEffect(() => {
-    fetch('/api/auth/session-check')
-      .then(res => res.json())
-      .then(data => {
-        if (data.authenticated && data.session) {
-          setSession(data.session);
-        }
+    const checkSession = async () => {
+      try {
+        const { data: { user: currentUser }, error } = await supabase.auth.getUser();
+        console.log('[NavigationWithAuth] Session check:', { 
+          hasUser: !!currentUser, 
+          email: currentUser?.email,
+          error: error?.message 
+        });
+        setUser(currentUser);
+      } catch (err) {
+        console.error('[NavigationWithAuth] Error checking session:', err);
+      } finally {
         setLoading(false);
-      })
-      .catch(() => setLoading(false));
-  }, []);
+      }
+    };
+
+    checkSession();
+
+    // 세션 변경 구독
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      console.log('[NavigationWithAuth] Auth state changed:', { 
+        event: _event, 
+        hasSession: !!session,
+        user: session?.user?.email 
+      });
+      setUser(session?.user || null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, [supabase]);
 
   // 스크롤 감지
   useEffect(() => {
@@ -95,8 +117,9 @@ export default function NavigationWithAuth() {
     return pathname.startsWith(href);
   };
 
-  const handleLogout = () => {
-    window.location.href = '/api/auth/signout?callbackUrl=/';
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    window.location.href = '/';
   };
 
   return (
@@ -139,7 +162,7 @@ export default function NavigationWithAuth() {
             })}
             
             {/* Claude AI 채팅 버튼 (로그인한 경우만) */}
-            {session && (
+            {user && (
               <Link
                 href="/ai/chat"
                 className={`flex items-center px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 whitespace-nowrap ${
@@ -153,7 +176,7 @@ export default function NavigationWithAuth() {
             )}
             
             {/* 관리자 대시보드 버튼 (관리자만) */}
-            {session?.user?.isAdmin && (
+            {user?.user_metadata?.isAdmin && (
               <Link
                 href="/admin/dashboard"
                 className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 whitespace-nowrap ${
@@ -171,14 +194,14 @@ export default function NavigationWithAuth() {
             <div className="ml-4">
               {loading ? (
                 <div className="px-4 py-2 text-sm text-slate-500">...</div>
-              ) : session ? (
+              ) : user ? (
                 <div className="flex items-center gap-3">
                   <Link
                     href="/auth/status"
                     className="flex items-center gap-2 text-sm text-slate-600 hover:text-slate-800 whitespace-nowrap"
                   >
                     <User className="w-4 h-4" />
-                    <span className="max-w-[150px] truncate">{session.user?.name || session.user?.email}</span>
+                    <span className="max-w-[150px] truncate">{user.user_metadata?.name || user.email}</span>
                   </Link>
                   <button
                     onClick={handleLogout}
@@ -234,7 +257,7 @@ export default function NavigationWithAuth() {
             })}
             
             {/* 모바일 Claude 채팅 버튼 */}
-            {session && (
+            {user && (
               <Link
                 href="/ai/chat"
                 onClick={() => setIsMenuOpen(false)}
@@ -249,7 +272,7 @@ export default function NavigationWithAuth() {
             )}
             
             {/* 모바일 관리자 버튼 */}
-            {session?.user?.isAdmin && (
+            {user?.user_metadata?.isAdmin && (
               <Link
                 href="/admin/dashboard"
                 onClick={() => setIsMenuOpen(false)}
@@ -266,7 +289,7 @@ export default function NavigationWithAuth() {
             
             {/* 모바일 로그인/로그아웃 */}
             <div className="mt-4 pt-4 border-t border-slate-200">
-              {session ? (
+              {user ? (
                 <>
                   <Link
                     href="/auth/status"
@@ -274,7 +297,7 @@ export default function NavigationWithAuth() {
                     className="flex items-center gap-3 px-4 py-3 text-slate-700 hover:bg-slate-50 rounded-lg"
                   >
                     <User className="w-5 h-5" />
-                    <span>{session.user?.name || session.user?.email}</span>
+                    <span>{user.user_metadata?.name || user.email}</span>
                   </Link>
                   <button
                     onClick={() => {

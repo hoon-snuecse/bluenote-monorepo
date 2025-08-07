@@ -1,5 +1,5 @@
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { createServerClient } from '@bluenote/supabase-auth/server';
+import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 
 export async function OPTIONS(request) {
@@ -47,20 +47,26 @@ export async function GET(request) {
       return new NextResponse(null, { status: 200, headers });
     }
 
-    const session = await getServerSession(authOptions);
+    // Supabase 서버 클라이언트 생성
+    const cookieStore = await cookies();
+    const supabase = createServerClient(cookieStore);
+    
+    // Supabase 세션 확인
+    const { data: { user }, error } = await supabase.auth.getUser();
     
     // 디버깅을 위한 로그
     const forwardedHost = request.headers.get('X-Forwarded-Host');
-    console.log('[Main] Session check:', {
-      hasSession: !!session,
-      userEmail: session?.user?.email,
-      requestFrom: forwardedHost || 'direct'
+    console.log('[Supabase] Session check:', {
+      hasUser: !!user,
+      userEmail: user?.email,
+      requestFrom: forwardedHost || 'direct',
+      error: error?.message
     });
     
     return NextResponse.json({
-      authenticated: !!session,
-      session: session,
-      user: session?.user || null,
+      authenticated: !!user,
+      session: user ? { user } : null,
+      user: user || null,
     }, { headers });
   } catch (error) {
     const origin = request.headers.get('origin');
