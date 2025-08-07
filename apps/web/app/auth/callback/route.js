@@ -22,8 +22,8 @@ export async function GET(request) {
   if (code) {
     console.log('[Auth Callback] Processing OAuth code');
     
-    // Cookie 옵션 설정
-    const cookieStore = cookies();
+    // Cookie 옵션 설정 - Next.js 15에서는 await 필요
+    const cookieStore = await cookies();
     const getCookieOptions = () => {
       const isProduction = process.env.NODE_ENV === 'production' || 
                           process.env.VERCEL_ENV === 'production';

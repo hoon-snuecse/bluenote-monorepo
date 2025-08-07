@@ -1,6 +1,6 @@
 'use client';
 
-import { SupabaseAuthProvider } from './SupabaseAuthProvider';
+import { SupabaseAuthProvider } from '@bluenote/supabase-auth';
 // import { DeviceInfoUpdater } from '@/components/DeviceInfoUpdater';
 
 export default function Providers({ children }) {

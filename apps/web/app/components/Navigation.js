@@ -25,7 +25,8 @@ export default function Navigation() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const pathname = usePathname();
-  const { user, loading, signOut } = useSupabaseAuth();
+  const { session, loading, signOut } = useSupabaseAuth();
+  const user = session?.user;
 
   // 스크롤 감지
   useEffect(() => {
