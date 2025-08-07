@@ -257,52 +257,37 @@ export async function POST(request) {
             
             <ol style="line-height: 2; color: #4b5563;">
                 <li style="margin-bottom: 15px;">
-                    <strong style="color: #7c3aed;">Kahoot 로그인</strong><br>
+                    <strong style="color: #7c3aed;">1. Kahoot 로그인</strong><br>
                     <a href="https://kahoot.com/schools/how-it-works/" target="_blank" style="color: #2563eb; text-decoration: underline;">
                         Kahoot.com 접속하기 →
                     </a>
                 </li>
                 
                 <li style="margin-bottom: 15px;">
-                    <strong style="color: #7c3aed;">새 Kahoot 만들기</strong><br>
+                    <strong style="color: #7c3aed;">2. 파일 다운로드</strong><br>
+                    상단의 <span style="color: #059669; font-weight: bold;">Excel</span> 또는 <span style="color: #2563eb; font-weight: bold;">CSV</span> 다운로드 버튼 클릭
+                </li>
+                
+                <li style="margin-bottom: 15px;">
+                    <strong style="color: #7c3aed;">3. 새 Kahoot 만들기</strong><br>
                     상단 메뉴에서 "Create" → "Import spreadsheet" 선택
                 </li>
                 
                 <li style="margin-bottom: 15px;">
-                    <strong style="color: #7c3aed;">다운로드한 파일 업로드</strong><br>
-                    위에서 다운로드한 Excel 또는 CSV 파일을 드래그 앤 드롭
+                    <strong style="color: #7c3aed;">4. 다운로드한 파일 업로드</strong><br>
+                    다운로드한 Excel 또는 CSV 파일을 드래그 앤 드롭
                 </li>
                 
                 <li style="margin-bottom: 15px;">
-                    <strong style="color: #7c3aed;">퀴즈 설정 확인</strong><br>
-                    제목, 설명, 표지 이미지 등을 설정하고 "Save" 클릭
+                    <strong style="color: #7c3aed;">5. 퀴즈 설정 및 저장</strong><br>
+                    파일 업로드 후 (제목, 설명, 표지 이미지 등을 설정하고) "Save" 클릭
                 </li>
                 
                 <li style="margin-bottom: 15px;">
-                    <strong style="color: #7c3aed;">퀴즈 실행</strong><br>
+                    <strong style="color: #7c3aed;">6. 퀴즈 실행</strong><br>
                     "Play" 버튼을 눌러 학생들과 함께 퀴즈 시작!
                 </li>
             </ol>
-            
-            <div style="margin-top: 20px; padding: 15px; background-color: #fef3c7; border-radius: 8px; border: 1px solid #fcd34d;">
-                <p style="margin: 0; color: #92400e; font-size: 14px;">
-                    <strong>💡 팁:</strong> Kahoot 무료 계정은 최대 10명까지 동시 참여 가능합니다. 
-                    더 많은 학생이 참여하려면 Pro 계정이 필요합니다.
-                </p>
-            </div>
-            
-            <div style="margin-top: 15px; font-size: 13px;">
-                <a href="https://support.kahoot.com/hc/en-us/articles/115002303908-How-to-import-questions-from-a-spreadsheet" 
-                   target="_blank" 
-                   style="color: #7c3aed; text-decoration: underline; margin-right: 20px;">
-                    상세 가이드 보기 →
-                </a>
-                <a href="https://kahoot.com/files/kahoot-spreadsheet-template.xlsx" 
-                   target="_blank" 
-                   style="color: #7c3aed; text-decoration: underline;">
-                    Kahoot 템플릿 다운로드 →
-                </a>
-            </div>
         </div>
         
         <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb; color: #6b7280; text-align: center;">
