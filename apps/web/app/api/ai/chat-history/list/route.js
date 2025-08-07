@@ -1,14 +1,13 @@
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { checkAuth } from '@/lib/supabase-auth-helpers';
 import { promises as fs } from 'fs';
 import path from 'path';
 
-export async function GET(request) {
+export async function GET() {
   try {
     // Check authentication
-    const session = await getServerSession(authOptions);
-    if (!session) {
-      return new Response('Unauthorized', { status: 401 });
+    const { error } = await checkAuth();
+    if (error) {
+      return new Response(error.message, { status: error.status });
     }
 
     const baseDir = path.join(process.cwd(), 'chat-history');

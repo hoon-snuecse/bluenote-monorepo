@@ -1,12 +1,11 @@
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { checkAuth } from '@/lib/supabase-auth-helpers';
 
 export async function POST(request) {
   try {
     // Check authentication
-    const session = await getServerSession(authOptions);
-    if (!session) {
-      return new Response('Unauthorized', { status: 401 });
+    const { user, error } = await checkAuth();
+    if (error) {
+      return new Response(error.message, { status: error.status });
     }
 
     const { messages, topic } = await request.json();
@@ -28,7 +27,7 @@ export async function POST(request) {
     const filename = `claude_chat_${dateStr}.md`;
     
     // Generate markdown content
-    const mdContent = generateMarkdown(messages, session.user, topic, date);
+    const mdContent = generateMarkdown(messages, user, topic, date);
     
     // Return markdown as downloadable file
     return new Response(mdContent, {
@@ -61,7 +60,7 @@ function generateMarkdown(messages, user, topic, date) {
   
   let md = `# Claude와의 대화\n`;
   md += `- 일시: ${dateStr}\n`;
-  md += `- 참여자: ${user?.name || user?.email || 'Unknown'}\n`;
+  md += `- 참여자: ${user?.user_metadata?.name || user?.email || 'Unknown'}\n`;
   md += `- 주제: ${topic || '일반 대화'}\n\n`;
   md += `---\n\n`;
   md += `## 대화 내용\n\n`;
