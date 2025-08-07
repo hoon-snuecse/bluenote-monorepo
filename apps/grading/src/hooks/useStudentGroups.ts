@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useSession } from 'next-auth/react';
+import { useUser } from '@/contexts/UserContext';
 
 export interface Student {
   id: string;
@@ -32,7 +32,7 @@ export interface StudentGroup {
 }
 
 export function useStudentGroups() {
-  const { data: session } = useSession();
+  const { user: session } = useUser();
   const [groups, setGroups] = useState<StudentGroup[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
