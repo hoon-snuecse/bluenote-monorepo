@@ -95,7 +95,15 @@ export function SupabaseAuthProvider({ children, redirectTo = '/' }) {
 export function useSupabaseAuth() {
   const context = useContext(SupabaseAuthContext)
   if (context === undefined) {
-    throw new Error('useSupabaseAuth must be used within a SupabaseAuthProvider')
+    // 컨텍스트가 없을 때 기본값 반환 (에러 대신)
+    console.warn('useSupabaseAuth must be used within a SupabaseAuthProvider')
+    return {
+      session: null,
+      loading: true,
+      signInWithGoogle: async () => {},
+      signOut: async () => {},
+      supabase: null
+    }
   }
   return context
 }
