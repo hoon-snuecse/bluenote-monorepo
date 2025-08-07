@@ -8,7 +8,7 @@ export default async function ServerDebugPage() {
   const allCookies = cookieStore.getAll();
   
   // Get Supabase session using our server client
-  const supabase = createServerClient();
+  const supabase = await createServerClient();
   const { data: { session }, error } = await supabase.auth.getSession();
   
   // Get session through our auth helper

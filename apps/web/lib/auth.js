@@ -4,7 +4,7 @@ import { createAdminClient } from '@/lib/supabase/admin';
 
 // 세션 확인 및 권한 체크 함수
 export async function getServerSession() {
-  const supabase = createServerClient();
+  const supabase = await createServerClient();
   const { data: { session }, error } = await supabase.auth.getSession();
   
   // 디버그 로그 추가
