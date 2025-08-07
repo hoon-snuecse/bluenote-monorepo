@@ -15,18 +15,16 @@ export default function SignInClient() {
     const currentOrigin = window.location.origin;
     console.log('[SignInClient] Current origin:', currentOrigin);
     
-    // Supabase OAuth flow 사용 - 자동 리다이렉트 사용
+    // Supabase OAuth flow 사용
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        // 명시적으로 현재 도메인의 callback URL로 리다이렉트
-        redirectTo: `${currentOrigin}/auth/callback?callbackUrl=${encodeURIComponent(callbackUrl)}`,
+        // redirectTo를 명시적으로 현재 도메인으로 설정
+        redirectTo: `${currentOrigin}/auth/callback`,
         queryParams: {
           access_type: 'offline',
           prompt: 'consent',
-        },
-        // 모든 환경에서 자동 리다이렉트 사용
-        skipBrowserRedirect: false
+        }
       }
     });
     
