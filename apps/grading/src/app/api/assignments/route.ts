@@ -135,6 +135,7 @@ export async function POST(request: NextRequest) {
     
     if (!user) {
       // 사용자가 없으면 생성
+      console.log('Creating new user for email:', userEmail);
       user = await prisma.user.create({
         data: {
           email: userEmail,
@@ -143,6 +144,9 @@ export async function POST(request: NextRequest) {
           schoolName: data.schoolName || '서울인왕초등학교'
         }
       });
+      console.log('Created user with ID:', user.id);
+    } else {
+      console.log('Found existing user with ID:', user.id);
     }
     
     const userId = user.id;
@@ -190,7 +194,8 @@ export async function POST(request: NextRequest) {
             evaluationLevels: data.evaluationLevels || [],
             levelCount: typeof data.levelCount === 'string' ? parseInt(data.levelCount) : (data.levelCount || 4),
             gradingCriteria: data.gradingCriteria || '',
-            userId: userId,
+            // userId는 nullable이므로 User 테이블에 연결이 있을 때만 설정
+            ...(user ? { userId: user.id } : {}),
             userEmail: userEmail
           }
         });
@@ -208,6 +213,10 @@ export async function POST(request: NextRequest) {
       }
     }
     
+    
+    if (!assignment) {
+      throw new Error('Failed to create assignment after retries');
+    }
     
     console.log('Assignment created successfully:', assignment.id);
 
