@@ -15,11 +15,23 @@ export async function GET() {
     }
     
     // Get user permissions using service role (bypasses RLS)
-    const { data, error } = await supabase
+    // Try user_email first, then email column for backward compatibility
+    let { data, error } = await supabase
       .from('user_permissions')
       .select('*')
       .eq('user_email', session.user.email)
       .single();
+    
+    // If user_email column doesn't exist, try email column
+    if (error && error.code === '42703') {
+      const result = await supabase
+        .from('user_permissions')
+        .select('*')
+        .eq('email', session.user.email)
+        .single();
+      data = result.data;
+      error = result.error;
+    }
     
     if (error) {
       console.warn('Permissions lookup error:', error);
