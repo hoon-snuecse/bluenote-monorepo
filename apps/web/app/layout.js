@@ -1,5 +1,5 @@
 import './globals.css'
-import Navigation from './components/NavigationWrapper'
+import NavigationWrapper from './components/NavigationWrapper'
 import Footer from './components/Footer'
 import Providers from './components/Providers'
 
@@ -78,7 +78,7 @@ export default function RootLayout({ children }) {
       <body suppressHydrationWarning={true}>
         <Providers>
           <div className="relative z-10">
-            <Navigation />
+            <NavigationWrapper />
             <main>
               {children}
             </main>
