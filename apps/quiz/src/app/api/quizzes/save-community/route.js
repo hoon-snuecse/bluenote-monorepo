@@ -2,10 +2,9 @@ import { NextResponse } from 'next/server'
 import { getSession } from '@bluenote/supabase-auth/server'
 import { createClient } from '@supabase/supabase-js'
 
-// Admin 클라이언트 생성 (RLS가 비활성화되어 있으므로 ANON KEY 사용 가능)
+// Admin 클라이언트 생성 - 매번 새로 생성하여 권한 변경사항 반영
 function createAdminClient() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-  // Service Role Key가 없으면 ANON Key 사용 (RLS가 비활성화되어 있으므로 작동함)
   const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
   
   if (!supabaseUrl) {
@@ -17,12 +16,23 @@ function createAdminClient() {
     throw new Error('Missing Supabase credentials')
   }
   
-  console.log('[save-community] Using key type:', process.env.SUPABASE_SERVICE_ROLE_KEY ? 'SERVICE_ROLE' : 'ANON')
+  console.log('[save-community] Creating new client with key type:', process.env.SUPABASE_SERVICE_ROLE_KEY ? 'SERVICE_ROLE' : 'ANON')
+  console.log('[save-community] Timestamp:', new Date().toISOString()) // 캐시 무효화를 위한 타임스탬프
   
+  // 새로운 클라이언트 인스턴스 생성 (캐시 방지)
   return createClient(supabaseUrl, supabaseKey, {
     auth: {
       autoRefreshToken: false,
-      persistSession: false
+      persistSession: false,
+      detectSessionInUrl: false
+    },
+    db: {
+      schema: 'public'
+    },
+    global: {
+      headers: {
+        'x-client-info': 'quiz-app-save-community'
+      }
     }
   })
 }
@@ -53,7 +63,7 @@ export async function POST(request) {
       )
     }
 
-    // Service Role 클라이언트 사용 (RLS 우회)
+    // 새로운 Admin 클라이언트 생성 (캐시 방지)
     console.log('[save-community] Creating admin client')
     let supabase
     try {
@@ -68,6 +78,17 @@ export async function POST(request) {
         },
         { status: 500 }
       )
+    }
+
+    // 현재 권한 상태 확인 (디버깅용)
+    const { data: roleCheck, error: roleError } = await supabase
+      .from('quizzes')
+      .select('id')
+      .limit(0)
+    
+    if (roleError) {
+      console.error('[save-community] Role check error:', roleError)
+      console.error('[save-community] This may indicate permission issues')
     }
 
     // 퀴즈 메타데이터 저장
@@ -91,18 +112,23 @@ export async function POST(request) {
         is_public: true,
         is_shared: true,
         is_sample: false,
-        tags: []
+        tags: [],
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
       })
       .select()
       .single()
 
     if (quizError) {
       console.error('[save-community] Quiz insert error:', quizError)
+      console.error('[save-community] Error code:', quizError.code)
+      console.error('[save-community] Error hint:', quizError.hint)
       return NextResponse.json(
         { 
           error: '퀴즈 저장 중 오류가 발생했습니다.', 
           details: quizError.message,
-          code: quizError.code
+          code: quizError.code,
+          hint: quizError.hint
         },
         { status: 500 }
       )
