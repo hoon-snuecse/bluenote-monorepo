@@ -546,7 +546,7 @@ function WritePageContent() {
                     </a>
                     <span className="text-slate-500 mx-2">|</span>
                     <Link 
-                      href="/MD_UPLOAD_GUIDE"
+                      href="/templates/shed-post-template.md"
                       target="_blank"
                       className="text-blue-600 hover:text-blue-700 underline"
                     >
