@@ -304,9 +304,9 @@ export async function PUT(request) {
 export async function DELETE(request) {
   try {
     // Check authentication
-    const { user, error } = await checkAuth('write');
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: error.status });
+    const { user, error: authError } = await checkAuth('write');
+    if (authError) {
+      return NextResponse.json({ error: authError.message }, { status: authError.status });
     }
 
     const supabase = await createClient();
