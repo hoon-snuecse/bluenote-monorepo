@@ -32,6 +32,23 @@ export async function GET() {
         { status: 403 }
       );
     }
+    
+    // User 테이블에서 사용자 확인 (없으면 생성)
+    let user = await prisma.user.findUnique({
+      where: { email: userEmail }
+    });
+    
+    if (!user) {
+      // 사용자가 없으면 생성
+      user = await prisma.user.create({
+        data: {
+          email: userEmail,
+          name: userEmail.split('@')[0],
+          role: 'TEACHER',
+          schoolName: '서울인왕초등학교'
+        }
+      });
+    }
 
     // 사용자가 볼 수 있는 과제만 가져오기
     const assignments = await getViewableAssignments(userEmail);
@@ -102,15 +119,33 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    const userId = session.user.id;
     const userEmail = session.user.email;
     
-    if (!userId || !userEmail) {
+    if (!userEmail) {
       return NextResponse.json(
         { success: false, error: '사용자 정보가 올바르지 않습니다.' },
         { status: 403 }
       );
     }
+    
+    // User 테이블에서 사용자 찾기 또는 생성
+    let user = await prisma.user.findUnique({
+      where: { email: userEmail }
+    });
+    
+    if (!user) {
+      // 사용자가 없으면 생성
+      user = await prisma.user.create({
+        data: {
+          email: userEmail,
+          name: userEmail.split('@')[0], // 이메일의 @ 앞부분을 기본 이름으로 사용
+          role: 'TEACHER',
+          schoolName: data.schoolName || '서울인왕초등학교'
+        }
+      });
+    }
+    
+    const userId = user.id;
     
     // 필수 필드 검증
     if (!data.title || !data.schoolName || !data.gradeLevel || !data.writingType) {
