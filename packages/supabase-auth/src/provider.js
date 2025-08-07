@@ -13,7 +13,7 @@ export function SupabaseAuthProvider({ children, redirectTo = '/' }) {
   const [permissions, setPermissions] = useState(null)
   const router = useRouter()
 
-  // 권한 정보 로드 함수
+  // 권한 정보 로드 함수 - API를 통해 가져오기
   const loadPermissions = async (userEmail) => {
     if (!userEmail) {
       setPermissions(null)
@@ -22,32 +22,38 @@ export function SupabaseAuthProvider({ children, redirectTo = '/' }) {
     
     try {
       console.log('[SupabaseAuthProvider] Loading permissions for:', userEmail)
-      const { data, error } = await supabase
-        .from('user_permissions')
-        .select('role, can_write, claude_daily_limit')
-        .eq('email', userEmail)
-        .single()
       
-      if (error) {
-        console.error('[SupabaseAuthProvider] Error loading permissions:', error)
-        // ADMIN_EMAILS 체크 (폴백)
-        const adminEmails = ['hoon@snuecse.org', 'hoon@iw.es.kr', 'sociogram@gmail.com']
-        if (adminEmails.includes(userEmail)) {
-          const fallbackPermissions = {
-            role: 'admin',
-            can_write: true,
-            claude_daily_limit: 1000
-          }
-          setPermissions(fallbackPermissions)
-          return fallbackPermissions
+      // ADMIN_EMAILS 체크 (폴백 - 클라이언트 사이드)
+      const adminEmails = ['hoon@snuecse.org', 'hoon@iw.es.kr', 'sociogram@gmail.com']
+      if (adminEmails.includes(userEmail)) {
+        const fallbackPermissions = {
+          role: 'admin',
+          can_write: true,
+          claude_daily_limit: 1000
         }
-        setPermissions(null)
-        return null
+        console.log('[SupabaseAuthProvider] Using admin fallback for:', userEmail)
+        setPermissions(fallbackPermissions)
+        return fallbackPermissions
       }
       
-      console.log('[SupabaseAuthProvider] Permissions loaded:', data)
-      setPermissions(data)
-      return data
+      // API를 통해 권한 정보 가져오기 (RLS 우회)
+      try {
+        const response = await fetch('/api/auth/session-check')
+        if (response.ok) {
+          const data = await response.json()
+          if (data.authenticated && data.user?.permissions) {
+            console.log('[SupabaseAuthProvider] Permissions loaded from API:', data.user.permissions)
+            setPermissions(data.user.permissions)
+            return data.user.permissions
+          }
+        }
+      } catch (apiError) {
+        console.error('[SupabaseAuthProvider] API fallback failed:', apiError)
+      }
+      
+      // 기본값 설정
+      setPermissions(null)
+      return null
     } catch (error) {
       console.error('[SupabaseAuthProvider] Error in loadPermissions:', error)
       setPermissions(null)
