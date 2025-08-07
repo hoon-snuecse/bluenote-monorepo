@@ -1,10 +1,7 @@
 import { NextResponse } from 'next/server';
 import { checkAuth } from '@/lib/supabase-auth-helpers';
 import Anthropic from '@anthropic-ai/sdk';
-
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-});
+import { createAdminClient } from '@/lib/supabase/admin';
 
 export async function POST(request) {
   try {
@@ -20,8 +17,24 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Invalid message' }, { status: 400 });
     }
 
-    // Use provided model or default
-    const selectedModel = model || 'claude-sonnet-4-20250514';
+    // Get system settings for Claude configuration
+    let systemPrompt = '당신은 도움이 되고 친절한 AI 어시스턴트입니다. 한국어로 자연스럽게 대화하며, 사용자의 질문에 정확하고 유용한 답변을 제공합니다.';
+    let selectedModel = model || 'claude-sonnet-4-20250514';
+    
+    try {
+      const supabase = createAdminClient();
+      const { data: settings } = await supabase
+        .from('system_settings')
+        .select('claude_system_prompt, claude_model')
+        .single();
+      
+      if (settings) {
+        systemPrompt = settings.claude_system_prompt || systemPrompt;
+        selectedModel = model || settings.claude_model || selectedModel;
+      }
+    } catch (error) {
+      console.log('Could not fetch system settings, using defaults');
+    }
 
     // Check if API key is configured
     if (!process.env.ANTHROPIC_API_KEY) {
@@ -30,6 +43,10 @@ export async function POST(request) {
         response: 'Claude API 키가 설정되지 않았습니다. 관리자에게 문의하세요.'
       }, { status: 500 });
     }
+
+    const anthropic = new Anthropic({
+      apiKey: process.env.ANTHROPIC_API_KEY,
+    });
 
     try {
       // Call Claude API
@@ -42,7 +59,7 @@ export async function POST(request) {
             content: message
           }
         ],
-        system: '당신은 도움이 되고 친절한 AI 어시스턴트입니다. 한국어로 자연스럽게 대화하며, 사용자의 질문에 정확하고 유용한 답변을 제공합니다.'
+        system: systemPrompt
       });
 
       const response = completion.content[0].text;

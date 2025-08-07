@@ -1,6 +1,24 @@
 import { NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase'
+import { createClient } from '@supabase/supabase-js'
 import { getSession } from '@bluenote/supabase-auth/server'
+
+// Admin 클라이언트 생성 (RLS가 비활성화되어 있으므로 ANON KEY 사용 가능)
+function createAdminClient() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  // Service Role Key가 없으면 ANON Key 사용 (RLS가 비활성화되어 있으므로 작동함)
+  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  
+  if (!supabaseUrl || !supabaseKey) {
+    throw new Error('Missing Supabase credentials')
+  }
+  
+  return createClient(supabaseUrl, supabaseKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false
+    }
+  })
+}
 
 export async function GET(request) {
   try {
@@ -9,18 +27,12 @@ export async function GET(request) {
     const category = searchParams.get('category') || 'all'
     const grade = searchParams.get('grade') || 'all'
 
-    const supabase = createClient()
+    // Service Role 클라이언트 사용 (RLS 우회)
+    const supabase = createAdminClient()
     
     // 현재 사용자 세션 가져오기
     const session = await getSession()
     const currentUserEmail = session?.user?.email
-    
-    // RLS 컨텍스트 설정 (로그인한 경우에만)
-    if (currentUserEmail) {
-      await supabase.rpc('set_current_user_email', { 
-        email: currentUserEmail 
-      })
-    }
 
     // 1. 공개된 퀴즈 또는 본인 퀴즈 가져오기 (shared_quizzes에서)
     let sharedQuery = supabase

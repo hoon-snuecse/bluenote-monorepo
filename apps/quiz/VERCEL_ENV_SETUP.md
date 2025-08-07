@@ -1,46 +1,76 @@
-# Vercel 환경 변수 설정 가이드
+# Vercel 환경변수 설정 가이드
 
-## 필수 환경 변수
+## 필수 환경변수
 
-Vercel 프로젝트 설정에서 다음 환경 변수들을 반드시 설정해야 합니다:
+Quiz 앱이 프로덕션에서 정상 작동하려면 Vercel 프로젝트 설정에서 다음 환경변수들을 설정해야 합니다:
 
-### 1. Supabase 설정
-- `NEXT_PUBLIC_SUPABASE_URL`: https://ukxchcyvxnbmsfrsamjk.supabase.co
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY`: Supabase 프로젝트의 anon key
-- `SUPABASE_SERVICE_ROLE_KEY`: Supabase 프로젝트의 service role key
+### 1. Supabase 설정 (필수)
+```bash
+# Public 환경변수 (클라이언트에서 사용)
+NEXT_PUBLIC_SUPABASE_URL=https://ukxchcyvxnbmsfrsamjk.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+
+# Service Role Key (서버에서만 사용 - 매우 중요\!)
+SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+```
+
+⚠️ **중요**: `SUPABASE_SERVICE_ROLE_KEY`가 없으면 퀴즈 저장 시 "permission denied" 오류가 발생합니다.
 
 ### 2. NextAuth 설정
-- `NEXTAUTH_SECRET`: 랜덤한 비밀 키 (openssl rand -base64 32로 생성)
-- `NEXTAUTH_URL`: https://quiz.bluenote.site (프로덕션)
+```bash
+NEXTAUTH_SECRET=your-nextauth-secret-here
+NEXTAUTH_URL=https://quiz.bluenote.site
+```
 
-### 3. Google OAuth 설정
-- `GOOGLE_CLIENT_ID`: Google Cloud Console에서 발급받은 OAuth 2.0 클라이언트 ID
-- `GOOGLE_CLIENT_SECRET`: Google Cloud Console에서 발급받은 OAuth 2.0 클라이언트 시크릿
+### 3. Google OAuth
+```bash
+GOOGLE_CLIENT_ID=your-google-client-id-here
+GOOGLE_CLIENT_SECRET=your-google-client-secret-here
+```
 
-### 4. Claude AI 설정
-- `ANTHROPIC_API_KEY`: Anthropic에서 발급받은 API 키
+### 4. Claude API (선택사항)
+```bash
+ANTHROPIC_API_KEY=sk-ant-api...
+```
 
-### 5. 디버깅 (선택사항)
-- `NEXTAUTH_DEBUG`: true (개발/디버깅 시), false 또는 미설정 (프로덕션)
+## Vercel에서 환경변수 설정하기
 
-## 설정 방법
-
-1. Vercel 대시보드에서 bluenote-quiz 프로젝트 선택
-2. Settings → Environment Variables 메뉴 이동
-3. 각 환경 변수 추가:
-   - Key: 환경 변수 이름
-   - Value: 실제 값
+1. [Vercel Dashboard](https://vercel.com)에 로그인
+2. Quiz 프로젝트 선택
+3. Settings → Environment Variables로 이동
+4. 각 변수를 추가:
+   - Key: 환경변수 이름
+   - Value: 환경변수 값
    - Environment: Production, Preview, Development 모두 체크
 
-## Google OAuth 콜백 URL 설정
+## Service Role Key 얻는 방법
 
-Google Cloud Console에서 다음 리다이렉트 URI를 추가해야 합니다:
-- 프로덕션: https://quiz.bluenote.site/api/auth/callback/google
-- 로컬 개발: http://localhost:3003/api/auth/callback/google
+1. [Supabase Dashboard](https://app.supabase.com)에 로그인
+2. 프로젝트 선택
+3. Settings → API로 이동
+4. "Service Role Key" 섹션에서 키 복사
+   - ⚠️ 이 키는 매우 민감한 정보입니다. 절대 클라이언트 코드나 공개 저장소에 포함시키지 마세요.
 
-## 주의사항
+## 설정 후 확인
 
-1. `NEXTAUTH_URL`은 프로덕션에서는 반드시 https://quiz.bluenote.site로 설정
-2. 모든 환경 변수는 대소문자를 정확히 구분해서 입력
-3. NEXT_PUBLIC_ 접두사가 붙은 환경 변수는 클라이언트에서도 접근 가능
-4. 환경 변수 변경 후 재배포 필요
+환경변수 설정 후:
+1. Vercel에서 재배포 트리거
+2. 배포 완료 후 테스트
+3. 퀴즈 저장 기능이 정상 작동하는지 확인
+
+## 문제 해결
+
+### "permission denied for table quizzes" 오류
+- 원인: `SUPABASE_SERVICE_ROLE_KEY`가 설정되지 않음
+- 해결: Vercel 환경변수에 Service Role Key 추가
+
+### "Server configuration error" 오류
+- 원인: 환경변수가 제대로 설정되지 않음
+- 해결: Vercel Dashboard에서 모든 필수 환경변수 확인
+
+## 보안 참고사항
+
+- `SUPABASE_SERVICE_ROLE_KEY`는 서버 사이드에서만 사용됩니다
+- 절대 `NEXT_PUBLIC_` 접두사를 붙이지 마세요
+- 이 키를 가진 사람은 RLS를 우회하여 모든 데이터에 접근할 수 있습니다
+EOF < /dev/null

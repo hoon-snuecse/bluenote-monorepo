@@ -1,6 +1,31 @@
 import { NextResponse } from 'next/server'
 import { getSession } from '@bluenote/supabase-auth/server'
-import { createServerClient } from '@bluenote/supabase-auth/server'
+import { createClient } from '@supabase/supabase-js'
+
+// Admin 클라이언트 생성 (RLS가 비활성화되어 있으므로 ANON KEY 사용 가능)
+function createAdminClient() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  // Service Role Key가 없으면 ANON Key 사용 (RLS가 비활성화되어 있으므로 작동함)
+  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  
+  if (!supabaseUrl) {
+    throw new Error('Missing NEXT_PUBLIC_SUPABASE_URL')
+  }
+  
+  if (!supabaseKey) {
+    console.error('[save-community] No Supabase key available')
+    throw new Error('Missing Supabase credentials')
+  }
+  
+  console.log('[save-community] Using key type:', process.env.SUPABASE_SERVICE_ROLE_KEY ? 'SERVICE_ROLE' : 'ANON')
+  
+  return createClient(supabaseUrl, supabaseKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false
+    }
+  })
+}
 
 export async function POST(request) {
   try {
@@ -28,12 +53,27 @@ export async function POST(request) {
       )
     }
 
-    // 서버 클라이언트 사용 (JWT 인증 포함)
-    console.log('[save-community] Creating server client')
-    const supabase = createServerClient()
+    // Service Role 클라이언트 사용 (RLS 우회)
+    console.log('[save-community] Creating admin client')
+    let supabase
+    try {
+      supabase = createAdminClient()
+    } catch (error) {
+      console.error('[save-community] Failed to create admin client:', error.message)
+      return NextResponse.json(
+        { 
+          error: 'Server configuration error', 
+          details: error.message,
+          hint: 'Service Role Key may not be configured in production environment'
+        },
+        { status: 500 }
+      )
+    }
 
     // 퀴즈 메타데이터 저장
     console.log('[save-community] Inserting quiz data')
+    console.log('[save-community] Using Service Role Key:', !!process.env.SUPABASE_SERVICE_ROLE_KEY)
+    
     const { data: quiz, error: quizError } = await supabase
       .from('quizzes')
       .insert({

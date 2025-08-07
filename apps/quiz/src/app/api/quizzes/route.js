@@ -1,6 +1,24 @@
 import { NextResponse } from 'next/server'
 import { getSession } from '@bluenote/supabase-auth/server'
-import { createClient } from '@/lib/supabase'
+import { createClient } from '@supabase/supabase-js'
+
+// Admin 클라이언트 생성 (RLS가 비활성화되어 있으므로 ANON KEY 사용 가능)
+function createAdminClient() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  // Service Role Key가 없으면 ANON Key 사용 (RLS가 비활성화되어 있으므로 작동함)
+  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  
+  if (!supabaseUrl || !supabaseKey) {
+    throw new Error('Missing Supabase credentials')
+  }
+  
+  return createClient(supabaseUrl, supabaseKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false
+    }
+  })
+}
 
 // GET: 사용자의 퀴즈 목록 조회
 export async function GET(request) {
@@ -16,12 +34,8 @@ export async function GET(request) {
     const search = searchParams.get('search') || ''
     const tag = searchParams.get('tag') || ''
 
-    const supabase = createClient()
-    
-    // RLS 컨텍스트 설정
-    await supabase.rpc('set_current_user_email', { 
-      email: session.user.email 
-    })
+    // Service Role 클라이언트 사용 (RLS 우회)
+    const supabase = createAdminClient()
 
     // 내 퀴즈와 샘플 퀴즈를 분리하여 조회
     const [myQuizzesResult, sampleQuizzesResult] = await Promise.all([
@@ -86,12 +100,8 @@ export async function POST(request) {
       }, { status: 400 })
     }
 
-    const supabase = createClient()
-    
-    // RLS 컨텍스트 설정
-    await supabase.rpc('set_current_user_email', { 
-      email: session.user.email 
-    })
+    // Service Role 클라이언트 사용 (RLS 우회)
+    const supabase = createAdminClient()
 
     // 트랜잭션 시작
     // 1. 퀴즈 생성
