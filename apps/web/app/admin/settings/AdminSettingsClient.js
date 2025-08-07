@@ -28,8 +28,8 @@ export default function AdminSettingsClient() {
   const [settings, setSettings] = useState({
     // 사이트 기본 정보
     siteName: 'BlueNote Atelier',
-    siteDescription: '박교수의 연구실 - 교육과 연구의 공간',
-    adminEmail: 'admin@bluenote.site',
+    siteDescription: 'BlueNote Atelier - 지식과 창의성이 만나는 공간',
+    adminEmail: 'hoon@snuecse.org',
     
     // Claude AI 설정
     claudeEnabled: true,

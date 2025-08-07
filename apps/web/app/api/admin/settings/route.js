@@ -1,15 +1,12 @@
 import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth/next';
-import { authOptions } from '@/lib/auth';
-import { createClientForServer } from '@/lib/supabase/server';
+import { checkAuth } from '@/lib/supabase-auth-helpers';
 import { createAdminClient } from '@/lib/supabase/admin';
 
-export async function GET(request) {
+export async function GET() {
   try {
-    const session = await getServerSession(authOptions);
-    
-    if (!session || !session.user.isAdmin) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const { error: authError } = await checkAuth('admin');
+    if (authError) {
+      return NextResponse.json({ error: authError.message }, { status: authError.status });
     }
 
     const supabase = createAdminClient();
@@ -27,8 +24,8 @@ export async function GET(request) {
     // Convert snake_case to camelCase for client
     const clientSettings = data ? {
       siteName: data.site_name || 'BlueNote Atelier',
-      siteDescription: data.site_description || '박교수의 연구실 - 교육과 연구의 공간',
-      adminEmail: data.admin_email || 'admin@bluenote.site',
+      siteDescription: data.site_description || 'BlueNote Atelier - 지식과 창의성이 만나는 공간',
+      adminEmail: data.admin_email || 'hoon@snuecse.org',
       claudeEnabled: data.claude_enabled ?? true,
       claudeDefaultDailyLimit: data.claude_default_daily_limit || 10,
       claudeSystemPrompt: data.claude_system_prompt || '당신은 교육과 연구를 돕는 AI 어시스턴트입니다.',
@@ -47,8 +44,8 @@ export async function GET(request) {
       enableMaintenanceMode: data.enable_maintenance_mode ?? false
     } : {
       siteName: 'BlueNote Atelier',
-      siteDescription: '박교수의 연구실 - 교육과 연구의 공간',
-      adminEmail: 'admin@bluenote.site',
+      siteDescription: 'BlueNote Atelier - 지식과 창의성이 만나는 공간',
+      adminEmail: 'hoon@snuecse.org',
       claudeEnabled: true,
       claudeDefaultDailyLimit: 10,
       claudeSystemPrompt: '당신은 교육과 연구를 돕는 AI 어시스턴트입니다.',
@@ -76,10 +73,9 @@ export async function GET(request) {
 
 export async function POST(request) {
   try {
-    const session = await getServerSession(authOptions);
-    
-    if (!session || !session.user.isAdmin) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const { error: authError } = await checkAuth('admin');
+    if (authError) {
+      return NextResponse.json({ error: authError.message }, { status: authError.status });
     }
 
     const { settings } = await request.json();
