@@ -1,7 +1,19 @@
+import { Inter, Noto_Sans_KR } from 'next/font/google'
 import './globals.css'
 import NavigationWrapper from './components/NavigationWrapper'
 import Footer from './components/Footer'
 import Providers from './components/Providers'
+
+const inter = Inter({ 
+  subsets: ['latin'],
+  variable: '--font-inter'
+})
+
+const notoSansKR = Noto_Sans_KR({ 
+  subsets: ['latin'],
+  variable: '--font-noto-sans-kr',
+  weight: ['400', '500', '700']
+})
 
 export const metadata = {
   metadataBase: new URL(process.env.NEXTAUTH_URL || 'http://localhost:3000'),
@@ -70,12 +82,8 @@ export const viewport = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="ko">
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-      </head>
-      <body suppressHydrationWarning={true}>
+    <html lang="ko" className={`${inter.variable} ${notoSansKR.variable}`}>
+      <body className="font-sans antialiased" suppressHydrationWarning={true}>
         <Providers>
           <div className="relative z-10">
             <NavigationWrapper />
@@ -85,10 +93,6 @@ export default function RootLayout({ children }) {
             <Footer />
           </div>
         </Providers>
-        <link 
-          href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;700&family=Dancing+Script:wght@400;700&family=Pacifico&family=Nanum+Pen+Script&display=swap" 
-          rel="stylesheet" 
-        />
       </body>
     </html>
   )

@@ -95,7 +95,7 @@ export default function Navigation() {
               ♭
             </div>
             <div className="hidden sm:block">
-              <h1 className="text-xl font-space-grotesk font-semibold text-slate-900">
+              <h1 className="text-xl font-semibold text-slate-900">
                 BlueNote Atelier
               </h1>
             </div>
