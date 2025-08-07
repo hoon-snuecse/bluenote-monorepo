@@ -3,7 +3,7 @@ import CreateQuizClient from './create-quiz-client'
 
 export default async function CreateQuizPage() {
   // 서버에서 세션 확인
-  const supabase = createServerClient()
+  const supabase = await createServerClient()
   const { data: { session } } = await supabase.auth.getSession()
   
   return (

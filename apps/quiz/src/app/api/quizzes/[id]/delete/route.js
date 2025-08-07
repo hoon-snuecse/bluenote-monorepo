@@ -14,7 +14,7 @@ export async function DELETE(request, { params }) {
     }
 
     const { id } = params
-    const supabase = createServerClient()
+    const supabase = await createServerClient()
 
     // 퀴즈 소유자 확인
     const { data: quiz, error: quizError } = await supabase

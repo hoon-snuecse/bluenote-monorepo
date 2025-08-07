@@ -17,7 +17,7 @@ export async function POST(request, { params }) {
     const { id } = params
     const { format } = await request.json()
 
-    const supabase = createServerClient()
+    const supabase = await createServerClient()
 
     // 먼저 shared_quizzes에서 실제 quiz_id 가져오기
     const { data: sharedQuiz, error: sharedError } = await supabase

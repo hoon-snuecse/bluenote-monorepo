@@ -6,7 +6,7 @@ export default async function ServerDebugPage() {
   const allCookies = cookieStore.getAll()
   const supabaseCookies = allCookies.filter(c => c.name.includes('sb-'))
   
-  const supabase = createServerClient()
+  const supabase = await createServerClient()
   const { data: { session }, error } = await supabase.auth.getSession()
   
   return (
