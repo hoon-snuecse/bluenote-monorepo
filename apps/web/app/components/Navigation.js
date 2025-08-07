@@ -133,7 +133,7 @@ export default function Navigation() {
             )}
             
             {/* 관리자 대시보드 버튼 (관리자만) */}
-            {user?.user_metadata?.isAdmin && (
+            {user?.isAdmin && (
               <Link
                 href="/admin/dashboard"
                 className="ml-2 flex items-center gap-2 bg-slate-800 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-slate-900 transition-all duration-200"
@@ -218,7 +218,7 @@ export default function Navigation() {
             )}
             
             {/* 모바일 관리자 버튼 */}
-            {user?.user_metadata?.isAdmin && (
+            {user?.isAdmin && (
               <Link
                 href="/admin/dashboard"
                 onClick={() => setIsMenuOpen(false)}

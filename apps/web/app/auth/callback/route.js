@@ -43,22 +43,23 @@ export async function GET(request) {
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
       {
         cookies: {
-          get(name) {
-            return cookieStore.get(name)?.value;
+          async get(name) {
+            const cookie = await cookieStore.get(name);
+            return cookie?.value;
           },
-          set(name, value, options) {
+          async set(name, value, options) {
             try {
               const finalOptions = { ...getCookieOptions(), ...options };
               console.log(`[Auth Callback] Setting cookie ${name} with options:`, finalOptions);
-              cookieStore.set(name, value, finalOptions);
+              await cookieStore.set(name, value, finalOptions);
             } catch (error) {
               console.error(`[Auth Callback] Error setting cookie ${name}:`, error);
             }
           },
-          remove(name, options) {
+          async remove(name, options) {
             try {
               const finalOptions = { ...getCookieOptions(), ...options };
-              cookieStore.set(name, '', { ...finalOptions, maxAge: 0 });
+              await cookieStore.set(name, '', { ...finalOptions, maxAge: 0 });
             } catch (error) {
               console.error(`[Auth Callback] Error removing cookie ${name}:`, error);
             }

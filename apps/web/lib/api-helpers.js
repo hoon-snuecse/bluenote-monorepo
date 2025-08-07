@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
-import { createClient } from '@/lib/supabase/server';
+import { cookies } from 'next/headers';
+import { createServerClient } from '@bluenote/supabase-auth/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 
 /**
@@ -10,17 +9,41 @@ import { createAdminClient } from '@/lib/supabase/admin';
  * @returns {Promise<{session?: any, error?: {message: string, status: number}}>}
  */
 export async function requireAuth(requiredRole = null) {
-  const session = await getServerSession(authOptions);
+  const cookieStore = await cookies();
+  const supabase = createServerClient(cookieStore);
   
-  if (!session) {
+  const { data: { user }, error } = await supabase.auth.getUser();
+  
+  if (error || !user) {
     return { error: { message: 'Unauthorized', status: 401 } };
   }
   
-  if (requiredRole === 'admin' && !session.user.isAdmin) {
+  // 권한 정보 가져오기
+  const { data: permissions } = await supabase
+    .from('user_permissions')
+    .select('role, can_write')
+    .eq('email', user.email)
+    .single();
+  
+  // ADMIN_EMAILS 폴백
+  const adminEmails = ['hoon@snuecse.org', 'hoon@iw.es.kr', 'sociogram@gmail.com'];
+  const isAdmin = permissions?.role === 'admin' || adminEmails.includes(user.email);
+  const canWrite = permissions?.can_write || isAdmin;
+  
+  const session = {
+    user: {
+      ...user,
+      isAdmin,
+      canWrite,
+      permissions
+    }
+  };
+  
+  if (requiredRole === 'admin' && !isAdmin) {
     return { error: { message: 'Forbidden - Admin access required', status: 403 } };
   }
   
-  if (requiredRole === 'write' && !session.user.isAdmin && !session.user.canWrite) {
+  if (requiredRole === 'write' && !isAdmin && !canWrite) {
     return { error: { message: 'Forbidden - Admin access or write permission required', status: 403 } };
   }
   
@@ -91,7 +114,10 @@ export function createApiHandler(options = {}) {
       // Supabase 클라이언트 생성
       const supabase = useAdminClient 
         ? createAdminClient() 
-        : await createClient();
+        : (() => {
+            const cookieStore = cookies();
+            return createServerClient(cookieStore);
+          })();
       
       // 콜백 실행
       const result = await callback({ request, session, supabase });

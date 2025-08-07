@@ -10,16 +10,62 @@ export function SupabaseAuthProvider({ children, redirectTo = '/' }) {
   const supabase = createBrowserClient()
   const [session, setSession] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [permissions, setPermissions] = useState(null)
   const router = useRouter()
+
+  // 권한 정보 로드 함수
+  const loadPermissions = async (userEmail) => {
+    if (!userEmail) {
+      setPermissions(null)
+      return null
+    }
+    
+    try {
+      console.log('[SupabaseAuthProvider] Loading permissions for:', userEmail)
+      const { data, error } = await supabase
+        .from('user_permissions')
+        .select('role, can_write, claude_daily_limit')
+        .eq('email', userEmail)
+        .single()
+      
+      if (error) {
+        console.error('[SupabaseAuthProvider] Error loading permissions:', error)
+        // ADMIN_EMAILS 체크 (폴백)
+        const adminEmails = ['hoon@snuecse.org', 'hoon@iw.es.kr', 'sociogram@gmail.com']
+        if (adminEmails.includes(userEmail)) {
+          const fallbackPermissions = {
+            role: 'admin',
+            can_write: true,
+            claude_daily_limit: 1000
+          }
+          setPermissions(fallbackPermissions)
+          return fallbackPermissions
+        }
+        setPermissions(null)
+        return null
+      }
+      
+      console.log('[SupabaseAuthProvider] Permissions loaded:', data)
+      setPermissions(data)
+      return data
+    } catch (error) {
+      console.error('[SupabaseAuthProvider] Error in loadPermissions:', error)
+      setPermissions(null)
+      return null
+    }
+  }
 
   useEffect(() => {
     // 초기 세션 가져오기
     console.log('[SupabaseAuthProvider] Initializing auth state')
-    supabase.auth.getSession().then(({ data: { session }, error }) => {
+    supabase.auth.getSession().then(async ({ data: { session }, error }) => {
       if (error) {
         console.error('[SupabaseAuthProvider] Error getting session:', error)
       } else {
         console.log('[SupabaseAuthProvider] Initial session:', session ? 'Found' : 'Not found')
+        if (session?.user?.email) {
+          await loadPermissions(session.user.email)
+        }
       }
       setSession(session)
       setLoading(false)
@@ -28,8 +74,15 @@ export function SupabaseAuthProvider({ children, redirectTo = '/' }) {
     // 세션 변경 감지
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, session) => {
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log('[SupabaseAuthProvider] Auth state changed:', event, session ? 'Session found' : 'No session')
+      
+      if (session?.user?.email) {
+        await loadPermissions(session.user.email)
+      } else {
+        setPermissions(null)
+      }
+      
       setSession(session)
       setLoading(false)
     })
@@ -84,8 +137,19 @@ export function SupabaseAuthProvider({ children, redirectTo = '/' }) {
     }
   }
 
+  // 권한이 포함된 세션 객체 생성
+  const enrichedSession = session && permissions ? {
+    ...session,
+    user: {
+      ...session.user,
+      isAdmin: permissions?.role === 'admin',
+      canWrite: permissions?.can_write || false,
+      permissions
+    }
+  } : session
+
   const value = {
-    session,
+    session: enrichedSession,
     loading,
     signInWithGoogle,
     signOut,
