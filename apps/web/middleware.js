@@ -83,14 +83,29 @@ export async function middleware(req) {
   
   // 권한 정보 가져오기
   const email = session.user.email;
-  const { data: permissions } = await supabase
-    .from('user_permissions')
-    .select('role, can_write')
-    .eq('email', email)
-    .single();
   
-  const isAdmin = permissions?.role === 'admin';
-  const canWrite = permissions?.can_write || false;
+  // ADMIN_EMAILS 폴백 (하드코딩된 관리자 이메일)
+  const adminEmails = ['hoon@snuecse.org', 'hoon@iw.es.kr', 'sociogram@gmail.com'];
+  const isAdminEmail = adminEmails.includes(email);
+  
+  // 데이터베이스 권한 체크 (RLS로 인해 실패할 수 있음)
+  let isAdmin = isAdminEmail;
+  let canWrite = isAdminEmail;
+  
+  try {
+    const { data: permissions } = await supabase
+      .from('user_permissions')
+      .select('role, can_write')
+      .eq('email', email)
+      .single();
+    
+    if (permissions) {
+      isAdmin = permissions.role === 'admin' || isAdminEmail;
+      canWrite = permissions.can_write || isAdmin;
+    }
+  } catch (error) {
+    console.log('[Middleware] Using fallback permissions for:', email);
+  }
   
   // 관리자만 접근 가능한 경로
   if (path.startsWith('/admin') && !isAdmin) {
@@ -105,7 +120,7 @@ export async function middleware(req) {
     '/shed/write'
   ];
   
-  // 글쓰기 권한 체크 - 데이터베이스 기반으로만
+  // 글쓰기 권한 체크 - ADMIN_EMAILS 폴백 포함
   const isWritePath = writePermissionPaths.some(writePath => path.startsWith(writePath));
   if (isWritePath && !isAdmin && !canWrite) {
     return NextResponse.redirect(new URL('/unauthorized', req.url));
