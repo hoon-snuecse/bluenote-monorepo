@@ -61,34 +61,20 @@ export function createBrowserClient() {
   if (!browserClientInstance) {
     console.log('[createBrowserClient] Creating new Supabase client instance');
     
-    // 쿠키 접근 함수 정의
-    const cookies = {
-      get(name) {
-        const value = getCombinedCookie(name);
-        console.log(`[Cookie Get] ${name}:`, value ? 'Found' : 'Not found');
-        return value;
-      },
-      set(name, value, options) {
-        // 브라우저에서는 자동으로 처리됨
-      },
-      remove(name, options) {
-        // 브라우저에서는 자동으로 처리됨
-      }
-    };
-    
-    // @supabase/ssr의 createBrowserClient는 브라우저 환경에서는
-    // 자동으로 document.cookie를 사용하므로 cookies 객체를 전달하지 않음
+    // @supabase/ssr의 createBrowserClient는 브라우저 환경에서
+    // 자동으로 document.cookie를 사용함
     browserClientInstance = createSupabaseBrowserClient(
       supabaseUrl,
       supabaseAnonKey,
       {
-        cookies,
         cookieOptions: getCookieOptions(),
         auth: {
           flowType: 'pkce',
           detectSessionInUrl: true,
           persistSession: true,
-          storageKey: 'sb-ukxchcyvxnbmsfrsamjk-auth-token'
+          storageKey: 'sb-ukxchcyvxnbmsfrsamjk-auth-token',
+          storage: typeof window !== 'undefined' ? window.localStorage : undefined,
+          autoRefreshToken: true
         }
       }
     )
