@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server';
-import { getServerSession } from '@/lib/auth';
+import { getSessionWithPermissions } from '@/lib/auth-helpers';
 
 export async function GET() {
   try {
-    const session = await getServerSession();
+    const session = await getSessionWithPermissions();
     
     if (!session || !session.user) {
       return NextResponse.json(

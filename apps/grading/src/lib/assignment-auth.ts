@@ -1,5 +1,4 @@
-import { getServerSession } from "next-auth";
-import { authOptions } from "@bluenote/auth";
+import { getSessionWithPermissions } from '@/lib/auth-helpers';
 import prisma from '@/lib/prisma';
 
 export type PermissionLevel = 'none' | 'read' | 'evaluate' | 'write' | 'owner';
@@ -186,7 +185,7 @@ export async function checkAssignmentPermissions(
  */
 export async function getCurrentUser() {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getSessionWithPermissions();
     return session?.user || null;
   } catch (error) {
     console.error('Error getting current user:', error);

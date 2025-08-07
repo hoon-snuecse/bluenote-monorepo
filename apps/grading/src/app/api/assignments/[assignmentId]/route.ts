@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { getServerSession } from '@/lib/auth';
+import { getSessionWithPermissions } from '@/lib/auth-helpers';
 import { checkAssignmentPermission } from '@/lib/assignment-auth';
 
 // 개별 과제 조회
@@ -10,7 +10,7 @@ export async function GET(
 ) {
   try {
     // 인증 체크
-    const session = await getServerSession();
+    const session = await getSessionWithPermissions();
     if (!session) {
       return NextResponse.json(
         { success: false, error: '인증이 필요합니다.' },
@@ -82,7 +82,7 @@ export async function PUT(
 ) {
   try {
     // 인증 체크
-    const session = await getServerSession();
+    const session = await getSessionWithPermissions();
     if (!session) {
       return NextResponse.json(
         { success: false, error: '인증이 필요합니다.' },
@@ -149,7 +149,7 @@ export async function DELETE(
 ) {
   try {
     // 인증 체크
-    const session = await getServerSession();
+    const session = await getSessionWithPermissions();
     if (!session) {
       return NextResponse.json(
         { success: false, error: '인증이 필요합니다.' },

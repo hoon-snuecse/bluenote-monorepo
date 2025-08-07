@@ -2,8 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { createEvaluator } from '@/lib/ai-evaluator';
 import { sendEvaluationUpdate } from './stream/route';
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/lib/auth";
+import { getServerSession, authOptions } from "@/lib/auth";
 import { checkAssignmentPermission } from '@/lib/assignment-auth';
 
 // AI 평가 실행 및 저장

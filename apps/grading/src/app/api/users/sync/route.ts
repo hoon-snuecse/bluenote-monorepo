@@ -1,12 +1,12 @@
 import { NextResponse } from 'next/server'
-import { getServerSession } from '@/lib/auth'
+import { getSessionWithPermissions } from '@/lib/auth-helpers'
 import { createClient } from '@/lib/supabase'
 import { User, UserRole, UserPermissions } from '@bluenote/shared-infra'
 
 // GET: web 앱과 사용자 정보 동기화
 export async function GET() {
   try {
-    const session = await getServerSession()
+    const session = await getSessionWithPermissions()
     if (!session?.user?.email) {
       return NextResponse.json(
         { error: 'Unauthorized' },

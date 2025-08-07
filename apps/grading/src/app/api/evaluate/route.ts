@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { evaluateWithClaude, EvaluationRequest } from '@/lib/claude-api';
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/lib/auth";
+import { getServerSession, authOptions } from "@/lib/auth";
 import { checkAssignmentPermission } from '@/lib/assignment-auth';
 
 export async function POST(request: NextRequest) {

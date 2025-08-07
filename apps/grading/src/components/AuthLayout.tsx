@@ -1,6 +1,6 @@
 'use client';
 
-import { useSession } from 'next-auth/react';
+import { useSupabaseAuth } from '@bluenote/supabase-auth';
 import { useRouter } from 'next/navigation';
 import { ReactNode, useEffect } from 'react';
 
@@ -9,19 +9,19 @@ interface AuthLayoutProps {
 }
 
 export function AuthLayout({ children }: AuthLayoutProps) {
-  const { data: session, status } = useSession();
+  const { session, loading } = useSupabaseAuth();
   const router = useRouter();
 
   useEffect(() => {
     // Redirect to signin if not authenticated
-    if (status === 'loading') return; // Still loading
+    if (loading) return; // Still loading
     if (!session) {
       router.push('/auth/signin');
     }
-  }, [session, status, router]);
+  }, [session, loading, router]);
 
   // Show loading state while checking auth
-  if (status === 'loading') {
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -32,18 +32,10 @@ export function AuthLayout({ children }: AuthLayoutProps) {
     );
   }
 
-  // Don't render children if not authenticated
+  // Show nothing if not authenticated (will redirect)
   if (!session) {
     return null;
   }
 
-  return (
-    <div className="min-h-screen bg-gray-50 pt-16">
-      <main className="py-6">
-        {children}
-      </main>
-    </div>
-  );
+  return <>{children}</>;
 }
-
-export default AuthLayout;

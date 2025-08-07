@@ -1,11 +1,11 @@
 import { NextResponse } from 'next/server';
-import { getServerSession } from '@/lib/auth';
+import { getSessionWithPermissions } from '@/lib/auth-helpers';
 
 export async function GET(request: Request) {
   console.log('[Auth Check] Checking session...');
   
   try {
-    const session = await getServerSession();
+    const session = await getSessionWithPermissions();
     console.log('[Auth Check] Session:', session ? 'Found' : 'Not found');
     
     return NextResponse.json({

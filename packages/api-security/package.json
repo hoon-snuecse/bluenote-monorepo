@@ -1,0 +1,23 @@
+{
+  "name": "@bluenote/api-security",
+  "version": "0.1.0",
+  "description": "Shared API security utilities for Bluenote monorepo",
+  "main": "src/index.js",
+  "exports": {
+    ".": "./src/index.js",
+    "./middleware": "./src/middleware.js",
+    "./validators": "./src/validators.js",
+    "./rate-limit": "./src/rate-limit.js"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "@bluenote/supabase-auth": "workspace:*",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0"
+  },
+  "license": "MIT"
+}

@@ -1,9 +1,8 @@
 'use client';
 
-import { SessionProvider, useSession } from '@bluenote/auth';
-import { createContext, useContext, ReactNode } from 'react';
+import { useSupabaseAuth, createClient } from '@bluenote/supabase-auth';
+import { createContext, useContext, ReactNode, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { signIn, signOut } from 'next-auth/react';
 
 interface UserContextType {
   user: {
@@ -13,6 +12,7 @@ interface UserContextType {
     role?: string;
     isAdmin?: boolean;
     canWrite?: boolean;
+    canGrade?: boolean;
   } | null;
   loading: boolean;
   error: string | null;
@@ -23,45 +23,90 @@ interface UserContextType {
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
-function UserProviderInner({ children }: { children: ReactNode }) {
+export function UserProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
-  const { data: session, status, update } = useSession();
+  const { session, loading: authLoading } = useSupabaseAuth();
+  const [permissions, setPermissions] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const supabase = createClient();
+  
+  // 권한 정보 가져오기
+  useEffect(() => {
+    const fetchPermissions = async () => {
+      if (session?.user?.email) {
+        try {
+          const response = await fetch('/api/auth/me');
+          if (response.ok) {
+            const data = await response.json();
+            setPermissions(data.permissions);
+          }
+        } catch (err) {
+          console.error('Failed to fetch permissions:', err);
+        }
+      } else {
+        setPermissions(null);
+      }
+      setLoading(false);
+    };
+    
+    fetchPermissions();
+  }, [session]);
   
   const user = session?.user ? {
     id: session.user.id,
     email: session.user.email,
-    name: session.user.name,
-    role: session.user.role,
-    isAdmin: session.user.isAdmin,
-    canWrite: session.user.canWrite,
-    canGrade: session.user.isAdmin || session.user.role === 'teacher',
+    name: session.user.user_metadata?.name || session.user.email?.split('@')[0],
+    role: permissions?.role || 'user',
+    isAdmin: permissions?.role === 'admin',
+    canWrite: permissions?.canWrite || false,
+    canGrade: permissions?.role === 'admin' || permissions?.role === 'teacher',
   } : null;
   
-  const loading = status === 'loading';
-  
-  // Google OAuth 로그인으로 변경
   const login = async (email: string, password: string) => {
-    // 기존 로그인 방식은 더 이상 사용하지 않음
-    // Google OAuth로 리다이렉트
-    await signIn('google', { callbackUrl: '/dashboard-beta' });
+    setError(null);
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      
+      if (error) throw error;
+      
+      router.push('/dashboard-beta');
+    } catch (err: any) {
+      setError(err.message || '로그인에 실패했습니다.');
+      throw err;
+    }
   };
   
   const logout = async () => {
-    // 메인 사이트 홈으로 리다이렉트
-    await signOut({ callbackUrl: 'https://bluenote.site' });
+    try {
+      await supabase.auth.signOut();
+      router.push('https://bluenote.site');
+    } catch (err) {
+      console.error('Logout error:', err);
+    }
   };
   
   const refreshUser = async () => {
-    // NextAuth의 update 함수를 사용하여 세션 갱신
-    await update();
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session) {
+      // 권한 정보 다시 가져오기
+      const response = await fetch('/api/auth/me');
+      if (response.ok) {
+        const data = await response.json();
+        setPermissions(data.permissions);
+      }
+    }
   };
   
   return (
     <UserContext.Provider
       value={{
         user,
-        loading,
-        error: null,
+        loading: loading || authLoading,
+        error,
         login,
         logout,
         refreshUser,
@@ -69,14 +114,6 @@ function UserProviderInner({ children }: { children: ReactNode }) {
     >
       {children}
     </UserContext.Provider>
-  );
-}
-
-export function UserProvider({ children }: { children: ReactNode }) {
-  return (
-    <SessionProvider>
-      <UserProviderInner>{children}</UserProviderInner>
-    </SessionProvider>
   );
 }
 

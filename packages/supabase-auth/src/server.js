@@ -1,8 +1,12 @@
-import { createServerClient } from './server-client.js'
+// @bluenote/supabase-auth/server
+// 서버 전용 exports
+
+export { createServerClient } from './server-client.js'
 
 // 서버에서 세션 가져오기
 export async function getSession() {
-  const supabase = createServerClient()
+  const { createServerClient } = await import('./server-client.js')
+  const supabase = await createServerClient()
   
   try {
     const { data: { session }, error } = await supabase.auth.getSession()
@@ -21,7 +25,8 @@ export async function getSession() {
 
 // 서버에서 사용자 정보 가져오기
 export async function getUser() {
-  const supabase = createServerClient()
+  const { createServerClient } = await import('./server-client.js')
+  const supabase = await createServerClient()
   
   try {
     const { data: { user }, error } = await supabase.auth.getUser()
@@ -35,25 +40,5 @@ export async function getUser() {
   } catch (error) {
     console.error('Unexpected error getting user:', error)
     return null
-  }
-}
-
-// 인증 필수 페이지용 헬퍼
-export async function requireAuth() {
-  const session = await getSession()
-  
-  if (!session) {
-    return {
-      redirect: {
-        destination: '/auth/signin',
-        permanent: false
-      }
-    }
-  }
-  
-  return {
-    props: {
-      user: session.user
-    }
   }
 }

@@ -1,29 +1,60 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server'
+import { createServerClient } from '@bluenote/supabase-auth/server'
 
-// 임시로 미들웨어를 간단하게 구현 (Edge Runtime 에러 해결을 위해)
-export function middleware(request: NextRequest) {
-  // 모든 요청을 통과시킴
-  return NextResponse.next();
+// 인증이 필요하지 않은 공개 경로들
+const publicPaths = [
+  '/',
+  '/auth/signin',
+  '/auth/error',
+  '/auth/callback',
+  '/api/auth/callback',
+  '/api/health',
+  '/submit',
+  '/view',
+  '/public-submissions',
+  '/test-auth',
+  '/test-api-security',
+  '/api/test-secured',
+  '/api/test-middleware',
+  '/_next',
+  '/favicon.ico'
+]
+
+export async function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl
+  
+  // 공개 경로는 인증 체크 없이 통과
+  const isPublicPath = publicPaths.some(path => 
+    pathname === path || pathname.startsWith(path + '/')
+  )
+  
+  if (isPublicPath) {
+    return NextResponse.next()
+  }
+
+  try {
+    // Supabase 세션 체크
+    const supabase = await createServerClient()
+    const { data: { session } } = await supabase.auth.getSession()
+    
+    if (!session) {
+      // 인증되지 않은 경우 로그인 페이지로 리다이렉트
+      const redirectUrl = new URL('/auth/signin', request.url)
+      redirectUrl.searchParams.set('callbackUrl', pathname)
+      return NextResponse.redirect(redirectUrl)
+    }
+
+    // user_permissions 체크 (선택사항)
+    // API 라우트에서 더 세밀한 권한 체크를 수행하므로
+    // 미들웨어에서는 기본 인증만 체크
+    
+    return NextResponse.next()
+  } catch (error) {
+    console.error('Middleware auth error:', error)
+    // 에러 발생 시 일단 통과 (API 레벨에서 다시 체크)
+    return NextResponse.next()
+  }
 }
-
-// TODO: Edge Runtime 호환성 문제 해결 후 createAuthMiddleware 사용
-// import { createAuthMiddleware } from '@bluenote/auth';
-// export const middleware = createAuthMiddleware({
-//   mainAuthUrl: process.env.NEXT_PUBLIC_MAIN_AUTH_URL || 'http://localhost:3000',
-//   publicPaths: [
-//     '/',
-//     '/auth/signin',
-//     '/auth/error',
-//     '/api/auth',
-//     '/submit',
-//     '/view',
-//     '/api/health',
-//     '/public-submissions',
-//     '/_next',
-//     '/favicon.ico'
-//   ],
-//   redirectToMain: true
-// });
 
 export const config = {
   matcher: [
@@ -36,4 +67,4 @@ export const config = {
      */
     '/((?!_next/static|_next/image|favicon.ico|public).*)',
   ],
-};
+}

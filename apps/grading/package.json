@@ -28,8 +28,10 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.56.0",
+    "@bluenote/api-security": "workspace:*",
     "@bluenote/auth": "workspace:*",
     "@bluenote/shared-infra": "workspace:*",
+    "@bluenote/supabase-auth": "workspace:*",
     "@bluenote/ui": "workspace:*",
     "@prisma/client": "^6.11.1",
     "@radix-ui/react-dialog": "^1.1.14",

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { getServerSession } from '@/lib/auth';
+import { getSessionWithPermissions } from '@/lib/auth-helpers';
 import { checkAssignmentPermission } from '@/lib/assignment-auth';
 
 export async function GET(
@@ -11,7 +11,7 @@ export async function GET(
     console.log('[Submissions API] GET request for assignmentId:', params.assignmentId);
     
     // 인증 확인
-    const session = await getServerSession();
+    const session = await getSessionWithPermissions();
     if (!session) {
       return NextResponse.json(
         { success: false, error: '인증이 필요합니다.', submissions: [] },
@@ -111,7 +111,7 @@ export async function POST(
     console.log('[Submissions API] POST request for assignmentId:', params.assignmentId);
     
     // 인증 확인
-    const session = await getServerSession();
+    const session = await getSessionWithPermissions();
     if (!session) {
       return NextResponse.json(
         { success: false, error: '인증이 필요합니다.' },
@@ -253,7 +253,7 @@ export async function DELETE(
     console.log('[Submissions API] DELETE request for assignmentId:', params.assignmentId);
     
     // 인증 확인
-    const session = await getServerSession();
+    const session = await getSessionWithPermissions();
     if (!session) {
       return NextResponse.json(
         { success: false, error: '인증이 필요합니다.' },

@@ -24,8 +24,8 @@ const getCookieOptions = () => {
 }
 
 // 서버 컴포넌트용 클라이언트
-export function createServerClient() {
-  const cookieStore = cookies()
+export async function createServerClient() {
+  const cookieStore = await cookies()
   
   return createSupabaseServerClient(supabaseUrl, supabaseAnonKey, {
     cookieOptions: getCookieOptions(),

@@ -1,57 +1,40 @@
-import { createAuthOptions } from '@bluenote/auth'
-import { getServerSession as nextAuthGetServerSession } from 'next-auth'
-import { createClient } from '@/lib/supabase'
+/**
+ * Legacy auth.ts - 호환성을 위해 유지
+ * 새로운 코드는 auth-helpers.ts를 사용하세요
+ */
 
-// Supabase 기반 권한 체크 함수들
-const authCallbacks = {
-  checkUserPermission: async (email: string) => {
-    const supabase = createClient()
-    
-    try {
-      const { data, error } = await supabase
-        .from('user_permissions')
-        .select('id')
-        .eq('email', email)
-        .eq('is_active', true)
-        .single()
-      
-      return !error && !!data
-    } catch (error) {
-      console.error('Error checking user permission:', error)
-      return false
-    }
-  },
+import { getSessionWithPermissions, checkUserPermission, getUserPermissions } from './auth-helpers'
+
+// NextAuth 호환성을 위한 레거시 익스포트
+// 점진적 마이그레이션을 위해 임시로 유지
+export async function getServerSession(authOptions?: any) {
+  // authOptions 파라미터는 무시하고 Supabase 세션 반환
+  const session = await getSessionWithPermissions()
   
-  getUserPermissions: async (email: string) => {
-    const supabase = createClient()
-    
-    try {
-      const { data, error } = await supabase
-        .from('user_permissions')
-        .select('role, can_write, claude_daily_limit')
-        .eq('email', email)
-        .eq('is_active', true)
-        .single()
-      
-      if (error || !data) return null
-      
-      return {
-        role: data.role || 'user',
-        can_write: data.can_write || false,
-        claude_daily_limit: data.claude_daily_limit || 3
-      }
-    } catch (error) {
-      console.error('Error fetching user permissions:', error)
-      return null
-    }
+  if (!session) return null
+  
+  // NextAuth 세션 형식으로 변환
+  return {
+    user: {
+      id: session.user.id || session.user.email,
+      email: session.user.email,
+      name: session.user.email?.split('@')[0],
+      role: session.user.permissions?.role || 'user',
+      isAdmin: session.user.permissions?.role === 'admin',
+      canWrite: session.user.permissions?.can_write || false,
+      claudeDailyLimit: session.user.permissions?.claude_daily_limit || 3
+    },
+    expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
   }
 }
 
-export const authOptions = createAuthOptions(authCallbacks)
+export const getSession = getServerSession
 
-export async function getServerSession() {
-  return nextAuthGetServerSession(authOptions)
+// Supabase 기반 권한 체크 함수들 (레거시 호환성)
+export const authCallbacks = {
+  checkUserPermission,
+  getUserPermissions
 }
 
-// Alias for backward compatibility
-export const getSession = getServerSession
+// NextAuth authOptions 대체 (더 이상 사용하지 않음)
+export const authOptions = {}

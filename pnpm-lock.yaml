@@ -40,12 +40,18 @@ importers:
       '@anthropic-ai/sdk':
         specifier: ^0.56.0
         version: 0.56.0
+      '@bluenote/api-security':
+        specifier: workspace:*
+        version: link:../../packages/api-security
       '@bluenote/auth':
         specifier: workspace:*
         version: link:../../packages/auth
       '@bluenote/shared-infra':
         specifier: workspace:*
         version: link:../../packages/shared-infra
+      '@bluenote/supabase-auth':
+        specifier: workspace:*
+        version: link:../../packages/supabase-auth
       '@bluenote/ui':
         specifier: workspace:*
         version: link:../../packages/ui
@@ -322,6 +328,19 @@ importers:
       tailwindcss:
         specifier: ^3.4.17
         version: 3.4.17
+
+  packages/api-security:
+    dependencies:
+      '@bluenote/supabase-auth':
+        specifier: workspace:*
+        version: link:../supabase-auth
+      zod:
+        specifier: ^3.22.4
+        version: 3.25.76
+    devDependencies:
+      '@types/node':
+        specifier: ^20.0.0
+        version: 20.19.7
 
   packages/auth:
     dependencies:
@@ -5131,6 +5150,9 @@ packages:
   zip-stream@4.1.1:
     resolution: {integrity: sha512-9qv4rlDiopXg4E69k+vMHjNN63YFMe9sZMrdlvKnCjlCRWeCBswPPMPUfx+ipsAWq1LXHe70RcbaHdJJpS6hyQ==}
     engines: {node: '>= 10'}
+
+  zod@3.25.76:
+    resolution: {integrity: sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ==}
 
 snapshots:
 
@@ -10297,3 +10319,5 @@ snapshots:
       archiver-utils: 3.0.4
       compress-commons: 4.1.2
       readable-stream: 3.6.2
+
+  zod@3.25.76: {}

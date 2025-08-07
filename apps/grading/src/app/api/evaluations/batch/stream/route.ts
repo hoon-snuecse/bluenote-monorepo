@@ -1,6 +1,5 @@
 import { NextRequest } from 'next/server'
-import { getServerSession } from 'next-auth/next'
-import { authOptions } from '@/lib/auth'
+import { getServerSession, authOptions } from '@/lib/auth'
 
 // 배치 작업별 SSE 연결 관리
 const batchConnections = new Map<string, Set<ReadableStreamDefaultController>>()

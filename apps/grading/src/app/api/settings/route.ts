@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import crypto from 'crypto';
-import { getServerSession } from '@/lib/auth';
+import { getSessionWithPermissions } from '@/lib/auth-helpers';
 
 // 간단한 암호화 (실제 환경에서는 더 안전한 방법 사용)
 const encrypt = (text: string): string => {
@@ -36,7 +36,7 @@ const decrypt = (text: string): string => {
 export async function GET() {
   try {
     // 인증 및 관리자 권한 체크
-    const session = await getServerSession();
+    const session = await getSessionWithPermissions();
     if (!session) {
       return NextResponse.json(
         { success: false, error: '인증이 필요합니다.' },
@@ -101,7 +101,7 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     // 인증 및 관리자 권한 체크
-    const session = await getServerSession();
+    const session = await getSessionWithPermissions();
     if (!session) {
       return NextResponse.json(
         { success: false, error: '인증이 필요합니다.' },

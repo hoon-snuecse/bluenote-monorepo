@@ -1,15 +1,26 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
+import { createServerClient } from '@bluenote/supabase-auth/server';
 
-export async function POST(request: NextRequest) {
+export async function POST() {
   try {
+    const supabase = await createServerClient();
+    
+    // Supabase 로그아웃
+    const { error } = await supabase.auth.signOut();
+    
+    if (error) {
+      throw error;
+    }
+    
     // 응답 생성
     const response = NextResponse.json({
       success: true,
       message: '로그아웃되었습니다.'
     });
     
-    // 쿠키 삭제
-    response.cookies.delete('auth-token');
+    // Supabase 관련 쿠키 삭제
+    response.cookies.delete('sb-access-token');
+    response.cookies.delete('sb-refresh-token');
     
     return response;
   } catch (error) {

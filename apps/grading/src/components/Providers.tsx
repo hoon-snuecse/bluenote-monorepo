@@ -1,14 +1,14 @@
 'use client';
 
-import { SessionProvider } from 'next-auth/react';
+import { SupabaseAuthProvider } from '@bluenote/supabase-auth';
 import { AuthSyncProvider } from './AuthSyncProvider';
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
-    <SessionProvider>
+    <SupabaseAuthProvider>
       <AuthSyncProvider>
         {children}
       </AuthSyncProvider>
-    </SessionProvider>
+    </SupabaseAuthProvider>
   );
 }

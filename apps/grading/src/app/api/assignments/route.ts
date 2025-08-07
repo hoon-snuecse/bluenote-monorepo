@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { getServerSession } from '@/lib/auth';
+import { getSessionWithPermissions } from '@/lib/auth-helpers';
 import { getViewableAssignments } from '@/lib/assignment-auth';
 
 // 과제 목록 조회
 export async function GET() {
   try {
-    // 인증 체크
-    const session = await getServerSession();
+    // 인증 체크 (Supabase Auth 사용)
+    const session = await getSessionWithPermissions();
     if (!session) {
       return NextResponse.json(
         { success: false, error: '인증이 필요합니다.' },
@@ -93,8 +93,8 @@ export async function POST(request: NextRequest) {
   }
   
   try {
-    // 인증 체크
-    const session = await getServerSession();
+    // 인증 체크 (Supabase Auth 사용)
+    const session = await getSessionWithPermissions();
     if (!session) {
       return NextResponse.json(
         { success: false, error: '인증이 필요합니다.' },

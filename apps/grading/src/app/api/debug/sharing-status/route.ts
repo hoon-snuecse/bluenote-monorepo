@@ -1,11 +1,11 @@
 import { NextResponse } from 'next/server';
-import { getServerSession } from '@/lib/auth';
+import { getSessionWithPermissions } from '@/lib/auth-helpers';
 import prisma from '@/lib/prisma';
 
 export async function GET() {
   try {
     // 인증 체크
-    const session = await getServerSession();
+    const session = await getSessionWithPermissions();
     if (!session) {
       return NextResponse.json(
         { error: '인증이 필요합니다.' },

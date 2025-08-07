@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { getServerSession } from '@/lib/auth';
+import { getSessionWithPermissions } from '@/lib/auth-helpers';
 import { checkAssignmentPermission } from '@/lib/assignment-auth';
 
 export async function GET(request: NextRequest) {
@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
     };
 
     // 인증 확인
-    const session = await getServerSession();
+    const session = await getSessionWithPermissions();
     const userEmail = session?.user?.email;
     
     if (!userEmail) {

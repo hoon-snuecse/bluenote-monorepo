@@ -1,12 +1,12 @@
 import { NextRequest } from 'next/server';
-import { getServerSession } from '@/lib/auth';
+import { getSessionWithPermissions } from '@/lib/auth-helpers';
 
 // Store WebSocket-like connections using SSE
 const chatClients = new Map<string, ReadableStreamDefaultController>();
 
 export async function GET(request: NextRequest) {
   // Verify authentication using NextAuth
-  const session = await getServerSession();
+  const session = await getSessionWithPermissions();
   if (!session?.user?.email) {
     return new Response('Unauthorized', { status: 401 });
   }
@@ -56,7 +56,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   // Verify authentication
-  const session = await getServerSession();
+  const session = await getSessionWithPermissions();
   if (!session?.user?.email) {
     return new Response('Unauthorized', { status: 401 });
   }
