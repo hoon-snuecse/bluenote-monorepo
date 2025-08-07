@@ -54,19 +54,50 @@ export async function GET(request) {
     // Supabase 세션 확인
     const { data: { user }, error } = await supabase.auth.getUser();
     
+    // 권한 정보 가져오기
+    let permissions = null;
+    let isAdmin = false;
+    let canWrite = false;
+    
+    if (user?.email) {
+      const { data: permData } = await supabase
+        .from('user_permissions')
+        .select('role, can_write, claude_daily_limit')
+        .eq('email', user.email)
+        .single();
+      
+      permissions = permData;
+      
+      // ADMIN_EMAILS 폴백
+      const adminEmails = ['hoon@snuecse.org', 'hoon@iw.es.kr', 'sociogram@gmail.com'];
+      isAdmin = permData?.role === 'admin' || adminEmails.includes(user.email);
+      canWrite = permData?.can_write || isAdmin;
+    }
+    
     // 디버깅을 위한 로그
     const forwardedHost = request.headers.get('X-Forwarded-Host');
     console.log('[Supabase] Session check:', {
       hasUser: !!user,
       userEmail: user?.email,
+      isAdmin,
+      canWrite,
+      permissions,
       requestFrom: forwardedHost || 'direct',
       error: error?.message
     });
     
+    // 권한이 포함된 사용자 객체 생성
+    const enrichedUser = user ? {
+      ...user,
+      isAdmin,
+      canWrite,
+      permissions
+    } : null;
+    
     return NextResponse.json({
       authenticated: !!user,
-      session: user ? { user } : null,
-      user: user || null,
+      session: enrichedUser ? { user: enrichedUser } : null,
+      user: enrichedUser,
     }, { headers });
   } catch (error) {
     const origin = request.headers.get('origin');
