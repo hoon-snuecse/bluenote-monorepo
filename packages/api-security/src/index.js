@@ -7,7 +7,7 @@
 export { requireAuth, requirePermission, withAuth } from './middleware.js'
 export { validateRequest, sanitizeInput } from './validators.js'
 export { rateLimit, createRateLimiter } from './rate-limit.js'
-export { SecurityError, AuthError, PermissionError } from './errors.js'
+export { SecurityError, AuthError, PermissionError, ValidationError, RateLimitError } from './errors.js'
 
 // 보안 헤더 설정
 export const securityHeaders = {
