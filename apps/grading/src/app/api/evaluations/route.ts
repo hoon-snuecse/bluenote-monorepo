@@ -2,14 +2,14 @@ import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { createEvaluator } from '@/lib/ai-evaluator';
 import { sendEvaluationUpdate } from './stream/route';
-import { getServerSession, authOptions } from "@/lib/auth";
+import { getSessionWithPermissions } from '@/lib/auth-helpers';
 import { checkAssignmentPermission } from '@/lib/assignment-auth';
 
 // AI 평가 실행 및 저장
 export async function POST(request: NextRequest) {
   try {
-    // 세션에서 사용자 정보 가져오기
-    const session = await getServerSession(authOptions);
+    // 세션에서 사용자 정보 가져오기 (Supabase Auth 사용)
+    const session = await getSessionWithPermissions();
     const userEmail = session?.user?.email;
     
     if (!userEmail) {
