@@ -12,6 +12,7 @@ import {
   FileSpreadsheet,
   FileCode
 } from 'lucide-react'
+import KahootUploadGuide from '@/components/KahootUploadGuide'
 
 export default function QuizDetailPage() {
   const { session } = useSupabaseAuth()
@@ -237,6 +238,9 @@ export default function QuizDetailPage() {
           </div>
         )}
       </div>
+
+      {/* Kahoot 업로드 가이드 */}
+      <KahootUploadGuide />
     </div>
   )
 }

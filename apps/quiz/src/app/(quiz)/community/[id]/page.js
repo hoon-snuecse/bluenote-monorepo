@@ -6,6 +6,7 @@ import { useSupabaseAuth } from '@bluenote/supabase-auth'
 import { createClient } from '@/lib/supabase'
 import { ChevronLeft, Download, Star, Calendar, User, FileText } from 'lucide-react'
 import QuestionPreview from '@/components/QuestionPreview/QuestionPreview'
+import KahootUploadGuide from '@/components/KahootUploadGuide'
 
 export default function CommunityQuizDetailPage() {
   const { id } = useParams()
@@ -283,6 +284,9 @@ export default function CommunityQuizDetailPage() {
           ))}
         </div>
       </div>
+
+      {/* Kahoot 업로드 가이드 */}
+      <KahootUploadGuide className="mt-6" />
     </div>
   )
 }
