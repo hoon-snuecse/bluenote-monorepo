@@ -44,6 +44,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
             setPermissions({
               role: data.role || 'user',
               canWrite: data.can_write || false,
+              canGrade: data.can_grade || false,
             });
           } else {
             console.error('Failed to fetch permissions:', response.status);
@@ -67,7 +68,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
     role: permissions?.role || 'user',
     isAdmin: permissions?.role === 'admin',
     canWrite: permissions?.canWrite || false,
-    canGrade: permissions?.role === 'admin' || permissions?.role === 'teacher',
+    canGrade: permissions?.canGrade || permissions?.role === 'admin' || permissions?.role === 'teacher',
   } : null;
   
   const login = async (email: string, password: string) => {
@@ -108,6 +109,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
           setPermissions({
             role: data.role || 'user',
             canWrite: data.can_write || false,
+            canGrade: data.can_grade || false,
           });
         }
       } catch (err) {

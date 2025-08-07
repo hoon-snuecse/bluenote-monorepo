@@ -22,23 +22,40 @@ export async function GET() {
       .single();
     
     if (error) {
-      // If no permissions found, return default permissions
-      if (error.code === 'PGRST116') {
-        return NextResponse.json({
-          user_email: session.user.email,
-          role: 'user',
-          can_write: false,
-          claude_daily_limit: 3
-        });
+      console.warn('Permissions lookup error:', error);
+      
+      // Return default permissions for any error
+      // This includes: table doesn't exist, no row found, etc.
+      const defaultPermissions = {
+        user_email: session.user.email,
+        role: 'user',
+        can_write: false,
+        can_grade: false,
+        claude_daily_limit: 3
+      };
+      
+      // Check if user is admin by email
+      if (session.user.email === 'hoon@snuecse.org') {
+        defaultPermissions.role = 'admin';
+        defaultPermissions.can_write = true;
+        defaultPermissions.can_grade = true;
+        defaultPermissions.claude_daily_limit = 100;
       }
       
-      console.error('Error fetching permissions:', error);
-      return NextResponse.json({ error: 'Failed to fetch permissions' }, { status: 500 });
+      return NextResponse.json(defaultPermissions);
     }
     
     return NextResponse.json(data);
   } catch (error) {
-    console.error('Unexpected error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    console.error('Unexpected error in permissions API:', error);
+    
+    // Return a default response instead of 500 error
+    return NextResponse.json({
+      user_email: '',
+      role: 'user',
+      can_write: false,
+      can_grade: false,
+      claude_daily_limit: 3
+    });
   }
 }
