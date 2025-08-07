@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { checkAuth } from '@/lib/supabase-auth-helpers';
 
 export async function GET(request) {
   try {
@@ -71,12 +70,9 @@ export async function GET(request) {
 export async function POST(request) {
   try {
     // Check authentication
-    const session = await getServerSession(authOptions);
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-    if (!session.user.isAdmin && !session.user.canWrite) {
-      return NextResponse.json({ error: 'Forbidden - Admin access or write permission required' }, { status: 403 });
+    const { user, error } = await checkAuth('write');
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: error.status });
     }
 
     const supabase = await createClient();
@@ -175,21 +171,17 @@ export async function POST(request) {
 export async function PUT(request) {
   try {
     // Check authentication
-    const session = await getServerSession(authOptions);
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const { user, error } = await checkAuth('write');
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: error.status });
     }
     
     // Debug log
     console.log('[PUT] Session user:', {
-      email: session.user?.email,
-      isAdmin: session.user?.isAdmin,
-      canWrite: session.user?.canWrite
+      email: user?.email,
+      isAdmin: user?.isAdmin,
+      canWrite: user?.canWrite
     });
-    
-    if (!session.user.isAdmin && !session.user.canWrite) {
-      return NextResponse.json({ error: 'Forbidden - Admin access or write permission required' }, { status: 403 });
-    }
 
     const supabase = await createClient();
     const data = await request.json();
@@ -312,12 +304,9 @@ export async function PUT(request) {
 export async function DELETE(request) {
   try {
     // Check authentication
-    const session = await getServerSession(authOptions);
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-    if (!session.user.isAdmin && !session.user.canWrite) {
-      return NextResponse.json({ error: 'Forbidden - Admin access or write permission required' }, { status: 403 });
+    const { user, error } = await checkAuth('write');
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: error.status });
     }
 
     const supabase = await createClient();

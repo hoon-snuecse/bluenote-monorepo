@@ -1,13 +1,12 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { checkAuth } from '@/lib/supabase-auth-helpers';
 
 export async function GET(request) {
   try {
     const supabase = await createClient();
     
-    // Fetch posts with their images and files
+    // Fetch posts with their images
     const { data: posts, error } = await supabase
       .from('analytics_posts')
       .select(`
@@ -63,7 +62,7 @@ export async function GET(request) {
 
     return NextResponse.json({ posts: transformedPosts });
   } catch (error) {
-    console.error('Error in GET /api/analytics/posts:', error);
+    console.error('Error in GET /api/shed/posts:', error);
     return NextResponse.json({ error: 'Failed to load posts' }, { status: 500 });
   }
 }
@@ -71,12 +70,9 @@ export async function GET(request) {
 export async function POST(request) {
   try {
     // Check authentication
-    const session = await getServerSession(authOptions);
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-    if (!session.user.isAdmin && !session.user.canWrite) {
-      return NextResponse.json({ error: 'Forbidden - Admin access or write permission required' }, { status: 403 });
+    const { user, error } = await checkAuth('write');
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: error.status });
     }
 
     const supabase = await createClient();
@@ -143,6 +139,7 @@ export async function POST(request) {
           file_name: file.name || 'untitled',
           file_size: file.size || 0,
           mime_type: file.type || 'application/octet-stream',
+          file_type: 'document',
           display_order: index
         }));
 
@@ -174,13 +171,17 @@ export async function POST(request) {
 export async function PUT(request) {
   try {
     // Check authentication
-    const session = await getServerSession(authOptions);
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const { user, error } = await checkAuth('write');
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: error.status });
     }
-    if (!session.user.isAdmin && !session.user.canWrite) {
-      return NextResponse.json({ error: 'Forbidden - Admin access or write permission required' }, { status: 403 });
-    }
+    
+    // Debug log
+    console.log('[PUT] Session user:', {
+      email: user?.email,
+      isAdmin: user?.isAdmin,
+      canWrite: user?.canWrite
+    });
 
     const supabase = await createClient();
     const data = await request.json();
@@ -273,6 +274,7 @@ export async function PUT(request) {
             file_name: file.name || 'untitled',
             file_size: file.size || 0,
             mime_type: file.type || 'application/octet-stream',
+            file_type: 'document',
             display_order: index
           }));
 
@@ -302,12 +304,9 @@ export async function PUT(request) {
 export async function DELETE(request) {
   try {
     // Check authentication
-    const session = await getServerSession(authOptions);
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-    if (!session.user.isAdmin && !session.user.canWrite) {
-      return NextResponse.json({ error: 'Forbidden - Admin access or write permission required' }, { status: 403 });
+    const { user, error } = await checkAuth('write');
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: error.status });
     }
 
     const supabase = await createClient();
