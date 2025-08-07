@@ -176,14 +176,14 @@ function AssignmentsContent() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50/30 via-slate-50 to-purple-50/20">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl py-8">
-        <div className="mb-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="mb-8 mt-12 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold text-slate-800 mb-2">과제 관리</h1>
             <p className="text-slate-600">평가할 과제를 생성하고 관리합니다</p>
           </div>
           <button
             onClick={handleCreateAssignment}
-            className="btn-primary flex items-center gap-2 whitespace-nowrap"
+            className="btn-primary flex items-center gap-2 whitespace-nowrap mt-4 sm:mt-0"
           >
             <Plus className="w-5 h-5" />
             새 과제 만들기
