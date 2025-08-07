@@ -36,18 +36,17 @@ export function UserProvider({ children }: { children: ReactNode }) {
     const fetchPermissions = async () => {
       if (session?.user?.email) {
         try {
-          // Supabase에서 직접 사용자 권한 가져오기
-          const { data, error } = await supabase
-            .from('user_permissions')
-            .select('*')
-            .eq('user_email', session.user.email)
-            .single();
+          // API 엔드포인트를 통해 권한 가져오기
+          const response = await fetch('/api/auth/permissions');
           
-          if (data && !error) {
+          if (response.ok) {
+            const data = await response.json();
             setPermissions({
               role: data.role || 'user',
               canWrite: data.can_write || false,
             });
+          } else {
+            console.error('Failed to fetch permissions:', response.status);
           }
         } catch (err) {
           console.error('Failed to fetch permissions:', err);
@@ -100,18 +99,19 @@ export function UserProvider({ children }: { children: ReactNode }) {
   const refreshUser = async () => {
     const { data: { session } } = await supabase.auth.getSession();
     if (session?.user?.email) {
-      // Supabase에서 직접 사용자 권한 가져오기
-      const { data, error } = await supabase
-        .from('user_permissions')
-        .select('*')
-        .eq('user_email', session.user.email)
-        .single();
-      
-      if (data && !error) {
-        setPermissions({
-          role: data.role || 'user',
-          canWrite: data.can_write || false,
-        });
+      try {
+        // API 엔드포인트를 통해 권한 가져오기
+        const response = await fetch('/api/auth/permissions');
+        
+        if (response.ok) {
+          const data = await response.json();
+          setPermissions({
+            role: data.role || 'user',
+            canWrite: data.can_write || false,
+          });
+        }
+      } catch (err) {
+        console.error('Failed to refresh permissions:', err);
       }
     }
   };
