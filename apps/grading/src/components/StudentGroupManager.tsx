@@ -14,7 +14,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Checkbox } from '@bluenote/ui'
 import { Users, Plus, Edit, Trash2, Upload, Download, Search, FileSpreadsheet, FileText, Sheet, FileDown } from 'lucide-react'
 import { useStudentGroups, StudentGroup, Student } from '@/hooks/useStudentGroups'
-import { useAuth } from '@/contexts/AuthContext'
+import { useUser } from '@/contexts/UserContext'
 
 // 학교명 약칭 생성 함수
 function getSchoolAbbreviation(schoolName: string): string {
@@ -51,7 +51,7 @@ function getSchoolAbbreviation(schoolName: string): string {
 }
 
 export function StudentGroupManager() {
-  const { session } = useAuth()
+  const { user: session } = useUser()
   const { groups, loading, createGroup, updateGroup, deleteGroup, fetchStudents, addStudents, deleteStudents, updateStudent } = useStudentGroups()
   const [dialogOpen, setDialogOpen] = useState(false)
   const [importDialogOpen, setImportDialogOpen] = useState(false)
