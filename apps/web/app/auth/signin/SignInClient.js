@@ -25,7 +25,7 @@ export default function SignInClient() {
           access_type: 'offline',
           prompt: 'consent',
         },
-        skipBrowserRedirect: false // 브라우저가 자동으로 리다이렉트 (로컬 테스트용)
+        skipBrowserRedirect: process.env.NODE_ENV === 'production' ? true : false // 프로덕션에서는 수동 제어
       }
     });
     

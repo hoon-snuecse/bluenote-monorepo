@@ -16,16 +16,16 @@ import {
   LogOut,
   MessageCircle,
   Shield,
-  Laptop
+  Laptop,
+  User
 } from 'lucide-react';
-import { useSession, signOut } from './SupabaseAuthProvider';
+import { useSupabaseAuth } from '@bluenote/supabase-auth';
 
 export default function Navigation() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const pathname = usePathname();
-  const { data: session, status } = useSession();
-  const user = session?.user;
+  const { user, loading, signOut } = useSupabaseAuth();
 
   // 스크롤 감지
   useEffect(() => {
@@ -132,7 +132,7 @@ export default function Navigation() {
             )}
             
             {/* 관리자 대시보드 버튼 (관리자만) */}
-            {user?.isAdmin && (
+            {user?.user_metadata?.isAdmin && (
               <Link
                 href="/admin/dashboard"
                 className="ml-2 flex items-center gap-2 bg-slate-800 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-slate-900 transition-all duration-200"
@@ -143,25 +143,30 @@ export default function Navigation() {
             )}
             
             {/* 로그인/로그아웃 버튼 */}
-            <div className="ml-4">
-              {status === 'loading' ? (
-                <div className="px-4 py-2 text-sm text-slate-500">로딩중...</div>
-              ) : user ? (
-                <button
-                  onClick={signOut}
-                  className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-800 transition-colors"
-                >
-                  <LogOut className="w-4 h-4" />
-                  <span>로그아웃</span>
-                </button>
-              ) : (
-                <button
-                  onClick={() => signIn('google')}
+            <div className="ml-4 flex items-center gap-3">
+              {!loading && user && (
+                <>
+                  <div className="flex items-center gap-2 text-sm text-gray-700">
+                    <User className="w-4 h-4" />
+                    <span>{user.email}</span>
+                  </div>
+                  <button
+                    onClick={signOut}
+                    className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-800 transition-colors"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    <span>로그아웃</span>
+                  </button>
+                </>
+              )}
+              {!loading && !user && (
+                <Link
+                  href="/auth/signin"
                   className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-300 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors"
                 >
                   <LogIn className="w-4 h-4" />
                   <span>로그인</span>
-                </button>
+                </Link>
               )}
             </div>
           </div>
@@ -212,7 +217,7 @@ export default function Navigation() {
             )}
             
             {/* 모바일 관리자 버튼 */}
-            {user?.isAdmin && (
+            {user?.user_metadata?.isAdmin && (
               <Link
                 href="/admin/dashboard"
                 onClick={() => setIsMenuOpen(false)}
@@ -226,27 +231,31 @@ export default function Navigation() {
             {/* 모바일 로그인/로그아웃 */}
             <div className="mt-4 pt-4 border-t border-slate-200">
               {user ? (
-                <button
-                  onClick={async () => {
-                    await signOut();
-                    setIsMenuOpen(false);
-                  }}
-                  className="flex items-center gap-3 w-full px-4 py-3 text-left text-slate-600 hover:bg-slate-50 rounded-lg"
-                >
-                  <LogOut className="w-5 h-5" />
-                  <span>로그아웃</span>
-                </button>
+                <>
+                  <div className="flex items-center gap-3 px-4 py-3 text-slate-700">
+                    <User className="w-5 h-5" />
+                    <span>{user.email}</span>
+                  </div>
+                  <button
+                    onClick={async () => {
+                      await signOut();
+                      setIsMenuOpen(false);
+                    }}
+                    className="flex items-center gap-3 w-full px-4 py-3 text-left text-slate-600 hover:bg-slate-50 rounded-lg"
+                  >
+                    <LogOut className="w-5 h-5" />
+                    <span>로그아웃</span>
+                  </button>
+                </>
               ) : (
-                <button
-                  onClick={() => {
-                    signIn('google');
-                    setIsMenuOpen(false);
-                  }}
+                <Link
+                  href="/auth/signin"
+                  onClick={() => setIsMenuOpen(false)}
                   className="flex items-center gap-3 w-full px-4 py-3 bg-white border border-slate-300 rounded-lg text-slate-700 hover:bg-slate-50"
                 >
                   <LogIn className="w-5 h-5" />
                   <span>Google로 로그인</span>
-                </button>
+                </Link>
               )}
             </div>
           </div>

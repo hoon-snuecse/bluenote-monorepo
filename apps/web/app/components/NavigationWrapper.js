@@ -1,7 +1,7 @@
 'use client';
 
-import NavigationWithAuth from './NavigationWithAuth';
+import Navigation from './Navigation';
 
 export default function NavigationWrapper() {
-  return <NavigationWithAuth />;
+  return <Navigation />;
 }
