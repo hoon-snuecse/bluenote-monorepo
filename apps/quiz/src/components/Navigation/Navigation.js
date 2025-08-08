@@ -77,23 +77,34 @@ export function Navigation() {
           
           {/* 사용자 정보 및 로그아웃 버튼 */}
           <div className="flex items-center gap-4">
-            {!loading && user && (
+            {loading ? (
+              <div className="text-sm text-gray-500">로딩중...</div>
+            ) : user ? (
               <>
                 {/* 사용자 정보 */}
                 <div className="flex items-center gap-2 text-sm text-gray-700">
                   <User className="w-4 h-4" />
-                  <span>{user.email}</span>
+                  <span className="hidden sm:inline">{user.email}</span>
+                  <span className="sm:hidden">{user.email?.split('@')[0]}</span>
                 </div>
                 
                 {/* 로그아웃 버튼 */}
                 <button
                   onClick={handleSignOut}
-                  className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-800 transition-colors"
+                  className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-gray-600 hover:text-gray-800 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
                 >
                   <LogOut className="w-4 h-4" />
-                  <span>로그아웃</span>
+                  <span className="hidden sm:inline">로그아웃</span>
                 </button>
               </>
+            ) : (
+              <Link
+                href="/auth/signin"
+                className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md transition-colors"
+              >
+                <User className="w-4 h-4" />
+                <span>로그인</span>
+              </Link>
             )}
           </div>
         </div>

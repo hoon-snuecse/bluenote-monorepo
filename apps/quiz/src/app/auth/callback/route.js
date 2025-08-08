@@ -5,7 +5,7 @@ import { cookies } from 'next/headers'
 export async function GET(request) {
   const requestUrl = new URL(request.url)
   const code = requestUrl.searchParams.get('code')
-  const next = requestUrl.searchParams.get('next') || '/create'
+  const next = requestUrl.searchParams.get('next') || '/community'
 
   console.log('=== Quiz app auth callback route ===')
   console.log('Code:', code ? 'present' : 'missing')
