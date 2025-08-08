@@ -6,9 +6,17 @@ export async function GET() {
     const apiKey = process.env.ANTHROPIC_API_KEY;
     
     let apiKeyStatus = 'not_configured';
+    let hasClaudeKey = false;
+    let isDefaultKey = false;
+    
     if (apiKey) {
-      if (apiKey.startsWith('sk-ant-')) {
+      hasClaudeKey = true;
+      if (apiKey === 'YOUR_ANTHROPIC_API_KEY_HERE' || apiKey === '') {
+        isDefaultKey = true;
+        apiKeyStatus = 'default_or_empty';
+      } else if (apiKey.startsWith('sk-ant-')) {
         apiKeyStatus = 'valid';
+        isDefaultKey = false;
       } else {
         apiKeyStatus = 'invalid_format';
       }
@@ -16,9 +24,12 @@ export async function GET() {
     
     return NextResponse.json({
       success: true,
-      apiKeyStatus,
-      // 보안상 실제 키는 노출하지 않음
-      hasApiKey: !!apiKey
+      apiKeyStatus: {
+        status: apiKeyStatus,
+        hasClaudeKey,
+        isDefaultKey,
+        hasApiKey: !!apiKey && apiKey !== ''
+      }
     });
   } catch (error) {
     console.error('환경 변수 확인 오류:', error);
@@ -26,7 +37,12 @@ export async function GET() {
       { 
         success: false, 
         error: '환경 변수 확인 중 오류가 발생했습니다.',
-        apiKeyStatus: 'error'
+        apiKeyStatus: {
+          status: 'error',
+          hasClaudeKey: false,
+          isDefaultKey: false,
+          hasApiKey: false
+        }
       },
       { status: 500 }
     );
