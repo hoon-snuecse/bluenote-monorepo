@@ -1,17 +1,15 @@
-import { createClient } from '@supabase/supabase-js'
+import { createRouteHandlerClient } from '@bluenote/supabase-auth/route-handler-client'
 import { NextResponse } from 'next/server'
-
-// 환경 변수
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+import { cookies } from 'next/headers'
 
 export async function GET(request) {
   const requestUrl = new URL(request.url)
   const origin = requestUrl.origin
   const next = requestUrl.searchParams.get('next') || '/community'
   
-  // 직접 Supabase 클라이언트 생성
-  const supabase = createClient(supabaseUrl, supabaseAnonKey)
+  // Use the shared Supabase client from @bluenote/supabase-auth
+  const cookieStore = await cookies()
+  const supabase = createRouteHandlerClient(cookieStore)
   
   // OAuth URL 생성
   const { data, error } = await supabase.auth.signInWithOAuth({

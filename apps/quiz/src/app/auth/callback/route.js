@@ -1,4 +1,4 @@
-import { createServerClient as createSupabaseServerClient } from '@supabase/ssr'
+import { createRouteHandlerClient } from '@bluenote/supabase-auth/route-handler-client'
 import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 
@@ -12,44 +12,9 @@ export async function GET(request) {
   console.log('URL:', requestUrl.toString())
 
   if (code) {
-    const cookieStore = cookies()
+    const cookieStore = await cookies()
+    const supabase = createRouteHandlerClient(cookieStore)
     
-    // 쿠키 옵션 - httpOnly를 false로 설정하여 클라이언트에서도 접근 가능하게 함
-    const getCookieOptions = () => {
-      const isProduction = process.env.NODE_ENV === 'production' || 
-                          process.env.VERCEL_ENV === 'production'
-      return {
-        domain: isProduction ? '.bluenote.site' : undefined,
-        path: '/',
-        sameSite: 'lax',
-        secure: isProduction,
-        httpOnly: false, // 클라이언트에서 접근 가능하도록 설정
-        maxAge: 60 * 60 * 24 * 7 // 7 days
-      }
-    }
-    
-    // Supabase 클라이언트 생성
-    const supabase = createSupabaseServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-      {
-        cookieOptions: getCookieOptions(),
-        cookies: {
-          get(name) {
-            return cookieStore.get(name)?.value
-          },
-          set(name, value, options) {
-            const cookieOptions = { ...getCookieOptions(), ...options }
-            cookieStore.set({ name, value, ...cookieOptions })
-          },
-          remove(name, options) {
-            const cookieOptions = { ...getCookieOptions(), ...options, maxAge: 0 }
-            cookieStore.set({ name, value: '', ...cookieOptions })
-          }
-        }
-      }
-    )
-
     // 이전 쿠키 상태 확인
     const beforeCookies = cookieStore.getAll().filter(c => c.name.includes('sb-'))
     console.log('Cookies before exchange:', beforeCookies.map(c => ({ name: c.name, length: c.value.length })))
@@ -71,8 +36,31 @@ export async function GET(request) {
     const { data: { session: verifySession } } = await supabase.auth.getSession()
     console.log('Verify session after exchange:', !!verifySession)
     
-    // 성공 시 리다이렉트
+    // 성공 시 리다이렉트 with proper cookie setting
     const response = NextResponse.redirect(new URL(next, requestUrl.origin))
+    
+    // 쿠키 옵션 설정 (도메인 간 공유를 위해)
+    const isProduction = process.env.NODE_ENV === 'production' || 
+                        process.env.VERCEL_ENV === 'production' ||
+                        requestUrl.hostname.includes('bluenote.site')
+    
+    const cookieOptions = {
+      domain: isProduction ? '.bluenote.site' : undefined,
+      path: '/',
+      sameSite: 'lax',
+      secure: isProduction,
+      httpOnly: false, // 클라이언트 접근을 위해 false로 통일
+      maxAge: 60 * 60 * 24 * 7 // 7 days
+    }
+    
+    // 모든 supabase 쿠키를 명시적으로 설정
+    const allCookies = cookieStore.getAll()
+    for (const cookie of allCookies) {
+      if (cookie.name.startsWith('sb-')) {
+        response.cookies.set(cookie.name, cookie.value, cookieOptions)
+        console.log(`Setting cookie: ${cookie.name} with domain: ${cookieOptions.domain}`)
+      }
+    }
     
     // 디버그: 쿠키 확인
     const afterCookies = cookieStore.getAll().filter(c => c.name.includes('sb-'))
