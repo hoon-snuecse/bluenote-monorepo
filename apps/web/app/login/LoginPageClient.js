@@ -35,7 +35,7 @@ export default function LoginPageClient() {
         redirectTo: `${window.location.origin}/auth/callback?callbackUrl=${encodeURIComponent(callbackUrl)}`,
         queryParams: {
           access_type: 'offline',
-          prompt: 'none',  // 재인증 화면 스킵
+          // prompt 제거 - 기본값 사용
         }
       }
     });

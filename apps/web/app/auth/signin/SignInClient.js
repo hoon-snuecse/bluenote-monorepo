@@ -24,7 +24,7 @@ export default function SignInClient() {
           redirectTo: `${currentOrigin}/auth/callback`,
           queryParams: {
             access_type: 'offline',
-            prompt: 'none',  // 재인증 화면 스킵 시도
+            // prompt 제거 - 기본값 사용 (필요시만 동의 화면 표시)
           },
           flowType: 'pkce'  // PKCE flow 명시적 사용
         }
