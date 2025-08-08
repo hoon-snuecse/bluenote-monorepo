@@ -2,6 +2,15 @@
 
 이 파일은 Claude Code (claude.ai/code)가 이 레포지토리의 코드를 작업할 때 참고할 가이드입니다.
 
+## Version: 0.2.0 (2025-01-08)
+
+### v0.2 변경사항
+- **인증 통합**: @bluenote/supabase-auth 패키지로 통합 인증 구현
+- **Navigation 컴포넌트**: 로그인 상태를 올바르게 표시하도록 수정
+- **세션 관리**: 크로스 도메인 쿠키 공유로 *.bluenote.site 전체에서 인증 유지
+- **API 엔드포인트**: session-check 및 auth callback 라우트 추가
+- **환경 설정**: 포트 3003으로 설정 및 환경변수 구성 완료
+
 ## 프로젝트 개요
 
 Kahoot 퀴즈 메이커 - 교사들이 AI의 도움을 받아 Kahoot용 대화형 퀴즈 템플릿을 생성, 공유, 다운로드할 수 있는 플랫폼
@@ -40,8 +49,8 @@ pnpm add <package> --filter=quiz
 - **런타임**: React 19 with JavaScript
 - **스타일링**: Tailwind CSS v3 (@bluenote/config 통해)
 - **UI 컴포넌트**: @bluenote/ui (공유 컴포넌트 라이브러리)
-- **인증**: @bluenote/auth (NextAuth + Google OAuth)
-- **데이터베이스**: Supabase (PostgreSQL)
+- **인증**: @bluenote/supabase-auth (통합 인증 패키지 v0.2)
+- **데이터베이스**: Supabase (PostgreSQL) with RLS
 - **AI 통합**: Claude API (Anthropic)
 - **아이콘**: Lucide React
 - **개발 포트**: 3003
@@ -62,7 +71,7 @@ apps/quiz/
 │   │   │   ├── my-quizzes/    # 사용자 퀴즈 라이브러리
 │   │   │   └── community/     # 커뮤니티 퀴즈 공유
 │   │   └── api/               # API 라우트
-│   │       ├── auth/          # NextAuth 엔드포인트
+│   │       ├── auth/          # Supabase Auth 엔드포인트 (v0.2)
 │   │       ├── quizzes/       # 퀴즈 CRUD 작업
 │   │       ├── ai/            # Claude AI 통합
 │   │       ├── export/        # 파일 내보내기 엔드포인트
@@ -74,7 +83,7 @@ apps/quiz/
 │   │   ├── Navigation/        # 탭 네비게이션
 │   │   └── Community/         # 커뮤니티 컴포넌트
 │   ├── lib/                   # 유틸리티 함수
-│   │   ├── auth.js           # @bluenote/auth 통합
+│   │   ├── auth.js           # @bluenote/supabase-auth 통합 (v0.2)
 │   │   ├── supabase.js       # 데이터베이스 클라이언트
 │   │   ├── claude-api.js     # AI 문항 생성
 │   │   ├── kahoot-exporter.js # CSV/Excel 내보내기
@@ -112,10 +121,16 @@ apps/quiz/
 
 ## 아키텍처 및 패턴
 
-### 인증 플로우
+### 인증 플로우 (v0.2)
 ```javascript
-// Google OAuth와 함께 @bluenote/auth 사용
-import { getServerSession } from '@bluenote/auth'
+// @bluenote/supabase-auth 사용 (v0.2 업데이트)
+import { useSupabaseAuth } from '@bluenote/supabase-auth'
+
+// 클라이언트 사이드
+const { user, session, loading, signInWithGoogle, signOut } = useSupabaseAuth()
+
+// 서버 사이드 (Route Handlers)
+import { createRouteHandlerClient } from '@bluenote/supabase-auth/route-handler-client'
 
 // RLS 정책은 이메일 기반 접근 제어 사용
 current_setting('app.current_user_email', true)
@@ -152,8 +167,8 @@ return NextResponse.json({
 ```javascript
 // 훅을 사용하는 함수형 컴포넌트
 export default function QuizBuilder() {
-  // 1. 인증 확인
-  const { data: session } = useSession()
+  // 1. 인증 확인 (v0.2)
+  const { user, session } = useSupabaseAuth()
   
   // 2. 상태 관리
   const [topic, setTopic] = useState('')
@@ -276,14 +291,16 @@ current_setting('app.current_user_email', true)
 
 ## 일반적인 작업
 
-### 새 API 엔드포인트 추가하기
+### 새 API 엔드포인트 추가하기 (v0.2)
 ```javascript
 // app/api/[endpoint]/route.js
-import { getServerSession } from '@bluenote/auth'
+import { createRouteHandlerClient } from '@bluenote/supabase-auth/route-handler-client'
 import { NextResponse } from 'next/server'
 
 export async function GET(request) {
-  const session = await getServerSession()
+  const supabase = createRouteHandlerClient()
+  const { data: { session } } = await supabase.auth.getSession()
+  
   if (!session) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }

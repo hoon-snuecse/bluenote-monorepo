@@ -1,7 +1,7 @@
 {
   "name": "@bluenote/supabase-auth",
-  "version": "1.0.0",
-  "description": "Shared Supabase authentication for Bluenote apps",
+  "version": "0.2.0",
+  "description": "Unified Supabase authentication for all Bluenote apps",
   "main": "src/index.js",
   "type": "module",
   "exports": {

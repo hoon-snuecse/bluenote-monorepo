@@ -2,6 +2,15 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Version: 0.2.0 (2025-01-08)
+
+### Major Changes in v0.2
+- **Standardized Authentication**: All three apps (web, grading, quiz) now use unified @bluenote/supabase-auth package
+- **Cross-subdomain Cookie Sharing**: Configured .bluenote.site domain for seamless authentication across apps
+- **Navigation Consistency**: All apps show proper logged-in state with user information
+- **Session Management**: Improved session handling with automatic refresh and proper context providers
+- **Quiz App Integration**: Successfully integrated Quiz app (quiz.bluenote.site) with shared authentication
+
 ## Repository Overview
 
 This is a pnpm-based monorepo using Turborepo for build orchestration. It contains educational tools and content management systems, primarily built with Next.js and React.
@@ -46,11 +55,13 @@ pnpm test --filter=<app-name>
 
 ### Monorepo Structure
 - **apps/**: Individual applications
-  - **web**: Main educational website (JavaScript, NextAuth, Supabase, Claude AI integration)
-  - **grading**: AI-powered essay assessment system (TypeScript, Supabase/Prisma)
+  - **web**: Main educational website (JavaScript, Supabase Auth, Claude AI integration)
+  - **grading**: AI-powered essay assessment system (TypeScript, Supabase Auth)
+  - **quiz**: Interactive quiz maker for Kahoot (JavaScript, Supabase Auth, Claude AI)
 - **packages/**: Shared packages across apps
   - **ui**: Common React components and utilities
-  - **auth**: Shared authentication logic
+  - **auth**: Legacy NextAuth configuration (deprecated in v0.2)
+  - **supabase-auth**: Unified Supabase authentication package (NEW in v0.2)
   - **config**: Shared configurations (ESLint, TypeScript, Tailwind)
   - **database**: Database client configurations
 
@@ -59,16 +70,20 @@ pnpm test --filter=<app-name>
 1. **Package Management**: Uses pnpm workspaces for efficient dependency management and disk space optimization
 2. **Build System**: Turborepo handles build orchestration with intelligent caching
 3. **Shared Code**: Common functionality is extracted into packages to avoid duplication
-4. **Type Safety**: Mixed approach - web app uses JavaScript, grading app uses TypeScript
-5. **Authentication**: Centralized in @bluenote/auth package using NextAuth
-6. **Database**: Both apps use Supabase, with grading app also supporting Prisma/SQLite
+4. **Type Safety**: Mixed approach - web and quiz apps use JavaScript, grading app uses TypeScript
+5. **Authentication**: Unified Supabase Auth with @bluenote/supabase-auth package (v0.2)
+   - Cross-subdomain cookie sharing enabled with `.bluenote.site` domain
+   - httpOnly set to false for client-side access
+   - Automatic session refresh with auth state listeners
+6. **Database**: All apps use Supabase with RLS (Row Level Security)
 
 ### Cross-App Dependencies
 
 The apps share dependencies through workspace packages:
 - `@bluenote/ui` provides consistent UI components
-- `@bluenote/auth` handles authentication across apps
+- `@bluenote/supabase-auth` handles unified authentication across all apps (v0.2)
 - `@bluenote/config` ensures consistent build configurations
+- Session cookies are shared across `*.bluenote.site` subdomains
 
 ### Environment Configuration
 
@@ -104,10 +119,25 @@ Each app has its own `.env.local` file. Key environment variables are declared i
 ### App-Specific Guidance
 
 Each app has its own CLAUDE.md file with detailed instructions:
-- **apps/web/CLAUDE.md**: Web app architecture, CMS features, admin system
+- **apps/web/CLAUDE.md**: Web app architecture, CMS features, admin system (to be created)
 - **apps/grading/CLAUDE.md**: Grading system architecture, AI evaluation logic
+- **apps/quiz/CLAUDE.md**: Quiz maker system, Kahoot integration, community features
 
 Refer to these files when working on specific apps for detailed implementation guidance.
+
+### Authentication Flow (v0.2)
+
+All apps now use the unified @bluenote/supabase-auth package:
+
+```javascript
+// Client-side usage
+import { useSupabaseAuth } from '@bluenote/supabase-auth'
+
+const { user, session, loading, signInWithGoogle, signOut } = useSupabaseAuth()
+
+// Server-side (Route Handlers)
+import { createRouteHandlerClient } from '@bluenote/supabase-auth/route-handler-client'
+```
 
 ### Common Tasks
 

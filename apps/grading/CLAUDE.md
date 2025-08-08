@@ -2,6 +2,14 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Version: 0.2.0 (2025-01-08)
+
+### Changes in v0.2
+- **Authentication Migration**: Migrated from legacy auth system to @bluenote/supabase-auth
+- **Navigation Component**: Now uses unified authentication with proper user state display
+- **Cross-domain Sessions**: Supports shared authentication across *.bluenote.site domains
+- **Login UI Update**: Simplified login page with improved styling and removed irrelevant text
+
 ## Project Overview
 
 AI-based Writing Assessment and Report System - A comprehensive platform for teachers to evaluate student essays, generate visual reports, and manage classroom achievement data.
@@ -35,6 +43,8 @@ npm run lint
 
 - **Framework**: Next.js 15.3.5 (App Router)
 - **Runtime**: React 19 with TypeScript 5
+- **Authentication**: @bluenote/supabase-auth (unified package v0.2)
+- **Database**: Supabase with RLS
 - **Styling**: Tailwind CSS v4 (latest architecture)
 - **UI Icons**: Lucide React
 - **Fonts**: Geist Sans & Geist Mono (Google Fonts)
@@ -49,9 +59,12 @@ grading-app/
 │   │   ├── layout.tsx         # Root layout with font configuration
 │   │   ├── page.tsx           # Main grading report page (currently Step 5 - Individual Report)
 │   │   ├── globals.css        # Global styles and Tailwind imports
-│   │   └── favicon.ico        # App icon
+│   │   ├── favicon.ico        # App icon
+│   │   └── auth/              # Authentication pages (v0.2)
+│   │       └── signin/        # Google OAuth login page
 │   └── components/            # React components
 │       ├── GrowthStageIndicator.tsx  # Visual progress indicator
+│       ├── Navigation.tsx     # Top navigation with auth state (v0.2)
 │       └── ui/                # UI component library
 │           └── Card.tsx       # Card component system
 ├── package.json               # Dependencies and scripts
