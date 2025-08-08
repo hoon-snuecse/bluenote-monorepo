@@ -23,6 +23,7 @@ const getCookieOptions = () => {
     path: '/',
     sameSite: 'lax',
     secure: isProduction,
+    httpOnly: false, // 클라이언트 접근 필요
     maxAge: 60 * 60 * 24 * 7 // 7 days
   }
 }

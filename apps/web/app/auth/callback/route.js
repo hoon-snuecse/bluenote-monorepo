@@ -108,6 +108,17 @@ export async function GET(request) {
       
       const response = NextResponse.redirect(redirectUrl);
       
+      // Supabase 세션 쿠키를 수동으로 응답 헤더에 추가
+      // 이는 Route Handler에서 쿠키를 확실하게 설정하기 위함
+      const cookieOptions = getCookieOptions();
+      const allCookies = await cookieStore.getAll();
+      
+      for (const cookie of allCookies) {
+        if (cookie.name.startsWith('sb-')) {
+          response.cookies.set(cookie.name, cookie.value, cookieOptions);
+        }
+      }
+      
       // 응답 헤더 로깅
       console.log('[Auth Callback] Response headers:', response.headers);
       

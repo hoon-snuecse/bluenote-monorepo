@@ -64,24 +64,44 @@ export function SupabaseAuthProvider({ children, redirectTo = '/' }) {
   useEffect(() => {
     // 초기 세션 가져오기
     console.log('[SupabaseAuthProvider] Initializing auth state')
-    supabase.auth.getSession().then(async ({ data: { session }, error }) => {
-      if (error) {
-        console.error('[SupabaseAuthProvider] Error getting session:', error)
-      } else {
-        console.log('[SupabaseAuthProvider] Initial session:', session ? 'Found' : 'Not found')
-        if (session?.user?.email) {
-          await loadPermissions(session.user.email)
+    
+    // 세션 초기화 함수
+    const initSession = async () => {
+      try {
+        // 먼저 세션 가져오기
+        const { data: { session }, error } = await supabase.auth.getSession()
+        
+        if (error) {
+          console.error('[SupabaseAuthProvider] Error getting session:', error)
+          // 에러 시 세션 복구 시도
+          await supabase.auth.refreshSession()
+        } else {
+          console.log('[SupabaseAuthProvider] Initial session:', session ? 'Found' : 'Not found')
+          if (session?.user?.email) {
+            await loadPermissions(session.user.email)
+          }
         }
+        
+        setSession(session)
+        setLoading(false)
+      } catch (err) {
+        console.error('[SupabaseAuthProvider] Session init error:', err)
+        setLoading(false)
       }
-      setSession(session)
-      setLoading(false)
-    })
+    }
+    
+    initSession()
 
     // 세션 변경 감지
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log('[SupabaseAuthProvider] Auth state changed:', event, session ? 'Session found' : 'No session')
+      
+      // 세션 만료 시 자동 갱신 시도
+      if (event === 'TOKEN_REFRESHED') {
+        console.log('[SupabaseAuthProvider] Token refreshed successfully')
+      }
       
       if (session?.user?.email) {
         await loadPermissions(session.user.email)
@@ -91,6 +111,17 @@ export function SupabaseAuthProvider({ children, redirectTo = '/' }) {
       
       setSession(session)
       setLoading(false)
+      
+      // 세션 변경 시 로컬 스토리지와 동기화
+      if (typeof window !== 'undefined') {
+        if (session) {
+          // 세션이 있으면 로컬 스토리지에도 저장 (백업)
+          localStorage.setItem('supabase.auth.token', JSON.stringify(session))
+        } else {
+          // 세션이 없으면 로컬 스토리지에서도 제거
+          localStorage.removeItem('supabase.auth.token')
+        }
+      }
     })
 
     return () => subscription.unsubscribe()
