@@ -3,14 +3,11 @@ import { createServerClient } from '@bluenote/supabase-auth/middleware'
 
 // 인증이 필요없는 공개 경로들
 const publicPaths = [
-  '/',
   '/auth',
   '/api/auth',
   '/api/health',
   '/_next',
   '/favicon.ico',
-  // 커뮤니티는 공개 접근 가능
-  '/community',
   '/api/share/quiz', // 퀴즈 공유 API
   '/debug-auth', // 디버그 페이지
   '/debug-cookies', // 쿠키 디버그 페이지
@@ -18,9 +15,11 @@ const publicPaths = [
 
 // 인증이 필요한 경로들
 const protectedPaths = [
+  '/',
   '/create',
   '/saved',
   '/my-quizzes',
+  '/community',
   '/api/quizzes',
   '/api/ai',
   '/api/export',

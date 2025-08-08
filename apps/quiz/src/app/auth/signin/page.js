@@ -9,7 +9,7 @@ function SignInContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const { signInWithGoogle, loading, user } = useSupabaseAuth()
-  const callbackUrl = searchParams.get('callbackUrl') || '/create'
+  const callbackUrl = searchParams.get('callbackUrl') || '/community'
   
   useEffect(() => {
     // 이미 로그인된 경우 리다이렉트
