@@ -1,0 +1,146 @@
+<\!DOCTYPE html>
+<html>
+<head>
+    <title>BlueNote Logo Generator</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: #f0f0f0;
+            margin: 0;
+        }
+        .container {
+            text-align: center;
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        #canvas {
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            margin: 20px auto;
+            display: block;
+        }
+        button {
+            background: #4285F4;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 10px;
+        }
+        button:hover {
+            background: #3367D6;
+        }
+        .preview {
+            margin: 20px 0;
+        }
+        .preview img {
+            border: 1px solid #e0e0e0;
+            border-radius: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>BlueNote OAuth Logo</h1>
+        <p>120x120px Google OAuth용 로고 생성기</p>
+        
+        <canvas id="canvas" width="120" height="120"></canvas>
+        
+        <div>
+            <button onclick="generateLogo('rounded')">둥근 사각형 (권장)</button>
+            <button onclick="generateLogo('circle')">원형</button>
+            <button onclick="downloadLogo()">다운로드 PNG</button>
+        </div>
+        
+        <div class="preview" id="preview"></div>
+        
+        <script>
+            const canvas = document.getElementById('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            function generateLogo(style = 'rounded') {
+                // Clear canvas
+                ctx.clearRect(0, 0, 120, 120);
+                
+                if (style === 'rounded') {
+                    // 둥근 사각형 배경
+                    ctx.fillStyle = '#4285F4';
+                    roundRect(ctx, 10, 10, 100, 100, 20);
+                    ctx.fill();
+                } else if (style === 'circle') {
+                    // 원형 배경
+                    ctx.fillStyle = '#4285F4';
+                    ctx.beginPath();
+                    ctx.arc(60, 60, 50, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                
+                // 'b' 텍스트 그리기
+                ctx.fillStyle = 'white';
+                ctx.font = 'bold 72px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText('b', 60, 62);
+                
+                // Preview 업데이트
+                const preview = document.getElementById('preview');
+                const img = new Image();
+                img.src = canvas.toDataURL('image/png');
+                preview.innerHTML = '<p>미리보기:</p>';
+                preview.appendChild(img);
+            }
+            
+            function roundRect(ctx, x, y, width, height, radius) {
+                ctx.beginPath();
+                ctx.moveTo(x + radius, y);
+                ctx.lineTo(x + width - radius, y);
+                ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+                ctx.lineTo(x + width, y + height - radius);
+                ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+                ctx.lineTo(x + radius, y + height);
+                ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+                ctx.lineTo(x, y + radius);
+                ctx.quadraticCurveTo(x, y, x + radius, y);
+                ctx.closePath();
+            }
+            
+            function downloadLogo() {
+                const link = document.createElement('a');
+                link.download = 'bluenote-logo-oauth-120.png';
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            }
+            
+            // 초기 로고 생성
+            generateLogo('rounded');
+        </script>
+        
+        <hr style="margin: 30px 0; border: none; border-top: 1px solid #e0e0e0;">
+        
+        <div style="text-align: left; background: #f8f9fa; padding: 20px; border-radius: 8px;">
+            <h3>사용 방법:</h3>
+            <ol>
+                <li>위에서 원하는 스타일 선택 (둥근 사각형 권장)</li>
+                <li>"다운로드 PNG" 버튼 클릭</li>
+                <li>Google Cloud Console → Auth Platform → Branding에서 업로드</li>
+            </ol>
+            
+            <h3>특징:</h3>
+            <ul>
+                <li>크기: 120x120 픽셀 (Google 권장 사이즈)</li>
+                <li>배경: 투명 (PNG 형식)</li>
+                <li>색상: Google Blue (#4285F4)</li>
+                <li>폰트: 시스템 폰트 Bold</li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>

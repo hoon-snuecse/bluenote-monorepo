@@ -1,0 +1,16 @@
+# 이미지 처리 안내
+
+제공하신 파란색 'b' 로고를 Google OAuth용으로 준비하려면:
+
+1. 120x120px 크기로 조정
+2. 배경 투명 처리 (PNG 형식)
+3. 파란색 둥근 사각형 유지
+4. 흰색 'b' 문자 유지
+
+온라인 도구 사용 방법:
+1. https://www.iloveimg.com/resize-image 에서 120x120으로 리사이즈
+2. https://www.remove.bg 에서 필요시 배경 제거
+3. 또는 Figma/Photoshop에서 직접 편집
+
+파일명: logo-oauth-120.png
+위치: /public/images/logo-oauth-120.png
