@@ -187,10 +187,12 @@ export function SupabaseAuthProvider({ children, redirectTo = '/' }) {
 
   const value = {
     session: enrichedSession,
+    user: enrichedSession?.user || null,
     loading,
     signInWithGoogle,
     signOut,
-    supabase
+    supabase,
+    permissions
   }
 
   return (
