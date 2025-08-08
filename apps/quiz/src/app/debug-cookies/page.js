@@ -1,124 +1,81 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { createBrowserClient } from '@bluenote/supabase-auth/client'
+import { useSupabaseAuth } from '@bluenote/supabase-auth'
 
 export default function DebugCookiesPage() {
   const [cookies, setCookies] = useState([])
-  const [session, setSession] = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [mounted, setMounted] = useState(false)
+  const [sessionInfo, setSessionInfo] = useState(null)
+  const { user, session, loading } = useSupabaseAuth()
   
   useEffect(() => {
-    setMounted(true)
-    
-    // 쿠키 파싱
-    const parsedCookies = document.cookie.split('; ').filter(Boolean).map(cookie => {
-      const [name, ...valueParts] = cookie.split('=')
-      return { name, value: valueParts.join('=') || '' }
-    })
-    setCookies(parsedCookies)
-    
-    // Supabase 세션 확인
-    const checkSession = async () => {
-      const supabase = createBrowserClient()
-      
-      // 디버깅을 위한 상세 로그
-      console.log('=== Supabase Debug Info ===')
-      console.log('Current URL:', window.location.href)
-      console.log('All cookies:', document.cookie)
-      
-      // auth token 쿠키 확인
-      const authTokenCookie = parsedCookies.find(c => c.name.includes('sb-') && c.name.includes('-auth-token'))
-      console.log('Auth token cookie found:', authTokenCookie?.name)
-      
-      // 세션 가져오기
-      const { data: { session }, error } = await supabase.auth.getSession()
-      console.log('Session check result:', { session, error })
-      
-      // 사용자 정보도 별도로 확인
-      const { data: { user }, error: userError } = await supabase.auth.getUser()
-      console.log('User check result:', { user, userError })
-      
-      setSession(session)
-      setLoading(false)
+    // 클라이언트 사이드 쿠키 확인
+    if (typeof document !== 'undefined') {
+      const allCookies = document.cookie.split('; ').map(cookie => {
+        const [name, value] = cookie.split('=')
+        return { 
+          name, 
+          value: value ? value.substring(0, 50) + (value.length > 50 ? '...' : '') : '',
+          length: value ? value.length : 0
+        }
+      })
+      setCookies(allCookies)
     }
     
-    checkSession()
+    // 세션 확인 API 호출
+    fetch('/api/auth/session-check')
+      .then(res => res.json())
+      .then(data => setSessionInfo(data))
+      .catch(err => console.error('Session check error:', err))
   }, [])
   
-  // 클라이언트 사이드에서만 렌더링
-  if (!mounted) {
-    return (
-      <div className="min-h-screen bg-gray-50 p-4">
-        <div className="max-w-4xl mx-auto">
-          <p>Loading...</p>
-        </div>
-      </div>
-    )
-  }
-
   return (
-    <div className="min-h-screen bg-gray-50 p-4">
-      <div className="max-w-4xl mx-auto space-y-6">
-        <h1 className="text-2xl font-bold">쿠키 및 세션 디버그</h1>
-        
-        <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-lg font-semibold mb-4">현재 도메인</h2>
-          <p className="text-sm text-gray-600">{window.location.hostname}</p>
+    <div className="p-8 max-w-4xl mx-auto">
+      <h1 className="text-2xl font-bold mb-6">Quiz 앱 쿠키 디버그</h1>
+      
+      <div className="space-y-6">
+        {/* useSupabaseAuth 훅 상태 */}
+        <div className="bg-gray-100 p-4 rounded">
+          <h2 className="font-bold mb-2">useSupabaseAuth 훅 상태:</h2>
+          <pre className="text-sm">
+            {JSON.stringify({
+              loading,
+              hasUser: !!user,
+              userEmail: user?.email,
+              hasSession: !!session,
+              sessionEmail: session?.user?.email
+            }, null, 2)}
+          </pre>
         </div>
         
-        <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-lg font-semibold mb-4">모든 쿠키</h2>
-          <div className="space-y-2">
-            {cookies.map((cookie, idx) => (
-              <div key={idx} className="border-b pb-2">
-                <p className="text-sm font-medium">{cookie.name}</p>
-                <p className="text-xs text-gray-600 break-all">
-                  {cookie.value.substring(0, 100)}...
-                </p>
+        {/* API 세션 체크 */}
+        <div className="bg-blue-100 p-4 rounded">
+          <h2 className="font-bold mb-2">API 세션 체크 (/api/auth/session-check):</h2>
+          <pre className="text-sm">
+            {JSON.stringify(sessionInfo, null, 2)}
+          </pre>
+        </div>
+        
+        {/* 쿠키 목록 */}
+        <div className="bg-green-100 p-4 rounded">
+          <h2 className="font-bold mb-2">현재 브라우저 쿠키:</h2>
+          <div className="space-y-1">
+            {cookies.map((cookie, i) => (
+              <div key={i} className="text-sm font-mono">
+                <span className="font-bold">{cookie.name}:</span> 
+                <span className="text-gray-600"> {cookie.value} (길이: {cookie.length})</span>
               </div>
             ))}
           </div>
         </div>
         
-        <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-lg font-semibold mb-4">Supabase 세션</h2>
-          {loading ? (
-            <p>확인 중...</p>
-          ) : session ? (
-            <div className="space-y-2">
-              <p className="text-sm"><strong>사용자 ID:</strong> {session.user.id}</p>
-              <p className="text-sm"><strong>이메일:</strong> {session.user.email}</p>
-              <p className="text-sm"><strong>Provider:</strong> {session.user.app_metadata?.provider}</p>
-              <p className="text-sm"><strong>만료:</strong> {new Date(session.expires_at * 1000).toLocaleString()}</p>
-            </div>
-          ) : (
-            <p className="text-red-600">세션이 없습니다</p>
-          )}
-        </div>
-        
-        <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-lg font-semibold mb-4">모든 Supabase 관련 쿠키</h2>
-          <div className="space-y-2">
-            {cookies
-              .filter(c => c.name.includes('sb-'))
-              .map((cookie, idx) => (
-                <div key={idx} className="border-b pb-2">
-                  <p className="text-sm font-medium">{cookie.name}</p>
-                  <p className="text-xs text-gray-600">
-                    길이: {cookie.value.length} 문자
-                  </p>
-                  <p className="text-xs text-gray-500">
-                    {cookie.name.includes('auth-token') && '✅ 인증 토큰'}
-                    {cookie.name.includes('code-verifier') && '🔑 PKCE verifier'}
-                    {cookie.name.includes('refresh-token') && '🔄 리프레시 토큰'}
-                  </p>
-                </div>
-              ))}
-            {cookies.filter(c => c.name.includes('sb-')).length === 0 && (
-              <p className="text-gray-500 text-sm">Supabase 쿠키가 없습니다</p>
-            )}
+        {/* 환경 정보 */}
+        <div className="bg-yellow-100 p-4 rounded">
+          <h2 className="font-bold mb-2">환경 정보:</h2>
+          <div className="text-sm space-y-1">
+            <div>현재 도메인: {typeof window !== 'undefined' ? window.location.hostname : 'loading...'}</div>
+            <div>현재 경로: {typeof window !== 'undefined' ? window.location.pathname : 'loading...'}</div>
+            <div>프로토콜: {typeof window !== 'undefined' ? window.location.protocol : 'loading...'}</div>
           </div>
         </div>
       </div>
