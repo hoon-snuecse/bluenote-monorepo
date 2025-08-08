@@ -68,9 +68,6 @@ export default function SignInPage() {
             <p className="text-base text-blue-600 italic">
               AI Writing Assessment
             </p>
-            <p className="mt-2 text-sm text-gray-500">
-              AI로 만드는 스마트한 퀴즈
-            </p>
           </div>
         </div>
         
