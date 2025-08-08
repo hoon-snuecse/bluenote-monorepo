@@ -450,7 +450,7 @@ ${submission.content?.substring(0, 100)}...
         </div>
 
         {/* Header */}
-        <div className="mb-8 text-center">
+        <div className="mb-8 text-center pt-8">
           <h1 className="text-4xl font-bold text-slate-900 mb-2">AI 평가 실행</h1>
           <p className="text-slate-600">{assignment?.title || '과제 제목'}</p>
         </div>

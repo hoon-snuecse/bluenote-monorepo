@@ -2,7 +2,7 @@ import Anthropic from '@anthropic-ai/sdk';
 
 // Claude API 클라이언트 초기화
 const anthropic = new Anthropic({
-  apiKey: process.env.CLAUDE_API_KEY || '',
+  apiKey: process.env.ANTHROPIC_API_KEY || '',
 });
 
 export interface EvaluationRequest {
@@ -32,13 +32,13 @@ export interface EvaluationResult {
 
 export async function evaluateWithClaude(request: EvaluationRequest): Promise<EvaluationResult> {
   // API 키가 설정되지 않은 경우 Mock 데이터 반환
-  if (!process.env.CLAUDE_API_KEY || process.env.CLAUDE_API_KEY === 'YOUR_CLAUDE_API_KEY_HERE') {
+  if (!process.env.ANTHROPIC_API_KEY || process.env.ANTHROPIC_API_KEY === 'YOUR_ANTHROPIC_API_KEY_HERE') {
     console.error('❌ Claude API 키가 설정되지 않았습니다!');
-    console.error('환경변수 CLAUDE_API_KEY를 확인해주세요.');
+    console.error('환경변수 ANTHROPIC_API_KEY를 확인해주세요.');
     console.warn('API Key 상태:', {
-      exists: !!process.env.CLAUDE_API_KEY,
-      isDefault: process.env.CLAUDE_API_KEY === 'YOUR_CLAUDE_API_KEY_HERE',
-      length: process.env.CLAUDE_API_KEY?.length || 0
+      exists: !!process.env.ANTHROPIC_API_KEY,
+      isDefault: process.env.ANTHROPIC_API_KEY === 'YOUR_ANTHROPIC_API_KEY_HERE',
+      length: process.env.ANTHROPIC_API_KEY?.length || 0
     });
     
     // Mock 평가 반환 (테스트 목적)

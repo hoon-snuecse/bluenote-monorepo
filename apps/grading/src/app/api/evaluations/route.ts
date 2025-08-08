@@ -62,7 +62,7 @@ export async function POST(request: NextRequest) {
       where: { key: 'apiKeys' }
     });
     
-    let apiKey = process.env.CLAUDE_API_KEY;
+    let apiKey = process.env.ANTHROPIC_API_KEY;
     if (settings?.value && typeof settings.value === 'object' && 'claudeApiKey' in settings.value) {
       // 암호화된 API 키 복호화 로직 필요
       // 현재는 환경변수 사용
@@ -82,7 +82,7 @@ export async function POST(request: NextRequest) {
     const evaluatorType = aiModel === 'mock' ? 'mock' : 'claude';
     
     // Claude API 키가 없으면서 Mock을 선택하지 않은 경우 에러
-    if (evaluatorType === 'claude' && (!process.env.CLAUDE_API_KEY || process.env.CLAUDE_API_KEY === 'YOUR_CLAUDE_API_KEY_HERE')) {
+    if (evaluatorType === 'claude' && (!process.env.ANTHROPIC_API_KEY || process.env.ANTHROPIC_API_KEY === 'YOUR_ANTHROPIC_API_KEY_HERE')) {
       console.error('Claude API 키가 설정되지 않았습니다.');
       return NextResponse.json(
         { 
@@ -97,7 +97,7 @@ export async function POST(request: NextRequest) {
     console.log('=== 평가기 선택 정보 ===');
     console.log('요청된 AI 모델:', aiModel);
     console.log('선택된 평가기 타입:', evaluatorType);
-    console.log('CLAUDE_API_KEY 존재:', !!process.env.CLAUDE_API_KEY);
+    console.log('ANTHROPIC_API_KEY 존재:', !!process.env.ANTHROPIC_API_KEY);
     console.log('=====================');
     
     const evaluator = createEvaluator(
