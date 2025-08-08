@@ -19,8 +19,13 @@ export default function Navigation() {
   const [isNoteDropdownOpen, setIsNoteDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
   const pathname = usePathname();
-  const { session, loading, signOut } = useSupabaseAuth();
+  const { session, loading, signOut, permissions } = useSupabaseAuth();
   const user = session?.user;
+  
+  // Admin 권한 체크 - 직접 이메일 체크도 포함
+  const adminEmails = ['hoon@snuecse.org', 'hoon@iw.es.kr', 'sociogram@gmail.com'];
+  const isAdmin = permissions?.role === 'admin' || 
+                  (user?.email && adminEmails.includes(user.email));
 
   // 스크롤 감지
   useEffect(() => {
@@ -172,7 +177,7 @@ export default function Navigation() {
               )}
               
               {/* 관리자 버튼 (관리자만) */}
-              {user?.isAdmin && (
+              {isAdmin && (
                 <Link
                   href="/admin/dashboard"
                   className={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
@@ -287,7 +292,7 @@ export default function Navigation() {
               )}
               
               {/* 모바일 관리자 버튼 */}
-              {user?.isAdmin && (
+              {isAdmin && (
                 <Link
                   href="/admin/dashboard"
                   onClick={() => setIsMenuOpen(false)}
