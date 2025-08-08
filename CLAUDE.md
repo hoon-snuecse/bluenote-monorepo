@@ -2,7 +2,7 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Version: 0.2.0 (2025-01-08)
+## Version: 0.2.0 (2025-08-08)
 
 ### Major Changes in v0.2
 - **Standardized Authentication**: All three apps (web, grading, quiz) now use unified @bluenote/supabase-auth package

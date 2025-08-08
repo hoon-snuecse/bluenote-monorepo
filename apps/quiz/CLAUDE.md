@@ -2,7 +2,7 @@
 
 이 파일은 Claude Code (claude.ai/code)가 이 레포지토리의 코드를 작업할 때 참고할 가이드입니다.
 
-## Version: 0.2.0 (2025-01-08)
+## Version: 0.2.0 (2025-08-08)
 
 ### v0.2 변경사항
 - **인증 통합**: @bluenote/supabase-auth 패키지로 통합 인증 구현
