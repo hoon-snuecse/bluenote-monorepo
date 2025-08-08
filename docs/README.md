@@ -1,16 +1,26 @@
-# 📚 Bluenote 문서 센터
+# 📚 Bluenote 문서 센터 (v0.2.0)
 
 > Bluenote 교육 플랫폼의 모든 문서를 한 곳에서 찾아보세요.
+> 
+> 최종 업데이트: 2025-01-08
+
+## 🆕 v0.2.0 주요 변경사항
+
+- **통합 인증 시스템**: 모든 앱이 @bluenote/supabase-auth 패키지 사용
+- **크로스 도메인 세션**: *.bluenote.site 전체에서 인증 공유
+- **Navigation 표준화**: 모든 앱에서 일관된 로그인 상태 표시
+- **Quiz 앱 통합**: 완전한 인증 시스템 구현
 
 ## 🚀 시작하기
 
 ### 프로젝트 소개
-- [프로젝트 개요](../README.md) - Bluenote 플랫폼 소개
+- [프로젝트 개요](../README.md) - Bluenote 플랫폼 소개 (v0.2.0)
+- [변경 이력](../CHANGELOG.md) - v0.2.0 변경사항 상세
 - [프로젝트 컨텍스트](../PROJECT_CONTEXT.md) - 상세 프로젝트 배경 및 목표
 - [아키텍처 개요](../ARCHITECTURE_CONTEXT.md) - 시스템 아키텍처
 
 ### 개발 환경 설정
-- [모노레포 가이드](../CLAUDE.md) - pnpm 워크스페이스 설정 및 개발 가이드
+- [모노레포 가이드](../CLAUDE.md) - pnpm 워크스페이스 설정 및 개발 가이드 (v0.2.0)
 - [파일 구조 가이드](../FILE_STRUCTURE_GUIDE.md) - 프로젝트 구조 이해하기
 
 ## 📱 애플리케이션별 문서
@@ -43,7 +53,8 @@
 - [데이터 관리 가이드](./data-management-guide.md)
 - [데이터베이스 설정](../apps/grading/docs/database-setup.md)
 
-### 보안 및 인증
+### 보안 및 인증 (v0.2.0 업데이트)
+- [Supabase Auth 설정](./SUPABASE_AUTH_SETUP.md) - 통합 인증 시스템 설정 (v0.2.0)
 - [RLS 보안 리포트](./2025-07-27-rls-security-report.md)
 - [사용자 권한 관리](../apps/web/docs/USER_PERMISSIONS.md)
 

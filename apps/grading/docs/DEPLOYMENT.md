@@ -1,4 +1,8 @@
-# Bluenote Grading 배포 가이드
+# Bluenote Grading 배포 가이드 (v0.2.0)
+
+> 최종 업데이트: 2025-01-08
+> 
+> v0.2.0부터 @bluenote/supabase-auth 패키지를 사용한 통합 인증이 적용됩니다.
 
 이 문서는 Bluenote Grading 시스템을 프로덕션 환경에 배포하는 과정을 안내합니다.
 
@@ -27,8 +31,8 @@
 - [ ] Supabase 계정 및 프로젝트
 - [ ] Vercel 계정 (또는 다른 호스팅 서비스)
 - [ ] Anthropic API 키 (Claude AI)
-- [ ] Google OAuth 앱 (선택사항)
-- [ ] 도메인 및 SSL 인증서
+- [ ] Google OAuth (Supabase 대시보드에서 설정)
+- [ ] 도메인 및 SSL 인증서 (grading.bluenote.site)
 
 ### 3. 로컬 환경 테스트
 
@@ -63,8 +67,9 @@ DATABASE_URL="postgresql://postgres.[project-ref]:[password]@aws-0-[region].pool
 DIRECT_URL="postgresql://postgres.[project-ref]:[password]@aws-0-[region].pooler.supabase.com:5432/postgres?schema=public"
 ```
 
-#### Supabase 설정
+#### Supabase 설정 (v0.2.0)
 ```bash
+# Supabase Auth (통합 인증)
 NEXT_PUBLIC_SUPABASE_URL="https://[project-ref].supabase.co"
 NEXT_PUBLIC_SUPABASE_ANON_KEY="[anon-key]"
 SUPABASE_SERVICE_ROLE_KEY="[service-role-key]"
@@ -72,14 +77,18 @@ SUPABASE_SERVICE_ROLE_KEY="[service-role-key]"
 
 #### 인증 보안
 ```bash
-# NextAuth 설정
+# 앱 URL (NextAuth 호환성을 위해 유지)
 NEXTAUTH_URL="https://grading.bluenote.site"
-NEXTAUTH_SECRET="$(openssl rand -base64 32)"
 
 # JWT & 암호화 키
 JWT_SECRET="$(openssl rand -base64 32)"
 ENCRYPTION_KEY="$(openssl rand -hex 16)"
 ```
+
+#### 쿠키 설정 (자동)
+- Domain: `.bluenote.site` (크로스 도메인 세션 공유)
+- httpOnly: `false` (클라이언트 접근 허용)
+- Secure: `true` (HTTPS 필수)
 
 #### AI 서비스
 ```bash

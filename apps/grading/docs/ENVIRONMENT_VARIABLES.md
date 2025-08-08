@@ -1,4 +1,8 @@
-# 환경 변수 가이드
+# 환경 변수 가이드 (v0.2.0)
+
+> 최종 업데이트: 2025-01-08
+> 
+> v0.2.0부터 인증 시스템이 @bluenote/supabase-auth로 통합되었습니다.
 
 이 문서는 Bluenote Grading 시스템의 환경 변수 설정에 대한 가이드입니다.
 
@@ -24,9 +28,14 @@ DATABASE_URL="postgresql://[user]:[password]@[host]:[port]/[database]?schema=pub
 DIRECT_URL="postgresql://[user]:[password]@[host]:[port]/[database]?schema=public"
 ```
 
-### 인증 및 보안
+### 인증 (v0.2.0 - Supabase Auth)
 
 ```bash
+# Supabase Auth (필수)
+NEXT_PUBLIC_SUPABASE_URL="https://[project-ref].supabase.co"
+NEXT_PUBLIC_SUPABASE_ANON_KEY="[your-anon-key]"
+SUPABASE_SERVICE_ROLE_KEY="[your-service-role-key]"
+
 # JWT 토큰 서명용 시크릿 (최소 32자)
 JWT_SECRET="your-super-secret-jwt-key-min-32-chars"
 
@@ -39,13 +48,12 @@ ENCRYPTION_KEY="your-32-character-encryption-key"
 프로덕션 환경에서는 다음 환경 변수도 필수입니다:
 
 ```bash
-# NextAuth 설정
-NEXTAUTH_URL="https://grading.bluenote.site"
-NEXTAUTH_SECRET="generate-with-openssl-rand-base64-32"
+# 앱 URL 설정 (v0.2.0부터 NEXTAUTH_URL 대체)
+NEXTAUTH_URL="https://grading.bluenote.site"  # 호환성을 위해 유지
 
-# Supabase 설정
-NEXT_PUBLIC_SUPABASE_URL="https://[project-ref].supabase.co"
-NEXT_PUBLIC_SUPABASE_ANON_KEY="[your-anon-key]"
+# 쿠키 도메인 (자동 설정됨)
+# 프로덕션: .bluenote.site
+# 개발: localhost
 ```
 
 ## 선택적 환경 변수
@@ -60,12 +68,12 @@ ANTHROPIC_API_KEY="sk-ant-..."
 OPENAI_API_KEY="sk-..."
 ```
 
-### Google OAuth
+### Google OAuth (v0.2.0 - Supabase 대시보드에서 설정)
 
-```bash
-GOOGLE_CLIENT_ID="your-google-client-id.apps.googleusercontent.com"
-GOOGLE_CLIENT_SECRET="your-google-client-secret"
-```
+Google OAuth는 이제 Supabase 대시보드에서 직접 설정합니다:
+1. Authentication > Providers > Google 활성화
+2. Client ID와 Client Secret 입력
+3. Redirect URLs에 앱 URL 추가
 
 ### 애플리케이션 설정
 
@@ -131,9 +139,16 @@ MAINTENANCE_MODE="false"
 ```bash
 NODE_ENV="development"
 DATABASE_URL="postgresql://localhost:5432/grading_dev"
+
+# Supabase Auth (v0.2.0)
+NEXT_PUBLIC_SUPABASE_URL="https://[project-ref].supabase.co"
+NEXT_PUBLIC_SUPABASE_ANON_KEY="[anon-key]"
+SUPABASE_SERVICE_ROLE_KEY="[service-role-key]"
+
 JWT_SECRET="dev-secret-key-not-for-production"
 ENCRYPTION_KEY="dev-encryption-key-32-characters"
 NEXT_PUBLIC_APP_URL="http://localhost:3002"
+NEXTAUTH_URL="http://localhost:3002"  # 포트 3002 사용
 ```
 
 ### 스테이징 환경 (.env.staging)
