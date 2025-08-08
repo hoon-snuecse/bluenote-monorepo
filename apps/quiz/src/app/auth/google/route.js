@@ -8,6 +8,7 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 export async function GET(request) {
   const requestUrl = new URL(request.url)
   const origin = requestUrl.origin
+  const next = requestUrl.searchParams.get('next') || '/community'
   
   // 직접 Supabase 클라이언트 생성
   const supabase = createClient(supabaseUrl, supabaseAnonKey)
@@ -16,7 +17,7 @@ export async function GET(request) {
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
     options: {
-      redirectTo: `${origin}/auth/callback`,
+      redirectTo: `${origin}/auth/callback?next=${encodeURIComponent(next)}`,
       queryParams: {
         access_type: 'offline',
         prompt: 'consent'

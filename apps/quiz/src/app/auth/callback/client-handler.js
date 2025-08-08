@@ -50,7 +50,7 @@ export default function ClientCallbackHandler() {
             
             // URL에서 next 파라미터 확인 (state 또는 query param에서)
             const urlParams = new URLSearchParams(window.location.search)
-            let next = urlParams.get('next') || '/create'
+            let next = urlParams.get('next') || '/community'
             
             // state에서 next 파라미터 확인
             const stateParam = hashParams.get('state')
@@ -85,7 +85,7 @@ export default function ClientCallbackHandler() {
               setStatus('Login successful! Redirecting...')
               
               const urlParams = new URLSearchParams(window.location.search)
-              const next = urlParams.get('next') || '/create'
+              const next = urlParams.get('next') || '/community'
               
               setTimeout(() => {
                 router.push(next)

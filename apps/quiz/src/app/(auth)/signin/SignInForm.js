@@ -24,7 +24,7 @@ export default function SignInForm() {
       setLoading(true)
       setError(null)
       
-      const callbackUrl = searchParams.get('callbackUrl') || '/create'
+      const callbackUrl = searchParams.get('callbackUrl') || '/community'
       
       // 공통 클라이언트의 signInWithGoogle 사용
       const { error } = await signInWithGoogle({
