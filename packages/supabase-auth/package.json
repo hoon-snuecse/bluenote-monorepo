@@ -8,7 +8,8 @@
     ".": "./src/index.js",
     "./client": "./src/client.js",
     "./server": "./server.js",
-    "./middleware": "./middleware.js"
+    "./middleware": "./middleware.js",
+    "./route-handler-client": "./src/route-handler-client.js"
   },
   "scripts": {
     "dev": "echo 'No dev script needed for auth package'",
