@@ -9,6 +9,7 @@ const publicPaths = [
   '/auth/callback',
   '/api/auth/callback',
   '/api/health',
+  '/api/check-env',
   '/submit',
   '/view',
   '/public-submissions',
