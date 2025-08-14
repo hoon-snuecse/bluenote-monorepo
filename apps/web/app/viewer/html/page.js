@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, ExternalLink, Download } from 'lucide-react';
@@ -9,12 +9,65 @@ function HTMLViewerContent() {
   const searchParams = useSearchParams();
   const url = searchParams.get('url');
   const title = searchParams.get('title') || 'HTML Document';
+  const [htmlContent, setHtmlContent] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    if (url) {
+      // Fetch the HTML content
+      fetch(url)
+        .then(response => {
+          if (!response.ok) throw new Error('Failed to load HTML file');
+          return response.text();
+        })
+        .then(html => {
+          // Process the HTML to make it safe and add base URL for relative links
+          const baseUrl = new URL(url).origin;
+          
+          // Add base tag to handle relative URLs in the HTML
+          const processedHtml = html.replace(
+            /<head[^>]*>/i,
+            `$&<base href="${baseUrl}/" target="_blank">`
+          );
+          
+          setHtmlContent(processedHtml);
+          setLoading(false);
+        })
+        .catch(err => {
+          setError(err.message);
+          setLoading(false);
+        });
+    }
+  }, [url]);
 
   if (!url) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-2xl font-bold text-slate-800 mb-4">파일을 찾을 수 없습니다</h1>
+          <Link href="/" className="text-blue-600 hover:text-blue-800">
+            홈으로 돌아가기
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-slate-800 mb-4">파일을 로드할 수 없습니다</h1>
+          <p className="text-slate-600 mb-4">{error}</p>
           <Link href="/" className="text-blue-600 hover:text-blue-800">
             홈으로 돌아가기
           </Link>
@@ -64,10 +117,10 @@ function HTMLViewerContent() {
       <div className="flex-1 p-4">
         <div className="max-w-7xl mx-auto bg-white rounded-lg shadow-sm overflow-hidden" style={{ height: 'calc(100vh - 120px)' }}>
           <iframe
-            src={url}
+            srcDoc={htmlContent}
             title={title}
             className="w-full h-full border-0"
-            sandbox="allow-same-origin allow-popups allow-forms"
+            sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
             loading="lazy"
           />
         </div>
