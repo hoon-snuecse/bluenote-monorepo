@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { ChevronLeft, Calendar, Tag, Edit, Trash2, GraduationCap, BarChart2, Network, Plus, FileText, Download, Music, Video, Eye } from 'lucide-react';
 import Link from 'next/link';
 import { useAuth } from '@/app/hooks/useAuth';
+import MarkdownRenderer from '@/app/components/MarkdownRenderer';
 
 const iconMap = {
   evaluation: GraduationCap,
@@ -238,38 +239,12 @@ export default function ResearchPostClient({ params }) {
                         ⚠️ 이 글은 매우 긴 내용({Math.floor(post.content.length / 1000)}KB)을 포함하고 있습니다.
                       </p>
                     </div>
-                    <div 
-                      className="text-slate-700 leading-relaxed space-y-4 max-h-[800px] overflow-y-auto border border-slate-200 rounded-lg p-4"
-                      dangerouslySetInnerHTML={{ 
-                        __html: post.content.substring(0, 50000)
-                          .replace(/\[📎 ([^\]]+)\]\(([^)]+)\)/g, (match, filename, url) => {
-                            // Check if it's an HTML file
-                            if (filename.match(/\.(html|htm)$/i)) {
-                              const viewerUrl = `/viewer/html?url=${encodeURIComponent(url)}&title=${encodeURIComponent(filename)}`;
-                              return `<a href="${viewerUrl}" class="text-blue-600 hover:text-blue-800 underline">📎 ${filename}</a>`;
-                            }
-                            return `<a href="${url}" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-800 underline">📎 ${filename}</a>`;
-                          })
-                          .replace(/\n/g, '<br />') + '<br /><br /><p class="text-slate-500 italic">... (내용이 너무 길어 일부만 표시됩니다)</p>' 
-                      }}
-                    />
+                    <div className="max-h-[800px] overflow-y-auto border border-slate-200 rounded-lg p-4">
+                      <MarkdownRenderer content={post.content.substring(0, 50000) + '\n\n... (내용이 너무 길어 일부만 표시됩니다)'} />
+                    </div>
                   </div>
                 ) : (
-                  <div 
-                    className="text-slate-700 leading-relaxed space-y-4"
-                    dangerouslySetInnerHTML={{ 
-                      __html: (post.content || '')
-                        .replace(/\[📎 ([^\]]+)\]\(([^)]+)\)/g, (match, filename, url) => {
-                          // Check if it's an HTML file
-                          if (filename.match(/\.(html|htm)$/i)) {
-                            const viewerUrl = `/viewer/html?url=${encodeURIComponent(url)}&title=${encodeURIComponent(filename)}`;
-                            return `<a href="${viewerUrl}" class="text-blue-600 hover:text-blue-800 underline">📎 ${filename}</a>`;
-                          }
-                          return `<a href="${url}" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-800 underline">📎 ${filename}</a>`;
-                        })
-                        .replace(/\n/g, '<br />')
-                    }}
-                  />
+                  <MarkdownRenderer content={post.content} />
                 )}
               </div>
 

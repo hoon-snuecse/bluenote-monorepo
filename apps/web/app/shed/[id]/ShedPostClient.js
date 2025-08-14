@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { ChevronLeft, Calendar, Tag, Edit, Trash2, Coffee, Hammer, Camera, Music, Film, Plane, FileText, Download, Eye } from 'lucide-react';
 import Link from 'next/link';
 import { useAuth } from '@/app/hooks/useAuth';
+import MarkdownRenderer from '@/app/components/MarkdownRenderer';
 
 const iconMap = {
   coffee: Coffee,
@@ -95,111 +96,6 @@ export default function ShedPostClient({ params }) {
 
   const Icon = iconMap[post.category] || Coffee;
 
-  // Convert markdown-style formatting to HTML
-  const formatContent = (content) => {
-    if (!content) return '';
-    
-    // First, handle images
-    let formatted = content.replace(
-      /!\[([^\]]*)\]\(([^)]+)\)/g,
-      (match, alt, src) => {
-        // Handle all image URLs (Supabase or others)
-        return `<div class="my-4"><img src="${src}" alt="${alt}" class="max-w-full rounded-lg shadow-md mx-auto" style="max-width: 600px; max-height: 400px; object-fit: contain;" /></div>`;
-      }
-    );
-    
-    // Split by lines for more precise handling
-    const lines = formatted.split('\n');
-    const htmlLines = [];
-    let inBlockquote = false;
-    let blockquoteContent = [];
-    
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i];
-      
-      // Handle blockquotes
-      if (line.startsWith('>')) {
-        inBlockquote = true;
-        blockquoteContent.push(line.substring(1).trim());
-      } else if (inBlockquote && line.trim() === '') {
-        // End of blockquote
-        htmlLines.push(`<blockquote class="border-l-4 border-blue-500 pl-4 my-4 text-slate-600 italic">${blockquoteContent.join(' ')}</blockquote>`);
-        blockquoteContent = [];
-        inBlockquote = false;
-      } else if (inBlockquote) {
-        // Continue blockquote
-        blockquoteContent.push(line.trim());
-      } else {
-        // Handle headings - support up to h6
-        if (line.startsWith('###### ')) {
-          htmlLines.push(`<h6 class="text-sm font-medium text-slate-700 mt-3 mb-2">${line.substring(7)}</h6>`);
-        } else if (line.startsWith('##### ')) {
-          htmlLines.push(`<h5 class="text-base font-medium text-slate-700 mt-4 mb-2">${line.substring(6)}</h5>`);
-        } else if (line.startsWith('#### ')) {
-          htmlLines.push(`<h4 class="text-lg font-semibold text-slate-800 mt-5 mb-3">${line.substring(5)}</h4>`);
-        } else if (line.startsWith('### ')) {
-          htmlLines.push(`<h3 class="text-xl font-semibold text-slate-800 mt-6 mb-3">${line.substring(4)}</h3>`);
-        } else if (line.startsWith('## ')) {
-          htmlLines.push(`<h2 class="text-2xl font-bold text-slate-800 mt-8 mb-4">${line.substring(3)}</h2>`);
-        } else if (line.startsWith('# ')) {
-          htmlLines.push(`<h1 class="text-3xl font-bold text-slate-800 mt-8 mb-4">${line.substring(2)}</h1>`);
-        } else if (line.trim() === '') {
-          // Empty line
-          htmlLines.push('');
-        } else if (line.includes('<img') || line.includes('<div')) {
-          // Already formatted images
-          htmlLines.push(line);
-        } else {
-          // Regular paragraph
-          htmlLines.push(line);
-        }
-      }
-    }
-    
-    // Close any remaining blockquote
-    if (inBlockquote && blockquoteContent.length > 0) {
-      htmlLines.push(`<blockquote class="border-l-4 border-blue-500 pl-4 my-4 text-slate-600 italic">${blockquoteContent.join(' ')}</blockquote>`);
-    }
-    
-    // Join lines and handle inline formatting
-    formatted = htmlLines.join('\n');
-    
-    // Group consecutive non-HTML lines into paragraphs
-    formatted = formatted
-      .split('\n\n')
-      .map(block => {
-        // Skip if it's already HTML
-        if (block.includes('<h1') || block.includes('<h2') || block.includes('<h3') || 
-            block.includes('<h4') || block.includes('<h5') || block.includes('<h6') ||
-            block.includes('<blockquote') || block.includes('<img') || block.includes('<div')) {
-          return block;
-        }
-        // Skip empty blocks
-        if (block.trim() === '') {
-          return '';
-        }
-        // Wrap in paragraph
-        return `<p class="mb-4">${block}</p>`;
-      })
-      .filter(block => block !== '')
-      .join('\n');
-    
-    // Apply inline formatting
-    formatted = formatted
-      .replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold">$1</strong>')
-      .replace(/\*(.*?)\*/g, '<em>$1</em>')
-      .replace(/\[📎 ([^\]]+)\]\(([^)]+)\)/g, (match, filename, url) => {
-        // Check if it's an HTML file
-        if (filename.match(/\.(html|htm)$/i)) {
-          const viewerUrl = `/viewer/html?url=${encodeURIComponent(url)}&title=${encodeURIComponent(filename)}`;
-          return `<a href="${viewerUrl}" class="text-blue-600 hover:text-blue-800 underline">📎 ${filename}</a>`;
-        }
-        return `<a href="${url}" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-800 underline">📎 ${filename}</a>`;
-      })
-      .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" class="text-blue-600 hover:text-blue-700 underline">$1</a>');
-    
-    return formatted;
-  };
 
   return (
     <div className={`py-8 px-4 transition-all duration-1000 ${
@@ -286,10 +182,9 @@ export default function ShedPostClient({ params }) {
               </div>
 
               {/* Content */}
-              <div 
-                className="prose prose-lg prose-slate max-w-none [&>p]:text-lg [&>p]:leading-relaxed [&>p]:text-slate-700"
-                dangerouslySetInnerHTML={{ __html: formatContent(post.content) }}
-              />
+              <div className="prose prose-lg prose-slate max-w-none">
+                <MarkdownRenderer content={post.content} />
+              </div>
               
               {/* Images Gallery */}
               {post.images && post.images.length > 0 && (

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { ChevronLeft, Calendar, Tag, Edit, Trash2, BarChart2, Network, Plus, FileText, Download, Music, Video, Eye } from 'lucide-react';
 import Link from 'next/link';
 import { useAuth } from '@/app/hooks/useAuth';
+import MarkdownRenderer from '@/app/components/MarkdownRenderer';
 
 const iconMap = {
   pisa: BarChart2,
@@ -98,68 +99,6 @@ export default function AnalyticsPostClient({ params }) {
     return FileText;
   };
 
-  // Convert markdown-style formatting to HTML
-  const formatContent = (content) => {
-    if (!content) return '';
-    
-    // First, handle images
-    let formatted = content.replace(
-      /!\[([^\]]*)\]\(([^)]+)\)/g,
-      (match, alt, src) => {
-        // Handle all image URLs (Supabase or others)
-        return `<div class="my-4"><img src="${src}" alt="${alt}" class="max-w-full rounded-lg shadow-md mx-auto" style="max-width: 600px; max-height: 400px; object-fit: contain;" /></div>`;
-      }
-    );
-    
-    // Handle headers with better spacing
-    formatted = formatted
-      .replace(/^##### (.*$)/gim, '<h5 class="text-lg font-semibold text-slate-800 mt-8 mb-3">$1</h5>')
-      .replace(/^#### (.*$)/gim, '<h4 class="text-xl font-semibold text-slate-800 mt-8 mb-3">$1</h4>')
-      .replace(/^### (.*$)/gim, '<h3 class="text-2xl font-bold text-slate-900 mt-10 mb-4">$1</h3>')
-      .replace(/^## (.*$)/gim, '<h2 class="text-3xl font-bold text-slate-900 mt-12 mb-4">$1</h2>')
-      .replace(/^# (.*$)/gim, '<h1 class="text-4xl font-bold text-slate-900 mt-12 mb-6">$1</h1>');
-    
-    // Handle lists with better spacing
-    formatted = formatted
-      .replace(/^\* (.+)$/gim, '<li class="ml-6 mb-2">$1</li>')
-      .replace(/^- (.+)$/gim, '<li class="ml-6 mb-2">$1</li>')
-      .replace(/^\d+\. (.+)$/gim, '<li class="ml-6 mb-2">$1</li>');
-    
-    // Wrap consecutive list items
-    formatted = formatted
-      .replace(/(<li class="ml-6 mb-2">.*<\/li>\n?)(?=<li class="ml-6 mb-2">)/g, '$1')
-      .replace(/(<li class="ml-6 mb-2">.*<\/li>)/g, '<ul class="list-disc list-inside mb-6">$1</ul>')
-      .replace(/<\/ul>\n?<ul class="list-disc list-inside mb-6">/g, '');
-    
-    // Handle inline formatting and file links
-    formatted = formatted
-      .replace(/\*\*([^*]+)\*\*/g, '<strong class="font-semibold">$1</strong>')
-      .replace(/\*([^*]+)\*/g, '<em class="italic">$1</em>')
-      .replace(/`([^`]+)`/g, '<code class="px-1 py-0.5 bg-slate-100 text-slate-800 rounded text-sm">$1</code>')
-      .replace(/\[📎 ([^\]]+)\]\(([^)]+)\)/g, (match, filename, url) => {
-        // Check if it's an HTML file
-        if (filename.match(/\.(html|htm)$/i)) {
-          const viewerUrl = `/viewer/html?url=${encodeURIComponent(url)}&title=${encodeURIComponent(filename)}`;
-          return `<a href="${viewerUrl}" class="text-blue-600 hover:text-blue-800 underline">📎 ${filename}</a>`;
-        }
-        return `<a href="${url}" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-800 underline">📎 ${filename}</a>`;
-      });
-    
-    // Handle blockquotes
-    formatted = formatted.replace(/^> (.+)$/gim, '<blockquote class="border-l-4 border-blue-500 pl-4 my-4 text-slate-600 italic">$1</blockquote>');
-    
-    // Handle paragraphs with better spacing
-    const paragraphs = formatted.split('\n\n');
-    formatted = paragraphs
-      .map(p => {
-        if (p.startsWith('<')) return p;
-        if (p.trim() === '') return '';
-        return `<p class="mb-6 leading-relaxed">${p}</p>`;
-      })
-      .join('\n');
-    
-    return formatted;
-  };
 
   return (
     <div className={`transition-all duration-1000 ${
@@ -231,10 +170,9 @@ export default function AnalyticsPostClient({ params }) {
         )}
 
         {/* Content */}
-        <div 
-          className="prose prose-lg max-w-none text-slate-700"
-          dangerouslySetInnerHTML={{ __html: formatContent(post.content) }}
-        />
+        <div className="prose prose-lg max-w-none">
+          <MarkdownRenderer content={post.content} />
+        </div>
 
         {/* Files Section */}
         {post.files && post.files.length > 0 && (
