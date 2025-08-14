@@ -1,4 +1,3 @@
-import { cookies } from 'next/headers';
 import { createServerClient } from '@bluenote/supabase-auth/server';
 
 /**
@@ -8,8 +7,7 @@ import { createServerClient } from '@bluenote/supabase-auth/server';
  */
 export async function checkAuth(requiredRole = null) {
   try {
-    const cookieStore = await cookies();
-    const supabase = createServerClient(cookieStore);
+    const supabase = await createServerClient();
     
     const { data: { user }, error } = await supabase.auth.getUser();
     
