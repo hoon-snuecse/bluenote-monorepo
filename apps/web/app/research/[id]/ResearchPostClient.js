@@ -252,11 +252,11 @@ export default function ResearchPostClient({ params }) {
               </div>
 
               {/* 첨부파일 */}
-              {post.attachments && post.attachments.length > 0 && (
+              {post.files && post.files.length > 0 && (
                 <div className="mt-8 pt-8 border-t border-slate-200">
                   <h3 className="text-lg font-semibold text-slate-700 mb-4">첨부파일</h3>
                   <div className="space-y-2">
-                    {post.attachments.map((file, index) => {
+                    {post.files.map((file, index) => {
                       const isVideo = file.type?.includes('video') || file.name?.match(/\.(mp4|avi|mov|wmv)$/i);
                       const isAudio = file.type?.includes('audio') || file.name?.match(/\.(mp3|wav|m4a)$/i);
                       const isPDF = file.type?.includes('pdf') || file.name?.endsWith('.pdf');

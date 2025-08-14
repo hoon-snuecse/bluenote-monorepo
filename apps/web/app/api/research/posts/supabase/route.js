@@ -28,7 +28,12 @@ export async function GET(request) {
     }
 
     // Debug log
-    console.log('Raw posts from Supabase:', JSON.stringify(posts[0], null, 2));
+    if (posts && posts.length > 0) {
+      console.log('Raw posts from Supabase:', JSON.stringify(posts[0], null, 2));
+      if (posts[0].research_post_images) {
+        console.log('Post images data:', posts[0].research_post_images);
+      }
+    }
     
     // Transform the data to match the existing format
     const transformedPosts = posts.map(post => ({
@@ -131,6 +136,7 @@ export async function POST(request) {
 
     // If there are files, save their metadata
     if (files && files.length > 0) {
+      console.log('Saving files:', files);
       const fileRecords = files
         .filter(file => file.path)
         .map((file, index) => ({
@@ -143,6 +149,8 @@ export async function POST(request) {
           display_order: index
         }));
 
+      console.log('File records to insert:', fileRecords);
+      
       if (fileRecords.length > 0) {
         const { error: fileError } = await supabase
           .from('research_post_images')
@@ -150,6 +158,8 @@ export async function POST(request) {
 
         if (fileError) {
           console.error('Error saving file metadata:', fileError);
+        } else {
+          console.log('Files saved successfully');
         }
       }
     }

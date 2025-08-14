@@ -136,6 +136,9 @@ function WritePageContent() {
       const endpoint = '/api/research/posts/supabase';
       const method = editId ? 'PUT' : 'POST';
       
+      // Debug logging
+      console.log('Form data files:', formData.files);
+      
       const payload = {
         ...formData,
         readingTime: Math.ceil(formData.content.length / 500), // 숫자만 전송
