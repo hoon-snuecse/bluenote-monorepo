@@ -231,10 +231,24 @@ export default function ResearchPostClient({ params }) {
 
               {/* 본문 */}
               <div className="prose prose-slate max-w-none mb-8">
-                <div 
-                  className="text-slate-700 leading-relaxed space-y-4"
-                  dangerouslySetInnerHTML={{ __html: post.content.replace(/\n/g, '<br />') }}
-                />
+                {post.content && post.content.length > 100000 ? (
+                  <div className="space-y-4">
+                    <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                      <p className="text-yellow-800">
+                        ⚠️ 이 글은 매우 긴 내용({Math.floor(post.content.length / 1000)}KB)을 포함하고 있습니다.
+                      </p>
+                    </div>
+                    <div 
+                      className="text-slate-700 leading-relaxed space-y-4 max-h-[800px] overflow-y-auto border border-slate-200 rounded-lg p-4"
+                      dangerouslySetInnerHTML={{ __html: post.content.substring(0, 50000).replace(/\n/g, '<br />') + '<br /><br /><p class="text-slate-500 italic">... (내용이 너무 길어 일부만 표시됩니다)</p>' }}
+                    />
+                  </div>
+                ) : (
+                  <div 
+                    className="text-slate-700 leading-relaxed space-y-4"
+                    dangerouslySetInnerHTML={{ __html: post.content.replace(/\n/g, '<br />') }}
+                  />
+                )}
               </div>
 
               {/* 첨부파일 */}
