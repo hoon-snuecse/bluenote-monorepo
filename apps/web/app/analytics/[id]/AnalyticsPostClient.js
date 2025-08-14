@@ -131,11 +131,12 @@ export default function AnalyticsPostClient({ params }) {
       .replace(/(<li class="ml-6 mb-2">.*<\/li>)/g, '<ul class="list-disc list-inside mb-6">$1</ul>')
       .replace(/<\/ul>\n?<ul class="list-disc list-inside mb-6">/g, '');
     
-    // Handle inline formatting
+    // Handle inline formatting and file links
     formatted = formatted
       .replace(/\*\*([^*]+)\*\*/g, '<strong class="font-semibold">$1</strong>')
       .replace(/\*([^*]+)\*/g, '<em class="italic">$1</em>')
-      .replace(/`([^`]+)`/g, '<code class="px-1 py-0.5 bg-slate-100 text-slate-800 rounded text-sm">$1</code>');
+      .replace(/`([^`]+)`/g, '<code class="px-1 py-0.5 bg-slate-100 text-slate-800 rounded text-sm">$1</code>')
+      .replace(/\[📎 ([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-800 underline">📎 $1</a>');
     
     // Handle blockquotes
     formatted = formatted.replace(/^> (.+)$/gim, '<blockquote class="border-l-4 border-blue-500 pl-4 my-4 text-slate-600 italic">$1</blockquote>');

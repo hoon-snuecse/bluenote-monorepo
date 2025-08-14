@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Coffee, Hammer, Camera, Music, Film, Plane, Plus, Save, X, Loader2, Image as ImageIcon, Upload, FileText } from 'lucide-react';
+import { Coffee, Hammer, Camera, Music as MusicIcon, Film, Plane, Plus, Save, X, Loader2, Image as ImageIcon, Upload, FileText, Paperclip, Music, Video } from 'lucide-react';
 import Link from 'next/link';
 import matter from 'gray-matter';
 
@@ -22,19 +22,21 @@ function WritePageContent() {
     summary: '',
     tags: [],
     images: [],
+    files: [],
     isAIGenerated: false
   });
 
   const [tagInput, setTagInput] = useState('');
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [uploadingFile, setUploadingFile] = useState(false);
 
   const [categories, setCategories] = useState([
     { id: 'coffee', name: '커피', icon: Coffee, desc: '로스팅 노트' },
     { id: 'woodwork', name: '목공', icon: Hammer, desc: '작업 프로젝트' },
     { id: 'photo', name: '사진', icon: Camera, desc: '순간의 기록' },
-    { id: 'music', name: '음악', icon: Music, desc: '소리의 여정' },
+    { id: 'music', name: '음악', icon: MusicIcon, desc: '소리의 여정' },
     { id: 'movie', name: '영화', icon: Film, desc: '시각적 서사' },
-    { id: 'travel', name: '여행', icon: Plane, desc: '새로운 영감' },
+    { id: 'travel', name: '여행', icon: Plane, desc: '새로운 영상' },
   ]);
 
   const loadPost = useCallback(async () => {
@@ -54,6 +56,7 @@ function WritePageContent() {
             summary: post.summary || '',
             tags: post.tags || [],
             images: post.images || [],
+            files: post.files || [],
             isAIGenerated: post.isAIGenerated || false
           });
           
@@ -121,6 +124,12 @@ function WritePageContent() {
           name: img.name,
           size: img.size,
           type: img.type
+        })),
+        files: formData.files.map(file => ({
+          path: file.path,
+          name: file.name,
+          size: file.size,
+          type: file.type
         }))
       };
       
@@ -329,6 +338,111 @@ function WritePageContent() {
     } catch (error) {
       console.error('Error parsing markdown file:', error);
       alert('마크다운 파일을 읽는 중 오류가 발생했습니다.');
+    }
+  };
+
+  const handleFileUpload = async (e) => {
+    const files = Array.from(e.target.files);
+    if (files.length === 0) return;
+
+    setUploadingFile(true);
+
+    try {
+      for (const file of files) {
+        // Check file size (50MB limit)
+        if (file.size > 50 * 1024 * 1024) {
+          alert(`${file.name}의 크기가 50MB를 초과합니다. 더 작은 파일을 선택해주세요.`);
+          continue;
+        }
+
+        // Upload to Supabase Storage
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('type', 'document');
+
+        const response = await fetch('/api/shed/upload', {
+          method: 'POST',
+          body: formData,
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.details || 'Upload failed');
+        }
+
+        const data = await response.json();
+        console.log('File upload response:', data);
+
+        // Insert link at cursor position in content
+        const linkText = `[📎 ${file.name}](${data.url})`;
+        setFormData(prev => {
+          const textarea = document.querySelector('textarea[name="content"]');
+          if (textarea) {
+            const start = textarea.selectionStart;
+            const end = textarea.selectionEnd;
+            const text = prev.content;
+            const newContent = text.substring(0, start) + linkText + text.substring(end);
+            
+            setTimeout(() => {
+              textarea.focus();
+              textarea.setSelectionRange(start + linkText.length, start + linkText.length);
+            }, 0);
+            
+            return { ...prev, content: newContent };
+          }
+          return { ...prev, content: prev.content + '\n' + linkText };
+        });
+
+        // Determine icon based on file type
+        let icon = FileText;
+        if (file.type.startsWith('audio/')) icon = Music;
+        else if (file.type.startsWith('video/')) icon = Video;
+        else if (file.type.includes('pdf')) icon = FileText;
+
+        // Add uploaded file to form data
+        setFormData(prev => ({
+          ...prev,
+          files: [...prev.files, {
+            id: Date.now() + Math.random(),
+            name: data.name,
+            url: data.url,
+            path: data.path,
+            size: data.size,
+            type: data.type,
+            icon: icon
+          }]
+        }));
+      }
+    } catch (error) {
+      console.error('File upload error:', error);
+      alert(`파일 업로드 중 오류가 발생했습니다.\n\n${error.message}`);
+    } finally {
+      setUploadingFile(false);
+    }
+  };
+
+  const removeFile = async (file) => {
+    try {
+      // If file has a path (uploaded to Supabase), delete it
+      if (file.path) {
+        await fetch(`/api/shed/upload?path=${encodeURIComponent(file.path)}`, {
+          method: 'DELETE',
+        });
+      }
+
+      // Remove file link from content
+      setFormData(prev => {
+        const linkPattern = `[📎 ${file.name}](${file.url})`;
+        const newContent = prev.content.replace(linkPattern, '');
+        return {
+          ...prev,
+          content: newContent,
+          files: prev.files.filter(f => f.id !== file.id)
+        };
+      });
+    } catch (error) {
+      console.error('Error removing file:', error);
+      alert('파일 삭제 중 오류가 발생했습니다.');
     }
   };
 
@@ -598,6 +712,69 @@ function WritePageContent() {
                             <p className="text-xs text-slate-500 mt-1 truncate">{image.name}</p>
                           </div>
                         ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* File Upload */}
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    파일 첨부
+                  </label>
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-center w-full">
+                      <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-slate-300 rounded-lg cursor-pointer bg-slate-50 hover:bg-slate-100 transition-all">
+                        <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                          {uploadingFile ? (
+                            <Loader2 className="w-8 h-8 text-slate-400 animate-spin" />
+                          ) : (
+                            <>
+                              <Paperclip className="w-8 h-8 mb-2 text-slate-400" />
+                              <p className="mb-2 text-sm text-slate-500">
+                                <span className="font-semibold">클릭하여 업로드</span> 또는 드래그 앤 드롭
+                              </p>
+                              <p className="text-xs text-slate-500">PDF, DOC, HTML, MP3, MP4 (최대 50MB)</p>
+                            </>
+                          )}
+                        </div>
+                        <input
+                          type="file"
+                          className="hidden"
+                          accept=".pdf,.doc,.docx,.wav,.mp3,.mp4,.html"
+                          multiple
+                          onChange={handleFileUpload}
+                          disabled={uploadingFile}
+                        />
+                      </label>
+                    </div>
+
+                    {/* Uploaded Files */}
+                    {formData.files && formData.files.length > 0 && (
+                      <div className="space-y-2">
+                        {formData.files.map((file) => {
+                          const Icon = file.icon || FileText;
+                          return (
+                            <div key={file.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                              <div className="flex items-center gap-3">
+                                <Icon className="w-5 h-5 text-slate-500" />
+                                <div>
+                                  <p className="text-sm font-medium text-slate-700">{file.name}</p>
+                                  <p className="text-xs text-slate-500">
+                                    {(file.size / 1024 / 1024).toFixed(2)} MB
+                                  </p>
+                                </div>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => removeFile(file)}
+                                className="text-red-600 hover:text-red-700 transition-colors"
+                              >
+                                <X className="w-4 h-4" />
+                              </button>
+                            </div>
+                          );
+                        })}
                       </div>
                     )}
                   </div>

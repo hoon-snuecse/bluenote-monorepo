@@ -415,6 +415,26 @@ function WritePageContent() {
           .from('analytics-images')
           .getPublicUrl(filePath);
 
+        // Insert link at cursor position in content
+        const linkText = `[📎 ${file.name}](${publicUrl})`;
+        setFormData(prev => {
+          const textarea = document.querySelector('textarea[name="content"]');
+          if (textarea) {
+            const start = textarea.selectionStart;
+            const end = textarea.selectionEnd;
+            const text = prev.content;
+            const newContent = text.substring(0, start) + linkText + text.substring(end);
+            
+            setTimeout(() => {
+              textarea.focus();
+              textarea.setSelectionRange(start + linkText.length, start + linkText.length);
+            }, 0);
+            
+            return { ...prev, content: newContent };
+          }
+          return { ...prev, content: prev.content + '\n' + linkText };
+        });
+
         // Determine icon based on file type
         let icon = FileText;
         if (file.type.startsWith('audio/')) icon = Music;
@@ -459,10 +479,16 @@ function WritePageContent() {
         }
       }
 
-      setFormData(prev => ({
-        ...prev,
-        files: prev.files.filter(f => f.id !== file.id)
-      }));
+      // Remove file link from content
+      setFormData(prev => {
+        const linkPattern = `[📎 ${file.name}](${file.url})`;
+        const newContent = prev.content.replace(linkPattern, '');
+        return {
+          ...prev,
+          content: newContent,
+          files: prev.files.filter(f => f.id !== file.id)
+        };
+      });
     } catch (error) {
       console.error('Error removing file:', error);
       alert('파일 삭제 중 오류가 발생했습니다.');

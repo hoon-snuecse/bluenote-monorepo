@@ -240,13 +240,21 @@ export default function ResearchPostClient({ params }) {
                     </div>
                     <div 
                       className="text-slate-700 leading-relaxed space-y-4 max-h-[800px] overflow-y-auto border border-slate-200 rounded-lg p-4"
-                      dangerouslySetInnerHTML={{ __html: post.content.substring(0, 50000).replace(/\n/g, '<br />') + '<br /><br /><p class="text-slate-500 italic">... (내용이 너무 길어 일부만 표시됩니다)</p>' }}
+                      dangerouslySetInnerHTML={{ 
+                        __html: post.content.substring(0, 50000)
+                          .replace(/\[📎 ([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-800 underline">📎 $1</a>')
+                          .replace(/\n/g, '<br />') + '<br /><br /><p class="text-slate-500 italic">... (내용이 너무 길어 일부만 표시됩니다)</p>' 
+                      }}
                     />
                   </div>
                 ) : (
                   <div 
                     className="text-slate-700 leading-relaxed space-y-4"
-                    dangerouslySetInnerHTML={{ __html: post.content.replace(/\n/g, '<br />') }}
+                    dangerouslySetInnerHTML={{ 
+                      __html: (post.content || '')
+                        .replace(/\[📎 ([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-800 underline">📎 $1</a>')
+                        .replace(/\n/g, '<br />')
+                    }}
                   />
                 )}
               </div>

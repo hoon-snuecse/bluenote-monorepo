@@ -447,17 +447,41 @@ function WritePageContent() {
           .getPublicUrl(filePath);
 
         // Add uploaded file to form data
+        const newFile = {
+          id: Date.now() + Math.random(),
+          name: file.name,
+          url: publicUrl,
+          path: filePath,
+          size: file.size,
+          type: file.type
+        };
+        
         setFormData(prev => ({
           ...prev,
-          files: [...prev.files, {
-            id: Date.now() + Math.random(),
-            name: file.name,
-            url: publicUrl,
-            path: filePath,
-            size: file.size,
-            type: file.type
-          }]
+          files: [...prev.files, newFile]
         }));
+
+        // Insert link at cursor position in content
+        const linkText = `[📎 ${file.name}](${publicUrl})`;
+        setFormData(prev => {
+          const textarea = document.querySelector('textarea[name="content"]');
+          if (textarea) {
+            const start = textarea.selectionStart;
+            const end = textarea.selectionEnd;
+            const text = prev.content;
+            const newContent = text.substring(0, start) + linkText + text.substring(end);
+            
+            // Set cursor position after the inserted link
+            setTimeout(() => {
+              textarea.focus();
+              textarea.setSelectionRange(start + linkText.length, start + linkText.length);
+            }, 0);
+            
+            return { ...prev, content: newContent };
+          }
+          // If no textarea or cursor position, append to end
+          return { ...prev, content: prev.content + '\n' + linkText };
+        });
       }
     } catch (error) {
       console.error('File upload error:', error);
@@ -497,10 +521,22 @@ function WritePageContent() {
         }
       }
 
-      setFormData(prev => ({
-        ...prev,
-        files: prev.files.filter(f => f.id !== file.id)
-      }));
+      setFormData(prev => {
+        // Remove file from files array
+        const updatedFiles = prev.files.filter(f => f.id !== file.id);
+        
+        // Remove link from content
+        let updatedContent = prev.content;
+        // Try to remove markdown link format
+        const linkPattern = new RegExp(`\\[📎 ${file.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\]\\([^)]+\\)`, 'g');
+        updatedContent = updatedContent.replace(linkPattern, '');
+        
+        return {
+          ...prev,
+          files: updatedFiles,
+          content: updatedContent
+        };
+      });
     } catch (error) {
       console.error('Error removing file:', error);
       alert('파일 삭제 중 오류가 발생했습니다.');
