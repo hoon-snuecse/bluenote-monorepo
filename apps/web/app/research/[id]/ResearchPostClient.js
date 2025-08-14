@@ -242,7 +242,14 @@ export default function ResearchPostClient({ params }) {
                       className="text-slate-700 leading-relaxed space-y-4 max-h-[800px] overflow-y-auto border border-slate-200 rounded-lg p-4"
                       dangerouslySetInnerHTML={{ 
                         __html: post.content.substring(0, 50000)
-                          .replace(/\[📎 ([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-800 underline">📎 $1</a>')
+                          .replace(/\[📎 ([^\]]+)\]\(([^)]+)\)/g, (match, filename, url) => {
+                            // Check if it's an HTML file
+                            if (filename.match(/\.(html|htm)$/i)) {
+                              const viewerUrl = `/viewer/html?url=${encodeURIComponent(url)}&title=${encodeURIComponent(filename)}`;
+                              return `<a href="${viewerUrl}" class="text-blue-600 hover:text-blue-800 underline">📎 ${filename}</a>`;
+                            }
+                            return `<a href="${url}" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-800 underline">📎 ${filename}</a>`;
+                          })
                           .replace(/\n/g, '<br />') + '<br /><br /><p class="text-slate-500 italic">... (내용이 너무 길어 일부만 표시됩니다)</p>' 
                       }}
                     />
@@ -252,7 +259,14 @@ export default function ResearchPostClient({ params }) {
                     className="text-slate-700 leading-relaxed space-y-4"
                     dangerouslySetInnerHTML={{ 
                       __html: (post.content || '')
-                        .replace(/\[📎 ([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-800 underline">📎 $1</a>')
+                        .replace(/\[📎 ([^\]]+)\]\(([^)]+)\)/g, (match, filename, url) => {
+                          // Check if it's an HTML file
+                          if (filename.match(/\.(html|htm)$/i)) {
+                            const viewerUrl = `/viewer/html?url=${encodeURIComponent(url)}&title=${encodeURIComponent(filename)}`;
+                            return `<a href="${viewerUrl}" class="text-blue-600 hover:text-blue-800 underline">📎 ${filename}</a>`;
+                          }
+                          return `<a href="${url}" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-800 underline">📎 ${filename}</a>`;
+                        })
                         .replace(/\n/g, '<br />')
                     }}
                   />
@@ -274,12 +288,18 @@ export default function ResearchPostClient({ params }) {
                       if (isVideo) FileIcon = Video;
                       else if (isAudio) FileIcon = Music;
                       
+                      // Use viewer for HTML files
+                      const fileUrl = isHTML 
+                        ? `/viewer/html?url=${encodeURIComponent(file.url)}&title=${encodeURIComponent(file.name)}`
+                        : file.url;
+                      const linkTarget = isHTML ? '_self' : '_blank';
+                      
                       return (
                         <div key={index} className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors">
                           <FileIcon className="w-5 h-5 text-slate-600" />
                           <a 
-                            href={file.url}
-                            target="_blank"
+                            href={fileUrl}
+                            target={linkTarget}
                             rel="noopener noreferrer"
                             className="flex-1 cursor-pointer hover:text-blue-600 transition-colors"
                           >

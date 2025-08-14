@@ -188,7 +188,14 @@ export default function ShedPostClient({ params }) {
     formatted = formatted
       .replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold">$1</strong>')
       .replace(/\*(.*?)\*/g, '<em>$1</em>')
-      .replace(/\[📎 ([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-800 underline">📎 $1</a>')
+      .replace(/\[📎 ([^\]]+)\]\(([^)]+)\)/g, (match, filename, url) => {
+        // Check if it's an HTML file
+        if (filename.match(/\.(html|htm)$/i)) {
+          const viewerUrl = `/viewer/html?url=${encodeURIComponent(url)}&title=${encodeURIComponent(filename)}`;
+          return `<a href="${viewerUrl}" class="text-blue-600 hover:text-blue-800 underline">📎 ${filename}</a>`;
+        }
+        return `<a href="${url}" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-800 underline">📎 ${filename}</a>`;
+      })
       .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" class="text-blue-600 hover:text-blue-700 underline">$1</a>');
     
     return formatted;
@@ -310,17 +317,24 @@ export default function ShedPostClient({ params }) {
                     {post.files.map((file, index) => {
                       const isVideo = file.type?.includes('video') || file.name?.match(/\.(mp4|avi|mov|wmv)$/i);
                       const isAudio = file.type?.includes('audio') || file.name?.match(/\.(mp3|wav|m4a)$/i);
+                      const isHTML = file.type?.includes('html') || file.name?.match(/\.(html|htm)$/i);
                       
                       let FileIcon = FileText;
                       if (isVideo) FileIcon = Film;
                       else if (isAudio) FileIcon = Music;
                       
+                      // Use viewer for HTML files
+                      const fileUrl = isHTML 
+                        ? `/viewer/html?url=${encodeURIComponent(file.url)}&title=${encodeURIComponent(file.name)}`
+                        : file.url;
+                      const linkTarget = isHTML ? '_self' : '_blank';
+                      
                       return (
                         <div key={index} className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors">
                           <FileIcon className="w-5 h-5 text-slate-600" />
                           <a 
-                            href={file.url}
-                            target="_blank"
+                            href={fileUrl}
+                            target={linkTarget}
                             rel="noopener noreferrer"
                             className="flex-1 cursor-pointer hover:text-blue-600 transition-colors"
                           >

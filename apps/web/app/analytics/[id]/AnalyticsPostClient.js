@@ -136,7 +136,14 @@ export default function AnalyticsPostClient({ params }) {
       .replace(/\*\*([^*]+)\*\*/g, '<strong class="font-semibold">$1</strong>')
       .replace(/\*([^*]+)\*/g, '<em class="italic">$1</em>')
       .replace(/`([^`]+)`/g, '<code class="px-1 py-0.5 bg-slate-100 text-slate-800 rounded text-sm">$1</code>')
-      .replace(/\[📎 ([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-800 underline">📎 $1</a>');
+      .replace(/\[📎 ([^\]]+)\]\(([^)]+)\)/g, (match, filename, url) => {
+        // Check if it's an HTML file
+        if (filename.match(/\.(html|htm)$/i)) {
+          const viewerUrl = `/viewer/html?url=${encodeURIComponent(url)}&title=${encodeURIComponent(filename)}`;
+          return `<a href="${viewerUrl}" class="text-blue-600 hover:text-blue-800 underline">📎 ${filename}</a>`;
+        }
+        return `<a href="${url}" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-800 underline">📎 ${filename}</a>`;
+      });
     
     // Handle blockquotes
     formatted = formatted.replace(/^> (.+)$/gim, '<blockquote class="border-l-4 border-blue-500 pl-4 my-4 text-slate-600 italic">$1</blockquote>');
@@ -236,6 +243,13 @@ export default function AnalyticsPostClient({ params }) {
             <div className="space-y-2">
               {post.files.map((file) => {
                 const FileIcon = getFileIcon(file.type);
+                const isHTML = file.type?.includes('html') || file.name?.match(/\.(html|htm)$/i);
+                
+                // Use viewer for HTML files
+                const fileUrl = isHTML 
+                  ? `/viewer/html?url=${encodeURIComponent(file.url)}&title=${encodeURIComponent(file.name)}`
+                  : file.url;
+                const linkTarget = isHTML ? '_self' : '_blank';
                 
                 return (
                   <div
@@ -244,8 +258,8 @@ export default function AnalyticsPostClient({ params }) {
                   >
                     <FileIcon className="w-5 h-5 text-slate-500" />
                     <a 
-                      href={file.url}
-                      target="_blank"
+                      href={fileUrl}
+                      target={linkTarget}
                       rel="noopener noreferrer"
                       className="flex-1 cursor-pointer hover:text-blue-600 transition-colors"
                     >
