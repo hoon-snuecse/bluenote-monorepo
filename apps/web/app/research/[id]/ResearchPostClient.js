@@ -260,6 +260,7 @@ export default function ResearchPostClient({ params }) {
                       const isVideo = file.type?.includes('video') || file.name?.match(/\.(mp4|avi|mov|wmv)$/i);
                       const isAudio = file.type?.includes('audio') || file.name?.match(/\.(mp3|wav|m4a)$/i);
                       const isPDF = file.type?.includes('pdf') || file.name?.endsWith('.pdf');
+                      const isHTML = file.type?.includes('html') || file.name?.match(/\.(html|htm)$/i);
                       
                       let FileIcon = FileText;
                       if (isVideo) FileIcon = Video;
@@ -277,7 +278,7 @@ export default function ResearchPostClient({ params }) {
                             )}
                           </div>
                           <div className="flex gap-2">
-                            {(isPDF || isVideo || isAudio) && (
+                            {(isPDF || isVideo || isAudio || isHTML) && (
                               <button
                                 onClick={() => window.open(file.url, '_blank')}
                                 className="p-2 text-slate-600 hover:text-blue-600 transition-colors"

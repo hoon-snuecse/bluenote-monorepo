@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { ChevronLeft, Calendar, Tag, Edit, Trash2, Coffee, Hammer, Camera, Music, Film, Plane } from 'lucide-react';
+import { ChevronLeft, Calendar, Tag, Edit, Trash2, Coffee, Hammer, Camera, Music, Film, Plane, FileText, Download, Eye } from 'lucide-react';
 import Link from 'next/link';
 import { useAuth } from '@/app/hooks/useAuth';
 
@@ -283,6 +283,76 @@ export default function ShedPostClient({ params }) {
                 dangerouslySetInnerHTML={{ __html: formatContent(post.content) }}
               />
               
+              {/* Images Gallery */}
+              {post.images && post.images.length > 0 && (
+                <div className="mt-8 pt-8 border-t border-slate-200">
+                  <h3 className="text-lg font-semibold text-slate-700 mb-4">이미지 갤러리</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {post.images.map((image, index) => (
+                      <div key={index} className="group relative overflow-hidden rounded-lg border border-slate-200">
+                        <img
+                          src={image.url}
+                          alt={image.name || `이미지 ${index + 1}`}
+                          className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Files Section */}
+              {post.files && post.files.length > 0 && (
+                <div className="mt-8 pt-8 border-t border-slate-200">
+                  <h3 className="text-lg font-semibold text-slate-700 mb-4">첨부파일</h3>
+                  <div className="space-y-2">
+                    {post.files.map((file, index) => {
+                      const isVideo = file.type?.includes('video') || file.name?.match(/\.(mp4|avi|mov|wmv)$/i);
+                      const isAudio = file.type?.includes('audio') || file.name?.match(/\.(mp3|wav|m4a)$/i);
+                      const isPDF = file.type?.includes('pdf') || file.name?.endsWith('.pdf');
+                      const isHTML = file.type?.includes('html') || file.name?.match(/\.(html|htm)$/i);
+                      
+                      let FileIcon = FileText;
+                      if (isVideo) FileIcon = Film;
+                      else if (isAudio) FileIcon = Music;
+                      
+                      return (
+                        <div key={index} className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors">
+                          <FileIcon className="w-5 h-5 text-slate-600" />
+                          <div className="flex-1">
+                            <p className="font-medium text-slate-700">{file.name}</p>
+                            {file.size && (
+                              <p className="text-sm text-slate-500">
+                                {(file.size / 1024 / 1024).toFixed(2)} MB
+                              </p>
+                            )}
+                          </div>
+                          <div className="flex gap-2">
+                            {(isPDF || isVideo || isAudio || isHTML) && (
+                              <button
+                                onClick={() => window.open(file.url, '_blank')}
+                                className="p-2 text-slate-600 hover:text-blue-600 transition-colors"
+                                title="미리보기"
+                              >
+                                <Eye className="w-4 h-4" />
+                              </button>
+                            )}
+                            <a
+                              href={file.url}
+                              download={file.name}
+                              className="p-2 text-slate-600 hover:text-blue-600 transition-colors"
+                              title="다운로드"
+                            >
+                              <Download className="w-4 h-4" />
+                            </a>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
               {/* Tags */}
               {post.tags && post.tags.length > 0 ? (
                 <div className="flex flex-wrap gap-2 mt-8 pt-8 border-t border-slate-200">

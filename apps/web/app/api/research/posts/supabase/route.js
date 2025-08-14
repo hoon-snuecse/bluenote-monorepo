@@ -48,14 +48,26 @@ export async function GET(request) {
       createdAt: post.created_at,
       updatedAt: post.updated_at,
       images: post.research_post_images ? post.research_post_images
-        .filter(item => (!item.file_type || item.file_type !== 'document') && item.file_path)
+        .filter(item => {
+          // 이미지 MIME 타입만 필터링
+          const isImage = item.mime_type && item.mime_type.startsWith('image/');
+          // file_type이 있으면 그것도 확인
+          const isImageType = !item.file_type || item.file_type === 'image';
+          return item.file_path && isImage && isImageType;
+        })
         .map(img => ({
           id: img.id,
           name: img.file_name,
           url: `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/research-images/${img.file_path}`
         })) : [],
       files: post.research_post_images ? post.research_post_images
-        .filter(item => item.file_type === 'document' && item.file_path)
+        .filter(item => {
+          // 이미지가 아닌 모든 파일 (문서, 비디오, 오디오 등)
+          const isNotImage = !item.mime_type || !item.mime_type.startsWith('image/');
+          // file_type이 document인 것도 포함
+          const isDocumentType = item.file_type === 'document';
+          return item.file_path && (isNotImage || isDocumentType);
+        })
         .map(file => ({
           id: file.id,
           name: file.file_name,
