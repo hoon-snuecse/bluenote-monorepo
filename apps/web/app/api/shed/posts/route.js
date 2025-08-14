@@ -69,8 +69,13 @@ export async function POST(request) {
   if (!session) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
-  if (!session.user.isAdmin) {
-    return NextResponse.json({ error: 'Forbidden - Admin access required' }, { status: 403 });
+  // Check for admin or write permissions
+  const adminEmails = ['hoon@snuecse.org', 'hoon@iw.es.kr', 'sociogram@gmail.com'];
+  const isAdminEmail = session.user?.email && adminEmails.includes(session.user.email);
+  const hasWritePermission = session.user?.isAdmin || session.user?.canWrite || isAdminEmail;
+  
+  if (!hasWritePermission) {
+    return NextResponse.json({ error: 'Forbidden - Write access required' }, { status: 403 });
   }
 
   // Use memory storage on Vercel
@@ -135,8 +140,13 @@ export async function PUT(request) {
   if (!session) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
-  if (!session.user.isAdmin) {
-    return NextResponse.json({ error: 'Forbidden - Admin access required' }, { status: 403 });
+  // Check for admin or write permissions
+  const adminEmails = ['hoon@snuecse.org', 'hoon@iw.es.kr', 'sociogram@gmail.com'];
+  const isAdminEmail = session.user?.email && adminEmails.includes(session.user.email);
+  const hasWritePermission = session.user?.isAdmin || session.user?.canWrite || isAdminEmail;
+  
+  if (!hasWritePermission) {
+    return NextResponse.json({ error: 'Forbidden - Write access required' }, { status: 403 });
   }
 
   // Use memory storage on Vercel
@@ -258,8 +268,13 @@ export async function DELETE(request) {
   if (!session) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
-  if (!session.user.isAdmin) {
-    return NextResponse.json({ error: 'Forbidden - Admin access required' }, { status: 403 });
+  // Check for admin or write permissions
+  const adminEmails = ['hoon@snuecse.org', 'hoon@iw.es.kr', 'sociogram@gmail.com'];
+  const isAdminEmail = session.user?.email && adminEmails.includes(session.user.email);
+  const hasWritePermission = session.user?.isAdmin || session.user?.canWrite || isAdminEmail;
+  
+  if (!hasWritePermission) {
+    return NextResponse.json({ error: 'Forbidden - Write access required' }, { status: 403 });
   }
 
   // Use memory storage on Vercel
