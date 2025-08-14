@@ -10,6 +10,33 @@ const nextConfig = {
   },
   async headers() {
     return [
+      // HTML viewer page - more relaxed CSP for iframe
+      {
+        source: '/viewer/html',
+        headers: [
+          {
+            key: 'X-Frame-Options',
+            value: 'SAMEORIGIN',
+          },
+          {
+            key: 'X-Content-Type-Options',
+            value: 'nosniff',
+          },
+          {
+            key: 'X-XSS-Protection',
+            value: '1; mode=block',
+          },
+          {
+            key: 'Referrer-Policy',
+            value: 'strict-origin-when-cross-origin',
+          },
+          {
+            key: 'Content-Security-Policy',
+            value: "default-src 'self' https://*.supabase.co; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://apis.google.com https://*.supabase.co; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://*.supabase.co; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: https: blob:; connect-src 'self' https://api.anthropic.com https://*.supabase.co; frame-src 'self' https://*.supabase.co; child-src 'self' https://*.supabase.co;",
+          },
+        ],
+      },
+      // Default for all other pages
       {
         source: '/:path*',
         headers: [
@@ -35,7 +62,7 @@ const nextConfig = {
           },
           {
             key: 'Content-Security-Policy',
-            value: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://apis.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https: blob:; connect-src 'self' https://api.anthropic.com https://*.supabase.co; frame-ancestors 'none';",
+            value: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://apis.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https: blob:; connect-src 'self' https://api.anthropic.com https://*.supabase.co; frame-src 'self' https://*.supabase.co; frame-ancestors 'none';",
           },
         ],
       },
