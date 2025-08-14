@@ -91,6 +91,22 @@ function WritePageContent() {
       return;
     }
 
+    // 콘텐츠 길이 체크
+    const contentLength = formData.content.length;
+    if (contentLength > 100000) {
+      const confirmSave = confirm(
+        `⚠️ 경고: 작성한 내용이 매우 깁니다.\n\n` +
+        `현재 글자 수: ${contentLength.toLocaleString()}자 (약 ${Math.floor(contentLength / 1000)}KB)\n` +
+        `권장 글자 수: 100,000자 이하\n\n` +
+        `긴 콘텐츠는 로딩 속도가 느려질 수 있습니다.\n` +
+        `그래도 저장하시겠습니까?`
+      );
+      
+      if (!confirmSave) {
+        return;
+      }
+    }
+
     setLoading(true);
 
     try {
@@ -482,17 +498,39 @@ function WritePageContent() {
 
                 {/* Content */}
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
-                    내용
-                  </label>
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="block text-sm font-medium text-slate-700">
+                      내용
+                    </label>
+                    <span className={`text-sm ${
+                      formData.content.length > 100000 
+                        ? 'text-red-600 font-semibold' 
+                        : formData.content.length > 50000 
+                        ? 'text-yellow-600' 
+                        : 'text-slate-500'
+                    }`}>
+                      {formData.content.length.toLocaleString()}자
+                      {formData.content.length > 100000 && ' (⚠️ 권장 길이 초과)'}
+                      {formData.content.length > 50000 && formData.content.length <= 100000 && ' (긴 글 - 분할 고려)'}
+                    </span>
+                  </div>
                   <textarea
                     name="content"
                     value={formData.content}
                     onChange={(e) => setFormData(prev => ({ ...prev, content: e.target.value }))}
-                    className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                    className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all ${
+                      formData.content.length > 100000 
+                        ? 'border-red-300 bg-red-50' 
+                        : 'border-slate-200'
+                    }`}
                     rows="15"
                     placeholder="글 내용을 작성하세요. 마크다운 문법을 사용할 수 있습니다."
                   />
+                  {formData.content.length > 100000 && (
+                    <p className="mt-2 text-sm text-red-600">
+                      ⚠️ 내용이 너무 깁니다. 로딩 성능을 위해 100,000자 이하로 작성하는 것을 권장합니다.
+                    </p>
+                  )}
                 </div>
 
                 {/* Image Upload */}
