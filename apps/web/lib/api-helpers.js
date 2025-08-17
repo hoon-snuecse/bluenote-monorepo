@@ -114,10 +114,7 @@ export function createApiHandler(options = {}) {
       // Supabase 클라이언트 생성
       const supabase = useAdminClient 
         ? createAdminClient() 
-        : (() => {
-            const cookieStore = cookies();
-            return createServerClient(cookieStore);
-          })();
+        : await createServerClient();
       
       // 콜백 실행
       const result = await callback({ request, session, supabase });
