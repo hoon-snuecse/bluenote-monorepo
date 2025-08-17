@@ -3,73 +3,27 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Shield, Users, FileText, Settings, BarChart3, ArrowLeft } from 'lucide-react';
-import { useAuth } from '@/app/hooks/useAuth';
 
-export default function AdminDashboardClient() {
-  const { user, status } = useAuth();
-  const session = user ? { user } : null;
-  const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState({
+export default function AdminDashboardClient({ initialStats, initialUser }) {
+  const [loading, setLoading] = useState(false);
+  const [user, setUser] = useState(initialUser);
+  const [stats, setStats] = useState(initialStats || {
     totalUsers: 0,
     totalPosts: 0,
     todayLogs: 0
   });
 
   useEffect(() => {
-    // 인증 로딩이 완료되면 통계 가져오기
-    if (status !== 'loading') {
-      setLoading(false);
-      if (user?.isAdmin) {
-        fetchStats();
-      }
+    if (initialStats) {
+      setStats(initialStats);
     }
-  }, [status, user]);
-
-
-  const fetchStats = async () => {
-    try {
-      // 병렬로 필요한 데이터만 조회 - 상대 경로 사용
-      const [usersRes, statsRes] = await Promise.allSettled([
-        fetch('/api/admin/users'),
-        fetch('/api/admin/stats')
-      ]);
-      
-      // 응답 처리
-      let usersData = { users: [] };
-      let statsData = { totalPosts: 0, todayUsage: 0 };
-      
-      if (usersRes.status === 'fulfilled' && usersRes.value.ok) {
-        usersData = await usersRes.value.json();
-      } else {
-        console.error('Users API failed:', usersRes.reason || usersRes.value?.status);
-      }
-      
-      if (statsRes.status === 'fulfilled' && statsRes.value.ok) {
-        statsData = await statsRes.value.json();
-      } else {
-        console.error('Stats API failed:', statsRes.reason || statsRes.value?.status);
-      }
-      
-      console.log('Admin Dashboard - Users Response:', usersData);
-      console.log('Admin Dashboard - Stats Response:', statsData);
-      
-      setStats({
-        totalUsers: usersData.users?.length || 0,
-        totalPosts: statsData.totalPosts || 0,
-        todayLogs: statsData.todayUsage || 0
-      });
-    } catch (error) {
-      console.error('Failed to fetch stats:', error);
-      // 기본값 설정
-      setStats({
-        totalUsers: 0,
-        totalPosts: 0,
-        todayLogs: 0
-      });
+    if (initialUser) {
+      setUser(initialUser);
     }
-  };
+    setLoading(false);
+  }, [initialStats, initialUser]);
 
-  if (loading || status === 'loading') {
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-gray-500">로딩 중...</div>
@@ -141,7 +95,7 @@ export default function AdminDashboardClient() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mb-8">
-          <h2 className="text-lg font-medium text-white mb-2">환영합니다, {session?.user?.name || session?.user?.email || '관리자'}님</h2>
+          <h2 className="text-lg font-medium text-white mb-2">환영합니다, {user?.name || user?.email || '관리자'}님</h2>
           <p className="text-slate-400">BlueNote Atelier 관리자 대시보드입니다.</p>
         </div>
 
