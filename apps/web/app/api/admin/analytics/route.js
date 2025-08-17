@@ -4,8 +4,15 @@ export async function GET() {
   try {
     // Create Supabase client with service role
     if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      console.error('[Admin Analytics API] Missing environment variables');
       return Response.json({ error: 'Missing environment variables' }, { status: 500 });
     }
+    
+    // Log service key presence (first 20 chars only for security)
+    console.log('[Admin Analytics API] Service key present:', 
+      process.env.SUPABASE_SERVICE_ROLE_KEY ? 
+      `${process.env.SUPABASE_SERVICE_ROLE_KEY.substring(0, 20)}...` : 'NO KEY'
+    );
     
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -14,6 +21,14 @@ export async function GET() {
         auth: {
           autoRefreshToken: false,
           persistSession: false
+        },
+        db: {
+          schema: 'public'
+        },
+        global: {
+          headers: {
+            'apikey': process.env.SUPABASE_SERVICE_ROLE_KEY
+          }
         }
       }
     );
@@ -29,21 +44,28 @@ export async function GET() {
     ]);
     
     // Try to fetch Evaluation data separately with better error handling
+    // Note: Evaluation table has RLS enabled without policies, so it will fail even with service role
+    // This is a known issue that needs to be fixed in Supabase dashboard
     let evaluations = { data: [], error: null };
     try {
+      // Try with explicit schema
       const evalResult = await supabase
         .from('Evaluation')
         .select('evaluatedBy, evaluatedByUser, evaluatedAt')
-        .order('evaluatedAt', { ascending: false });
+        .order('evaluatedAt', { ascending: false })
+        .limit(1000); // Add limit to prevent timeout
       
       if (evalResult.error) {
         console.error('[Admin Analytics API] Evaluation query error:', evalResult.error);
         // Check if it's a permission error
         if (evalResult.error.code === '42501') {
-          console.log('[Admin Analytics API] Permission denied for Evaluation table. Using empty data.');
+          console.log('[Admin Analytics API] Permission denied for Evaluation table.');
+          console.log('[Admin Analytics API] This is a known issue - RLS is enabled without policies.');
+          console.log('[Admin Analytics API] Please disable RLS or add policies in Supabase dashboard.');
         }
       } else {
         evaluations = evalResult;
+        console.log('[Admin Analytics API] Successfully fetched', evalResult.data?.length || 0, 'evaluation records');
       }
     } catch (error) {
       console.error('[Admin Analytics API] Failed to fetch Evaluation data:', error);
