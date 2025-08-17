@@ -3,10 +3,10 @@
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { Send, Bot, User, ArrowLeft, Loader2, AlertCircle, ChevronDown, Save, CheckCircle } from 'lucide-react';
+import { useSupabaseAuth } from '@bluenote/supabase-auth';
 
 export default function ClaudeChat() {
-  const [session, setSession] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const { user, session, loading: authLoading } = useSupabaseAuth();
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [sending, setSending] = useState(false);
@@ -24,17 +24,7 @@ export default function ClaudeChat() {
     { id: 'claude-3-5-haiku-20241022', name: 'Claude 3.5 Haiku', description: '빠른 응답' },
   ];
 
-  useEffect(() => {
-    fetch('/api/auth/session-check')
-      .then(res => res.json())
-      .then(data => {
-        if (data.authenticated) {
-          setSession(data.session);
-        }
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
-  }, []);
+  // Remove the session-check fetch since we're using useSupabaseAuth hook
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -194,7 +184,7 @@ export default function ClaudeChat() {
     }
   };
 
-  if (loading) {
+  if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
@@ -209,8 +199,8 @@ export default function ClaudeChat() {
           <Bot className="w-16 h-16 text-gray-400 mx-auto mb-4" />
           <h1 className="text-2xl font-bold text-gray-900 mb-2">Login Required</h1>
           <p className="text-gray-600 mb-4">Please login to chat with Claude.</p>
-          <Link href="/login" className="text-blue-600 hover:text-blue-800">
-            Login
+          <Link href="/" className="text-blue-600 hover:text-blue-800">
+            Go to Home
           </Link>
         </div>
       </div>
