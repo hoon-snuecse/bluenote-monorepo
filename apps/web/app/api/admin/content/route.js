@@ -3,6 +3,8 @@ import { createRouteHandlerClient } from '@bluenote/supabase-auth/route-handler-
 import { createClient } from '@supabase/supabase-js';
 
 export async function GET(request) {
+  console.log('[Admin Content API] GET request received');
+  
   try {
     // Check authentication first
     const authClient = await createRouteHandlerClient();
@@ -72,6 +74,8 @@ export async function GET(request) {
       shed: posts.shed.length,
       total: posts.research.length + posts.teaching.length + posts.analytics.length + posts.shed.length
     };
+    
+    console.log('[Admin Content API] Stats:', stats);
     
     return NextResponse.json({ 
       posts,

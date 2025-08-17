@@ -3,15 +3,13 @@ import { createRouteHandlerClient } from '@bluenote/supabase-auth/route-handler-
 import { createClient } from '@supabase/supabase-js';
 
 export async function GET(request) {
-  console.log('[Admin Analytics API] GET request received');
-  
   try {
     // Check authentication first
     const authClient = await createRouteHandlerClient();
     const { data: { user }, error: userError } = await authClient.auth.getUser();
     
     if (userError || !user) {
-      console.error('[Admin Analytics API] Auth error:', userError);
+      console.error('[Admin Content API] Auth error:', userError);
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     
@@ -47,45 +45,43 @@ export async function GET(request) {
       supabase = authClient;
     }
     
-    // Simple analytics data for now
-    const { data: users } = await supabase.from('user_permissions').select('*');
-    const { data: researchPosts } = await supabase.from('research_posts').select('*');
-    const { data: teachingPosts } = await supabase.from('teaching_posts').select('*');
-    const { data: analyticsPosts } = await supabase.from('analytics_posts').select('*');
-    const { data: shedPosts } = await supabase.from('shed_posts').select('*');
+    // Fetch all posts from different tables
+    const [
+      researchPosts,
+      teachingPosts,
+      analyticsPosts,
+      shedPosts
+    ] = await Promise.all([
+      supabase.from('research_posts').select('*').order('created_at', { ascending: false }),
+      supabase.from('teaching_posts').select('*').order('created_at', { ascending: false }),
+      supabase.from('analytics_posts').select('*').order('created_at', { ascending: false }),
+      supabase.from('shed_posts').select('*').order('created_at', { ascending: false })
+    ]);
     
-    const result = {
-      totalUsers: users?.length || 0,
-      totalPosts: (researchPosts?.length || 0) + (teachingPosts?.length || 0) + 
-                  (analyticsPosts?.length || 0) + (shedPosts?.length || 0),
-      contentStats: {
-        research: researchPosts?.length || 0,
-        teaching: teachingPosts?.length || 0,
-        analytics: analyticsPosts?.length || 0,
-        shed: shedPosts?.length || 0
-      },
-      // Placeholder data for other fields
-      totalLogins: 0,
-      todayLogins: 0,
-      totalClaudeUsage: 0,
-      todayClaudeUsage: 0,
-      totalGradingSonnet: 0,
-      todayGradingSonnet: 0,
-      totalGradingOpus: 0,
-      todayGradingOpus: 0,
-      dailyStats: [],
-      recentPosts: [],
-      userActivity: [],
-      sonnetTopUsers: [],
-      opusTopUsers: []
+    const posts = {
+      research: researchPosts.data || [],
+      teaching: teachingPosts.data || [],
+      analytics: analyticsPosts.data || [],
+      shed: shedPosts.data || []
     };
     
-    return NextResponse.json(result);
+    const stats = {
+      research: posts.research.length,
+      teaching: posts.teaching.length,
+      analytics: posts.analytics.length,
+      shed: posts.shed.length,
+      total: posts.research.length + posts.teaching.length + posts.analytics.length + posts.shed.length
+    };
+    
+    return NextResponse.json({ 
+      posts,
+      stats
+    });
     
   } catch (error) {
-    console.error('[Admin Analytics API] Error:', error);
+    console.error('[Admin Content API] Error:', error);
     return NextResponse.json({ 
-      error: 'Failed to fetch analytics',
+      error: 'Failed to fetch content',
       details: error.message 
     }, { status: 500 });
   }

@@ -1,90 +1,81 @@
-import { createApiHandler, crud, supabaseQuery } from '@/lib/api-helpers';
+import { NextResponse } from 'next/server';
+import { createRouteHandlerClient } from '@bluenote/supabase-auth/route-handler-client';
+import { createClient } from '@supabase/supabase-js';
 
-const handleAdminRequest = createApiHandler({ requiredRole: 'admin', useAdminClient: true });
-
-// GET - Fetch all users
 export async function GET(request) {
-  return handleAdminRequest(request, async ({ supabase }) => {
-    const users = await crud.list(supabase, 'user_permissions');
-    return { users };
-  });
-}
-
-// POST - Create new user
-export async function POST(request) {
-  return handleAdminRequest(request, async ({ supabase }) => {
-    const data = await request.json();
-    const { email, role = 'user', claude_daily_limit = 3, can_write = false } = data;
-
-    if (!email || !email.includes('@')) {
-      throw { message: 'Valid email required', status: 400 };
+  console.log('[Admin Users API] GET request received');
+  
+  try {
+    // Check authentication first
+    const authClient = await createRouteHandlerClient();
+    const { data: { user }, error: userError } = await authClient.auth.getUser();
+    
+    if (userError || !user) {
+      console.error('[Admin Users API] Auth error:', userError);
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-
-    const newUser = await crud.create(supabase, 'user_permissions', {
-      email,
-      role,
-      claude_daily_limit,
-      can_write
+    
+    console.log('[Admin Users API] User authenticated:', user.email);
+    
+    // Check admin permissions
+    const { data: permissions } = await authClient
+      .from('user_permissions')
+      .select('role')
+      .eq('email', user.email)
+      .single();
+    
+    const adminEmails = ['hoon@snuecse.org', 'hoon@iw.es.kr', 'sociogram@gmail.com'];
+    const isAdmin = permissions?.role === 'admin' || adminEmails.includes(user.email);
+    
+    console.log('[Admin Users API] Is admin:', isAdmin);
+    
+    if (!isAdmin) {
+      return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
+    }
+    
+    // Try to use service role client if available
+    let supabase;
+    if (process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      console.log('[Admin Users API] Using service role client');
+      supabase = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL,
+        process.env.SUPABASE_SERVICE_ROLE_KEY,
+        {
+          auth: {
+            autoRefreshToken: false,
+            persistSession: false,
+            detectSessionInUrl: false
+          }
+        }
+      );
+    } else {
+      console.log('[Admin Users API] Using auth client');
+      supabase = authClient;
+    }
+    
+    // Fetch all users
+    const { data: users, error } = await supabase
+      .from('user_permissions')
+      .select('*')
+      .order('created_at', { ascending: false });
+    
+    console.log('[Admin Users API] Users fetched:', users?.length || 0);
+    
+    if (error) {
+      console.error('[Admin Users API] Error fetching users:', error);
+      return NextResponse.json({ error: 'Failed to fetch users' }, { status: 500 });
+    }
+    
+    return NextResponse.json({ 
+      users: users || [],
+      count: users?.length || 0 
     });
-
-    return { user: newUser };
-  });
-}
-
-// PUT - Update existing user
-export async function PUT(request) {
-  return handleAdminRequest(request, async ({ supabase }) => {
-    const data = await request.json();
-    const { email, role, claude_daily_limit, can_write } = data;
-
-    if (!email) {
-      throw { message: 'Email required', status: 400 };
-    }
-
-    // user_permissions 테이블은 email이 primary key이므로 특별 처리
-    const updatedUser = await supabaseQuery(
-      () => supabase
-        .from('user_permissions')
-        .update({
-          role,
-          claude_daily_limit,
-          can_write,
-          updated_at: new Date().toISOString()
-        })
-        .eq('email', email)
-        .select()
-        .single(),
-      'Failed to update user'
-    );
-
-    return { user: updatedUser };
-  });
-}
-
-// DELETE - Delete user
-export async function DELETE(request) {
-  return handleAdminRequest(request, async ({ session, supabase }) => {
-    const { searchParams } = new URL(request.url);
-    const email = searchParams.get('email');
-
-    if (!email) {
-      throw { message: 'Email required', status: 400 };
-    }
-
-    // Prevent self-deletion
-    if (email === session.user.email) {
-      throw { message: 'Cannot delete your own account', status: 400 };
-    }
-
-    // user_permissions 테이블은 email이 primary key이므로 특별 처리
-    await supabaseQuery(
-      () => supabase
-        .from('user_permissions')
-        .delete()
-        .eq('email', email),
-      'Failed to delete user'
-    );
-
-    return { success: true };
-  });
+    
+  } catch (error) {
+    console.error('[Admin Users API] Error:', error);
+    return NextResponse.json({ 
+      error: 'Failed to fetch users',
+      details: error.message 
+    }, { status: 500 });
+  }
 }
