@@ -18,21 +18,35 @@ export async function GET() {
       }
     );
     
-    // Fetch data for analytics - including usage_logs and grading evaluations
-    const [users, researchPosts, teachingPosts, analyticsPosts, shedPosts, usageLogs, evaluations] = await Promise.all([
+    // Fetch data for analytics - including usage_logs
+    const [users, researchPosts, teachingPosts, analyticsPosts, shedPosts, usageLogs] = await Promise.all([
       supabase.from('user_permissions').select('*'),
       supabase.from('research_posts').select('*'),
       supabase.from('teaching_posts').select('*'),
       supabase.from('analytics_posts').select('*'),
       supabase.from('shed_posts').select('*'),
-      supabase.from('usage_logs').select('*').order('created_at', { ascending: false }),
-      supabase.from('Evaluation').select('evaluatedBy, evaluatedByUser, evaluatedAt').order('evaluatedAt', { ascending: false })
+      supabase.from('usage_logs').select('*').order('created_at', { ascending: false })
     ]);
     
-    // Log evaluation query result for debugging in production
-    if (evaluations.error) {
-      console.error('[Admin Analytics API] Evaluation query error:', evaluations.error);
-      // Evaluation 테이블 접근 실패 시 빈 데이터 사용
+    // Try to fetch Evaluation data separately with better error handling
+    let evaluations = { data: [], error: null };
+    try {
+      const evalResult = await supabase
+        .from('Evaluation')
+        .select('evaluatedBy, evaluatedByUser, evaluatedAt')
+        .order('evaluatedAt', { ascending: false });
+      
+      if (evalResult.error) {
+        console.error('[Admin Analytics API] Evaluation query error:', evalResult.error);
+        // Check if it's a permission error
+        if (evalResult.error.code === '42501') {
+          console.log('[Admin Analytics API] Permission denied for Evaluation table. Using empty data.');
+        }
+      } else {
+        evaluations = evalResult;
+      }
+    } catch (error) {
+      console.error('[Admin Analytics API] Failed to fetch Evaluation data:', error);
       evaluations.data = [];
     }
     
