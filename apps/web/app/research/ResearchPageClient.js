@@ -7,6 +7,7 @@ import { useAuth } from '@/app/hooks/useAuth';
 
 export default function ResearchPageClient() {
   const { user, status } = useAuth();
+  const session = user ? { user } : null;
   
   // 임시 관리자 이메일 체크 (프로덕션에서는 서버 측 검증 필요)
   const adminEmails = ['hoon@snuecse.org', 'hoon@iw.es.kr', 'sociogram@gmail.com'];
