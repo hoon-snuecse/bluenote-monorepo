@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
 import { createServerClient } from '@bluenote/supabase-auth/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 
@@ -9,8 +8,7 @@ import { createAdminClient } from '@/lib/supabase/admin';
  * @returns {Promise<{session?: any, error?: {message: string, status: number}}>}
  */
 export async function requireAuth(requiredRole = null) {
-  const cookieStore = await cookies();
-  const supabase = createServerClient(cookieStore);
+  const supabase = await createServerClient();
   
   const { data: { user }, error } = await supabase.auth.getUser();
   
