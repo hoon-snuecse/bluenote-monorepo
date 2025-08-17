@@ -72,18 +72,7 @@ export default function AdminAnalyticsOptimized() {
     setError(null);
 
     try {
-      // API 호출을 위한 base URL 설정
-      const baseUrl = typeof window !== 'undefined' 
-        ? window.location.origin 
-        : process.env.NEXT_PUBLIC_BASE_URL || 'https://www.bluenote.site';
-      
-      const response = await fetch(`${baseUrl}/api/admin/analytics-optimized`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include'
-      });
+      const response = await fetch('/api/admin/analytics-optimized');
       
       if (!response.ok) {
         throw new Error('Failed to fetch analytics');
