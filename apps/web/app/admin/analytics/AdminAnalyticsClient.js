@@ -220,6 +220,27 @@ export default function AdminAnalyticsClient({ initialStats }) {
           </div>
         </div>
 
+        {/* Login Top Users */}
+        {stats.loginTopUsers && (
+          <div className="bg-slate-800 border border-slate-700 rounded-lg p-6">
+            <h3 className="text-lg font-semibold text-white mb-4">로그인 최다 사용자</h3>
+            <div className="space-y-2">
+              {stats.loginTopUsers.map((user, index) => (
+                <div key={`login-${index}`} className="flex items-center justify-between p-3 hover:bg-slate-700 rounded">
+                  <div className="flex items-center gap-3">
+                    <span className="text-slate-500 text-sm w-6">#{index + 1}</span>
+                    <div>
+                      <span className="text-white text-sm">{user.name}</span>
+                      <span className="text-slate-500 text-xs ml-2">({user.email})</span>
+                    </div>
+                  </div>
+                  <span className="text-blue-400 font-medium">{user.count}회</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Model-specific Grading Top Users */}
         <div className="bg-slate-800 border border-slate-700 rounded-lg p-6">
           <h3 className="text-lg font-semibold text-white mb-4">모델별 채점 최다 사용자</h3>

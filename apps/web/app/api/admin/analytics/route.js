@@ -115,10 +115,13 @@ export async function GET() {
           }
         };
       }) || [],
-      // Top users based on real usage_logs data
-      sonnetTopUsers: (() => {
+      // Grading statistics - not implemented yet (no grading tables in database)
+      sonnetTopUsers: [], // Sonnet grading data not available
+      opusTopUsers: [], // Opus grading data not available
+      // Login statistics from usage_logs
+      loginTopUsers: (() => {
         const userCounts = {};
-        (usageLogs.data || []).forEach(log => {
+        (usageLogs.data || []).filter(log => log.action_type === 'login').forEach(log => {
           const email = log.user_email;
           if (email) {
             userCounts[email] = (userCounts[email] || 0) + 1;
@@ -129,10 +132,10 @@ export async function GET() {
           .slice(0, 5)
           .map(([email, count]) => ({
             name: email.split('@')[0], // Use username part of email
+            email: email,
             count: count
           }));
-      })(),
-      opusTopUsers: [] // Grading logs not implemented yet
+      })()
     };
     
     return Response.json(result);
