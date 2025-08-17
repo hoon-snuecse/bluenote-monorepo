@@ -3,10 +3,10 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Shield, Users, FileText, Settings, BarChart3, ArrowLeft } from 'lucide-react';
-import { useSupabaseAuth } from '@bluenote/supabase-auth';
+import { useAuth } from '@/app/hooks/useAuth';
 
 export default function AdminDashboardClient() {
-  const { session, loading: authLoading, permissions } = useSupabaseAuth();
+  const { user, status } = useAuth();
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
     totalUsers: 0,
@@ -14,20 +14,15 @@ export default function AdminDashboardClient() {
     todayLogs: 0
   });
 
-  // Admin 권한 체크 - 직접 이메일 체크도 포함
-  const adminEmails = ['hoon@snuecse.org', 'hoon@iw.es.kr', 'sociogram@gmail.com'];
-  const isAdmin = permissions?.role === 'admin' || 
-                  (session?.user?.email && adminEmails.includes(session.user.email));
-
   useEffect(() => {
     // 인증 로딩이 완료되면 통계 가져오기
-    if (!authLoading) {
+    if (status !== 'loading') {
       setLoading(false);
-      if (isAdmin) {
+      if (user?.isAdmin) {
         fetchStats();
       }
     }
-  }, [authLoading, isAdmin]);
+  }, [status, user]);
 
 
   const fetchStats = async () => {
@@ -63,7 +58,7 @@ export default function AdminDashboardClient() {
     }
   };
 
-  if (loading || authLoading) {
+  if (loading || status === 'loading') {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-gray-500">로딩 중...</div>
@@ -71,7 +66,7 @@ export default function AdminDashboardClient() {
     );
   }
 
-  if (!session || !isAdmin) {
+  if (!user || !user.isAdmin) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -79,7 +74,7 @@ export default function AdminDashboardClient() {
           <h1 className="text-2xl font-bold text-gray-900 mb-2">접근 권한 없음</h1>
           <p className="text-gray-600 mb-4">관리자만 이 페이지에 접근할 수 있습니다.</p>
           <p className="text-sm text-gray-500 mb-4">
-            현재 로그인: {session?.user?.email || '없음'}
+            현재 로그인: {user?.email || '없음'}
           </p>
           <Link href="/" className="text-blue-600 hover:text-blue-800">
             홈으로 돌아가기

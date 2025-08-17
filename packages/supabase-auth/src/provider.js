@@ -23,22 +23,9 @@ export function SupabaseAuthProvider({ children, redirectTo = '/' }) {
     try {
       console.log('[SupabaseAuthProvider] Loading permissions for:', userEmail)
       
-      // ADMIN_EMAILS 체크 (폴백 - 클라이언트 사이드)
-      const adminEmails = ['hoon@snuecse.org', 'hoon@iw.es.kr', 'sociogram@gmail.com']
-      if (adminEmails.includes(userEmail)) {
-        const fallbackPermissions = {
-          role: 'admin',
-          can_write: true,
-          claude_daily_limit: 1000
-        }
-        console.log('[SupabaseAuthProvider] Using admin fallback for:', userEmail)
-        setPermissions(fallbackPermissions)
-        return fallbackPermissions
-      }
-      
       // API를 통해 권한 정보 가져오기 (RLS 우회)
       try {
-        const response = await fetch('/api/auth/session-check')
+        const response = await fetch('/api/auth/permissions')
         if (response.ok) {
           const data = await response.json()
           if (data.authenticated && data.user?.permissions) {
@@ -48,7 +35,35 @@ export function SupabaseAuthProvider({ children, redirectTo = '/' }) {
           }
         }
       } catch (apiError) {
-        console.error('[SupabaseAuthProvider] API fallback failed:', apiError)
+        console.error('[SupabaseAuthProvider] API permissions fetch failed:', apiError)
+      }
+      
+      // API 실패 시 폴백 - session-check 시도
+      try {
+        const response = await fetch('/api/auth/session-check')
+        if (response.ok) {
+          const data = await response.json()
+          if (data.authenticated && data.user?.permissions) {
+            console.log('[SupabaseAuthProvider] Permissions loaded from session-check:', data.user.permissions)
+            setPermissions(data.user.permissions)
+            return data.user.permissions
+          }
+        }
+      } catch (apiError) {
+        console.error('[SupabaseAuthProvider] Session-check fallback failed:', apiError)
+      }
+      
+      // 최종 폴백 - 클라이언트 사이드 ADMIN_EMAILS 체크
+      const adminEmails = ['hoon@snuecse.org', 'hoon@iw.es.kr', 'sociogram@gmail.com']
+      if (adminEmails.includes(userEmail)) {
+        const fallbackPermissions = {
+          role: 'admin',
+          can_write: true,
+          claude_daily_limit: 1000
+        }
+        console.log('[SupabaseAuthProvider] Using admin email fallback for:', userEmail)
+        setPermissions(fallbackPermissions)
+        return fallbackPermissions
       }
       
       // 기본값 설정
