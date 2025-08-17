@@ -43,10 +43,23 @@ export default function AdminUsersClient() {
 
   const fetchUsers = async () => {
     try {
-      const res = await fetch('/api/admin/users');
+      const res = await fetch('/api/admin/users', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include'
+      });
+      
       if (res.ok) {
         const data = await res.json();
-        setUsers(data.users || []);
+        console.log('Fetched users data:', data);
+        // Filter out any null or invalid user objects
+        const validUsers = (data.users || []).filter(u => u && u.email);
+        setUsers(validUsers);
+      } else {
+        console.error('Users API response not ok:', res.status);
+        setError('사용자 목록을 불러오는데 실패했습니다.');
       }
     } catch (error) {
       console.error('Failed to fetch users:', error);
@@ -274,12 +287,12 @@ export default function AdminUsersClient() {
                 </tr>
               </thead>
               <tbody>
-                {users.map((user) => (
+                {users.filter(user => user && user.email).map((user) => (
                   <tr key={user.email} className="border-b border-slate-700 hover:bg-slate-700/50">
                     <td className="p-4">
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 bg-slate-700 rounded-full flex items-center justify-center">
-                          {user.role === 'admin' ? (
+                          {user?.role === 'admin' ? (
                             <Shield className="w-5 h-5 text-blue-400" />
                           ) : (
                             <User className="w-5 h-5 text-slate-400" />
@@ -302,11 +315,11 @@ export default function AdminUsersClient() {
                         </select>
                       ) : (
                         <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          user.role === 'admin' 
+                          user?.role === 'admin' 
                             ? 'bg-blue-900/50 text-blue-300' 
                             : 'bg-slate-700 text-slate-300'
                         }`}>
-                          {user.role === 'admin' ? '관리자' : '일반'}
+                          {user?.role === 'admin' ? '관리자' : '일반'}
                         </span>
                       )}
                     </td>
@@ -322,7 +335,7 @@ export default function AdminUsersClient() {
                       ) : (
                         <div className="flex items-center justify-center gap-1">
                           <MessageSquare className="w-4 h-4 text-slate-500" />
-                          <span className="text-white">{user.claude_daily_limit}</span>
+                          <span className="text-white">{user?.claude_daily_limit || 0}</span>
                         </div>
                       )}
                     </td>

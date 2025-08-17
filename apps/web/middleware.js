@@ -74,8 +74,17 @@ export async function middleware(req) {
     userId: session.user.id
   } : 'No session');
   
-  // 세션이 없으면 로그인 페이지로 리다이렉트
+  // 세션이 없으면 처리
   if (!session) {
+    // API 경로는 401 응답 반환
+    if (path.startsWith('/api/')) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+    
+    // 일반 페이지는 로그인 페이지로 리다이렉트
     const loginUrl = new URL('/auth/signin', req.url);
     loginUrl.searchParams.set('callbackUrl', req.url);
     return NextResponse.redirect(loginUrl);
@@ -109,6 +118,15 @@ export async function middleware(req) {
   
   // 관리자만 접근 가능한 경로
   if (path.startsWith('/admin') && !isAdmin) {
+    // API 경로는 403 응답 반환
+    if (path.startsWith('/api/')) {
+      return NextResponse.json(
+        { error: 'Forbidden - Admin access required' },
+        { status: 403 }
+      );
+    }
+    
+    // 일반 페이지는 unauthorized 페이지로 리다이렉트
     return NextResponse.redirect(new URL('/unauthorized', req.url));
   }
   
