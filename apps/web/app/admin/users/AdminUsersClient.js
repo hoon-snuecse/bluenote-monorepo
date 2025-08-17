@@ -30,30 +30,38 @@ export default function AdminUsersClient({ initialUsers, initialUser }) {
   const [success, setSuccess] = useState('');
 
   useEffect(() => {
+    console.log('AdminUsersClient mounted:', {
+      initialUser,
+      initialUsersCount: initialUsers?.length
+    });
+    
     if (!initialUser || !initialUser.isAdmin) {
       router.push('/');
       return;
     }
     setCurrentUser(initialUser);
     
-    // If no initial users provided or empty, fetch from API
-    if (!initialUsers || initialUsers.length === 0) {
-      fetchUsers();
-    } else {
-      setUsers(initialUsers);
-    }
+    // Always fetch users from API for now
+    fetchUsers();
   }, [initialUser, initialUsers, router]);
   
   const fetchUsers = async () => {
     try {
+      console.log('Fetching users from API...');
       setLoading(true);
       const response = await fetch('/api/admin/users', {
         credentials: 'include'
       });
       
+      console.log('Users API response:', response.status);
+      
       if (response.ok) {
         const data = await response.json();
+        console.log('Users data:', data);
         setUsers(data.users || []);
+      } else {
+        const errorText = await response.text();
+        console.error('Failed to fetch users:', response.status, errorText);
       }
     } catch (error) {
       console.error('Error fetching users:', error);

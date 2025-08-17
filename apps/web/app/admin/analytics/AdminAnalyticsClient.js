@@ -27,22 +27,27 @@ export default function AdminAnalyticsClient({ initialStats }) {
   // 디버깅을 위한 콘솔 로그
   useEffect(() => {
     console.log('AdminAnalyticsClient mounted with stats:', initialStats);
-    if (!initialStats) {
-      fetchAnalytics();
-    }
+    // Always fetch analytics from API
+    fetchAnalytics();
   }, []);
 
   const fetchAnalytics = async () => {
     try {
+      console.log('Fetching analytics from API...');
       setLoading(true);
       const response = await fetch('/api/admin/analytics', {
         credentials: 'include'
       });
       
+      console.log('Analytics API response:', response.status);
+      
       if (response.ok) {
         const data = await response.json();
         console.log('Analytics data fetched:', data);
         setStats(data);
+      } else {
+        const errorText = await response.text();
+        console.error('Failed to fetch analytics:', response.status, errorText);
       }
     } catch (error) {
       console.error('Error fetching analytics:', error);

@@ -47,10 +47,8 @@ export default function AdminContentClient({ initialUser, initialStats, initialP
       postsSections: Object.keys(initialPosts || {})
     });
     
-    // If no initial data, fetch from API
-    if (!initialPosts || Object.keys(initialPosts).length === 0) {
-      fetchContent();
-    }
+    // Always fetch from API
+    fetchContent();
     
     if (!initialUser || !initialUser.isAdmin) {
       router.push('/');
@@ -76,10 +74,13 @@ export default function AdminContentClient({ initialUser, initialStats, initialP
 
   const fetchContent = async () => {
     try {
+      console.log('Fetching content from API...');
       setLoading(true);
       const response = await fetch('/api/admin/content', {
         credentials: 'include'
       });
+      
+      console.log('Content API response:', response.status);
       
       if (response.ok) {
         const data = await response.json();
@@ -93,6 +94,9 @@ export default function AdminContentClient({ initialUser, initialStats, initialP
           total: 0
         });
         setPosts(data.posts?.[activeSection] || []);
+      } else {
+        const errorText = await response.text();
+        console.error('Failed to fetch content:', response.status, errorText);
       }
     } catch (error) {
       console.error('Error fetching content:', error);
