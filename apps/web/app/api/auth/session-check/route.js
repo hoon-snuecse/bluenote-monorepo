@@ -1,5 +1,4 @@
 import { createServerClient } from '@bluenote/supabase-auth/server';
-import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 
 export async function OPTIONS(request) {
@@ -48,8 +47,7 @@ export async function GET(request) {
     }
 
     // Supabase 서버 클라이언트 생성
-    const cookieStore = await cookies();
-    const supabase = createServerClient(cookieStore);
+    const supabase = await createServerClient();
     
     // Supabase 세션 확인
     const { data: { user }, error } = await supabase.auth.getUser();
