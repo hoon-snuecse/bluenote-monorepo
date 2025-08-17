@@ -76,19 +76,33 @@ async function getAnalyticsData(fallbackClient = null) {
     // 모든 데이터를 병렬로 가져오기
     const [
       users,
-      posts,
+      researchPosts,
+      teachingPosts,
+      analyticsPosts,
+      shedPosts,
       claudeLogs,
       gradingLogs,
-      loginLogs,
-      recentPosts
+      loginLogs
     ] = await Promise.all([
       supabase.from('user_permissions').select('*'),
-      supabase.from('posts').select('*'),
-      supabase.from('claude_usage_logs').select('*'),
+      supabase.from('research_posts').select('*'),
+      supabase.from('teaching_posts').select('*'),
+      supabase.from('analytics_posts').select('*'),
+      supabase.from('shed_posts').select('*'),
+      supabase.from('usage_logs').select('*'),
       supabase.from('grading_logs').select('*'),
-      supabase.from('login_logs').select('*').order('created_at', { ascending: false }),
-      supabase.from('posts').select('*').order('created_at', { ascending: false }).limit(10)
+      supabase.from('login_logs').select('*').order('created_at', { ascending: false })
     ]);
+    
+    // Combine all posts
+    const allPosts = [
+      ...(researchPosts.data || []),
+      ...(teachingPosts.data || []),
+      ...(analyticsPosts.data || []),
+      ...(shedPosts.data || [])
+    ];
+    const posts = { data: allPosts };
+    const recentPosts = { data: allPosts.sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 10) };
     
     
     // 통계 계산
@@ -109,10 +123,12 @@ async function getAnalyticsData(fallbackClient = null) {
     ).length || 0;
     
     // 콘텐츠 통계
-    const contentStats = posts.data?.reduce((acc, post) => {
-      acc[post.section] = (acc[post.section] || 0) + 1;
-      return acc;
-    }, {}) || {};
+    const contentStats = {
+      research: researchPosts.data?.length || 0,
+      teaching: teachingPosts.data?.length || 0,
+      analytics: analyticsPosts.data?.length || 0,
+      shed: shedPosts.data?.length || 0
+    };
     
     // 일별 통계 (최근 7일)
     const dailyStats = [];

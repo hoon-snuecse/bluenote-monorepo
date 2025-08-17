@@ -56,13 +56,19 @@ export async function GET(request) {
     // Fetch data using correct table names
     const [
       usersResult,
-      postsResult,
+      researchResult,
+      teachingResult,
+      analyticsResult,
+      shedResult,
       logsResult,
       gradingResult
     ] = await Promise.all([
       supabase.from('user_permissions').select('*'),
-      supabase.from('posts').select('*'),
-      supabase.from('claude_usage_logs')
+      supabase.from('research_posts').select('*'),
+      supabase.from('teaching_posts').select('*'),
+      supabase.from('analytics_posts').select('*'),
+      supabase.from('shed_posts').select('*'),
+      supabase.from('usage_logs')
         .select('*')
         .gte('created_at', todayStart),
       supabase.from('grading_logs')
@@ -80,6 +86,12 @@ export async function GET(request) {
       usingServiceRole
     });
     
+    // Calculate total posts
+    const totalPosts = (researchResult.data?.length || 0) + 
+                      (teachingResult.data?.length || 0) + 
+                      (analyticsResult.data?.length || 0) + 
+                      (shedResult.data?.length || 0);
+    
     // Log query results with more detail
     console.log('Query results:', {
       users: { 
@@ -87,10 +99,19 @@ export async function GET(request) {
         error: usersResult.error?.message || null
       },
       posts: { 
-        count: postsResult.data?.length || 0, 
-        error: postsResult.error?.message || null
+        research: researchResult.data?.length || 0,
+        teaching: teachingResult.data?.length || 0,
+        analytics: analyticsResult.data?.length || 0,
+        shed: shedResult.data?.length || 0,
+        total: totalPosts,
+        errors: {
+          research: researchResult.error?.message || null,
+          teaching: teachingResult.error?.message || null,
+          analytics: analyticsResult.error?.message || null,
+          shed: shedResult.error?.message || null
+        }
       },
-      claudeLogs: { 
+      usageLogs: { 
         count: logsResult.data?.length || 0, 
         error: logsResult.error?.message || null
       },
@@ -102,17 +123,11 @@ export async function GET(request) {
     
     // Count posts by section
     const postsBySection = {
-      research: 0,
-      teaching: 0,
-      analytics: 0,
-      shed: 0
+      research: researchResult.data?.length || 0,
+      teaching: teachingResult.data?.length || 0,
+      analytics: analyticsResult.data?.length || 0,
+      shed: shedResult.data?.length || 0
     };
-    
-    postsResult.data?.forEach(post => {
-      if (postsBySection.hasOwnProperty(post.section)) {
-        postsBySection[post.section]++;
-      }
-    });
     
     // Count grading by model
     let sonnetCount = 0;
@@ -125,7 +140,7 @@ export async function GET(request) {
     
     return NextResponse.json({
       totalUsers: usersResult.data?.length || 0,
-      totalPosts: postsResult.data?.length || 0,
+      totalPosts: totalPosts,
       todayLogs: logsResult.data?.length || 0,
       todayGradingSonnet: sonnetCount,
       todayGradingHaiku: haikuCount,
@@ -136,7 +151,10 @@ export async function GET(request) {
         hasServiceKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
         errors: {
           users: usersResult.error?.message || null,
-          posts: postsResult.error?.message || null,
+          research: researchResult.error?.message || null,
+          teaching: teachingResult.error?.message || null,
+          analytics: analyticsResult.error?.message || null,
+          shed: shedResult.error?.message || null,
           logs: logsResult.error?.message || null,
           grading: gradingResult.error?.message || null
         }

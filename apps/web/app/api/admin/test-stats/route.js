@@ -70,43 +70,53 @@ export async function GET() {
       results.users = { error: e.message };
     }
 
-    // 2. Test posts table
-    try {
-      const { data, count, error } = await supabase
-        .from('posts')
-        .select('*', { count: 'exact' })
-        .limit(5);
-      
-      results.posts = { 
-        count: count || data?.length || 0,
-        sample: data?.map(p => ({ id: p.id, section: p.section, title: p.title })),
-        error: error?.message || null 
-      };
-      console.log('[Test Stats API] Posts:', results.posts);
-    } catch (e) {
-      results.posts = { error: e.message };
+    // 2. Test posts tables (separated by section)
+    const postsTables = ['research_posts', 'teaching_posts', 'analytics_posts', 'shed_posts'];
+    let totalPosts = 0;
+    results.posts = {};
+    
+    for (const table of postsTables) {
+      try {
+        const { data, count, error } = await supabase
+          .from(table)
+          .select('*', { count: 'exact' })
+          .limit(2);
+        
+        const tableCount = count || data?.length || 0;
+        totalPosts += tableCount;
+        
+        results.posts[table] = { 
+          count: tableCount,
+          sample: data?.slice(0, 1).map(p => ({ id: p.id, title: p.title })),
+          error: error?.message || null 
+        };
+        console.log(`[Test Stats API] ${table}:`, results.posts[table]);
+      } catch (e) {
+        results.posts[table] = { error: e.message };
+      }
     }
+    results.posts.total = totalPosts;
 
-    // 3. Test claude_usage_logs table
+    // 3. Test usage_logs table (not claude_usage_logs)
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const todayString = today.toISOString();
 
     try {
       const { data, count, error } = await supabase
-        .from('claude_usage_logs')
+        .from('usage_logs')
         .select('*', { count: 'exact' })
         .gte('created_at', todayString)
         .limit(5);
       
-      results.claudeLogs = { 
+      results.usageLogs = { 
         todayCount: count || data?.length || 0,
         sample: data?.slice(0, 2),
         error: error?.message || null 
       };
-      console.log('[Test Stats API] Claude logs:', results.claudeLogs);
+      console.log('[Test Stats API] Usage logs:', results.usageLogs);
     } catch (e) {
-      results.claudeLogs = { error: e.message };
+      results.usageLogs = { error: e.message };
     }
     
     // 4. Test grading_logs table
@@ -135,8 +145,8 @@ export async function GET() {
       results,
       summary: {
         totalUsers: results.users?.count || 0,
-        totalPosts: results.posts?.count || 0,
-        todayClaudeLogs: results.claudeLogs?.todayCount || 0,
+        totalPosts: results.posts?.total || 0,
+        todayUsageLogs: results.usageLogs?.todayCount || 0,
         todayGradingLogs: results.gradingLogs?.todayCount || 0
       }
     });
