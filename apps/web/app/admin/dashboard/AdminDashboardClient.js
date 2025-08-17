@@ -43,12 +43,30 @@ export default function AdminDashboardClient({ initialStats, initialUser }) {
       console.log('Starting fetchStats function...');
       setLoading(true);
       
+      // First test debug endpoint
+      console.log('Testing debug endpoint...');
+      const debugResponse = await fetch('/api/admin/debug', {
+        credentials: 'include'
+      });
+      const debugData = await debugResponse.json();
+      console.log('Debug API response:', debugData);
+      
+      // Then test the test-stats endpoint
+      console.log('Testing test-stats endpoint...');
+      const testResponse = await fetch('/api/admin/test-stats', {
+        credentials: 'include'
+      });
+      const testData = await testResponse.json();
+      console.log('Test-stats API response:', testData);
+      
+      // Now try the main stats endpoint
+      console.log('Fetching main stats...');
       const response = await fetch('/api/admin/stats', {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
         },
-        credentials: 'same-origin'
+        credentials: 'include'
       });
       
       console.log('API Response status:', response.status);
@@ -84,6 +102,20 @@ export default function AdminDashboardClient({ initialStats, initialUser }) {
           statusText: response.statusText,
           body: text
         });
+        
+        // If main API fails but test-stats works, use that data
+        if (testData && testData.success) {
+          console.log('Using test-stats data as fallback');
+          setStats({
+            totalUsers: testData.summary?.totalUsers || 0,
+            totalPosts: testData.summary?.totalPosts || 0,
+            todayLogs: testData.summary?.todayUsageLogs || 0,
+            todayGradingSonnet: 0,
+            todayGradingHaiku: 0,
+            users: testData.results?.users?.sample || [],
+            debug: { usingTestStats: true }
+          });
+        }
       }
     } catch (error) {
       console.error('Error in fetchStats:', error);
