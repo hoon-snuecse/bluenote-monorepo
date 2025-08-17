@@ -18,7 +18,12 @@ const getCookieOptions = () => {
 export async function middleware(req) {
   const path = req.nextUrl.pathname;
   
-  // 보호된 경로 목록
+  // API 경로는 미들웨어 건너뛰기
+  if (path.startsWith('/api/')) {
+    return NextResponse.next();
+  }
+  
+  // 보호된 경로 목록 (페이지만)
   const protectedPaths = [
     '/admin',
     '/research/write',
@@ -26,9 +31,7 @@ export async function middleware(req) {
     '/analytics/write',
     '/shed/write',
     '/ai/chat',
-    '/auth/status',
-    '/api/ai',
-    '/api/admin'
+    '/auth/status'
   ];
   
   // 현재 경로가 보호된 경로인지 확인
@@ -74,17 +77,8 @@ export async function middleware(req) {
     userId: session.user.id
   } : 'No session');
   
-  // 세션이 없으면 처리
+  // 세션이 없으면 로그인 페이지로 리다이렉트
   if (!session) {
-    // API 경로는 401 응답 반환
-    if (path.startsWith('/api/')) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
-    
-    // 일반 페이지는 로그인 페이지로 리다이렉트
     const loginUrl = new URL('/auth/signin', req.url);
     loginUrl.searchParams.set('callbackUrl', req.url);
     return NextResponse.redirect(loginUrl);
@@ -118,15 +112,6 @@ export async function middleware(req) {
   
   // 관리자만 접근 가능한 경로
   if (path.startsWith('/admin') && !isAdmin) {
-    // API 경로는 403 응답 반환
-    if (path.startsWith('/api/')) {
-      return NextResponse.json(
-        { error: 'Forbidden - Admin access required' },
-        { status: 403 }
-      );
-    }
-    
-    // 일반 페이지는 unauthorized 페이지로 리다이렉트
     return NextResponse.redirect(new URL('/unauthorized', req.url));
   }
   
@@ -150,7 +135,7 @@ export async function middleware(req) {
 // 보호된 경로 설정
 export const config = {
   matcher: [
-    // 관리자 전용 경로
+    // 관리자 전용 경로 (페이지만)
     '/admin/:path*',
     '/research/write',
     '/teaching/write',
@@ -159,8 +144,8 @@ export const config = {
     // 로그인 필요 경로
     '/ai/chat/:path*',
     '/auth/status/:path*',
-    // API 경로 보호
-    '/api/ai/:path*',
-    '/api/admin/:path*'
+    // API 경로는 미들웨어에서 제외 (각 API route에서 직접 처리)
+    // '/api/ai/:path*',
+    // '/api/admin/:path*'
   ],
 };
