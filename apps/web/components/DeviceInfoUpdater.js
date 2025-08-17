@@ -39,7 +39,7 @@ export function DeviceInfoUpdater() {
         });
       }
     }
-  }, [sessionData]);
+  }, [session, status]);
   
   // 화면에 렌더링할 것이 없음
   return null;
