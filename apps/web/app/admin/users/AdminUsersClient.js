@@ -30,6 +30,12 @@ export default function AdminUsersClient({ initialUsers, initialUser }) {
   const [success, setSuccess] = useState('');
 
   useEffect(() => {
+    console.log('AdminUsersClient mounted with:', {
+      initialUser,
+      initialUsersLength: initialUsers?.length,
+      isAdmin: initialUser?.isAdmin
+    });
+    
     if (!initialUser || !initialUser.isAdmin) {
       router.push('/');
       return;
@@ -261,7 +267,13 @@ export default function AdminUsersClient({ initialUsers, initialUser }) {
                 </tr>
               </thead>
               <tbody>
-                {users.filter(user => user && user.email).map((user) => (
+                {users.length === 0 ? (
+                  <tr>
+                    <td colSpan="6" className="p-8 text-center text-slate-400">
+                      사용자가 없습니다.
+                    </td>
+                  </tr>
+                ) : users.filter(user => user && user.email).map((user) => (
                   <tr key={user.email} className="border-b border-slate-700 hover:bg-slate-700/50">
                     <td className="p-4">
                       <div className="flex items-center gap-3">

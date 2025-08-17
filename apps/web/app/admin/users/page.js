@@ -7,32 +7,46 @@ export const revalidate = 0;
 
 async function getUsers() {
   try {
+    console.log('getUsers: Starting to fetch users');
     const supabase = createAdminClient();
+    console.log('getUsers: Admin client created');
+    
     const { data, error } = await supabase
       .from('user_permissions')
       .select('*')
       .order('created_at', { ascending: false });
     
     if (error) {
-      console.error('Error fetching users:', error);
+      console.error('getUsers: Database error:', error);
       throw error;
     }
     
-    console.log('Fetched users from DB:', data?.length || 0);
+    console.log('getUsers: Successfully fetched users:', {
+      count: data?.length || 0,
+      users: data?.map(u => u.email) || []
+    });
+    
     return data || [];
   } catch (error) {
-    console.error('Failed to fetch users:', error);
+    console.error('getUsers: Failed to fetch users:', error.message);
     return [];
   }
 }
 
 export default async function AdminUsersPage() {
+  console.log('AdminUsersPage: Starting render');
+  
   const supabase = await createServerClient();
   const { data: { user }, error: authError } = await supabase.auth.getUser();
   
-  console.log('Auth user:', user?.email, 'Error:', authError);
+  console.log('AdminUsersPage: Auth check:', {
+    userEmail: user?.email,
+    authError: authError?.message,
+    hasUser: !!user
+  });
   
   if (!user) {
+    console.log('AdminUsersPage: No user found, returning empty client');
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
         <div className="container mx-auto px-4 py-8">
@@ -43,16 +57,25 @@ export default async function AdminUsersPage() {
   }
   
   // 권한 확인
-  const { data: permissions } = await supabase
+  const { data: permissions, error: permError } = await supabase
     .from('user_permissions')
     .select('role, can_write')
     .eq('email', user.email)
     .single();
   
+  console.log('AdminUsersPage: Permission check:', {
+    permissions,
+    permError: permError?.message
+  });
+  
   const adminEmails = ['hoon@snuecse.org', 'hoon@iw.es.kr', 'sociogram@gmail.com'];
   const isAdmin = permissions?.role === 'admin' || adminEmails.includes(user.email);
   
-  console.log('User permissions:', permissions, 'isAdmin:', isAdmin);
+  console.log('AdminUsersPage: Admin status:', {
+    isAdmin,
+    role: permissions?.role,
+    isInAdminEmails: adminEmails.includes(user.email)
+  });
   
   const userData = {
     ...user,
@@ -61,9 +84,21 @@ export default async function AdminUsersPage() {
   };
   
   // Admin이면 사용자 목록 가져오기
-  const users = isAdmin ? await getUsers() : [];
+  let users = [];
+  if (isAdmin) {
+    console.log('AdminUsersPage: User is admin, fetching user list');
+    users = await getUsers();
+  } else {
+    console.log('AdminUsersPage: User is not admin, skipping user list fetch');
+  }
   
-  console.log('Passing to client - users:', users.length, 'user:', userData.email);
+  console.log('AdminUsersPage: Final data to pass to client:', {
+    userCount: users.length,
+    userData: {
+      email: userData.email,
+      isAdmin: userData.isAdmin
+    }
+  });
   
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
