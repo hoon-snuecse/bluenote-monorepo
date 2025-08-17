@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { 
   BarChart3, 
   TrendingUp, 
@@ -24,35 +24,29 @@ export default function AdminAnalyticsClient({ initialStats }) {
   const [stats, setStats] = useState(initialStats);
   const [loading, setLoading] = useState(false);
   
-  // 디버깅을 위한 콘솔 로그
-  useEffect(() => {
-    console.log('AdminAnalyticsClient mounted with stats:', initialStats);
-    // Always fetch analytics from API
-    fetchAnalytics();
-  }, []);
-
-  const fetchAnalytics = async () => {
+  // fetchAnalytics를 useEffect 안으로 이동하거나 useCallback으로 감싸기
+  const fetchAnalytics = useCallback(async () => {
     try {
-      console.log('Fetching analytics from API...');
       setLoading(true);
       const response = await fetch('/api/admin/analytics');
       
-      console.log('Analytics API response:', response.status);
-      
       if (response.ok) {
         const data = await response.json();
-        console.log('Analytics data fetched:', data);
         setStats(data);
       } else {
-        const errorText = await response.text();
-        console.error('Failed to fetch analytics:', response.status, errorText);
+        console.error('Failed to fetch analytics:', response.status);
       }
     } catch (error) {
       console.error('Error fetching analytics:', error);
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  // 컴포넌트 마운트 시 데이터 불러오기
+  useEffect(() => {
+    fetchAnalytics();
+  }, [fetchAnalytics]);
 
   const handleRefresh = () => {
     setRefreshing(true);

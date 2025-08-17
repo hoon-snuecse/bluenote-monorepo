@@ -26,8 +26,13 @@ export async function GET() {
       supabase.from('analytics_posts').select('*'),
       supabase.from('shed_posts').select('*'),
       supabase.from('usage_logs').select('*').order('created_at', { ascending: false }),
-      supabase.from('Evaluation').select('*').order('evaluatedAt', { ascending: false })
+      supabase.from('Evaluation').select('evaluatedBy, evaluatedByUser, evaluatedAt').order('evaluatedAt', { ascending: false })
     ]);
+    
+    // Log evaluation query result for debugging
+    if (evaluations.error) {
+      console.error('[Admin Analytics API] Evaluation query error:', evaluations.error);
+    }
     
     const allPosts = [
       ...(researchPosts.data || []).map(p => ({ ...p, section: 'research' })),
