@@ -8,8 +8,16 @@ export const revalidate = 0;
 async function getUsers() {
   try {
     console.log('getUsers: Starting to fetch users');
-    const supabase = createAdminClient();
-    console.log('getUsers: Admin client created');
+    
+    // Try admin client first, fall back to server client if needed
+    let supabase;
+    try {
+      supabase = createAdminClient();
+      console.log('getUsers: Using admin client');
+    } catch (error) {
+      console.log('getUsers: Admin client failed, using server client:', error.message);
+      supabase = await createServerClient();
+    }
     
     const { data, error } = await supabase
       .from('user_permissions')
@@ -18,6 +26,21 @@ async function getUsers() {
     
     if (error) {
       console.error('getUsers: Database error:', error);
+      // RLS 에러인 경우 다른 방법 시도
+      if (error.code === '42501' || error.message?.includes('permission')) {
+        console.log('getUsers: RLS error, trying authenticated query');
+        const authClient = await createServerClient();
+        const { data: authData, error: authError } = await authClient
+          .from('user_permissions')
+          .select('*')
+          .order('created_at', { ascending: false });
+        
+        if (authError) {
+          console.error('getUsers: Auth query also failed:', authError);
+          return [];
+        }
+        return authData || [];
+      }
       throw error;
     }
     
@@ -28,7 +51,7 @@ async function getUsers() {
     
     return data || [];
   } catch (error) {
-    console.error('getUsers: Failed to fetch users:', error.message);
+    console.error('getUsers: Failed to fetch users:', error.message, error.stack);
     return [];
   }
 }

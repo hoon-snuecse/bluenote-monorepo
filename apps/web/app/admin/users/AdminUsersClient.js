@@ -33,10 +33,21 @@ export default function AdminUsersClient({ initialUsers, initialUser }) {
     console.log('AdminUsersClient mounted with:', {
       initialUser,
       initialUsersLength: initialUsers?.length,
-      isAdmin: initialUser?.isAdmin
+      isAdmin: initialUser?.isAdmin,
+      initialUsersData: initialUsers
     });
     
+    // 디버깅: window 객체에 데이터 저장
+    if (typeof window !== 'undefined') {
+      window.__DEBUG_USERS__ = {
+        initialUser,
+        initialUsers,
+        timestamp: new Date().toISOString()
+      };
+    }
+    
     if (!initialUser || !initialUser.isAdmin) {
+      console.log('Not admin, redirecting...');
       router.push('/');
       return;
     }

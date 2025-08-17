@@ -8,8 +8,16 @@ export const revalidate = 0;
 async function getContentStats() {
   try {
     console.log('getContentStats: Starting to fetch content stats');
-    const supabase = createAdminClient();
-    console.log('getContentStats: Admin client created');
+    
+    // Try admin client first, fall back to server client if needed
+    let supabase;
+    try {
+      supabase = createAdminClient();
+      console.log('getContentStats: Using admin client');
+    } catch (error) {
+      console.log('getContentStats: Admin client failed, using server client:', error.message);
+      supabase = await createServerClient();
+    }
     
     const { data, error } = await supabase
       .from('posts')
@@ -46,7 +54,16 @@ async function getContentStats() {
 async function getPostsBySection(section) {
   try {
     console.log('getPostsBySection: Fetching posts for section:', section);
-    const supabase = createAdminClient();
+    
+    // Try admin client first, fall back to server client if needed
+    let supabase;
+    try {
+      supabase = createAdminClient();
+      console.log('getPostsBySection: Using admin client');
+    } catch (error) {
+      console.log('getPostsBySection: Admin client failed, using server client:', error.message);
+      supabase = await createServerClient();
+    }
     
     const { data, error } = await supabase
       .from('posts')

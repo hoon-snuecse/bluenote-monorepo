@@ -14,8 +14,16 @@ export const metadata = {
 async function getAnalyticsData() {
   try {
     console.log('getAnalyticsData: Starting to fetch analytics');
-    const supabase = createAdminClient();
-    console.log('getAnalyticsData: Admin client created');
+    
+    // Try admin client first, fall back to server client if needed
+    let supabase;
+    try {
+      supabase = createAdminClient();
+      console.log('getAnalyticsData: Using admin client');
+    } catch (error) {
+      console.log('getAnalyticsData: Admin client failed, using server client:', error.message);
+      supabase = await createServerClient();
+    }
     
     const koreaTime = new Date(new Date().toLocaleString("en-US", {timeZone: "Asia/Seoul"}));
     const todayStart = new Date(koreaTime.setHours(0, 0, 0, 0)).toISOString();

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   BarChart3, 
   TrendingUp, 
@@ -22,6 +22,17 @@ export default function AdminAnalyticsClient({ initialStats }) {
   const router = useRouter();
   const [refreshing, setRefreshing] = useState(false);
   const stats = initialStats;
+  
+  // 디버깅을 위한 콘솔 로그
+  useEffect(() => {
+    console.log('AdminAnalyticsClient mounted with stats:', initialStats);
+    if (typeof window !== 'undefined') {
+      window.__DEBUG_STATS__ = {
+        initialStats,
+        timestamp: new Date().toISOString()
+      };
+    }
+  }, [initialStats]);
 
   const handleRefresh = () => {
     setRefreshing(true);
