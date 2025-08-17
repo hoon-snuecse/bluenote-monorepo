@@ -29,9 +29,15 @@ export async function GET() {
       return Response.json({ error: 'Failed to fetch users' }, { status: 500 });
     }
     
+    // Transform user_email to email for compatibility
+    const transformedUsers = (users || []).map(user => ({
+      ...user,
+      email: user.user_email || user.email
+    }));
+    
     return Response.json({ 
-      users: users || [],
-      count: users?.length || 0 
+      users: transformedUsers,
+      count: transformedUsers.length
     });
     
   } catch (error) {

@@ -28,10 +28,10 @@ export async function GET() {
     ]);
     
     const allPosts = [
-      ...(researchPosts.data || []),
-      ...(teachingPosts.data || []),
-      ...(analyticsPosts.data || []),
-      ...(shedPosts.data || [])
+      ...(researchPosts.data || []).map(p => ({ ...p, section: 'research' })),
+      ...(teachingPosts.data || []).map(p => ({ ...p, section: 'teaching' })),
+      ...(analyticsPosts.data || []).map(p => ({ ...p, section: 'analytics' })),
+      ...(shedPosts.data || []).map(p => ({ ...p, section: 'shed' }))
     ];
     
     const result = {
@@ -65,7 +65,9 @@ export async function GET() {
       todayGradingSonnet: 0,
       totalGradingOpus: 0,
       todayGradingOpus: 0,
-      recentPosts: allPosts.slice(0, 10),
+      recentPosts: allPosts.sort((a, b) => 
+        new Date(b.created_at) - new Date(a.created_at)
+      ).slice(0, 10),
       userActivity: [],
       sonnetTopUsers: [],
       opusTopUsers: []
