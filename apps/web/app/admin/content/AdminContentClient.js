@@ -47,6 +47,11 @@ export default function AdminContentClient({ initialUser, initialStats, initialP
       postsSections: Object.keys(initialPosts || {})
     });
     
+    // If no initial data, fetch from API
+    if (!initialPosts || Object.keys(initialPosts).length === 0) {
+      fetchContent();
+    }
+    
     if (!initialUser || !initialUser.isAdmin) {
       router.push('/');
       return;
@@ -69,8 +74,35 @@ export default function AdminContentClient({ initialUser, initialStats, initialP
     }
   }, [activeSection, allPosts]);
 
+  const fetchContent = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch('/api/admin/content', {
+        credentials: 'include'
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Content data fetched:', data);
+        setAllPosts(data.posts || {});
+        setStats(data.stats || {
+          research: 0,
+          teaching: 0,
+          analytics: 0,
+          shed: 0,
+          total: 0
+        });
+        setPosts(data.posts?.[activeSection] || []);
+      }
+    } catch (error) {
+      console.error('Error fetching content:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleRefresh = () => {
-    router.refresh();
+    fetchContent();
   };
 
   const handleDelete = async (id) => {

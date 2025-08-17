@@ -35,12 +35,36 @@ export default function AdminUsersClient({ initialUsers, initialUser }) {
       return;
     }
     setCurrentUser(initialUser);
-    setUsers(initialUsers || []);
+    
+    // If no initial users provided or empty, fetch from API
+    if (!initialUsers || initialUsers.length === 0) {
+      fetchUsers();
+    } else {
+      setUsers(initialUsers);
+    }
   }, [initialUser, initialUsers, router]);
+  
+  const fetchUsers = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch('/api/admin/users', {
+        credentials: 'include'
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setUsers(data.users || []);
+      }
+    } catch (error) {
+      console.error('Error fetching users:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  // 서버 컴포넌트에서 데이터를 받아오므로 fetchUsers 제거
+  // 페이지 새로고침 또는 사용자 목록 다시 가져오기
   const refreshPage = () => {
-    router.refresh();
+    fetchUsers();
   };
 
   const handleAddUser = async () => {

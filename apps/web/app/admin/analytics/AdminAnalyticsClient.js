@@ -21,22 +21,39 @@ import { useRouter } from 'next/navigation';
 export default function AdminAnalyticsClient({ initialStats }) {
   const router = useRouter();
   const [refreshing, setRefreshing] = useState(false);
-  const stats = initialStats;
+  const [stats, setStats] = useState(initialStats);
+  const [loading, setLoading] = useState(false);
   
   // 디버깅을 위한 콘솔 로그
   useEffect(() => {
     console.log('AdminAnalyticsClient mounted with stats:', initialStats);
-    if (typeof window !== 'undefined') {
-      window.__DEBUG_STATS__ = {
-        initialStats,
-        timestamp: new Date().toISOString()
-      };
+    if (!initialStats) {
+      fetchAnalytics();
     }
-  }, [initialStats]);
+  }, []);
+
+  const fetchAnalytics = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch('/api/admin/analytics', {
+        credentials: 'include'
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Analytics data fetched:', data);
+        setStats(data);
+      }
+    } catch (error) {
+      console.error('Error fetching analytics:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleRefresh = () => {
     setRefreshing(true);
-    router.refresh();
+    fetchAnalytics();
     setTimeout(() => setRefreshing(false), 1000);
   };
 
