@@ -38,32 +38,9 @@ export default function AdminUsersClient({ initialUsers, initialUser }) {
     setUsers(initialUsers || []);
   }, [initialUser, initialUsers, router]);
 
-  const fetchUsers = async () => {
-    try {
-      const res = await fetch('/api/admin/users', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include'
-      });
-      
-      if (res.ok) {
-        const data = await res.json();
-        console.log('Fetched users data:', data);
-        // Filter out any null or invalid user objects
-        const validUsers = (data.users || []).filter(u => u && u.email);
-        setUsers(validUsers);
-      } else {
-        console.error('Users API response not ok:', res.status);
-        setError('사용자 목록을 불러오는데 실패했습니다.');
-      }
-    } catch (error) {
-      console.error('Failed to fetch users:', error);
-      setError('사용자 목록을 불러오는데 실패했습니다.');
-    } finally {
-      setLoading(false);
-    }
+  // 서버 컴포넌트에서 데이터를 받아오므로 fetchUsers 제거
+  const refreshPage = () => {
+    router.refresh();
   };
 
   const handleAddUser = async () => {
@@ -86,7 +63,7 @@ export default function AdminUsersClient({ initialUsers, initialUser }) {
         setSuccess('사용자가 추가되었습니다.');
         setNewUser({ email: '', role: 'user', claude_daily_limit: 3, can_write: false });
         setShowAddForm(false);
-        fetchUsers();
+        setTimeout(() => router.refresh(), 500);
       } else {
         const data = await res.json();
         setError(data.error || '사용자 추가에 실패했습니다.');
@@ -112,7 +89,7 @@ export default function AdminUsersClient({ initialUsers, initialUser }) {
       if (res.ok) {
         setSuccess('사용자 정보가 업데이트되었습니다.');
         setEditingUser(null);
-        fetchUsers();
+        setTimeout(() => router.refresh(), 500);
       } else {
         const data = await res.json();
         setError(data.error || '사용자 업데이트에 실패했습니다.');
@@ -135,7 +112,7 @@ export default function AdminUsersClient({ initialUsers, initialUser }) {
 
       if (res.ok) {
         setSuccess('사용자가 삭제되었습니다.');
-        fetchUsers();
+        setTimeout(() => router.refresh(), 500);
       } else {
         const data = await res.json();
         setError(data.error || '사용자 삭제에 실패했습니다.');
@@ -145,7 +122,7 @@ export default function AdminUsersClient({ initialUsers, initialUser }) {
     }
   };
 
-  if (loading || status === 'loading') {
+  if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
