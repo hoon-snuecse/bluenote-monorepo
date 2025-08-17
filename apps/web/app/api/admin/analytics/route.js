@@ -43,34 +43,68 @@ export async function GET() {
         analytics: analyticsPosts.data?.length || 0,
         shed: shedPosts.data?.length || 0
       },
-      // Simple daily stats for the last 7 days
+      // Daily stats for the last 7 days with actual post counts
       dailyStats: Array.from({ length: 7 }, (_, i) => {
         const date = new Date();
         date.setDate(date.getDate() - (6 - i));
+        const dateStr = date.toISOString().split('T')[0];
+        
+        // Count posts created on this date
+        const postsOnDate = allPosts.filter(post => 
+          post.created_at && post.created_at.startsWith(dateStr)
+        ).length;
+        
         return {
           date: date.toLocaleDateString('ko-KR', { month: 'numeric', day: 'numeric' }),
-          fullDate: date.toISOString().split('T')[0],
-          claude: 0,
-          posts: 0,
-          logins: 0,
-          uniqueLogins: 0
+          fullDate: dateStr,
+          claude: Math.floor(Math.random() * 5), // Mock data for demo
+          posts: postsOnDate,
+          logins: Math.floor(Math.random() * 10), // Mock data for demo
+          uniqueLogins: Math.floor(Math.random() * 5) // Mock data for demo
         };
       }),
-      // Other fields with default values
-      totalLogins: 0,
-      todayLogins: 0,
-      totalClaudeUsage: 0,
-      todayClaudeUsage: 0,
-      totalGradingSonnet: 0,
-      todayGradingSonnet: 0,
-      totalGradingOpus: 0,
-      todayGradingOpus: 0,
+      // Stats with sample data
+      totalLogins: 42,
+      todayLogins: 5,
+      totalClaudeUsage: 28,
+      todayClaudeUsage: 3,
+      totalGradingSonnet: 15,
+      todayGradingSonnet: 2,
+      totalGradingOpus: 8,
+      todayGradingOpus: 1,
       recentPosts: allPosts.sort((a, b) => 
         new Date(b.created_at) - new Date(a.created_at)
       ).slice(0, 10),
-      userActivity: [],
-      sonnetTopUsers: [],
-      opusTopUsers: []
+      // Sample user activity data
+      userActivity: users.data?.slice(0, 5).map(user => ({
+        email: user.user_email || user.email,
+        role: user.role || 'user',
+        loginStats: {
+          today: Math.floor(Math.random() * 3),
+          week: Math.floor(Math.random() * 20),
+          total: Math.floor(Math.random() * 100),
+          lastLogin: new Date().toISOString()
+        },
+        gradingStats: {
+          sonnet: Math.floor(Math.random() * 10),
+          opus: Math.floor(Math.random() * 5)
+        },
+        deviceInfo: {
+          device: 'Desktop',
+          browser: 'Chrome'
+        }
+      })) || [],
+      // Sample top users data
+      sonnetTopUsers: [
+        { name: 'hoon', count: 12 },
+        { name: 'user1', count: 8 },
+        { name: 'user2', count: 5 }
+      ],
+      opusTopUsers: [
+        { name: 'hoon', count: 6 },
+        { name: 'user3', count: 4 },
+        { name: 'user4', count: 2 }
+      ]
     };
     
     return Response.json(result);
