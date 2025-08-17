@@ -76,9 +76,7 @@ export default function AdminContentClient({ initialUser, initialStats, initialP
     try {
       console.log('Fetching content from API...');
       setLoading(true);
-      const response = await fetch('/api/admin/content', {
-        credentials: 'include'
-      });
+      const response = await fetch('/api/admin/content');
       
       console.log('Content API response:', response.status);
       

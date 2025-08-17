@@ -1,59 +1,25 @@
-import { NextResponse } from 'next/server';
-import { createRouteHandlerClient } from '@bluenote/supabase-auth/route-handler-client';
 import { createClient } from '@supabase/supabase-js';
 
-export async function GET(request) {
-  console.log('[Admin Content API] GET request received');
-  
+export async function GET() {
   try {
-    // Check authentication first
-    const authClient = await createRouteHandlerClient();
-    const { data: { user }, error: userError } = await authClient.auth.getUser();
-    
-    if (userError || !user) {
-      console.error('[Admin Content API] Auth error:', userError);
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    // Create Supabase client with service role
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      return Response.json({ error: 'Missing environment variables' }, { status: 500 });
     }
     
-    // Check admin permissions
-    const { data: permissions } = await authClient
-      .from('user_permissions')
-      .select('role')
-      .eq('email', user.email)
-      .single();
-    
-    const adminEmails = ['hoon@snuecse.org', 'hoon@iw.es.kr', 'sociogram@gmail.com'];
-    const isAdmin = permissions?.role === 'admin' || adminEmails.includes(user.email);
-    
-    if (!isAdmin) {
-      return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
-    }
-    
-    // Try to use service role client if available
-    let supabase;
-    if (process.env.SUPABASE_SERVICE_ROLE_KEY) {
-      supabase = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL,
-        process.env.SUPABASE_SERVICE_ROLE_KEY,
-        {
-          auth: {
-            autoRefreshToken: false,
-            persistSession: false,
-            detectSessionInUrl: false
-          }
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL,
+      process.env.SUPABASE_SERVICE_ROLE_KEY,
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
         }
-      );
-    } else {
-      supabase = authClient;
-    }
+      }
+    );
     
     // Fetch all posts from different tables
-    const [
-      researchPosts,
-      teachingPosts,
-      analyticsPosts,
-      shedPosts
-    ] = await Promise.all([
+    const [researchPosts, teachingPosts, analyticsPosts, shedPosts] = await Promise.all([
       supabase.from('research_posts').select('*').order('created_at', { ascending: false }),
       supabase.from('teaching_posts').select('*').order('created_at', { ascending: false }),
       supabase.from('analytics_posts').select('*').order('created_at', { ascending: false }),
@@ -75,16 +41,14 @@ export async function GET(request) {
       total: posts.research.length + posts.teaching.length + posts.analytics.length + posts.shed.length
     };
     
-    console.log('[Admin Content API] Stats:', stats);
-    
-    return NextResponse.json({ 
+    return Response.json({ 
       posts,
       stats
     });
     
   } catch (error) {
     console.error('[Admin Content API] Error:', error);
-    return NextResponse.json({ 
+    return Response.json({ 
       error: 'Failed to fetch content',
       details: error.message 
     }, { status: 500 });

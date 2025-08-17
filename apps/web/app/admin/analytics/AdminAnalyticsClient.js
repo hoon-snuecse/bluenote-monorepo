@@ -35,9 +35,7 @@ export default function AdminAnalyticsClient({ initialStats }) {
     try {
       console.log('Fetching analytics from API...');
       setLoading(true);
-      const response = await fetch('/api/admin/analytics', {
-        credentials: 'include'
-      });
+      const response = await fetch('/api/admin/analytics');
       
       console.log('Analytics API response:', response.status);
       

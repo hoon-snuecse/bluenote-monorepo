@@ -50,18 +50,7 @@ export default function AdminUsersClient({ initialUsers, initialUser }) {
       console.log('Fetching users from API...');
       setLoading(true);
       
-      // First try simple endpoint
-      console.log('Testing simple endpoint...');
-      const testResponse = await fetch('/api/admin/users-simple');
-      console.log('Simple endpoint status:', testResponse.status);
-      if (testResponse.ok) {
-        const testData = await testResponse.json();
-        console.log('Simple endpoint data:', testData);
-      }
-      
-      const response = await fetch('/api/admin/users', {
-        credentials: 'include'
-      });
+      const response = await fetch('/api/admin/users');
       
       console.log('Users API response:', response.status);
       
