@@ -6,9 +6,9 @@ import { createRouteHandlerClient } from '@bluenote/supabase-auth/route-handler-
 // API 키 인증 함수
 async function authenticateRequest(request) {
   // 1. 세션 기반 인증 (기존 방식)
-  const supabase = createRouteHandlerClient();
-    const { data: { user }, error: authError } = await authSupabase.auth.getUser();
-    const session = user ? { user } : null;
+  const authSupabase = createRouteHandlerClient();
+  const { data: { user }, error: authError } = await authSupabase.auth.getUser();
+  const session = user ? { user } : null;
   if (session && session.user.isAdmin) {
     return { authenticated: true, source: 'session' };
   }
