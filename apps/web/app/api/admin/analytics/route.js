@@ -18,13 +18,14 @@ export async function GET() {
       }
     );
     
-    // Fetch data for analytics
-    const [users, researchPosts, teachingPosts, analyticsPosts, shedPosts] = await Promise.all([
+    // Fetch data for analytics - including usage_logs
+    const [users, researchPosts, teachingPosts, analyticsPosts, shedPosts, usageLogs] = await Promise.all([
       supabase.from('user_permissions').select('*'),
       supabase.from('research_posts').select('*'),
       supabase.from('teaching_posts').select('*'),
       supabase.from('analytics_posts').select('*'),
-      supabase.from('shed_posts').select('*')
+      supabase.from('shed_posts').select('*'),
+      supabase.from('usage_logs').select('*').order('created_at', { ascending: false })
     ]);
     
     const allPosts = [
@@ -43,7 +44,7 @@ export async function GET() {
         analytics: analyticsPosts.data?.length || 0,
         shed: shedPosts.data?.length || 0
       },
-      // Daily stats for the last 7 days with actual post counts
+      // Daily stats for the last 7 days with actual data
       dailyStats: Array.from({ length: 7 }, (_, i) => {
         const date = new Date();
         date.setDate(date.getDate() - (6 - i));
@@ -54,57 +55,84 @@ export async function GET() {
           post.created_at && post.created_at.startsWith(dateStr)
         ).length;
         
+        // Count logins on this date from usage_logs
+        const loginsOnDate = (usageLogs.data || []).filter(log =>
+          log.created_at && log.created_at.startsWith(dateStr)
+        );
+        
+        const uniqueUsersOnDate = new Set(loginsOnDate.map(log => log.user_email)).size;
+        
         return {
           date: date.toLocaleDateString('ko-KR', { month: 'numeric', day: 'numeric' }),
           fullDate: dateStr,
-          claude: Math.floor(Math.random() * 5), // Mock data for demo
+          claude: 0, // Claude usage tracking not implemented yet
           posts: postsOnDate,
-          logins: Math.floor(Math.random() * 10), // Mock data for demo
-          uniqueLogins: Math.floor(Math.random() * 5) // Mock data for demo
+          logins: loginsOnDate.length,
+          uniqueLogins: uniqueUsersOnDate
         };
       }),
-      // Stats with sample data
-      totalLogins: 42,
-      todayLogins: 5,
-      totalClaudeUsage: 28,
-      todayClaudeUsage: 3,
-      totalGradingSonnet: 15,
-      todayGradingSonnet: 2,
-      totalGradingOpus: 8,
-      todayGradingOpus: 1,
+      // Stats with real login data from usage_logs
+      totalLogins: usageLogs.data?.length || 0,
+      todayLogins: (usageLogs.data || []).filter(log => 
+        log.created_at && log.created_at.startsWith(new Date().toISOString().split('T')[0])
+      ).length,
+      totalClaudeUsage: 0, // Claude usage tracking not implemented yet
+      todayClaudeUsage: 0,
+      totalGradingSonnet: 0, // Grading logs not implemented yet
+      todayGradingSonnet: 0,
+      totalGradingOpus: 0,
+      todayGradingOpus: 0,
       recentPosts: allPosts.sort((a, b) => 
         new Date(b.created_at) - new Date(a.created_at)
       ).slice(0, 10),
-      // Sample user activity data
-      userActivity: users.data?.slice(0, 5).map(user => ({
-        email: user.user_email || user.email,
-        role: user.role || 'user',
-        loginStats: {
-          today: Math.floor(Math.random() * 3),
-          week: Math.floor(Math.random() * 20),
-          total: Math.floor(Math.random() * 100),
-          lastLogin: new Date().toISOString()
-        },
-        gradingStats: {
-          sonnet: Math.floor(Math.random() * 10),
-          opus: Math.floor(Math.random() * 5)
-        },
-        deviceInfo: {
-          device: 'Desktop',
-          browser: 'Chrome'
-        }
-      })) || [],
-      // Sample top users data
-      sonnetTopUsers: [
-        { name: 'hoon', count: 12 },
-        { name: 'user1', count: 8 },
-        { name: 'user2', count: 5 }
-      ],
-      opusTopUsers: [
-        { name: 'hoon', count: 6 },
-        { name: 'user3', count: 4 },
-        { name: 'user4', count: 2 }
-      ]
+      // Real user activity data from usage_logs
+      userActivity: users.data?.slice(0, 10).map(user => {
+        const userEmail = user.user_email || user.email;
+        const userLogs = (usageLogs.data || []).filter(log => log.user_email === userEmail);
+        const today = new Date().toISOString().split('T')[0];
+        const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+        
+        const todayLogs = userLogs.filter(log => log.created_at && log.created_at.startsWith(today));
+        const weekLogs = userLogs.filter(log => log.created_at && log.created_at >= weekAgo);
+        const lastLog = userLogs[0]; // Already sorted by created_at desc
+        
+        return {
+          email: userEmail,
+          role: user.role || 'user',
+          loginStats: {
+            today: todayLogs.length,
+            week: weekLogs.length,
+            total: userLogs.length,
+            lastLogin: lastLog?.created_at || null
+          },
+          gradingStats: {
+            sonnet: 0, // Grading logs not implemented yet
+            opus: 0
+          },
+          deviceInfo: {
+            device: 'Unknown',
+            browser: 'Unknown'
+          }
+        };
+      }) || [],
+      // Top users based on real usage_logs data
+      sonnetTopUsers: (() => {
+        const userCounts = {};
+        (usageLogs.data || []).forEach(log => {
+          const email = log.user_email;
+          if (email) {
+            userCounts[email] = (userCounts[email] || 0) + 1;
+          }
+        });
+        return Object.entries(userCounts)
+          .sort(([,a], [,b]) => b - a)
+          .slice(0, 5)
+          .map(([email, count]) => ({
+            name: email.split('@')[0], // Use username part of email
+            count: count
+          }));
+      })(),
+      opusTopUsers: [] // Grading logs not implemented yet
     };
     
     return Response.json(result);
