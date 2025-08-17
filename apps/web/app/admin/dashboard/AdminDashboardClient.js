@@ -28,21 +28,26 @@ export default function AdminDashboardClient() {
 
   const fetchStats = async () => {
     try {
+      // API 호출을 위한 base URL 설정
+      const baseUrl = typeof window !== 'undefined' 
+        ? window.location.origin 
+        : process.env.NEXT_PUBLIC_BASE_URL || 'https://www.bluenote.site';
+      
       // 병렬로 필요한 데이터만 조회
       const [usersRes, statsRes] = await Promise.allSettled([
-        fetch('/api/admin/users', {
+        fetch(`${baseUrl}/api/admin/users`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
           },
-          credentials: 'include'
+          credentials: 'same-origin'  // same-origin으로 변경
         }),
-        fetch('/api/admin/stats', {
+        fetch(`${baseUrl}/api/admin/stats`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
           },
-          credentials: 'include'
+          credentials: 'same-origin'  // same-origin으로 변경
         })
       ]);
       

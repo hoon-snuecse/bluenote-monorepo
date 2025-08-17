@@ -56,13 +56,6 @@ export async function requireAuth(requiredRole = null) {
  * @returns {NextResponse}
  */
 export function apiResponse(data, error = null, status = 200) {
-  const headers = {
-    'Content-Type': 'application/json',
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-  };
-  
   if (error) {
     console.error('[API Helper] Error:', error.message || error);
     return NextResponse.json(
@@ -70,10 +63,10 @@ export function apiResponse(data, error = null, status = 200) {
         error: error.message || 'An error occurred', 
         details: process.env.NODE_ENV === 'development' ? error.details : undefined 
       },
-      { status: error.status || status, headers }
+      { status: error.status || status }
     );
   }
-  return NextResponse.json(data, { status, headers });
+  return NextResponse.json(data, { status });
 }
 
 /**

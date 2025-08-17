@@ -1,19 +1,6 @@
 import { createApiHandler, crud, supabaseQuery } from '@/lib/api-helpers';
-import { NextResponse } from 'next/server';
 
 const handleAdminRequest = createApiHandler({ requiredRole: 'admin', useAdminClient: true });
-
-// OPTIONS - Handle preflight requests
-export async function OPTIONS(request) {
-  return new NextResponse(null, { 
-    status: 200,
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-    },
-  });
-}
 
 // GET - Fetch all users
 export async function GET(request) {

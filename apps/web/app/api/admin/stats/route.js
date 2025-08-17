@@ -2,30 +2,14 @@ import { NextResponse } from 'next/server';
 import { checkAuth } from '@/lib/supabase-auth-helpers';
 import { getUsageStats } from '@/lib/usage';
 
-// OPTIONS - Handle preflight requests
-export async function OPTIONS(request) {
-  return new NextResponse(null, { 
-    status: 200,
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-    },
-  });
-}
-
 export async function GET(request) {
   try {
-    // Add CORS headers
-    const headers = {
-      'Content-Type': 'application/json',
-    };
     
     // Check authentication and admin status
     const { error: authError } = await checkAuth('admin');
     if (authError) {
       console.error('[Admin Stats API] Auth error:', authError);
-      return NextResponse.json({ error: authError.message }, { status: authError.status, headers });
+      return NextResponse.json({ error: authError.message }, { status: authError.status });
     }
 
     // Get usage statistics (실패해도 계속 진행)
@@ -139,15 +123,12 @@ export async function GET(request) {
         analytics: analyticsResult.count || 0,
         shed: shedResult.count || 0
       }
-    }, { headers });
+    });
   } catch (error) {
     console.error('[Admin Stats API] Error:', error);
-    const headers = {
-      'Content-Type': 'application/json',
-    };
     return NextResponse.json({ 
       error: 'Failed to fetch statistics',
       details: error.message 
-    }, { status: 500, headers });
+    }, { status: 500 });
   }
 }
