@@ -5,9 +5,25 @@ import AdminUsersClient from './AdminUsersClient';
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-async function getUsers() {
+async function getUsers(fallbackClient = null) {
   try {
-    const supabase = createAdminClient();
+    let supabase;
+    
+    // Try to use admin client, fallback to regular client if service key not available
+    try {
+      if (process.env.SUPABASE_SERVICE_ROLE_KEY) {
+        supabase = createAdminClient();
+      } else {
+        console.warn('SUPABASE_SERVICE_ROLE_KEY not set, using fallback client');
+        supabase = fallbackClient;
+        if (!supabase) return [];
+      }
+    } catch (adminError) {
+      console.error('Error creating admin client:', adminError);
+      supabase = fallbackClient;
+      if (!supabase) return [];
+    }
+    
     const { data, error } = await supabase
       .from('user_permissions')
       .select('*')
@@ -56,7 +72,7 @@ export default async function AdminUsersPage() {
   };
   
   // Admin이면 사용자 목록 가져오기
-  const users = isAdmin ? await getUsers() : [];
+  const users = isAdmin ? await getUsers(supabase) : [];
   
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">

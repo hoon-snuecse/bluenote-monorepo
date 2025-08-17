@@ -5,9 +5,24 @@ import AdminContentClient from './AdminContentClient';
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-async function getContentStats() {
+async function getContentStats(fallbackClient = null) {
   try {
-    const supabase = createAdminClient();
+    let supabase;
+    
+    // Try to use admin client, fallback to regular client if service key not available
+    try {
+      if (process.env.SUPABASE_SERVICE_ROLE_KEY) {
+        supabase = createAdminClient();
+      } else {
+        console.warn('SUPABASE_SERVICE_ROLE_KEY not set, using fallback client');
+        supabase = fallbackClient;
+        if (!supabase) return null;
+      }
+    } catch (adminError) {
+      console.error('Error creating admin client:', adminError);
+      supabase = fallbackClient;
+      if (!supabase) return null;
+    }
     
     const { data, error } = await supabase
       .from('posts')
@@ -40,9 +55,24 @@ async function getContentStats() {
   }
 }
 
-async function getPostsBySection(section) {
+async function getPostsBySection(section, fallbackClient = null) {
   try {
-    const supabase = createAdminClient();
+    let supabase;
+    
+    // Try to use admin client, fallback to regular client if service key not available
+    try {
+      if (process.env.SUPABASE_SERVICE_ROLE_KEY) {
+        supabase = createAdminClient();
+      } else {
+        console.warn('SUPABASE_SERVICE_ROLE_KEY not set, using fallback client');
+        supabase = fallbackClient;
+        if (!supabase) return [];
+      }
+    } catch (adminError) {
+      console.error('Error creating admin client:', adminError);
+      supabase = fallbackClient;
+      if (!supabase) return [];
+    }
     
     const { data, error } = await supabase
       .from('posts')
@@ -101,11 +131,11 @@ export default async function AdminContentPage() {
   let postsBySection = {};
   
   if (isAdmin) {
-    stats = await getContentStats();
+    stats = await getContentStats(supabase);
     
     // 모든 섹션의 포스트를 병렬로 가져오기
     const sections = ['research', 'teaching', 'analytics', 'shed'];
-    const postsPromises = sections.map(section => getPostsBySection(section));
+    const postsPromises = sections.map(section => getPostsBySection(section, supabase));
     const postsResults = await Promise.all(postsPromises);
     
     sections.forEach((section, index) => {

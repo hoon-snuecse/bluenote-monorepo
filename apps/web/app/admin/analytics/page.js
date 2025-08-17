@@ -10,9 +10,64 @@ export const metadata = {
   description: '사용자 활동 및 시스템 통계 분석'
 };
 
-async function getAnalyticsData() {
+async function getAnalyticsData(fallbackClient = null) {
   try {
-    const supabase = createAdminClient();
+    let supabase;
+    
+    // Try to use admin client, fallback to regular client if service key not available
+    try {
+      if (process.env.SUPABASE_SERVICE_ROLE_KEY) {
+        supabase = createAdminClient();
+      } else {
+        console.warn('SUPABASE_SERVICE_ROLE_KEY not set, using fallback client');
+        supabase = fallbackClient;
+        if (!supabase) {
+          return {
+            stats: {
+              totalUsers: 0,
+              totalPosts: 0,
+              todayLogins: 0,
+              todayClaudeUsage: 0,
+              todayGradingSonnet: 0,
+              todayGradingHaiku: 0,
+              weeklyActive: 0,
+              averageLoginPerDay: 0
+            },
+            charts: {
+              dailyLogins: [],
+              claudeUsage: [],
+              gradingUsage: [],
+              deviceTypes: []
+            },
+            recentActivity: []
+          };
+        }
+      }
+    } catch (adminError) {
+      console.error('Error creating admin client:', adminError);
+      supabase = fallbackClient;
+      if (!supabase) {
+        return {
+          stats: {
+            totalUsers: 0,
+            totalPosts: 0,
+            todayLogins: 0,
+            todayClaudeUsage: 0,
+            todayGradingSonnet: 0,
+            todayGradingHaiku: 0,
+            weeklyActive: 0,
+            averageLoginPerDay: 0
+          },
+          charts: {
+            dailyLogins: [],
+            claudeUsage: [],
+            gradingUsage: [],
+            deviceTypes: []
+          },
+          recentActivity: []
+        };
+      }
+    }
     
     const koreaTime = new Date(new Date().toLocaleString("en-US", {timeZone: "Asia/Seoul"}));
     const todayStart = new Date(koreaTime.setHours(0, 0, 0, 0)).toISOString();
@@ -206,7 +261,7 @@ export default async function AdminAnalyticsPage() {
     );
   }
   
-  const stats = await getAnalyticsData();
+  const stats = await getAnalyticsData(supabase);
   
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
