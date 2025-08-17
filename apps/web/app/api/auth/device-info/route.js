@@ -1,12 +1,14 @@
 import { NextResponse, userAgent } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+// Removed next-auth import
+import { createRouteHandlerClient } from '@bluenote/supabase-auth/route-handler-client';
 import { createAdminClient } from '@/lib/supabase/admin';
 
 export async function POST(request) {
   try {
     // 세션 확인
-    const session = await getServerSession(authOptions);
+    const supabase = createRouteHandlerClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const session = user ? { user } : null;
     
     if (!session || !session.user?.email) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -55,11 +57,11 @@ export async function POST(request) {
     }
     
     // Supabase에 업데이트
-    const supabase = createAdminClient();
+    const adminSupabase = createAdminClient();
     const today = new Date().toISOString().split('T')[0];
     
     
-    const { error } = await supabase
+    const { error } = await adminSupabase
       .from('user_daily_stats')
       .update({
         last_device: deviceInfo,

@@ -1,12 +1,14 @@
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
 import { NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { createRouteHandlerClient } from '@bluenote/supabase-auth/route-handler-client';
 
 export async function GET(request) {
   try {
-    // Get session
-    const session = await getServerSession(authOptions);
+    // Get session using Supabase auth
+    const supabase = createRouteHandlerClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    
+    const session = user ? { user } : null;
     
     // Get user permissions from database
     let dbPermissions = null;
@@ -35,14 +37,14 @@ export async function GET(request) {
         }
       } : null,
       dbPermissions,
-      isAdminEmail: session?.user?.email ? adminEmails.includes(session.user.email) : false,
+      isAdminEmail: user?.email ? adminEmails.includes(user.email) : false,
       adminEmails: adminEmails.map(email => email.replace(/^(.{2}).*@/, '$1***@')),
       authDebug: {
         hasSession: !!session,
-        hasIsAdmin: session?.user?.isAdmin,
-        hasCanWrite: session?.user?.canWrite,
-        claudeDailyLimit: session?.user?.claudeDailyLimit,
-        userRole: session?.user?.role
+        hasIsAdmin: user?.user_metadata?.isAdmin,
+        hasCanWrite: user?.user_metadata?.canWrite,
+        claudeDailyLimit: user?.user_metadata?.claudeDailyLimit,
+        userRole: user?.user_metadata?.role
       }
     });
   } catch (error) {

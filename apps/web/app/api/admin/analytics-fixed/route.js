@@ -1,15 +1,14 @@
 import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+// Removed next-auth import
+import { checkAuth } from '@/lib/supabase-auth-helpers';
 import { createAdminClient } from '@/lib/supabase/admin';
 
 export async function GET() {
   try {
     // 1. 세션 확인
-    const session = await getServerSession(authOptions);
-    
-    if (!session || !session.user?.isAdmin) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const { error: authError } = await checkAuth('admin');
+    if (authError) {
+      return NextResponse.json({ error: authError.message }, { status: authError.status });
     }
 
     // 2. Service Role 클라이언트 사용

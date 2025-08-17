@@ -1,11 +1,13 @@
 import Anthropic from '@anthropic-ai/sdk';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+// Removed next-auth import
+import { createRouteHandlerClient } from '@bluenote/supabase-auth/route-handler-client';
 
 export async function POST(request) {
   try {
     // Check authentication
-    const session = await getServerSession(authOptions);
+    const supabase = createRouteHandlerClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const session = user ? { user } : null;
     if (!session) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }

@@ -1,6 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+// Removed next-auth import
+import { createRouteHandlerClient } from '@bluenote/supabase-auth/route-handler-client';
 import { checkClaudeUsage, recordUsage } from '@/lib/usage';
 
 const anthropic = new Anthropic({
@@ -10,7 +10,9 @@ const anthropic = new Anthropic({
 export async function POST(request) {
   try {
     // Check authentication
-    const session = await getServerSession(authOptions);
+    const supabase = createRouteHandlerClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const session = user ? { user } : null;
     if (!session) {
       return Response.json({ 
         error: '로그인이 필요합니다.',
@@ -257,7 +259,9 @@ isAIGenerated: true
 // GET 요청 처리 (API 상태 및 사용량 확인용)
 export async function GET(request) {
   try {
-    const session = await getServerSession(authOptions);
+    const supabase = createRouteHandlerClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const session = user ? { user } : null;
     
     const baseInfo = {
       status: 'ok',

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+// Removed next-auth import
+import { createRouteHandlerClient } from '@bluenote/supabase-auth/route-handler-client';
 
 // This is a fallback API that stores data in memory
 // Use only for testing when file system fails
@@ -16,7 +16,9 @@ export async function GET() {
 export async function POST(request) {
   try {
     // Check authentication
-    const session = await getServerSession(authOptions);
+    const supabase = createRouteHandlerClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const session = user ? { user } : null;
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -67,7 +69,9 @@ export async function POST(request) {
 export async function PUT(request) {
   try {
     // Check authentication
-    const session = await getServerSession(authOptions);
+    const supabase = createRouteHandlerClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const session = user ? { user } : null;
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -105,7 +109,9 @@ export async function PUT(request) {
 export async function DELETE(request) {
   try {
     // Check authentication
-    const session = await getServerSession(authOptions);
+    const supabase = createRouteHandlerClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const session = user ? { user } : null;
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }

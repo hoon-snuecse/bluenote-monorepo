@@ -1,10 +1,12 @@
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+// Removed next-auth import
+import { createRouteHandlerClient } from '@bluenote/supabase-auth/route-handler-client';
 import { NextResponse } from 'next/server';
 
 export async function POST() {
   try {
-    const session = await getServerSession(authOptions);
+    const supabase = createRouteHandlerClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const session = user ? { user } : null;
     
     if (!session) {
       return NextResponse.json({ error: 'No session found' }, { status: 401 });

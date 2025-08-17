@@ -1,12 +1,14 @@
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+// Removed next-auth import
+import { createRouteHandlerClient } from '@bluenote/supabase-auth/route-handler-client';
 import { promises as fs } from 'fs';
 import path from 'path';
 
 export async function POST(request) {
   try {
     // 인증 확인
-    const session = await getServerSession(authOptions);
+    const supabase = createRouteHandlerClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const session = user ? { user } : null;
     if (!session) {
       return Response.json({ 
         error: '로그인이 필요합니다.' 
@@ -78,7 +80,9 @@ export async function POST(request) {
 // GET 요청 - 저장된 글 목록 조회
 export async function GET(request) {
   try {
-    const session = await getServerSession(authOptions);
+    const supabase = createRouteHandlerClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const session = user ? { user } : null;
     if (!session) {
       return Response.json({ 
         error: '로그인이 필요합니다.' 

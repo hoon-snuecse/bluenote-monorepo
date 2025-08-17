@@ -1,12 +1,14 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+// Removed next-auth import
+import { createRouteHandlerClient } from '@bluenote/supabase-auth/route-handler-client';
 
 // API 키 인증 함수
 async function authenticateRequest(request) {
   // 1. 세션 기반 인증 (기존 방식)
-  const session = await getServerSession(authOptions);
+  const supabase = createRouteHandlerClient();
+    const { data: { user }, error: authError } = await authSupabase.auth.getUser();
+    const session = user ? { user } : null;
   if (session && session.user.isAdmin) {
     return { authenticated: true, source: 'session' };
   }

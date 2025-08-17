@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { checkAuth } from '@/lib/supabase-auth-helpers';
 import { createAdminClient } from '@/lib/supabase/admin';
 
 export async function GET() {
@@ -12,14 +11,9 @@ export async function GET() {
   try {
     // 1. 세션 확인
     debugInfo.step = 'session-check';
-    const session = await getServerSession(authOptions);
-    
-    if (!session) {
-      return NextResponse.json({ error: 'No session' }, { status: 401 });
-    }
-    
-    if (!session.user.isAdmin) {
-      return NextResponse.json({ error: 'Not admin' }, { status: 401 });
+    const { error: authError } = await checkAuth('admin');
+    if (authError) {
+      return NextResponse.json({ error: authError.message }, { status: authError.status });
     }
 
     debugInfo.sessionOk = true;

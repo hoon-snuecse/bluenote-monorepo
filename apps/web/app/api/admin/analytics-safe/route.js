@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+// Removed next-auth import
+import { checkAuth } from '@/lib/supabase-auth-helpers';
 import { createAdminClient } from '@/lib/supabase/admin';
 
 export async function GET() {

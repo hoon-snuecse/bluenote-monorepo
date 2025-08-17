@@ -1,15 +1,13 @@
 import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+// Removed next-auth import
+import { checkAuth } from '@/lib/supabase-auth-helpers';
 import { createAdminClient } from '@/lib/supabase/admin';
 
 export async function GET() {
   try {
-    const session = await getServerSession(authOptions);
-    
-    if (!session) {
-      console.log('No session found for usage-logs request');
-      return NextResponse.json({ error: 'Unauthorized - No session' }, { status: 401 });
+    const { error: authError } = await checkAuth('admin');
+    if (authError) {
+      return NextResponse.json({ error: authError.message }, { status: authError.status });
     }
     
     if (!session.user.isAdmin) {

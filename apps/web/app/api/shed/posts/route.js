@@ -2,8 +2,8 @@ import { NextResponse } from 'next/server';
 import fs from 'fs/promises';
 import path from 'path';
 import * as memoryAPI from './local/route.js';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+// Removed next-auth import
+import { createRouteHandlerClient } from '@bluenote/supabase-auth/route-handler-client';
 
 const POSTS_FILE = path.join(process.cwd(), 'data', 'shed-posts.json');
 
@@ -65,7 +65,9 @@ export async function GET(request) {
 
 export async function POST(request) {
   // Check authentication
-  const session = await getServerSession(authOptions);
+  const supabase = createRouteHandlerClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const session = user ? { user } : null;
   if (!session) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
@@ -136,7 +138,9 @@ export async function POST(request) {
 
 export async function PUT(request) {
   // Check authentication
-  const session = await getServerSession(authOptions);
+  const supabase = createRouteHandlerClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const session = user ? { user } : null;
   if (!session) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
@@ -264,7 +268,9 @@ export async function PUT(request) {
 
 export async function DELETE(request) {
   // Check authentication
-  const session = await getServerSession(authOptions);
+  const supabase = createRouteHandlerClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const session = user ? { user } : null;
   if (!session) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
