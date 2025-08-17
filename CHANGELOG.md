@@ -5,6 +5,58 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.1] - 2025-08-17
+
+### 🔧 Admin Dashboard & AI Chat Improvements
+
+This release fixes critical issues with the admin dashboard functionality and enhances the Claude AI chat feature.
+
+### Fixed
+- **Admin Dashboard Data Display**: 
+  - Fixed analytics page showing no data after unified authentication implementation
+  - Connected real usage data from `usage_logs` table (770+ login records)
+  - Connected grading statistics from `Evaluation` table (93 records: 63 Sonnet, 30 Opus)
+  - Fixed user list page not displaying any users
+  - Fixed content management page showing empty lists
+
+- **API Response Issues**:
+  - Fixed 404 errors by using `Response.json()` instead of `NextResponse.json()`
+  - Fixed field mapping issues (`user_email` vs `email`)
+  - Resolved React hydration errors
+
+- **ESLint Errors**: 
+  - Fixed `react-hooks/exhaustive-deps` warnings in AdminAnalyticsClient and AdminContentClient
+  - Wrapped fetch functions in `useCallback` with proper dependencies
+
+- **AI Chat Login Loop**:
+  - Fixed infinite login loop at `/ai/chat` page
+  - Corrected `session-check` API's `createServerClient` call
+  - Updated ClaudeChat to use `useSupabaseAuth` hook directly
+  - Changed redirect from `/login` to home page
+
+- **Database Permission Issues**:
+  - Added error handling for `Evaluation` table RLS permission errors (code 42501)
+  - Service Role Key not bypassing RLS as expected (requires Supabase dashboard fix)
+
+### Added
+- **Claude Model Selection Enhancement**:
+  - Added Claude Opus 4.1 (claude-opus-4-1-20250805) - highest performance model
+  - Added Claude Sonnet 4 (claude-sonnet-4-20250514) - latest fast model
+  - Total 5 models available with badges and descriptions
+  - Model-specific max_tokens optimization (Opus 4.1: 8192, Sonnet 4: 4096)
+  
+- **API Error Checking & Logging**:
+  - Comprehensive error logging in chat-stream API
+  - Response time measurement for API calls
+  - Detailed request/response logging for debugging
+
+### Changed
+- **Admin Analytics Improvements**:
+  - Separated login statistics from grading statistics
+  - Added real-time data from database instead of mock data
+  - Enhanced user activity tracking with login counts
+  - Added top users by model usage (Sonnet/Opus)
+
 ## [0.2.0] - 2025-08-08
 
 ### 🎉 Major Authentication Overhaul
