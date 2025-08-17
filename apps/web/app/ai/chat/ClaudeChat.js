@@ -10,7 +10,7 @@ export default function ClaudeChat() {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [sending, setSending] = useState(false);
-  const [selectedModel, setSelectedModel] = useState('claude-sonnet-4-20250514');
+  const [selectedModel, setSelectedModel] = useState('claude-3-5-sonnet-20241022');
   const [showModelSelect, setShowModelSelect] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -19,9 +19,41 @@ export default function ClaudeChat() {
   const textareaRef = useRef(null);
 
   const models = [
-    { id: 'claude-sonnet-4-20250514', name: 'Claude Sonnet 4', description: '최신 모델, 최고의 성능' },
-    { id: 'claude-3-5-sonnet-20241022', name: 'Claude 3.5 Sonnet', description: '균형잡힌 모델' },
-    { id: 'claude-3-5-haiku-20241022', name: 'Claude 3.5 Haiku', description: '빠른 응답' },
+    { 
+      id: 'claude-sonnet-4-20250514', 
+      name: 'Claude Sonnet 4', 
+      description: '최신 - 빠르고 스마트함',
+      badge: '최신',
+      badgeColor: 'bg-orange-100 text-orange-700'
+    },
+    { 
+      id: 'claude-3-5-sonnet-20241022', 
+      name: 'Claude 3.5 Sonnet', 
+      description: '권장 - 스마트하고 효율적',
+      badge: '권장',
+      badgeColor: 'bg-green-100 text-green-700'
+    },
+    { 
+      id: 'claude-opus-4-1-20250805', 
+      name: 'Claude Opus 4.1', 
+      description: '최고 성능 - 복잡한 작업에 적합',
+      badge: '최고 성능',
+      badgeColor: 'bg-purple-100 text-purple-700'
+    },
+    { 
+      id: 'claude-3-opus-20240229', 
+      name: 'Claude 3 Opus', 
+      description: '이전 버전 - 안정적인 성능',
+      badge: '이전 버전',
+      badgeColor: 'bg-gray-100 text-gray-700'
+    },
+    { 
+      id: 'claude-3-5-haiku-20241022', 
+      name: 'Claude 3.5 Haiku', 
+      description: '빠른 응답 - 간단한 작업에 적합',
+      badge: '빠름',
+      badgeColor: 'bg-blue-100 text-blue-700'
+    },
   ];
 
   // Remove the session-check fetch since we're using useSupabaseAuth hook
@@ -227,14 +259,18 @@ export default function ClaudeChat() {
               onClick={() => setShowModelSelect(!showModelSelect)}
               className="flex items-center space-x-2 px-4 py-2 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
             >
+              <Bot className="w-4 h-4 text-gray-600" />
               <span className="text-sm font-medium">
-                {models.find(m => m.id === selectedModel)?.name || 'Select Model'}
+                {models.find(m => m.id === selectedModel)?.name || 'AI 모델 선택'}
               </span>
               <ChevronDown className={`w-4 h-4 transition-transform ${showModelSelect ? 'rotate-180' : ''}`} />
             </button>
             
             {showModelSelect && (
-              <div className="absolute right-0 mt-2 w-72 bg-white rounded-lg shadow-lg border border-gray-200 z-10">
+              <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-xl border border-gray-200 z-10 overflow-hidden">
+                <div className="px-4 py-2 bg-gray-50 border-b border-gray-200">
+                  <p className="text-xs font-medium text-gray-600">AI 모델 선택</p>
+                </div>
                 {models.map((model) => (
                   <button
                     key={model.id}
@@ -242,12 +278,28 @@ export default function ClaudeChat() {
                       setSelectedModel(model.id);
                       setShowModelSelect(false);
                     }}
-                    className={`w-full text-left px-4 py-3 hover:bg-gray-50 transition-colors ${
-                      selectedModel === model.id ? 'bg-blue-50' : ''
+                    className={`w-full text-left px-4 py-3 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0 ${
+                      selectedModel === model.id ? 'bg-blue-50 border-l-4 border-l-blue-500' : ''
                     }`}
                   >
-                    <div className="font-medium text-sm">{model.name}</div>
-                    <div className="text-xs text-gray-500">{model.description}</div>
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium text-sm">{model.name}</span>
+                          {model.badge && (
+                            <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${model.badgeColor}`}>
+                              {model.badge}
+                            </span>
+                          )}
+                        </div>
+                        <div className="text-xs text-gray-500 mt-1">{model.description}</div>
+                      </div>
+                      {selectedModel === model.id && (
+                        <div className="ml-2">
+                          <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                        </div>
+                      )}
+                    </div>
                   </button>
                 ))}
               </div>

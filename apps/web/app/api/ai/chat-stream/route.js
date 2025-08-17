@@ -16,9 +16,23 @@ export async function POST(request) {
       return new Response('Invalid message', { status: 400 });
     }
 
+    // Supported models
+    const supportedModels = [
+      'claude-sonnet-4-20250514',    // Claude Sonnet 4
+      'claude-3-5-sonnet-20241022',  // Claude 3.5 Sonnet
+      'claude-opus-4-1-20250805',    // Claude Opus 4.1
+      'claude-3-opus-20240229',      // Claude 3 Opus
+      'claude-3-5-haiku-20241022'    // Claude 3.5 Haiku
+    ];
+
+    // Validate model if provided
+    if (model && !supportedModels.includes(model)) {
+      console.warn(`Unsupported model requested: ${model}, falling back to default`);
+    }
+
     // Get system settings for Claude configuration
     let systemPrompt = '당신은 도움이 되고 친절한 AI 어시스턴트입니다. 한국어로 자연스럽게 대화하며, 사용자의 질문에 정확하고 유용한 답변을 제공합니다.';
-    let selectedModel = model || 'claude-sonnet-4-20250514';
+    let selectedModel = model && supportedModels.includes(model) ? model : 'claude-3-5-sonnet-20241022';
     
     try {
       const supabase = createAdminClient();
@@ -52,12 +66,29 @@ export async function POST(request) {
         apiKey: process.env.ANTHROPIC_API_KEY,
       });
 
-      console.log('Creating Claude stream for message:', message.substring(0, 50) + '...');
+      console.log('[AI Chat API] Request details:', {
+        message: message.substring(0, 50) + '...',
+        model: selectedModel,
+        user: user.email
+      });
+
+      // Adjust max_tokens based on model
+      const maxTokens = selectedModel === 'claude-opus-4-1-20250805' ? 8192 :  // Opus 4.1 can handle more
+                       selectedModel === 'claude-sonnet-4-20250514' ? 4096 :    // Sonnet 4 
+                       selectedModel.includes('opus') ? 4096 : 
+                       selectedModel.includes('haiku') ? 1024 : 2048;
+
+      console.log('[AI Chat API] Model configuration:', {
+        model: selectedModel,
+        maxTokens: maxTokens,
+        systemPromptLength: systemPrompt.length
+      });
 
       // For now, let's use non-streaming API to verify it works
+      const startTime = Date.now();
       const completion = await anthropic.messages.create({
         model: selectedModel,
-        max_tokens: 1024,
+        max_tokens: maxTokens,
         messages: [
           {
             role: 'user',
@@ -65,6 +96,13 @@ export async function POST(request) {
           }
         ],
         system: systemPrompt,
+      });
+
+      const responseTime = Date.now() - startTime;
+      console.log('[AI Chat API] Response received:', {
+        model: selectedModel,
+        responseTime: `${responseTime}ms`,
+        responseLength: completion.content[0].text.length
       });
 
       const responseText = completion.content[0].text;
