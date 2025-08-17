@@ -8,8 +8,7 @@
   },
   "scripts": {
     "dev": "next dev",
-    "build": "cd ../.. && turbo run build",
-    "build:single": "next build",
+    "build": "next build",
     "start": "next start",
     "lint": "next lint",
     "sync:login-stats": "node scripts/sync-login-stats.js",
