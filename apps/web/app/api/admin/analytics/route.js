@@ -29,9 +29,11 @@ export async function GET() {
       supabase.from('Evaluation').select('evaluatedBy, evaluatedByUser, evaluatedAt').order('evaluatedAt', { ascending: false })
     ]);
     
-    // Log evaluation query result for debugging
+    // Log evaluation query result for debugging in production
     if (evaluations.error) {
       console.error('[Admin Analytics API] Evaluation query error:', evaluations.error);
+      // Evaluation 테이블 접근 실패 시 빈 데이터 사용
+      evaluations.data = [];
     }
     
     const allPosts = [

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { 
   FileText, 
@@ -63,7 +63,7 @@ export default function AdminContentClient({ initialUser, initialStats, initialP
       setAllPosts(initialPosts);
       setPosts(initialPosts[activeSection] || []);
     }
-  }, [initialUser, initialStats, initialPosts, router]);
+  }, [initialUser, initialStats, initialPosts, router, activeSection, fetchContent]);
 
   useEffect(() => {
     // 섹션 변경 시 해당 섹션의 포스트 표시
@@ -72,9 +72,8 @@ export default function AdminContentClient({ initialUser, initialStats, initialP
     }
   }, [activeSection, allPosts]);
 
-  const fetchContent = async () => {
+  const fetchContent = useCallback(async () => {
     try {
-      console.log('Fetching content from API...');
       setLoading(true);
       const response = await fetch('/api/admin/content');
       
@@ -101,7 +100,7 @@ export default function AdminContentClient({ initialUser, initialStats, initialP
     } finally {
       setLoading(false);
     }
-  };
+  }, [activeSection]);
 
   const handleRefresh = () => {
     fetchContent();
