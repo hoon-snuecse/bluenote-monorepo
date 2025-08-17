@@ -1,48 +1,73 @@
 import { NextResponse } from 'next/server';
-import { checkAuth } from '@/lib/supabase-auth-helpers';
-import { getUsageStats } from '@/lib/usage';
+import { createRouteHandlerClient } from '@bluenote/supabase-auth/route-handler-client';
+import { createClient } from '@supabase/supabase-js';
 
 export async function GET(request) {
   try {
+    // Check authentication first
+    const authClient = await createRouteHandlerClient();
+    const { data: { user }, error: userError } = await authClient.auth.getUser();
     
-    // Check authentication and admin status
-    const { error: authError } = await checkAuth('admin');
-    if (authError) {
-      console.error('[Admin Stats API] Auth error:', authError);
-      return NextResponse.json({ error: authError.message }, { status: authError.status });
-    }
-
-    // Get usage statistics (실패해도 계속 진행)
-    let usageStats = {};
-    try {
-      usageStats = await getUsageStats(7); // Last 7 days
-    } catch (error) {
-      console.error('Error getting usage stats:', error);
-      // Continue without usage stats
+    if (userError || !user) {
+      console.error('[Admin Stats API] Auth error:', userError);
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     
-    // Get post counts
-    // Service Role Key가 특정 테이블에 대해 권한 거부되므로 regular client 사용
-    // RLS가 비활성화되어 있어서 regular client로도 충분함
-    const { createClient } = await import('@/lib/supabase/server');
-    const supabase = await createClient();
+    // Check admin permissions
+    const { data: permissions } = await authClient
+      .from('user_permissions')
+      .select('role')
+      .eq('email', user.email)
+      .single();
     
+    const adminEmails = ['hoon@snuecse.org', 'hoon@iw.es.kr', 'sociogram@gmail.com'];
+    const isAdmin = permissions?.role === 'admin' || adminEmails.includes(user.email);
+    
+    if (!isAdmin) {
+      return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
+    }
+    
+    // Try to use service role client if available
+    let supabase;
+    let usingServiceRole = false;
+    
+    if (process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      console.log('Using service role key for admin stats');
+      supabase = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL,
+        process.env.SUPABASE_SERVICE_ROLE_KEY,
+        {
+          auth: {
+            autoRefreshToken: false,
+            persistSession: false,
+            detectSessionInUrl: false
+          }
+        }
+      );
+      usingServiceRole = true;
+    } else {
+      console.warn('Service role key not available, using auth client');
+      supabase = authClient;
+    }
+    
+    const koreaTime = new Date(new Date().toLocaleString("en-US", {timeZone: "Asia/Seoul"}));
+    const todayStart = new Date(koreaTime.setHours(0, 0, 0, 0)).toISOString();
+    
+    // Fetch data using correct table names
     const [
-      researchResult,
-      teachingResult,
-      analyticsResult,
-      shedResult,
-      todayLogsResult
+      usersResult,
+      postsResult,
+      logsResult,
+      gradingResult
     ] = await Promise.all([
-      supabase.from('research_posts').select('*', { count: 'exact', head: true }),
-      supabase.from('teaching_posts').select('*', { count: 'exact', head: true }),
-      supabase.from('analytics_posts').select('*', { count: 'exact', head: true }),
-      supabase.from('shed_posts').select('*', { count: 'exact', head: true }),
-      // Get today's usage logs count
-      supabase
-        .from('usage_logs')
-        .select('*', { count: 'exact', head: true })
-        .gte('created_at', new Date().toISOString().split('T')[0])
+      supabase.from('user_permissions').select('*'),
+      supabase.from('posts').select('*'),
+      supabase.from('claude_usage_logs')
+        .select('*')
+        .gte('created_at', todayStart),
+      supabase.from('grading_logs')
+        .select('*')
+        .gte('created_at', todayStart)
     ]);
     
     // Enhanced debugging for Vercel deployment
@@ -51,77 +76,70 @@ export async function GET(request) {
       serviceKeyLength: process.env.SUPABASE_SERVICE_ROLE_KEY?.length || 0,
       supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL?.substring(0, 30) + '...',
       nodeEnv: process.env.NODE_ENV,
-      vercel: process.env.VERCEL || 'not-vercel'
+      vercel: process.env.VERCEL || 'not-vercel',
+      usingServiceRole
     });
     
     // Log query results with more detail
     console.log('Query results:', {
-      research: { 
-        count: researchResult.count, 
-        error: researchResult.error?.message || null,
-        status: researchResult.status,
-        statusText: researchResult.statusText
+      users: { 
+        count: usersResult.data?.length || 0, 
+        error: usersResult.error?.message || null
       },
-      teaching: { 
-        count: teachingResult.count, 
-        error: teachingResult.error?.message || null,
-        status: teachingResult.status,
-        statusText: teachingResult.statusText
+      posts: { 
+        count: postsResult.data?.length || 0, 
+        error: postsResult.error?.message || null
       },
-      analytics: { 
-        count: analyticsResult.count, 
-        error: analyticsResult.error?.message || null,
-        status: analyticsResult.status,
-        statusText: analyticsResult.statusText
+      claudeLogs: { 
+        count: logsResult.data?.length || 0, 
+        error: logsResult.error?.message || null
       },
-      shed: { 
-        count: shedResult.count, 
-        error: shedResult.error?.message || null,
-        status: shedResult.status,
-        statusText: shedResult.statusText
-      },
-      todayLogs: { 
-        count: todayLogsResult.count, 
-        error: todayLogsResult.error?.message || null,
-        status: todayLogsResult.status,
-        statusText: todayLogsResult.statusText
+      gradingLogs: { 
+        count: gradingResult.data?.length || 0, 
+        error: gradingResult.error?.message || null
       }
     });
     
-    // Test direct query to verify connection
-    if (researchResult.error || teachingResult.error || analyticsResult.error || shedResult.error) {
-      console.error('Supabase query errors detected');
-      
-      // Try a simple test query
-      const testQuery = await supabase
-        .from('research_posts')
-        .select('id')
-        .limit(1);
-      
-      console.log('Test query result:', {
-        data: testQuery.data,
-        error: testQuery.error?.message || null,
-        status: testQuery.status
-      });
-    }
+    // Count posts by section
+    const postsBySection = {
+      research: 0,
+      teaching: 0,
+      analytics: 0,
+      shed: 0
+    };
     
-    const totalPosts = (researchResult.count || 0) + 
-                      (teachingResult.count || 0) + 
-                      (analyticsResult.count || 0) + 
-                      (shedResult.count || 0);
+    postsResult.data?.forEach(post => {
+      if (postsBySection.hasOwnProperty(post.section)) {
+        postsBySection[post.section]++;
+      }
+    });
     
-    // Remove error field if exists
-    const { error, ...cleanUsageStats } = usageStats;
+    // Count grading by model
+    let sonnetCount = 0;
+    let haikuCount = 0;
+    
+    gradingResult.data?.forEach(log => {
+      if (log.model === 'sonnet') sonnetCount++;
+      else if (log.model === 'haiku') haikuCount++;
+    });
     
     return NextResponse.json({
-      ...cleanUsageStats,
-      totalPosts,
-      todayUsage: todayLogsResult.count || 0,
-      postsBreakdown: {
-        research: researchResult.count || 0,
-        teaching: teachingResult.count || 0,
-        analytics: analyticsResult.count || 0,
-        shed: shedResult.count || 0
+      totalUsers: usersResult.data?.length || 0,
+      totalPosts: postsResult.data?.length || 0,
+      todayLogs: logsResult.data?.length || 0,
+      todayGradingSonnet: sonnetCount,
+      todayGradingHaiku: haikuCount,
+      users: usersResult.data || [],
+      postsBySection,
+      debug: {
+        usingServiceRole,
+        hasServiceKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
+        errors: {
+          users: usersResult.error?.message || null,
+          posts: postsResult.error?.message || null,
+          logs: logsResult.error?.message || null,
+          grading: gradingResult.error?.message || null
+        }
       }
     });
   } catch (error) {

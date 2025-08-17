@@ -5,15 +5,19 @@ import AdminDashboardClient from './AdminDashboardClient';
 async function getAdminStats(fallbackClient = null) {
   try {
     let supabase;
+    let usingServiceRole = false;
     
     // Try to use admin client, fallback to regular client if service key not available
     try {
       if (process.env.SUPABASE_SERVICE_ROLE_KEY) {
+        console.log('Using service role key for admin stats');
         supabase = createAdminClient();
+        usingServiceRole = true;
       } else {
         console.warn('SUPABASE_SERVICE_ROLE_KEY not set, using fallback client');
         supabase = fallbackClient;
         if (!supabase) {
+          console.error('No fallback client available');
           return {
             totalUsers: 0,
             totalPosts: 0,
@@ -26,6 +30,7 @@ async function getAdminStats(fallbackClient = null) {
       console.error('Error creating admin client:', adminError);
       supabase = fallbackClient;
       if (!supabase) {
+        console.error('No fallback client available after error');
         return {
           totalUsers: 0,
           totalPosts: 0,
@@ -34,6 +39,9 @@ async function getAdminStats(fallbackClient = null) {
         };
       }
     }
+    
+    console.log('Fetching admin stats with', usingServiceRole ? 'service role' : 'regular client');
+    
     const koreaTime = new Date(new Date().toLocaleString("en-US", {timeZone: "Asia/Seoul"}));
     const todayStart = new Date(koreaTime.setHours(0, 0, 0, 0)).toISOString();
     
@@ -45,6 +53,23 @@ async function getAdminStats(fallbackClient = null) {
         .select('id')
         .gte('created_at', todayStart)
     ]);
+    
+    // Log results for debugging
+    console.log('Users result:', { 
+      error: usersResult.error, 
+      dataCount: usersResult.data?.length,
+      usingServiceRole 
+    });
+    console.log('Posts result:', { 
+      error: postsResult.error, 
+      dataCount: postsResult.data?.length,
+      usingServiceRole 
+    });
+    console.log('Logs result:', { 
+      error: logsResult.error, 
+      dataCount: logsResult.data?.length,
+      usingServiceRole 
+    });
     
     // Check for errors in results
     if (usersResult.error) {

@@ -14,14 +14,42 @@ export default function AdminDashboardClient({ initialStats, initialUser }) {
   });
 
   useEffect(() => {
-    if (initialStats) {
+    // If initial stats are not provided or empty, fetch from API
+    if (initialUser?.isAdmin && (!initialStats || initialStats.totalUsers === 0)) {
+      fetchStats();
+    } else if (initialStats) {
       setStats(initialStats);
     }
+    
     if (initialUser) {
       setUser(initialUser);
     }
     setLoading(false);
   }, [initialStats, initialUser]);
+  
+  const fetchStats = async () => {
+    try {
+      console.log('Fetching stats from API...');
+      const response = await fetch('/api/admin/stats');
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Stats from API:', data);
+        setStats({
+          totalUsers: data.totalUsers || 0,
+          totalPosts: data.totalPosts || 0,
+          todayLogs: data.todayLogs || 0,
+          todayGradingSonnet: data.todayGradingSonnet || 0,
+          todayGradingHaiku: data.todayGradingHaiku || 0,
+          users: data.users || [],
+          debug: data.debug
+        });
+      } else {
+        console.error('Failed to fetch stats:', response.status);
+      }
+    } catch (error) {
+      console.error('Error fetching stats:', error);
+    }
+  };
 
   if (loading) {
     return (
