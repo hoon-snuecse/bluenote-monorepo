@@ -1,13 +1,11 @@
 import { NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
 import { createServerClient } from '@bluenote/supabase-auth/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 
 export async function GET() {
   try {
     // 1. 현재 사용자 확인
-    const cookieStore = await cookies();
-    const supabase = createServerClient(cookieStore);
+    const supabase = await createServerClient();
     
     const { data: { user }, error } = await supabase.auth.getUser();
     

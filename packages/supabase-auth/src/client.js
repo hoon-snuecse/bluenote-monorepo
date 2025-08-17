@@ -4,10 +4,6 @@ import { createBrowserClient as createSupabaseBrowserClient } from '@supabase/ss
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://ukxchcyvxnbmsfrsamjk.supabase.co'
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVreGNoY3l2eG5ibXNmcnNhbWprIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE4MTY2NjIsImV4cCI6MjA2NzM5MjY2Mn0.5xnB8uzJu1uxq7S9f7rueKwv0GbiHc4V2uyYgpynvTE'
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Missing Supabase environment variables')
-}
-
 // 싱글톤 인스턴스
 let browserClientInstance = null
 
