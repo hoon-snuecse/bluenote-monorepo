@@ -1,7 +1,6 @@
 import { createServerClient } from '@bluenote/supabase-auth/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import AdminAnalyticsClient from './AdminAnalyticsClient';
-import { DeviceInfoDebug } from '@/components/DeviceInfoDebug';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -13,17 +12,7 @@ export const metadata = {
 
 async function getAnalyticsData() {
   try {
-    console.log('getAnalyticsData: Starting to fetch analytics');
-    
-    // Try admin client first, fall back to server client if needed
-    let supabase;
-    try {
-      supabase = createAdminClient();
-      console.log('getAnalyticsData: Using admin client');
-    } catch (error) {
-      console.log('getAnalyticsData: Admin client failed, using server client:', error.message);
-      supabase = await createServerClient();
-    }
+    const supabase = createAdminClient();
     
     const koreaTime = new Date(new Date().toLocaleString("en-US", {timeZone: "Asia/Seoul"}));
     const todayStart = new Date(koreaTime.setHours(0, 0, 0, 0)).toISOString();
@@ -46,22 +35,6 @@ async function getAnalyticsData() {
       supabase.from('posts').select('*').order('created_at', { ascending: false }).limit(10)
     ]);
     
-    console.log('getAnalyticsData: Database queries completed:', {
-      users: users.data?.length || 0,
-      posts: posts.data?.length || 0,
-      claudeLogs: claudeLogs.data?.length || 0,
-      gradingLogs: gradingLogs.data?.length || 0,
-      loginLogs: loginLogs.data?.length || 0,
-      recentPosts: recentPosts.data?.length || 0,
-      errors: {
-        users: users.error?.message,
-        posts: posts.error?.message,
-        claudeLogs: claudeLogs.error?.message,
-        gradingLogs: gradingLogs.error?.message,
-        loginLogs: loginLogs.error?.message,
-        recentPosts: recentPosts.error?.message
-      }
-    });
     
     // 통계 계산
     const todayLogins = loginLogs.data?.filter(log => 
@@ -192,36 +165,18 @@ async function getAnalyticsData() {
       opusTopUsers
     };
     
-    console.log('getAnalyticsData: Returning statistics:', {
-      totalUsers: result.totalUsers,
-      totalLogins: result.totalLogins,
-      todayLogins: result.todayLogins,
-      contentStatsKeys: Object.keys(contentStats),
-      dailyStatsCount: dailyStats.length,
-      userActivityCount: userActivity.length
-    });
-    
     return result;
   } catch (error) {
-    console.error('getAnalyticsData: Failed to fetch analytics:', error.message, error.stack);
+    console.error('Failed to fetch analytics:', error);
     return null;
   }
 }
 
 export default async function AdminAnalyticsPage() {
-  console.log('AdminAnalyticsPage: Starting render');
-  
   const supabase = await createServerClient();
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
-  
-  console.log('AdminAnalyticsPage: Auth check:', {
-    userEmail: user?.email,
-    authError: authError?.message,
-    hasUser: !!user
-  });
+  const { data: { user } } = await supabase.auth.getUser();
   
   if (!user) {
-    console.log('AdminAnalyticsPage: No user found');
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
         <div className="container mx-auto px-4 pb-8">
@@ -232,28 +187,16 @@ export default async function AdminAnalyticsPage() {
   }
   
   // 권한 확인
-  const { data: permissions, error: permError } = await supabase
+  const { data: permissions } = await supabase
     .from('user_permissions')
     .select('role')
     .eq('email', user.email)
     .single();
   
-  console.log('AdminAnalyticsPage: Permission check:', {
-    permissions,
-    permError: permError?.message
-  });
-  
   const adminEmails = ['hoon@snuecse.org', 'hoon@iw.es.kr', 'sociogram@gmail.com'];
   const isAdmin = permissions?.role === 'admin' || adminEmails.includes(user.email);
   
-  console.log('AdminAnalyticsPage: Admin status:', {
-    isAdmin,
-    role: permissions?.role,
-    isInAdminEmails: adminEmails.includes(user.email)
-  });
-  
   if (!isAdmin) {
-    console.log('AdminAnalyticsPage: User is not admin');
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
         <div className="container mx-auto px-4 pb-8">
@@ -263,20 +206,13 @@ export default async function AdminAnalyticsPage() {
     );
   }
   
-  console.log('AdminAnalyticsPage: User is admin, fetching analytics data');
   const stats = await getAnalyticsData();
-  
-  console.log('AdminAnalyticsPage: Analytics data fetched:', {
-    hasStats: !!stats,
-    statsKeys: stats ? Object.keys(stats) : null
-  });
   
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
       <div className="container mx-auto px-4 pb-8">
         <AdminAnalyticsClient initialStats={stats} />
       </div>
-      <DeviceInfoDebug />
     </div>
   );
 }

@@ -7,24 +7,14 @@ export const revalidate = 0;
 
 async function getContentStats() {
   try {
-    console.log('getContentStats: Starting to fetch content stats');
-    
-    // Try admin client first, fall back to server client if needed
-    let supabase;
-    try {
-      supabase = createAdminClient();
-      console.log('getContentStats: Using admin client');
-    } catch (error) {
-      console.log('getContentStats: Admin client failed, using server client:', error.message);
-      supabase = await createServerClient();
-    }
+    const supabase = createAdminClient();
     
     const { data, error } = await supabase
       .from('posts')
       .select('section');
     
     if (error) {
-      console.error('getContentStats: Database error:', error);
+      console.error('Error fetching content stats:', error);
       return null;
     }
     
@@ -43,27 +33,16 @@ async function getContentStats() {
       }
     });
     
-    console.log('getContentStats: Stats calculated:', stats);
     return stats;
   } catch (error) {
-    console.error('getContentStats: Failed to fetch stats:', error.message);
+    console.error('Failed to fetch content stats:', error);
     return null;
   }
 }
 
 async function getPostsBySection(section) {
   try {
-    console.log('getPostsBySection: Fetching posts for section:', section);
-    
-    // Try admin client first, fall back to server client if needed
-    let supabase;
-    try {
-      supabase = createAdminClient();
-      console.log('getPostsBySection: Using admin client');
-    } catch (error) {
-      console.log('getPostsBySection: Admin client failed, using server client:', error.message);
-      supabase = await createServerClient();
-    }
+    const supabase = createAdminClient();
     
     const { data, error } = await supabase
       .from('posts')
@@ -72,32 +51,22 @@ async function getPostsBySection(section) {
       .order('created_at', { ascending: false });
     
     if (error) {
-      console.error('getPostsBySection: Database error:', error);
+      console.error('Error fetching posts by section:', error);
       return [];
     }
     
-    console.log('getPostsBySection: Fetched posts:', data?.length || 0);
     return data || [];
   } catch (error) {
-    console.error('getPostsBySection: Failed to fetch posts:', error.message);
+    console.error('Failed to fetch posts by section:', error);
     return [];
   }
 }
 
 export default async function AdminContentPage() {
-  console.log('AdminContentPage: Starting render');
-  
   const supabase = await createServerClient();
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
-  
-  console.log('AdminContentPage: Auth check:', {
-    userEmail: user?.email,
-    authError: authError?.message,
-    hasUser: !!user
-  });
+  const { data: { user } } = await supabase.auth.getUser();
   
   if (!user) {
-    console.log('AdminContentPage: No user found');
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
         <div className="container mx-auto px-4 py-8">
@@ -112,25 +81,14 @@ export default async function AdminContentPage() {
   }
   
   // 권한 확인
-  const { data: permissions, error: permError } = await supabase
+  const { data: permissions } = await supabase
     .from('user_permissions')
     .select('role')
     .eq('email', user.email)
     .single();
   
-  console.log('AdminContentPage: Permission check:', {
-    permissions,
-    permError: permError?.message
-  });
-  
   const adminEmails = ['hoon@snuecse.org', 'hoon@iw.es.kr', 'sociogram@gmail.com'];
   const isAdmin = permissions?.role === 'admin' || adminEmails.includes(user.email);
-  
-  console.log('AdminContentPage: Admin status:', {
-    isAdmin,
-    role: permissions?.role,
-    isInAdminEmails: adminEmails.includes(user.email)
-  });
   
   const userData = {
     ...user,
@@ -143,7 +101,6 @@ export default async function AdminContentPage() {
   let postsBySection = {};
   
   if (isAdmin) {
-    console.log('AdminContentPage: User is admin, fetching content data');
     stats = await getContentStats();
     
     // 모든 섹션의 포스트를 병렬로 가져오기
@@ -154,14 +111,6 @@ export default async function AdminContentPage() {
     sections.forEach((section, index) => {
       postsBySection[section] = postsResults[index];
     });
-    
-    console.log('AdminContentPage: Content data fetched:', {
-      hasStats: !!stats,
-      postsSections: Object.keys(postsBySection),
-      postsCount: Object.values(postsBySection).reduce((acc, posts) => acc + posts.length, 0)
-    });
-  } else {
-    console.log('AdminContentPage: User is not admin, skipping content fetch');
   }
   
   return (
