@@ -56,17 +56,21 @@ export async function requireAuth(requiredRole = null) {
  * @returns {NextResponse}
  */
 export function apiResponse(data, error = null, status = 200) {
+  const headers = {
+    'Content-Type': 'application/json',
+  };
+  
   if (error) {
-    console.error(error.message || error);
+    console.error('[API Helper] Error:', error.message || error);
     return NextResponse.json(
       { 
         error: error.message || 'An error occurred', 
         details: process.env.NODE_ENV === 'development' ? error.details : undefined 
       },
-      { status: error.status || status }
+      { status: error.status || status, headers }
     );
   }
-  return NextResponse.json(data, { status });
+  return NextResponse.json(data, { status, headers });
 }
 
 /**

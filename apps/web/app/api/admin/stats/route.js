@@ -2,12 +2,18 @@ import { NextResponse } from 'next/server';
 import { checkAuth } from '@/lib/supabase-auth-helpers';
 import { getUsageStats } from '@/lib/usage';
 
-export async function GET() {
+export async function GET(request) {
   try {
+    // Add CORS headers
+    const headers = {
+      'Content-Type': 'application/json',
+    };
+    
     // Check authentication and admin status
     const { error: authError } = await checkAuth('admin');
     if (authError) {
-      return NextResponse.json({ error: authError.message }, { status: authError.status });
+      console.error('[Admin Stats API] Auth error:', authError);
+      return NextResponse.json({ error: authError.message }, { status: authError.status, headers });
     }
 
     // Get usage statistics (실패해도 계속 진행)
@@ -121,12 +127,15 @@ export async function GET() {
         analytics: analyticsResult.count || 0,
         shed: shedResult.count || 0
       }
-    });
+    }, { headers });
   } catch (error) {
-    console.error('Error fetching admin stats:', error);
+    console.error('[Admin Stats API] Error:', error);
+    const headers = {
+      'Content-Type': 'application/json',
+    };
     return NextResponse.json({ 
       error: 'Failed to fetch statistics',
       details: error.message 
-    }, { status: 500 });
+    }, { status: 500, headers });
   }
 }

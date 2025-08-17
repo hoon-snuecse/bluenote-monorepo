@@ -29,22 +29,38 @@ export default function AdminDashboardClient() {
   const fetchStats = async () => {
     try {
       // 병렬로 필요한 데이터만 조회
-      const [usersRes, statsRes] = await Promise.all([
-        fetch('/api/admin/users'),
-        fetch('/api/admin/stats')
+      const [usersRes, statsRes] = await Promise.allSettled([
+        fetch('/api/admin/users', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include'
+        }),
+        fetch('/api/admin/stats', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include'
+        })
       ]);
       
-      // 응답 상태 확인
-      if (!usersRes.ok || !statsRes.ok) {
-        console.error('API request failed:', {
-          users: usersRes.status,
-          stats: statsRes.status
-        });
-        return;
+      // 응답 처리
+      let usersData = { users: [] };
+      let statsData = { totalPosts: 0, todayUsage: 0 };
+      
+      if (usersRes.status === 'fulfilled' && usersRes.value.ok) {
+        usersData = await usersRes.value.json();
+      } else {
+        console.error('Users API failed:', usersRes.reason || usersRes.value?.status);
       }
       
-      const usersData = await usersRes.json();
-      const statsData = await statsRes.json();
+      if (statsRes.status === 'fulfilled' && statsRes.value.ok) {
+        statsData = await statsRes.value.json();
+      } else {
+        console.error('Stats API failed:', statsRes.reason || statsRes.value?.status);
+      }
       
       console.log('Admin Dashboard - Users Response:', usersData);
       console.log('Admin Dashboard - Stats Response:', statsData);
@@ -56,6 +72,12 @@ export default function AdminDashboardClient() {
       });
     } catch (error) {
       console.error('Failed to fetch stats:', error);
+      // 기본값 설정
+      setStats({
+        totalUsers: 0,
+        totalPosts: 0,
+        todayLogs: 0
+      });
     }
   };
 
