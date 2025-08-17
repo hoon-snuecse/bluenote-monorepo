@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useAuth } from '@/app/hooks/useAuth';
 import { useRouter } from 'next/navigation';
 import { 
   User, 
@@ -19,11 +18,11 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 
-export default function AdminUsersClient() {
-  const { user: currentUser, status } = useAuth();
+export default function AdminUsersClient({ initialUsers, initialUser }) {
   const router = useRouter();
-  const [users, setUsers] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [currentUser, setCurrentUser] = useState(initialUser);
+  const [users, setUsers] = useState(initialUsers || []);
+  const [loading, setLoading] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
   const [newUser, setNewUser] = useState({ email: '', role: 'user', claude_daily_limit: 3, can_write: false });
   const [showAddForm, setShowAddForm] = useState(false);
@@ -31,15 +30,13 @@ export default function AdminUsersClient() {
   const [success, setSuccess] = useState('');
 
   useEffect(() => {
-    if (status === 'loading') return;
-    
-    if (!currentUser || !currentUser.isAdmin) {
+    if (!initialUser || !initialUser.isAdmin) {
       router.push('/');
       return;
     }
-
-    fetchUsers();
-  }, [currentUser, status, router]);
+    setCurrentUser(initialUser);
+    setUsers(initialUsers || []);
+  }, [initialUser, initialUsers, router]);
 
   const fetchUsers = async () => {
     try {
