@@ -40,14 +40,14 @@ export default function AdminDashboardClient() {
           headers: {
             'Content-Type': 'application/json',
           },
-          credentials: 'same-origin'  // same-origin으로 변경
+          credentials: 'include'
         }),
         fetch(`${baseUrl}/api/admin/stats`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
           },
-          credentials: 'same-origin'  // same-origin으로 변경
+          credentials: 'include'
         })
       ]);
       
