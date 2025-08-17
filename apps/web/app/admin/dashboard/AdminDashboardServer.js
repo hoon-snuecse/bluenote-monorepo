@@ -133,10 +133,11 @@ export default async function AdminDashboardServer() {
       permissions
     };
     
-    // Admin이면 통계 데이터 가져오기
-    const stats = isAdmin ? await getAdminStats(supabase) : null;
+    // Don't fetch stats server-side, let client handle it via API
+    // This avoids RSC payload issues
+    console.log('AdminDashboardServer - User is admin:', isAdmin);
     
-    return <AdminDashboardClient initialStats={stats} initialUser={userData} />;
+    return <AdminDashboardClient initialStats={null} initialUser={userData} />;
   } catch (error) {
     console.error('Error in AdminDashboardServer:', error);
     // Return fallback component on error

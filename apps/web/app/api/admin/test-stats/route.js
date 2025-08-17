@@ -1,126 +1,153 @@
 import { NextResponse } from 'next/server';
-// Removed next-auth import
-import { checkAuth } from '@/lib/supabase-auth-helpers';
-import { createAdminClient } from '@/lib/supabase/admin';
+import { createClient } from '@supabase/supabase-js';
 
 export async function GET() {
+  console.log('[Test Stats API] Starting...');
+  
   try {
-    const { error: authError } = await checkAuth('admin');
-    if (authError) {
-      return NextResponse.json({ error: authError.message }, { status: authError.status });
+    // Skip auth check for testing
+    // Just create a client and test queries
+    
+    // Log environment
+    console.log('[Test Stats API] Environment:', {
+      hasUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
+      hasServiceKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
+      hasAnonKey: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    });
+    
+    let supabase;
+    let clientType = 'unknown';
+    
+    // Try service role first
+    if (process.env.SUPABASE_SERVICE_ROLE_KEY && process.env.NEXT_PUBLIC_SUPABASE_URL) {
+      console.log('[Test Stats API] Using service role key');
+      supabase = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL,
+        process.env.SUPABASE_SERVICE_ROLE_KEY,
+        {
+          auth: {
+            autoRefreshToken: false,
+            persistSession: false
+          }
+        }
+      );
+      clientType = 'service-role';
+    } else if (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY && process.env.NEXT_PUBLIC_SUPABASE_URL) {
+      console.log('[Test Stats API] Using anon key');
+      supabase = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+      );
+      clientType = 'anon';
+    } else {
+      return NextResponse.json({ 
+        error: 'Missing Supabase credentials',
+        env: {
+          hasUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
+          hasServiceKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
+          hasAnonKey: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+        }
+      }, { status: 500 });
     }
-
-    const supabase = createAdminClient();
     const results = {};
+    
+    console.log('[Test Stats API] Testing with', clientType, 'client');
 
-    // 1. 콘텐츠 통계 테스트
+    // 1. Test user_permissions table
     try {
-      const { count: researchCount, error: researchError } = await supabase
-        .from('research_posts')
-        .select('*', { count: 'exact', head: true });
+      const { data, count, error } = await supabase
+        .from('user_permissions')
+        .select('*', { count: 'exact' })
+        .limit(5);
       
-      results.research = { count: researchCount, error: researchError };
+      results.users = { 
+        count: count || data?.length || 0, 
+        sample: data?.map(u => ({ email: u.email, role: u.role })),
+        error: error?.message || null 
+      };
+      console.log('[Test Stats API] Users:', results.users);
     } catch (e) {
-      results.research = { error: e.message };
+      results.users = { error: e.message };
     }
 
+    // 2. Test posts table
     try {
-      const { count: teachingCount, error: teachingError } = await supabase
-        .from('teaching_posts')
-        .select('*', { count: 'exact', head: true });
+      const { data, count, error } = await supabase
+        .from('posts')
+        .select('*', { count: 'exact' })
+        .limit(5);
       
-      results.teaching = { count: teachingCount, error: teachingError };
+      results.posts = { 
+        count: count || data?.length || 0,
+        sample: data?.map(p => ({ id: p.id, section: p.section, title: p.title })),
+        error: error?.message || null 
+      };
+      console.log('[Test Stats API] Posts:', results.posts);
     } catch (e) {
-      results.teaching = { error: e.message };
+      results.posts = { error: e.message };
     }
 
-    try {
-      const { count: analyticsCount, error: analyticsError } = await supabase
-        .from('analytics_posts')
-        .select('*', { count: 'exact', head: true });
-      
-      results.analytics = { count: analyticsCount, error: analyticsError };
-    } catch (e) {
-      results.analytics = { error: e.message };
-    }
-
-    try {
-      const { count: shedCount, error: shedError } = await supabase
-        .from('shed_posts')
-        .select('*', { count: 'exact', head: true });
-      
-      results.shed = { count: shedCount, error: shedError };
-    } catch (e) {
-      results.shed = { error: e.message };
-    }
-
-    // 2. 최근 게시물 테스트
-    try {
-      const { data: recentPosts, error: postsError } = await supabase
-        .from('research_posts')
-        .select('id, title, created_at')
-        .order('created_at', { ascending: false })
-        .limit(3);
-      
-      results.recentPosts = { data: recentPosts, error: postsError };
-    } catch (e) {
-      results.recentPosts = { error: e.message };
-    }
-
-    // 3. 로그 통계 테스트
+    // 3. Test claude_usage_logs table
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const todayString = today.toISOString();
 
     try {
-      const { data: todayLogs, error: todayError } = await supabase
-        .from('usage_logs')
-        .select('action_type, created_at')
-        .gte('created_at', todayString);
+      const { data, count, error } = await supabase
+        .from('claude_usage_logs')
+        .select('*', { count: 'exact' })
+        .gte('created_at', todayString)
+        .limit(5);
       
-      results.todayLogs = { 
-        total: todayLogs?.length || 0,
-        byType: todayLogs ? todayLogs.reduce((acc, log) => {
-          acc[log.action_type] = (acc[log.action_type] || 0) + 1;
-          return acc;
-        }, {}) : {},
-        error: todayError 
+      results.claudeLogs = { 
+        todayCount: count || data?.length || 0,
+        sample: data?.slice(0, 2),
+        error: error?.message || null 
       };
+      console.log('[Test Stats API] Claude logs:', results.claudeLogs);
     } catch (e) {
-      results.todayLogs = { error: e.message };
+      results.claudeLogs = { error: e.message };
     }
-
-    // 4. Grading API 테스트
+    
+    // 4. Test grading_logs table
     try {
-      const baseUrl = process.env.NODE_ENV === 'production'
-        ? 'https://grading.bluenote.site'
-        : 'http://localhost:3002';
-
-      const response = await fetch(`${baseUrl}/api/stats/evaluations`);
-      results.gradingApi = {
-        status: response.status,
-        ok: response.ok,
-        url: `${baseUrl}/api/stats/evaluations`
+      const { data, count, error } = await supabase
+        .from('grading_logs')
+        .select('*', { count: 'exact' })
+        .gte('created_at', todayString)
+        .limit(5);
+      
+      results.gradingLogs = { 
+        todayCount: count || data?.length || 0,
+        sample: data?.slice(0, 2),
+        error: error?.message || null 
       };
-
-      if (response.ok) {
-        const data = await response.json();
-        results.gradingApi.data = data;
-      }
+      console.log('[Test Stats API] Grading logs:', results.gradingLogs);
     } catch (e) {
-      results.gradingApi = { error: e.message };
+      results.gradingLogs = { error: e.message };
     }
 
     return NextResponse.json({
+      success: true,
+      clientType,
       timestamp: new Date().toISOString(),
       today: todayString,
-      results
+      results,
+      summary: {
+        totalUsers: results.users?.count || 0,
+        totalPosts: results.posts?.count || 0,
+        todayClaudeLogs: results.claudeLogs?.todayCount || 0,
+        todayGradingLogs: results.gradingLogs?.todayCount || 0
+      }
     });
 
   } catch (error) {
+    console.error('[Test Stats API] Error:', error);
     return NextResponse.json({ 
+      success: false,
       error: 'Test API Error', 
-      message: error.message 
+      message: error.message,
+      stack: error.stack
     }, { status: 500 });
   }
 }

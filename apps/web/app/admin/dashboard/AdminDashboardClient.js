@@ -14,40 +14,81 @@ export default function AdminDashboardClient({ initialStats, initialUser }) {
   });
 
   useEffect(() => {
-    // If initial stats are not provided or empty, fetch from API
-    if (initialUser?.isAdmin && (!initialStats || initialStats.totalUsers === 0)) {
-      fetchStats();
-    } else if (initialStats) {
-      setStats(initialStats);
-    }
+    console.log('AdminDashboardClient mounted:', {
+      hasInitialStats: !!initialStats,
+      hasInitialUser: !!initialUser,
+      isAdmin: initialUser?.isAdmin,
+      userEmail: initialUser?.email,
+      initialStatsData: initialStats
+    });
     
     if (initialUser) {
       setUser(initialUser);
+      
+      // If user is admin, always fetch fresh stats from API
+      if (initialUser.isAdmin) {
+        console.log('Admin user detected, fetching fresh stats from API...');
+        fetchStats();
+      }
     }
-    setLoading(false);
+    
+    // Set initial stats if provided (usually null now)
+    if (initialStats) {
+      setStats(initialStats);
+    }
   }, [initialStats, initialUser]);
   
   const fetchStats = async () => {
     try {
-      console.log('Fetching stats from API...');
-      const response = await fetch('/api/admin/stats');
+      console.log('Starting fetchStats function...');
+      setLoading(true);
+      
+      const response = await fetch('/api/admin/stats', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'same-origin'
+      });
+      
+      console.log('API Response status:', response.status);
+      const text = await response.text();
+      console.log('API Response text:', text);
+      
       if (response.ok) {
-        const data = await response.json();
-        console.log('Stats from API:', data);
-        setStats({
-          totalUsers: data.totalUsers || 0,
-          totalPosts: data.totalPosts || 0,
-          todayLogs: data.todayLogs || 0,
-          todayGradingSonnet: data.todayGradingSonnet || 0,
-          todayGradingHaiku: data.todayGradingHaiku || 0,
-          users: data.users || [],
-          debug: data.debug
-        });
+        try {
+          const data = JSON.parse(text);
+          console.log('Parsed stats data:', data);
+          
+          setStats({
+            totalUsers: data.totalUsers || 0,
+            totalPosts: data.totalPosts || 0,
+            todayLogs: data.todayLogs || 0,
+            todayGradingSonnet: data.todayGradingSonnet || 0,
+            todayGradingHaiku: data.todayGradingHaiku || 0,
+            users: data.users || [],
+            debug: data.debug
+          });
+          
+          // Log debug info if available
+          if (data.debug) {
+            console.log('Debug info from API:', data.debug);
+          }
+        } catch (parseError) {
+          console.error('Error parsing JSON:', parseError);
+          console.log('Raw response:', text);
+        }
       } else {
-        console.error('Failed to fetch stats:', response.status);
+        console.error('Failed to fetch stats:', {
+          status: response.status,
+          statusText: response.statusText,
+          body: text
+        });
       }
     } catch (error) {
-      console.error('Error fetching stats:', error);
+      console.error('Error in fetchStats:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
