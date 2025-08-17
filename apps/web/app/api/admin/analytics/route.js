@@ -18,14 +18,15 @@ export async function GET() {
       }
     );
     
-    // Fetch data for analytics - including usage_logs
-    const [users, researchPosts, teachingPosts, analyticsPosts, shedPosts, usageLogs] = await Promise.all([
+    // Fetch data for analytics - including usage_logs and grading evaluations
+    const [users, researchPosts, teachingPosts, analyticsPosts, shedPosts, usageLogs, evaluations] = await Promise.all([
       supabase.from('user_permissions').select('*'),
       supabase.from('research_posts').select('*'),
       supabase.from('teaching_posts').select('*'),
       supabase.from('analytics_posts').select('*'),
       supabase.from('shed_posts').select('*'),
-      supabase.from('usage_logs').select('*').order('created_at', { ascending: false })
+      supabase.from('usage_logs').select('*').order('created_at', { ascending: false }),
+      supabase.from('Evaluation').select('*').order('evaluatedAt', { ascending: false })
     ]);
     
     const allPosts = [
@@ -78,10 +79,21 @@ export async function GET() {
       ).length,
       totalClaudeUsage: 0, // Claude usage tracking not implemented yet
       todayClaudeUsage: 0,
-      totalGradingSonnet: 0, // Grading logs not implemented yet
-      todayGradingSonnet: 0,
-      totalGradingOpus: 0,
-      todayGradingOpus: 0,
+      // Real grading statistics from Evaluation table
+      totalGradingSonnet: (evaluations.data || []).filter(e => 
+        e.evaluatedBy && e.evaluatedBy.includes('sonnet')
+      ).length,
+      todayGradingSonnet: (evaluations.data || []).filter(e => 
+        e.evaluatedBy && e.evaluatedBy.includes('sonnet') && 
+        e.evaluatedAt && e.evaluatedAt.startsWith(new Date().toISOString().split('T')[0])
+      ).length,
+      totalGradingOpus: (evaluations.data || []).filter(e => 
+        e.evaluatedBy && e.evaluatedBy.includes('opus')
+      ).length,
+      todayGradingOpus: (evaluations.data || []).filter(e => 
+        e.evaluatedBy && e.evaluatedBy.includes('opus') && 
+        e.evaluatedAt && e.evaluatedAt.startsWith(new Date().toISOString().split('T')[0])
+      ).length,
       recentPosts: allPosts.sort((a, b) => 
         new Date(b.created_at) - new Date(a.created_at)
       ).slice(0, 10),
@@ -115,9 +127,41 @@ export async function GET() {
           }
         };
       }) || [],
-      // Grading statistics - not implemented yet (no grading tables in database)
-      sonnetTopUsers: [], // Sonnet grading data not available
-      opusTopUsers: [], // Opus grading data not available
+      // Real grading statistics from Evaluation table
+      sonnetTopUsers: (() => {
+        const userCounts = {};
+        (evaluations.data || []).filter(e => 
+          e.evaluatedBy && e.evaluatedBy.includes('sonnet') && e.evaluatedByUser
+        ).forEach(evaluation => {
+          const email = evaluation.evaluatedByUser;
+          userCounts[email] = (userCounts[email] || 0) + 1;
+        });
+        return Object.entries(userCounts)
+          .sort(([,a], [,b]) => b - a)
+          .slice(0, 5)
+          .map(([email, count]) => ({
+            name: email.split('@')[0],
+            email: email,
+            count: count
+          }));
+      })(),
+      opusTopUsers: (() => {
+        const userCounts = {};
+        (evaluations.data || []).filter(e => 
+          e.evaluatedBy && e.evaluatedBy.includes('opus') && e.evaluatedByUser
+        ).forEach(evaluation => {
+          const email = evaluation.evaluatedByUser;
+          userCounts[email] = (userCounts[email] || 0) + 1;
+        });
+        return Object.entries(userCounts)
+          .sort(([,a], [,b]) => b - a)
+          .slice(0, 5)
+          .map(([email, count]) => ({
+            name: email.split('@')[0],
+            email: email,
+            count: count
+          }));
+      })(),
       // Login statistics from usage_logs
       loginTopUsers: (() => {
         const userCounts = {};
