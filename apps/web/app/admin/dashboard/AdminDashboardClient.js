@@ -7,6 +7,7 @@ import { useAuth } from '@/app/hooks/useAuth';
 
 export default function AdminDashboardClient() {
   const { user, status } = useAuth();
+  const session = user ? { user } : null;
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
     totalUsers: 0,
