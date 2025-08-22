@@ -39,7 +39,7 @@ export default function SubmitPage({ params }: { params: { assignmentId: string 
 
   const fetchAssignment = async () => {
     try {
-      const response = await fetch(`/api/assignments/${params.assignmentId}`);
+      const response = await fetch(`/api/public/assignments/${params.assignmentId}`);
       const data = await response.json();
       
       if (data.success) {
