@@ -10,6 +10,8 @@ const publicPaths = [
   '/api/auth/callback',
   '/api/health',
   '/api/check-env',
+  '/api/public',        // 모든 public API 경로 허용
+  '/api/submissions',   // 학생 제출용 API
   '/submit',
   '/view',
   '/public-submissions',
