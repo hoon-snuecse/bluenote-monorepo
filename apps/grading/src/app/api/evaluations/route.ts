@@ -4,6 +4,7 @@ import { createEvaluator } from '@/lib/ai-evaluator';
 import { sendEvaluationUpdate } from './stream/route';
 import { getSessionWithPermissions } from '@/lib/auth-helpers';
 import { checkAssignmentPermission } from '@/lib/assignment-auth';
+import { evaluateWithLMStudio, checkLMStudioStatus } from '@/lib/lm-studio-api';
 
 // AI 평가 실행 및 저장
 export async function POST(request: NextRequest) {
@@ -78,7 +79,112 @@ export async function POST(request: NextRequest) {
       where: { email: userEmail }
     });
     
-    // AI 평가기 생성 - Mock 모델을 명시적으로 선택한 경우만 Mock 사용
+    // LM Studio 모델 처리
+    if (aiModel === 'lm-studio') {
+      console.log('=== LM Studio 평가 시작 ===');
+      
+      // LM Studio 상태 확인
+      const lmStudioStatus = await checkLMStudioStatus();
+      if (!lmStudioStatus.available) {
+        return NextResponse.json(
+          { 
+            success: false, 
+            error: 'LM Studio 서버가 실행 중이지 않습니다. LM Studio를 시작해주세요.' 
+          },
+          { status: 500 }
+        );
+      }
+      
+      // 평가 시작 알림
+      sendEvaluationUpdate(assignmentId, {
+        type: 'evaluation_started',
+        submissionId,
+        studentName,
+        timestamp: new Date().toISOString()
+      });
+      
+      // LM Studio 평가 실행
+      const lmStudioResult = await evaluateWithLMStudio({
+        assignmentTitle: title || assignment?.title || '',
+        schoolName: schoolName || assignment?.schoolName || '',
+        grade: gradeLevel || assignment?.gradeLevel || '',
+        writingType: writingType || assignment?.writingType || '',
+        evaluationDomains: evaluationDomains || [],
+        evaluationLevels: evaluationLevels || [],
+        levelCount: levelCount || evaluationLevels?.length || 4,
+        evaluationPrompt: gradingCriteria || '',
+        studentText: content,
+        studentName: studentName || '',
+        temperature: temperature
+      });
+      
+      // LM Studio 결과를 기존 형식으로 변환
+      const domainEvaluations: any = {};
+      evaluationDomains.forEach((domain: string) => {
+        domainEvaluations[domain] = {
+          score: lmStudioResult.domainScores[domain] || 75,
+          level: lmStudioResult.domainGrades[domain] || evaluationLevels[1],
+          feedback: `${domain}에 대한 평가: ${lmStudioResult.domainGrades[domain]}`
+        };
+      });
+      
+      const evaluationResult = {
+        domainEvaluations,
+        overallLevel: lmStudioResult.overallGrade,
+        overallFeedback: lmStudioResult.detailedFeedback,
+        improvementSuggestions: lmStudioResult.improvements,
+        strengths: lmStudioResult.strengths
+      };
+      
+      // 기존 평가 횟수 확인
+      const existingEvaluations = await prisma.evaluation.count({
+        where: { submissionId }
+      });
+      
+      console.log(`평가 저장: 제출물 ${submissionId}의 ${existingEvaluations + 1}번째 평가`);
+      
+      // 평가 결과 저장
+      const evaluation = await prisma.evaluation.create({
+        data: {
+          submissionId,
+          assignmentId,
+          studentId: studentId || studentName,
+          domainEvaluations: evaluationResult.domainEvaluations,
+          overallLevel: evaluationResult.overallLevel,
+          overallFeedback: evaluationResult.overallFeedback,
+          improvementSuggestions: evaluationResult.improvementSuggestions || [],
+          strengths: evaluationResult.strengths || [],
+          evaluatedBy: 'LM Studio (GPT-OSS-20B)',
+          evaluatedByUser: userEmail,
+          userId: user?.id
+        }
+      });
+      
+      console.log('LM Studio 평가 저장 완료:', evaluation.id);
+      
+      // 평가 완료 알림
+      sendEvaluationUpdate(assignmentId, {
+        type: 'evaluation_completed',
+        submissionId,
+        studentName,
+        evaluationId: evaluation.id,
+        overallLevel: evaluationResult.overallLevel,
+        timestamp: new Date().toISOString()
+      });
+      
+      return NextResponse.json({ 
+        success: true, 
+        evaluationId: evaluation.id,
+        evaluation: {
+          ...evaluation,
+          improvementSuggestions: evaluationResult.improvementSuggestions,
+          strengths: evaluationResult.strengths
+        },
+        message: 'LM Studio 평가가 완료되었습니다.'
+      });
+    }
+    
+    // 기존 Claude/Mock 평가기 처리
     const evaluatorType = aiModel === 'mock' ? 'mock' : 'claude';
     
     // Claude API 키가 없으면서 Mock을 선택하지 않은 경우 에러

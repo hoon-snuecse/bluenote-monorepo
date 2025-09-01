@@ -37,10 +37,12 @@ export default function EvaluatePage() {
   const [apiErrorDetected, setApiErrorDetected] = useState(false);
   const [mockUsageCount, setMockUsageCount] = useState(0);
   const [apiKeyStatus, setApiKeyStatus] = useState<any>(null);
+  const [lmStudioStatus, setLmStudioStatus] = useState<{ available: boolean; models?: string[] } | null>(null);
 
   useEffect(() => {
     fetchData();
     checkApiKey();
+    checkLMStudioStatus();
   }, [params.assignmentId, searchParams]);
   
   // assignment나 submissions가 변경될 때마다 프롬프트 미리보기 업데이트
@@ -85,6 +87,17 @@ export default function EvaluatePage() {
       setApiKeyStatus(data.apiKeyStatus);
     } catch (error) {
       console.error('API 키 상태 확인 실패:', error);
+    }
+  };
+  
+  const checkLMStudioStatus = async () => {
+    try {
+      const response = await fetch('/api/lm-studio/status');
+      const data = await response.json();
+      setLmStudioStatus(data);
+    } catch (error) {
+      console.error('LM Studio 상태 확인 실패:', error);
+      setLmStudioStatus({ available: false });
     }
   };
   
@@ -507,7 +520,9 @@ ${submission.content?.substring(0, 100)}...
                   >
                     <option value="claude-sonnet-4-20250514">Claude Sonnet 4 (권장 - 스마트하고 효율적)</option>
                     <option value="claude-opus-4-20250514">Claude Opus 4 (가장 강력한 모델)</option>
-                    <option value="mock">Mock 평가기 (테스트용 - 실제 AI 아님)</option>
+                    <option value="lm-studio" disabled={!lmStudioStatus?.available}>
+                      LM Studio - GPT-OSS-20B (로컬 - 맥북프로) {lmStudioStatus?.available ? '✅' : '❌ 서버 오프라인'}
+                    </option>
                   </select>
                 </div>
 
