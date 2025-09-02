@@ -25,10 +25,12 @@ export interface AIEvaluator {
 export class ClaudeEvaluator implements AIEvaluator {
   private assignmentData: any;
   private aiModel?: string;
+  private outputFormat?: string;
 
-  constructor(assignmentData?: any, aiModel?: string) {
+  constructor(assignmentData?: any, aiModel?: string, outputFormat?: string) {
     this.assignmentData = assignmentData;
     this.aiModel = aiModel;
+    this.outputFormat = outputFormat;
   }
 
   async evaluate(
@@ -51,7 +53,8 @@ export class ClaudeEvaluator implements AIEvaluator {
         studentText: content,
         studentName: this.assignmentData?.studentName || '학생',
         temperature: this.assignmentData?.temperature || 0.1,
-        aiModel: this.aiModel
+        aiModel: this.aiModel,
+        outputFormat: this.outputFormat
       });
 
       // Claude API 결과를 기존 형식으로 변환
@@ -147,10 +150,11 @@ export function createEvaluator(
   type: 'claude' | 'mock' = 'mock',
   _apiKey?: string,
   model?: string,
-  assignmentData?: any
+  assignmentData?: any,
+  outputFormat?: string
 ): AIEvaluator {
   if (type === 'claude') {
-    return new ClaudeEvaluator(assignmentData, model);
+    return new ClaudeEvaluator(assignmentData, model, outputFormat);
   }
   return new MockEvaluator();
 }

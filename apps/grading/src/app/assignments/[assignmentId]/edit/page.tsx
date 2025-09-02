@@ -13,6 +13,20 @@ import { ShareAssignmentDialog } from '@/components/ShareAssignmentDialog';
 type GradeLevel = '초등학교 3학년' | '초등학교 4학년' | '초등학교 5학년' | '초등학교 6학년';
 type WritingType = '설명문' | '논설문' | '생활문' | '독서감상문' | '기행문';
 
+// 기본 출력 형식 (claude-api.ts에서 사용하던 형식)
+function getDefaultOutputFormat() {
+  return `다음 형식으로 JSON 응답을 제공해주세요:
+{
+  "overallScore": 점수 (0-100),
+  "overallGrade": "전체 평가 수준",
+  "domainScores": { "영역명": 점수, ... },
+  "domainGrades": { "영역명": "평가 수준", ... },
+  "strengths": ["강점1", "강점2", ...],
+  "improvements": ["개선점1", "개선점2", ...],
+  "detailedFeedback": "상세 피드백 (학생과 학부모가 이해하기 쉽게)"
+}`;
+}
+
 export default function EditAssignmentPage() {
   const router = useRouter();
   const params = useParams();
@@ -38,6 +52,7 @@ export default function EditAssignmentPage() {
   const [evaluationLevels, setEvaluationLevels] = useState<string[]>(['매우 우수', '우수', '보통', '미흡']);
   const [levelCount, setLevelCount] = useState<'3' | '4' | '5'>('4');
   const [gradingCriteria, setGradingCriteria] = useState('');
+  const [outputFormat, setOutputFormat] = useState('');
   const [isGeneratingCriteria, setIsGeneratingCriteria] = useState(false);
   const [templateDialogOpen, setTemplateDialogOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -84,6 +99,9 @@ export default function EditAssignmentPage() {
           
           // 채점 기준 설정
           setGradingCriteria(assignment.gradingCriteria || '');
+          
+          // 출력 형식 설정 (없으면 기본값 사용)
+          setOutputFormat(assignment.outputFormat || getDefaultOutputFormat());
         }
       } catch (error) {
         console.error('과제 불러오기 오류:', error);
@@ -110,6 +128,7 @@ export default function EditAssignmentPage() {
       evaluationLevels: evaluationLevels.filter(l => l.trim()),
       levelCount,
       gradingCriteria,
+      outputFormat,
     };
     
     try {
@@ -349,6 +368,8 @@ ${typeInfo.keyElements.map(element => `- ${element}: ${formData.writingType}에 
     setEvaluationLevels(template.evaluationLevels);
     setLevelCount(template.levelCount.toString() as '3' | '4' | '5');
     setGradingCriteria(template.gradingCriteria);
+    // Template doesn't have outputFormat, so use default
+    setOutputFormat(getDefaultOutputFormat());
     setTemplateDialogOpen(false);
   };
 
@@ -596,6 +617,25 @@ ${typeInfo.keyElements.map(element => `- ${element}: ${formData.writingType}에 
                   className="w-full px-4 py-3 border border-slate-200/50 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/30 bg-white/70 backdrop-blur-sm text-base resize-none font-mono text-sm"
                   placeholder="위의 정보를 입력하고 '채점 기준 생성' 버튼을 클릭하면 AI가 자동으로 채점 기준을 생성합니다."
                 />
+              </div>
+
+              {/* Output Format Field */}
+              <div>
+                <label htmlFor="outputFormat" className="block text-base font-medium text-gray-700 mb-2">
+                  출력 형식 지정 (AI 응답 구조)
+                </label>
+                <textarea
+                  id="outputFormat"
+                  name="outputFormat"
+                  value={outputFormat}
+                  onChange={(e) => setOutputFormat(e.target.value)}
+                  rows={10}
+                  className="w-full px-4 py-3 border border-slate-200/50 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/30 bg-white/70 backdrop-blur-sm text-base resize-none font-mono text-sm"
+                  placeholder="JSON 응답 형식을 지정합니다. 기본값이 자동으로 제공됩니다."
+                />
+                <p className="text-sm text-slate-600 mt-2">
+                  AI가 평가 결과를 반환할 때 사용할 JSON 형식을 지정합니다. 필요에 따라 수정하세요.
+                </p>
               </div>
 
               {/* Submit Button */}

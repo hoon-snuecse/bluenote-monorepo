@@ -94,6 +94,7 @@ export default function EvaluatePage() {
     try {
       const response = await fetch('/api/lm-studio/status');
       const data = await response.json();
+      console.log('LM Studio 상태 응답:', data);
       setLmStudioStatus(data);
     } catch (error) {
       console.error('LM Studio 상태 확인 실패:', error);
@@ -337,7 +338,8 @@ ${submission.content?.substring(0, 100)}...
           aiModel: selectedModel,
           studentId: submission.studentId,
           studentName: submission.studentName,
-          temperature: temperature
+          temperature: temperature,
+          outputFormat: updatedAssignment?.outputFormat
         };
         
         console.log('평가 요청 데이터:', requestData);

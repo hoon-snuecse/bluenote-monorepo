@@ -19,6 +19,7 @@ model Assignment {
   evaluationLevels  Json
   levelCount        Int
   gradingCriteria   String
+  outputFormat      String?      // AI 응답 형식 지정 (선택사항)
   isSample          Boolean      @default(false)
   sampleOrder       Int?
   sampleCategory    String?

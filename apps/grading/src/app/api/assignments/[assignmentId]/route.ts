@@ -57,6 +57,7 @@ export async function GET(
         ? assignment.evaluationLevels
         : JSON.parse(assignment.evaluationLevels as string),
       gradingCriteria: assignment.gradingCriteria,
+      outputFormat: assignment.outputFormat,
       // 권한 정보 추가
       permission: permission,
       submissionCount: assignment._count?.submissions || 0
@@ -113,7 +114,8 @@ export async function PUT(
         evaluationDomains: data.evaluationDomains,
         evaluationLevels: data.evaluationLevels,
         levelCount: parseInt(data.levelCount),
-        gradingCriteria: data.gradingCriteria
+        gradingCriteria: data.gradingCriteria,
+        outputFormat: data.outputFormat
       }
     });
 
@@ -126,7 +128,8 @@ export async function PUT(
       evaluationLevels: Array.isArray(assignment.evaluationLevels)
         ? assignment.evaluationLevels
         : JSON.parse(assignment.evaluationLevels as string),
-      gradingCriteria: assignment.gradingCriteria // gradingCriteria 포함
+      gradingCriteria: assignment.gradingCriteria, // gradingCriteria 포함
+      outputFormat: assignment.outputFormat // outputFormat 포함
     };
 
     return NextResponse.json({ 

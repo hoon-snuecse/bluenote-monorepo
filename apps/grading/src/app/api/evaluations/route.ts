@@ -115,7 +115,8 @@ export async function POST(request: NextRequest) {
         evaluationPrompt: gradingCriteria || '',
         studentText: content,
         studentName: studentName || '',
-        temperature: temperature
+        temperature: temperature,
+        outputFormat: data.outputFormat || assignment?.outputFormat
       });
       
       // LM Studio 결과를 기존 형식으로 변환
@@ -217,7 +218,8 @@ export async function POST(request: NextRequest) {
         writingType: writingType || assignment?.writingType,
         studentName,
         temperature
-      }
+      },
+      data.outputFormat || assignment?.outputFormat
     );
     
     // 평가 시작 알림

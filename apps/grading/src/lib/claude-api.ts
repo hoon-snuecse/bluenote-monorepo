@@ -18,6 +18,7 @@ export interface EvaluationRequest {
   studentName: string;
   temperature?: number;
   aiModel?: string;
+  outputFormat?: string;
 }
 
 export interface EvaluationResult {
@@ -74,7 +75,7 @@ export async function evaluateWithClaude(request: EvaluationRequest): Promise<Ev
 [평가 기준]
 ${request.evaluationPrompt}
 
-다음 형식으로 JSON 응답을 제공해주세요:
+${request.outputFormat || `다음 형식으로 JSON 응답을 제공해주세요:
 {
   "overallScore": 점수 (0-100),
   "overallGrade": "전체 평가 수준",
@@ -83,7 +84,7 @@ ${request.evaluationPrompt}
   "strengths": ["강점1", "강점2", ...],
   "improvements": ["개선점1", "개선점2", ...],
   "detailedFeedback": "상세 피드백 (학생과 학부모가 이해하기 쉽게)"
-}`;
+}`}`;
 
     const userPrompt = `학생 이름: ${request.studentName}
 과제 제목: ${request.assignmentTitle}
