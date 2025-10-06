@@ -163,6 +163,29 @@ grading-app/
 4. **Animation**: Custom fade-in-up animation with staggered delays for visual appeal
 5. **Responsive Design**: Mobile-first approach with responsive breakpoints
 
+## AI Model Configuration
+
+### Supported AI Models
+- **Claude Sonnet 4.5** (`claude-sonnet-4-5-20250929`) - Default, recommended for best results
+- **Claude Sonnet 4** (`claude-sonnet-4-20250514`) - Efficient and smart
+- **Claude Opus 4** (`claude-opus-4-20250514`) - Most powerful model
+- **LM Studio GPT-OSS-20B** - Local model for offline evaluation
+
+### API Configuration
+- **max_tokens**: 4096 (increased from 2000 to prevent feedback truncation)
+- **temperature**: 0.1-0.3 (configurable, lower for consistent evaluation)
+- **API Key**: Set `ANTHROPIC_API_KEY` in `.env.local`
+
+### Key Files
+- `src/lib/claude-api.ts` - Claude API integration with model selection
+- `src/lib/lm-studio-api.ts` - LM Studio local model integration
+- `src/utils/ai-evaluator.ts` - AI evaluator utility functions
+
+### Important Notes
+1. **max_tokens = 4096**: Essential for generating complete detailed feedback without truncation
+2. **Model Selection**: Users can select AI model in the evaluation UI
+3. **Fallback Behavior**: Mock evaluator is used if API keys are not configured
+
 ## Next Steps for Development
 
 1. Create data models and types for the grading system

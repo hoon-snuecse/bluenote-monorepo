@@ -134,7 +134,7 @@ const completion = await lmStudioClient.chat.completions.create({
     { role: 'user', content: userPrompt }
   ],
   temperature: 0.1,  // 현재 사용 중인 값
-  max_tokens: 2000,
+  max_tokens: 4096,  // 충분한 길이의 피드백을 위해 증가
 });
 ```
 

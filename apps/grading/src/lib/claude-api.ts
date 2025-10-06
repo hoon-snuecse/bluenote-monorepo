@@ -119,7 +119,7 @@ ${request.studentText}
     
     const message = await anthropic.messages.create({
       model: actualModel,
-      max_tokens: 2000,
+      max_tokens: 4096,
       temperature: request.temperature || 0.1, // 사용자 지정 temperature 사용
       system: systemPrompt,
       messages: [

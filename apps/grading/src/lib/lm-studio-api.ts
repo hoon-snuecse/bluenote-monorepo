@@ -108,7 +108,7 @@ ${request.studentText}
         { role: 'user', content: userPrompt }
       ],
       temperature: request.temperature || 0.1,
-      max_tokens: 2000,
+      max_tokens: 4096,
     });
 
     console.log('LM Studio 응답 수신 완료');
