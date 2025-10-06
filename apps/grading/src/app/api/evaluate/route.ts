@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
         studentText: submission.content,
         studentName: submission.studentName,
         temperature: 0.7,
-        aiModel: model || 'claude-sonnet-4-20250514'
+        aiModel: model || 'claude-sonnet-4-5-20250929'
       };
 
       console.log('Calling evaluateWithClaude with:', {
@@ -118,7 +118,7 @@ export async function POST(request: NextRequest) {
           overallFeedback: aiEvaluation.detailedFeedback,
           improvementSuggestions: aiEvaluation.improvements,
           strengths: aiEvaluation.strengths,
-          evaluatedBy: model || 'claude-sonnet-4-20250514',
+          evaluatedBy: model || 'claude-sonnet-4-5-20250929',
           evaluatedByUser: userEmail,  // 평가한 사용자 이메일 추가
           userId: userId  // 평가한 사용자 ID 추가
         }

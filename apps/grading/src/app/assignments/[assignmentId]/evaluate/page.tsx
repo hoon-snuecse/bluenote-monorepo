@@ -25,7 +25,7 @@ export default function EvaluatePage() {
   const searchParams = useSearchParams();
   const [isEvaluating, setIsEvaluating] = useState(false);
   const [evaluationTasks, setEvaluationTasks] = useState<EvaluationTask[]>([]);
-  const [selectedModel, setSelectedModel] = useState('claude-sonnet-4-20250514');
+  const [selectedModel, setSelectedModel] = useState('claude-sonnet-4-5-20250929');
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [assignment, setAssignment] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -520,7 +520,8 @@ ${submission.content?.substring(0, 100)}...
                     onChange={(e) => setSelectedModel(e.target.value)}
                     className="w-full px-4 py-3 border border-slate-200/50 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/30 bg-white/70 backdrop-blur-sm text-base"
                   >
-                    <option value="claude-sonnet-4-20250514">Claude Sonnet 4 (권장 - 스마트하고 효율적)</option>
+                    <option value="claude-sonnet-4-5-20250929">Claude Sonnet 4.5 (권장 - 최신 모델, 코딩 최적화)</option>
+                    <option value="claude-sonnet-4-20250514">Claude Sonnet 4 (스마트하고 효율적)</option>
                     <option value="claude-opus-4-20250514">Claude Opus 4 (가장 강력한 모델)</option>
                     <option value="lm-studio" disabled={!lmStudioStatus?.available}>
                       LM Studio - GPT-OSS-20B (로컬 - 맥북프로) {lmStudioStatus?.available ? '✅' : '❌ 서버 오프라인'}

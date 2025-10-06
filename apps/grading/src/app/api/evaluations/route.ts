@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
       schoolName,
       gradeLevel,
       writingType,
-      aiModel = 'claude-sonnet-4-20250514',
+      aiModel = 'claude-sonnet-4-5-20250929',
       studentId,
       studentName,
       temperature = 0.1
