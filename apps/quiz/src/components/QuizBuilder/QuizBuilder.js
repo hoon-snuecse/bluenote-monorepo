@@ -20,7 +20,7 @@ export default function QuizBuilder() {
   const [difficultyLowPercent, setDifficultyLowPercent] = useState(20)
   
   // AI 모델 선택
-  const [aiModel, setAiModel] = useState('claude-sonnet-4-20250514')
+  const [aiModel, setAiModel] = useState('claude-sonnet-4-5-20250929')
   
   const [isGenerating, setIsGenerating] = useState(false)
   const [error, setError] = useState(null)
@@ -286,7 +286,8 @@ export default function QuizBuilder() {
             className="mt-1 block w-64 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
             disabled={isGenerating}
           >
-            <option value="claude-sonnet-4-20250514">Claude Sonnet 4 (기본)</option>
+            <option value="claude-sonnet-4-5-20250929">Claude Sonnet 4.5 (기본)</option>
+            <option value="claude-sonnet-4-20250514">Claude Sonnet 4</option>
             <option value="claude-opus-4-20250514">Claude Opus 4</option>
           </select>
         </div>
