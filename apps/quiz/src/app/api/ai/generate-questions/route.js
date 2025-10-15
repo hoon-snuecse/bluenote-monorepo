@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { getSession } from '@bluenote/supabase-auth/server'
 import Anthropic from '@anthropic-ai/sdk'
+import JSON5 from 'json5'
 
 // Claude API 키 확인
 const apiKey = process.env.ANTHROPIC_API_KEY || process.env.CLAUDE_API_KEY
@@ -135,43 +136,46 @@ OX형은 options가 2개, 4지선다형은 options가 4개입니다:
     let questions
 
     try {
-      // JSON 파싱 시도
+      // 먼저 표준 JSON 파싱 시도
       questions = JSON.parse(content)
     } catch (parseError) {
-      console.log('[generate-questions] Initial JSON parse failed, trying alternative methods...')
+      console.log('[generate-questions] Standard JSON parse failed, trying JSON5...')
 
       try {
-        // JSON이 코드 블록으로 감싸진 경우 처리
-        const jsonMatch = content.match(/```json?\n?([\s\S]*?)\n?```/)
-        if (jsonMatch) {
-          console.log('[generate-questions] Found JSON in code block')
-          questions = JSON.parse(jsonMatch[1])
-        } else {
-          // 직접 JSON 찾기
-          const jsonStart = content.indexOf('[')
-          const jsonEnd = content.lastIndexOf(']') + 1
-          if (jsonStart !== -1 && jsonEnd > jsonStart) {
-            console.log('[generate-questions] Extracting JSON from position', jsonStart, 'to', jsonEnd)
-            const jsonString = content.substring(jsonStart, jsonEnd)
+        // JSON5로 파싱 시도 (trailing commas, 주석 등 허용)
+        questions = JSON5.parse(content)
+        console.log('[generate-questions] Successfully parsed with JSON5')
+      } catch (json5Error) {
+        console.log('[generate-questions] JSON5 parse failed, extracting JSON from content...')
 
-            // JSON 문자열 정리 (trailing commas, 주석 등 제거)
-            const cleanedJson = jsonString
-              .replace(/,(\s*[}\]])/g, '$1') // trailing commas 제거
-              .replace(/\/\/.*$/gm, '') // 한 줄 주석 제거
-              .replace(/\/\*[\s\S]*?\*\//g, '') // 블록 주석 제거
-
-            questions = JSON.parse(cleanedJson)
+        try {
+          // JSON이 코드 블록으로 감싸진 경우 처리
+          const jsonMatch = content.match(/```json?\n?([\s\S]*?)\n?```/)
+          if (jsonMatch) {
+            console.log('[generate-questions] Found JSON in code block')
+            questions = JSON5.parse(jsonMatch[1])
           } else {
-            console.error('[generate-questions] Could not find JSON array in response')
-            console.error('[generate-questions] Response content:', content.substring(0, 500))
-            throw new Error('Failed to parse AI response - no JSON array found')
+            // 직접 JSON 찾기
+            const jsonStart = content.indexOf('[')
+            const jsonEnd = content.lastIndexOf(']') + 1
+            if (jsonStart !== -1 && jsonEnd > jsonStart) {
+              console.log('[generate-questions] Extracting JSON from position', jsonStart, 'to', jsonEnd)
+              const jsonString = content.substring(jsonStart, jsonEnd)
+
+              // JSON5로 파싱 (더 관대한 파싱)
+              questions = JSON5.parse(jsonString)
+            } else {
+              console.error('[generate-questions] Could not find JSON array in response')
+              console.error('[generate-questions] Response content:', content.substring(0, 500))
+              throw new Error('Failed to parse AI response - no JSON array found')
+            }
           }
+        } catch (finalError) {
+          console.error('[generate-questions] All parsing attempts failed')
+          console.error('[generate-questions] Parse error:', finalError.message)
+          console.error('[generate-questions] Response preview:', content.substring(0, 1000))
+          throw new Error(`AI 응답 파싱 실패: ${finalError.message}`)
         }
-      } catch (secondError) {
-        console.error('[generate-questions] All parsing attempts failed')
-        console.error('[generate-questions] Parse error:', secondError.message)
-        console.error('[generate-questions] Response preview:', content.substring(0, 1000))
-        throw new Error(`AI 응답 파싱 실패: ${secondError.message}`)
       }
     }
 

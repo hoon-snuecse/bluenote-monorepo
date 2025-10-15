@@ -227,6 +227,9 @@ importers:
       file-saver:
         specifier: ^2.0.5
         version: 2.0.5
+      json5:
+        specifier: ^2.2.3
+        version: 2.2.3
       lucide-react:
         specifier: ^0.525.0
         version: 0.525.0(react@19.1.0)
