@@ -121,7 +121,7 @@ OX형은 options가 2개, 4지선다형은 options가 4개입니다:
 
     const response = await anthropic.messages.create({
       model: aiModel, // 사용자가 선택한 모델 사용
-      max_tokens: 4000,
+      max_tokens: 8000, // 증가: 20문항 생성 시 충분한 토큰
       temperature: 0.7,
       messages: [
         {
@@ -132,12 +132,20 @@ OX형은 options가 2개, 4지선다형은 options가 4개입니다:
     })
 
     // Claude 응답에서 JSON 추출
-    const content = response.content[0].text
+    let content = response.content[0].text
     let questions
+
+    // 코드 블록 제거 (가장 먼저 처리)
+    const codeBlockMatch = content.match(/```(?:json)?\s*\n?([\s\S]*?)\n?```/)
+    if (codeBlockMatch) {
+      console.log('[generate-questions] Removing code block markers')
+      content = codeBlockMatch[1].trim()
+    }
 
     try {
       // 먼저 표준 JSON 파싱 시도
       questions = JSON.parse(content)
+      console.log('[generate-questions] Successfully parsed with standard JSON')
     } catch (parseError) {
       console.log('[generate-questions] Standard JSON parse failed, trying JSON5...')
 
@@ -146,29 +154,25 @@ OX형은 options가 2개, 4지선다형은 options가 4개입니다:
         questions = JSON5.parse(content)
         console.log('[generate-questions] Successfully parsed with JSON5')
       } catch (json5Error) {
-        console.log('[generate-questions] JSON5 parse failed, extracting JSON from content...')
+        console.log('[generate-questions] JSON5 parse failed, extracting JSON array...')
 
         try {
-          // JSON이 코드 블록으로 감싸진 경우 처리
-          const jsonMatch = content.match(/```json?\n?([\s\S]*?)\n?```/)
-          if (jsonMatch) {
-            console.log('[generate-questions] Found JSON in code block')
-            questions = JSON5.parse(jsonMatch[1])
-          } else {
-            // 직접 JSON 찾기
-            const jsonStart = content.indexOf('[')
-            const jsonEnd = content.lastIndexOf(']') + 1
-            if (jsonStart !== -1 && jsonEnd > jsonStart) {
-              console.log('[generate-questions] Extracting JSON from position', jsonStart, 'to', jsonEnd)
-              const jsonString = content.substring(jsonStart, jsonEnd)
+          // JSON 배열 직접 추출
+          const jsonStart = content.indexOf('[')
+          const jsonEnd = content.lastIndexOf(']') + 1
 
-              // JSON5로 파싱 (더 관대한 파싱)
-              questions = JSON5.parse(jsonString)
-            } else {
-              console.error('[generate-questions] Could not find JSON array in response')
-              console.error('[generate-questions] Response content:', content.substring(0, 500))
-              throw new Error('Failed to parse AI response - no JSON array found')
-            }
+          if (jsonStart !== -1 && jsonEnd > jsonStart) {
+            console.log('[generate-questions] Extracting JSON array from position', jsonStart, 'to', jsonEnd)
+            const jsonString = content.substring(jsonStart, jsonEnd)
+
+            // JSON5로 파싱 (더 관대한 파싱)
+            questions = JSON5.parse(jsonString)
+            console.log('[generate-questions] Successfully parsed extracted JSON')
+          } else {
+            console.error('[generate-questions] Could not find JSON array in response')
+            console.error('[generate-questions] Response length:', content.length)
+            console.error('[generate-questions] Response preview:', content.substring(0, 500))
+            throw new Error('Failed to parse AI response - no JSON array found')
           }
         } catch (finalError) {
           console.error('[generate-questions] All parsing attempts failed')
