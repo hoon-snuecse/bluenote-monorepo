@@ -79,23 +79,23 @@ export async function POST(request) {
 - 중 난이도: ${difficultyMedium}개 (기본 개념 이해)
 - 하 난이도: ${difficultyLow}개 (기초 개념, 단순 암기)
 
-다음 형식으로 정확히 ${totalQuestions}개의 문항을 JSON 배열로 생성해주세요:
+다음 형식으로 정확히 ${totalQuestions}개의 문항을 JSON 배열로 생성해주세요.
+OX형은 options가 2개, 4지선다형은 options가 4개입니다:
 
 [
   {
-    "question": "질문 내용 (최대 95자)",
-    "type": "true_false" 또는 "multiple_choice",
-    "timeLimit": 20 또는 30,
+    "question": "질문 내용",
+    "type": "true_false",
+    "timeLimit": 20,
     "options": [
-      {"text": "선택지 1 (최대 60자)", "isCorrect": true/false},
-      {"text": "선택지 2 (최대 60자)", "isCorrect": true/false},
-      // 4지선다형은 4개, OX형은 2개
+      {"text": "O", "isCorrect": true},
+      {"text": "X", "isCorrect": false}
     ],
     "explanation": "정답 해설",
     "metadata": {
       "grade": "${grade}",
       "topic": "${topic}",
-      "difficulty": "hard" 또는 "medium" 또는 "easy"
+      "difficulty": "hard"
     }
   }
 ]
@@ -104,16 +104,19 @@ export async function POST(request) {
 1. 질문은 최대 95자, 선택지는 최대 60자로 제한
 2. OX형은 timeLimit 20초, 4지선다형은 30초
 3. OX형의 경우 반드시 "O" (맞다)와 "X" (틀리다) 두 개의 선택지만
-4. 각 문항마다 정확히 하나의 정답만 있어야 함
+4. 각 문항마다 정확히 하나의 정답만 있어야 함 (isCorrect: true는 하나만)
 5. 해설은 교육적이고 이해하기 쉽게 작성
 6. 반드시 지정된 난이도별 문항 수를 정확히 지켜주세요:
    - 난이도 "hard": ${difficultyHigh}개
-   - 난이도 "medium": ${difficultyMedium}개  
+   - 난이도 "medium": ${difficultyMedium}개
    - 난이도 "easy": ${difficultyLow}개
 7. 학년 수준에 맞는 어휘와 개념 사용
 8. 문항 유형별 개수도 정확히 지켜주세요
+9. **중요**: 순수한 JSON 배열만 응답하세요. 주석, 설명, 코드 블록 마커 등은 절대 포함하지 마세요.
+10. **중요**: trailing comma(마지막 항목 뒤 쉼표)를 넣지 마세요.
 
-JSON 형식으로만 응답하고, 다른 텍스트는 포함하지 마세요.`
+응답 예시 (주석 없이 순수 JSON만):
+[{"question":"예시","type":"true_false","timeLimit":20,"options":[{"text":"O","isCorrect":true},{"text":"X","isCorrect":false}],"explanation":"설명","metadata":{"grade":"${grade}","topic":"${topic}","difficulty":"easy"}}]`
 
     const response = await anthropic.messages.create({
       model: aiModel, // 사용자가 선택한 모델 사용
@@ -130,24 +133,45 @@ JSON 형식으로만 응답하고, 다른 텍스트는 포함하지 마세요.`
     // Claude 응답에서 JSON 추출
     const content = response.content[0].text
     let questions
-    
+
     try {
       // JSON 파싱 시도
       questions = JSON.parse(content)
     } catch (parseError) {
-      // JSON이 코드 블록으로 감싸진 경우 처리
-      const jsonMatch = content.match(/```json?\n?([\s\S]*?)\n?```/)
-      if (jsonMatch) {
-        questions = JSON.parse(jsonMatch[1])
-      } else {
-        // 직접 JSON 찾기
-        const jsonStart = content.indexOf('[')
-        const jsonEnd = content.lastIndexOf(']') + 1
-        if (jsonStart !== -1 && jsonEnd > jsonStart) {
-          questions = JSON.parse(content.substring(jsonStart, jsonEnd))
+      console.log('[generate-questions] Initial JSON parse failed, trying alternative methods...')
+
+      try {
+        // JSON이 코드 블록으로 감싸진 경우 처리
+        const jsonMatch = content.match(/```json?\n?([\s\S]*?)\n?```/)
+        if (jsonMatch) {
+          console.log('[generate-questions] Found JSON in code block')
+          questions = JSON.parse(jsonMatch[1])
         } else {
-          throw new Error('Failed to parse AI response')
+          // 직접 JSON 찾기
+          const jsonStart = content.indexOf('[')
+          const jsonEnd = content.lastIndexOf(']') + 1
+          if (jsonStart !== -1 && jsonEnd > jsonStart) {
+            console.log('[generate-questions] Extracting JSON from position', jsonStart, 'to', jsonEnd)
+            const jsonString = content.substring(jsonStart, jsonEnd)
+
+            // JSON 문자열 정리 (trailing commas, 주석 등 제거)
+            const cleanedJson = jsonString
+              .replace(/,(\s*[}\]])/g, '$1') // trailing commas 제거
+              .replace(/\/\/.*$/gm, '') // 한 줄 주석 제거
+              .replace(/\/\*[\s\S]*?\*\//g, '') // 블록 주석 제거
+
+            questions = JSON.parse(cleanedJson)
+          } else {
+            console.error('[generate-questions] Could not find JSON array in response')
+            console.error('[generate-questions] Response content:', content.substring(0, 500))
+            throw new Error('Failed to parse AI response - no JSON array found')
+          }
         }
+      } catch (secondError) {
+        console.error('[generate-questions] All parsing attempts failed')
+        console.error('[generate-questions] Parse error:', secondError.message)
+        console.error('[generate-questions] Response preview:', content.substring(0, 1000))
+        throw new Error(`AI 응답 파싱 실패: ${secondError.message}`)
       }
     }
 
