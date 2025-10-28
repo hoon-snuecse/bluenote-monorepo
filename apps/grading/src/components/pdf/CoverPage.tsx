@@ -203,13 +203,13 @@ const styles = StyleSheet.create({
     fontSize: 36, // 표지는 임팩트 있게
     fontWeight: 700,
     color: '#91AF52', // primary-600
-    letterSpacing: -0.5, // 타이트한 자간으로 모던함
+    letterSpacing: 0, // 자간 정상으로
   },
   logoPlus: {
     fontSize: 36,
     fontWeight: 700,
     color: '#F58742', // secondary-600
-    marginLeft: 1,
+    marginLeft: 3, // 충분한 간격
   },
   headerSubtitle: {
     fontSize: 11, // 부제는 절제되게
