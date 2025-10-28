@@ -133,7 +133,8 @@ function getLevelStyle(level: string) {
 const styles = StyleSheet.create({
   page: {
     fontFamily: 'NotoSansKR',
-    padding: 50,
+    padding: 40,
+    paddingTop: 35,
     backgroundColor: '#FFFFFF',
     fontSize: 10,
     fontWeight: 400,
@@ -142,8 +143,8 @@ const styles = StyleSheet.create({
 
   // 헤더 - 개인보고서 스타일 통일
   header: {
-    marginBottom: 20,
-    paddingBottom: 12,
+    marginBottom: 12,
+    paddingBottom: 8,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'baseline',
@@ -166,7 +167,7 @@ const styles = StyleSheet.create({
   tableHeader: {
     flexDirection: 'row',
     backgroundColor: 'transparent',
-    paddingVertical: 6,
+    paddingVertical: 4,
     paddingHorizontal: 3,
   },
   tableHeaderCell: {
@@ -179,7 +180,7 @@ const styles = StyleSheet.create({
   },
   tableRow: {
     flexDirection: 'row',
-    paddingVertical: 4, // 줄간격 축소
+    paddingVertical: 3, // 줄간격 더 축소
     paddingHorizontal: 3,
   },
   tableRowEven: {
@@ -190,7 +191,7 @@ const styles = StyleSheet.create({
     color: '#475569',
     textAlign: 'center',
     fontWeight: 400,
-    lineHeight: 1.4,
+    lineHeight: 1.3,
   },
 
   // 컬럼 너비 - 최적화하여 공간 절약
