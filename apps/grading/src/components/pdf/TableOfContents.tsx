@@ -143,8 +143,6 @@ const styles = StyleSheet.create({
   // 헤더 - 편집 디자인: 미니멀하고 세련되게
   header: {
     marginBottom: 24,
-    borderBottomWidth: 0.5,
-    borderBottomColor: '#cbd5e1', // 더 연하게
     paddingBottom: 16,
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -168,8 +166,6 @@ const styles = StyleSheet.create({
   tableHeader: {
     flexDirection: 'row',
     backgroundColor: 'transparent', // 배경 제거로 깔끔하게
-    borderBottomWidth: 1,
-    borderBottomColor: '#e2e8f0',
     paddingVertical: 8,
     paddingHorizontal: 4,
   },
@@ -183,8 +179,6 @@ const styles = StyleSheet.create({
   },
   tableRow: {
     flexDirection: 'row',
-    borderBottomWidth: 0.25, // 매우 얇게
-    borderBottomColor: '#f1f5f9',
     paddingVertical: 7,
     paddingHorizontal: 4,
   },
@@ -225,8 +219,6 @@ const styles = StyleSheet.create({
     left: 50,
     right: 50,
     alignItems: 'center',
-    borderTopWidth: 0.5,
-    borderTopColor: '#e2e8f0',
     paddingTop: 12,
   },
   footerText: {

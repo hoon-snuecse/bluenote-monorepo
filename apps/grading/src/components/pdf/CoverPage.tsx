@@ -275,9 +275,6 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     paddingHorizontal: 12,
     backgroundColor: '#fafbfc',
-    borderWidth: 0,
-    borderBottomWidth: 2, // 하단 강조선으로 모던함
-    borderBottomColor: '#f1f5f9',
     alignItems: 'center',
   },
   statLabel: {
@@ -322,8 +319,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#f8fafc',
     marginHorizontal: 10,
     overflow: 'hidden',
-    borderWidth: 0.5,
-    borderColor: '#e2e8f0',
   },
   bar: {
     height: '100%',

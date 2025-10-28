@@ -291,8 +291,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 24,
     paddingBottom: 12,
-    borderBottomWidth: 0.5,
-    borderBottomColor: '#e2e8f0',
   },
   logoContainer: {
     flexDirection: 'row',
@@ -323,8 +321,6 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     padding: 12,
     backgroundColor: '#f8fafc',
-    borderWidth: 0.5,
-    borderColor: '#e2e8f0',
   },
   assignmentRow: {
     flexDirection: 'row',
@@ -395,8 +391,6 @@ const styles = StyleSheet.create({
   submissionBox: {
     backgroundColor: '#f8fafc',
     padding: 12,
-    borderWidth: 0.5,
-    borderColor: '#e2e8f0',
   },
   submissionText: {
     fontSize: 9,
@@ -429,8 +423,6 @@ const styles = StyleSheet.create({
   feedbackBox: {
     backgroundColor: '#ffffff',
     padding: 10,
-    borderWidth: 0.5,
-    borderColor: '#e2e8f0',
   },
   feedbackText: {
     fontSize: 9,
@@ -470,8 +462,6 @@ const styles = StyleSheet.create({
   domainFeedbackBox: {
     backgroundColor: '#f8fafc',
     padding: 8,
-    borderLeftWidth: 1.5,
-    borderLeftColor: '#91AF52', // primary-600
   },
   domainFeedback: {
     fontSize: 8.5,
@@ -517,8 +507,6 @@ const styles = StyleSheet.create({
     right: 40,
     flexDirection: 'row',
     justifyContent: 'space-between',
-    borderTopWidth: 0.5,
-    borderTopColor: '#e2e8f0',
     paddingTop: 8,
   },
   footerText: {
