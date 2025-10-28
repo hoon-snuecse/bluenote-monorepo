@@ -2,30 +2,32 @@ import { Font } from '@react-pdf/renderer';
 
 /**
  * PDF 생성을 위한 한글 폰트 등록
- * Vercel 서버리스 환경에서는 jsDelivr CDN을 사용합니다.
+ * Google Fonts에서 직접 TTF 파일을 로드합니다.
+ * Vercel 서버리스 환경에서 안정적으로 작동합니다.
  */
 export function registerKoreanFonts() {
   try {
-    // jsDelivr CDN을 통해 Noto Sans KR 폰트 로드
+    // Google Fonts에서 직접 TTF 파일 로드
+    // curl 'https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap' 에서 추출한 실제 TTF URL
     Font.register({
       family: 'NotoSansKR',
       fonts: [
         {
-          src: 'https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2108@1.1/NotoSansKR-Regular.woff',
+          src: 'https://fonts.gstatic.com/s/notosanskr/v38/PbyxFmXiEBPT4ITbgNA5Cgms3VYcOA-vvnIzzuoyeLQ.ttf',
           fontWeight: 400,
         },
         {
-          src: 'https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2108@1.1/NotoSansKR-Medium.woff',
+          src: 'https://fonts.gstatic.com/s/notosanskr/v38/PbyxFmXiEBPT4ITbgNA5Cgms3VYcOA-vvnIzztgyeLQ.ttf',
           fontWeight: 500,
         },
         {
-          src: 'https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2108@1.1/NotoSansKR-Bold.woff',
+          src: 'https://fonts.gstatic.com/s/notosanskr/v38/PbyxFmXiEBPT4ITbgNA5Cgms3VYcOA-vvnIzzg01eLQ.ttf',
           fontWeight: 700,
         },
       ],
     });
 
-    console.log('✅ Korean fonts registered successfully (Noto Sans KR from jsDelivr CDN)');
+    console.log('✅ Korean fonts registered successfully (Noto Sans KR from Google Fonts)');
     return true;
   } catch (error) {
     console.error('❌ Font registration failed:', error);
