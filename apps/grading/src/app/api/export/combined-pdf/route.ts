@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import React from 'react';
 import prisma from '@/lib/prisma';
 import { Document, pdf } from '@react-pdf/renderer';
 import { CoverPage } from '@/components/pdf/CoverPage';
