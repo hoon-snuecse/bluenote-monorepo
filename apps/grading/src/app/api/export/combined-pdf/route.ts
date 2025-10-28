@@ -7,7 +7,6 @@ import { TableOfContents } from '@/components/pdf/TableOfContents';
 import { StudentReportPDF } from '@/components/pdf/StudentReportPDF';
 import { registerKoreanFonts } from '@/lib/pdf-font-setup';
 import { getSessionWithPermissions } from '@/lib/auth-helpers';
-import { checkAssignmentPermission } from '@/lib/assignment-auth';
 
 /**
  * 통합 PDF 생성 API
@@ -22,7 +21,7 @@ export async function POST(request: NextRequest) {
     // 한글 폰트 등록
     registerKoreanFonts();
 
-    // 인증 확인
+    // 인증 확인 (개별 PDF와 동일한 방식)
     const session = await getSessionWithPermissions();
     const userEmail = session?.user?.email;
 
@@ -34,15 +33,6 @@ export async function POST(request: NextRequest) {
     }
 
     const { assignmentId, submissionIds } = await request.json();
-
-    // 권한 확인
-    const permission = await checkAssignmentPermission(assignmentId, userEmail);
-    if (!permission.canRead) {
-      return NextResponse.json(
-        { success: false, error: '이 과제를 조회할 권한이 없습니다.' },
-        { status: 403 }
-      );
-    }
 
     // 1. 과제 정보 조회
     const assignment = await prisma.assignment.findUnique({
