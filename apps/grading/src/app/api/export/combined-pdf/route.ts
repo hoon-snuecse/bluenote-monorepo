@@ -345,11 +345,11 @@ function createTableOfContentsPages(students: Array<{
         View,
         { style: tocStyles.header },
         React.createElement(Text, { style: tocStyles.title }, '목차'),
-        totalPages > 1 && React.createElement(
+        ...(totalPages > 1 ? [React.createElement(
           Text,
           { style: tocStyles.pageInfo },
           `${pageIndex + 1} / ${totalPages}`
-        )
+        )] : [])
       ),
       // Table Header
       React.createElement(
