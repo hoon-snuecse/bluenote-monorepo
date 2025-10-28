@@ -82,6 +82,7 @@ export async function POST(request: NextRequest) {
         studentId: evaluation.submission.studentId,
       },
       submission: evaluation.submission,
+      studentPageStart: 1, // 개별 보고서는 1페이지부터 시작
     })
 
     const pdfBuffer = await pdf(doc).toBlob()
