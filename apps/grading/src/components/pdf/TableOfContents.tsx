@@ -89,6 +89,7 @@ export function TableOfContents({ students }: TableOfContentsProps) {
   return <>{pages}</>;
 }
 
+
 /**
  * 성취 수준에 따른 스타일 반환
  */

@@ -64,3 +64,6 @@ temp/
 *.backup.*
 *.bak
 .env.backup*
+
+# Obsidian Project Notes (personal documentation, not version controlled)
+Project-Notes/

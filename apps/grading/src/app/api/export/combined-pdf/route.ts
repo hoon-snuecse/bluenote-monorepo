@@ -137,14 +137,17 @@ export async function POST(request: NextRequest) {
     });
 
     // 8. PDF 문서 생성
+    // TableOfContents는 JSX fragment를 반환하므로, 먼저 렌더링해서 페이지들을 얻어야 함
+    const tocElement = React.createElement(TableOfContents, { students: tocStudents });
+
     const CombinedPDFDocument = () =>
       React.createElement(
         Document,
         null,
         // 1. 표지 페이지
         React.createElement(CoverPage, coverPageData),
-        // 2. 목차 페이지
-        React.createElement(TableOfContents, { students: tocStudents }),
+        // 2. 목차 페이지(들)
+        tocElement,
         // 3. 개별 학생 보고서들
         ...evaluatedSubmissions.map((submission) => {
           const evaluation = submission.evaluations[0];
@@ -202,8 +205,18 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error('Combined PDF generation error:', error);
+    // Log detailed error information
+    if (error instanceof Error) {
+      console.error('Error name:', error.name);
+      console.error('Error message:', error.message);
+      console.error('Error stack:', error.stack);
+    }
     return NextResponse.json(
-      { success: false, error: 'PDF 생성 중 오류가 발생했습니다.' },
+      {
+        success: false,
+        error: 'PDF 생성 중 오류가 발생했습니다.',
+        details: error instanceof Error ? error.message : String(error)
+      },
       { status: 500 }
     );
   }

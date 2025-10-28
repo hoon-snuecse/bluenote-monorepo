@@ -12,6 +12,9 @@ const publicPaths = [
   '/api/check-env',
   '/api/public',        // 모든 public API 경로 허용
   '/api/submissions',   // 학생 제출용 API
+  '/api/lm-studio',     // LM Studio API 경로
+  '/api/test-lm-studio', // LM Studio 테스트 API
+  '/test-lm-studio',    // LM Studio 테스트 페이지
   '/submit',
   '/view',
   '/public-submissions',

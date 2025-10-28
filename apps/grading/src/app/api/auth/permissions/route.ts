@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
-import { createServerClient } from '@bluenote/supabase-auth';
+import { createServerClient } from '@bluenote/supabase-auth/server';
+import { createAdminClient } from '@/lib/supabase';
 import { cookies } from 'next/headers';
 
 export async function GET() {
@@ -15,8 +16,10 @@ export async function GET() {
     }
     
     // Get user permissions using service role (bypasses RLS)
+    const adminSupabase = createAdminClient();
+    
     // Try user_email first, then email column for backward compatibility
-    let { data, error } = await supabase
+    let { data, error } = await adminSupabase
       .from('user_permissions')
       .select('*')
       .eq('user_email', session.user.email)
@@ -24,7 +27,7 @@ export async function GET() {
     
     // If user_email column doesn't exist, try email column
     if (error && error.code === '42703') {
-      const result = await supabase
+      const result = await adminSupabase
         .from('user_permissions')
         .select('*')
         .eq('email', session.user.email)
