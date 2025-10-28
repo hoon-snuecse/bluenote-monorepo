@@ -182,7 +182,7 @@ export function StudentReportPDF({
 
             {evaluation.strengths.map((strength, index) => (
               <View key={index} style={styles.listItem}>
-                <Text style={styles.listBullet}>•</Text>
+                <Text style={styles.listBullet}>●</Text>
                 <Text style={styles.listText}>{strength}</Text>
               </View>
             ))}
@@ -197,7 +197,7 @@ export function StudentReportPDF({
 
             {evaluation.improvementSuggestions.map((suggestion, index) => (
               <View key={index} style={styles.listItem}>
-                <Text style={styles.listNumber}>{index + 1}.</Text>
+                <Text style={styles.listBullet}>●</Text>
                 <Text style={styles.listText}>{suggestion}</Text>
               </View>
             ))}
@@ -213,13 +213,13 @@ export function StudentReportPDF({
         </View>
 
         {/* 푸터 */}
-        <View style={styles.footer}>
+        <View style={styles.footer} fixed>
           <Text style={styles.footerText}>
             평가일: {formatDateKorean(evaluation.evaluatedAt)}
           </Text>
-          <Text style={styles.footerText}>
-            {evaluation.evaluatedBy || 'AI 평가'}
-          </Text>
+          <Text style={styles.footerText} render={({ pageNumber, totalPages }) => (
+            `${pageNumber} / ${totalPages}`
+          )} />
         </View>
     </Page>
   );
@@ -306,22 +306,22 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   logoStaged: {
-    fontSize: 14, // 사용자 요청: 더 크게
+    fontSize: 18, // 더 크게
     fontWeight: 700,
     color: '#91AF52',
-    letterSpacing: -0.3,
+    letterSpacing: 0.5,
   },
   logoPlus: {
-    fontSize: 14,
+    fontSize: 18,
     fontWeight: 700,
     color: '#F58742',
-    marginLeft: 0.5,
+    marginLeft: 1,
   },
   mainTitle: {
-    fontSize: 10, // 제목도 크게
-    fontWeight: 500,
-    color: '#78716C', // neutral-500
-    letterSpacing: 0.5,
+    fontSize: 13, // 제목 크게
+    fontWeight: 400, // Regular
+    color: '#4A4B3D', // neutral-700
+    letterSpacing: 0.3,
   },
 
   // 과제 정보
@@ -353,16 +353,16 @@ const styles = StyleSheet.create({
     marginBottom: 18,
   },
   sectionTitle: {
-    fontSize: 11, // 사용자 요청: 1-2pt 크게
-    fontWeight: 700,
-    color: '#4A4B3D', // neutral-700 - 더 진하게
+    fontSize: 11,
+    fontWeight: 600, // Bold → Semibold (컬러 인쇄용)
+    color: '#4A4B3D', // neutral-700
     marginBottom: 10,
     letterSpacing: 0.3,
   },
   subsectionTitle: {
     fontSize: 9,
-    fontWeight: 400, // Regular로 절제
-    color: '#94a3b8', // 더 연하게
+    fontWeight: 400, // Regular
+    color: '#94a3b8',
     marginBottom: 6,
     marginTop: 10,
     letterSpacing: 0.5,
@@ -458,7 +458,7 @@ const styles = StyleSheet.create({
   },
   domainTitle: {
     fontSize: 9,
-    fontWeight: 400, // Regular로 절제
+    fontWeight: 400, // Regular
     color: '#475569',
     flex: 1,
     letterSpacing: 0,
@@ -496,7 +496,7 @@ const styles = StyleSheet.create({
     fontSize: 9,
     color: '#91AF52', // primary-600
     marginRight: 5,
-    fontWeight: 400, // Regular, not medium
+    fontWeight: 400, // Regular
     width: 16,
   },
   listText: {
