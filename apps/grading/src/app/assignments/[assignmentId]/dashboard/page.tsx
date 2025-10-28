@@ -1041,7 +1041,9 @@ function SubmissionManagementTab({ assignment, students, params, router }: any) 
       });
 
       if (!response.ok) {
-        throw new Error('PDF 생성 실패');
+        const errorData = await response.json().catch(() => ({}));
+        console.error('PDF generation error:', errorData);
+        throw new Error(errorData.details || errorData.error || 'PDF 생성 실패');
       }
 
       const blob = await response.blob();
@@ -1057,7 +1059,8 @@ function SubmissionManagementTab({ assignment, students, params, router }: any) 
       alert(`${selectedEvaluatedSubmissions.length}명의 평가 보고서를 내보냈습니다.`);
     } catch (error) {
       console.error('PDF 내보내기 오류:', error);
-      alert('PDF 내보내기 중 오류가 발생했습니다.');
+      const errorMessage = error instanceof Error ? error.message : 'PDF 내보내기 중 오류가 발생했습니다.';
+      alert(errorMessage);
     } finally {
       setIsExporting(false);
     }
@@ -1090,7 +1093,9 @@ function SubmissionManagementTab({ assignment, students, params, router }: any) 
       });
 
       if (!response.ok) {
-        throw new Error('PDF 생성 실패');
+        const errorData = await response.json().catch(() => ({}));
+        console.error('PDF generation error:', errorData);
+        throw new Error(errorData.details || errorData.error || 'PDF 생성 실패');
       }
 
       const blob = await response.blob();
@@ -1106,7 +1111,8 @@ function SubmissionManagementTab({ assignment, students, params, router }: any) 
       alert(`${evaluatedSubmissions.length}명의 평가 보고서를 내보냈습니다.`);
     } catch (error) {
       console.error('PDF 내보내기 오류:', error);
-      alert('PDF 내보내기 중 오류가 발생했습니다.');
+      const errorMessage = error instanceof Error ? error.message : 'PDF 내보내기 중 오류가 발생했습니다.';
+      alert(errorMessage);
     } finally {
       setIsExporting(false);
     }
