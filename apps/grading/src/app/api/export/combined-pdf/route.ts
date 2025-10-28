@@ -119,8 +119,8 @@ export async function POST(request: NextRequest) {
 
     // 7. 목차 데이터 (페이지 번호 계산)
     // 목차 페이지 수 계산 (30명당 1페이지)
-    const tocPages = Math.ceil(evaluatedSubmissions.length / 30);
-    let currentPage = 1 + tocPages; // 표지(1페이지) + 목차(tocPages 페이지)
+    const tocPageCount = Math.ceil(evaluatedSubmissions.length / 30);
+    let currentPage = 1 + tocPageCount; // 표지(1페이지) + 목차(tocPageCount 페이지)
 
     const tocStudents = evaluatedSubmissions.map((submission, index) => {
       const pageNumber = currentPage;
