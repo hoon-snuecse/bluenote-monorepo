@@ -147,61 +147,56 @@ export async function POST(request: NextRequest) {
     });
 
     // 8. PDF 문서 생성
-    const CombinedPDFDocument = () => (
-      <Document>
-        {/* 1. 표지 페이지 */}
-        <CoverPage {...coverPageData} />
-
-        {/* 2. 목차 페이지 (25명 이상일 때만 또는 항상) */}
-        <TableOfContents students={tocStudents} />
-
-        {/* 3. 개별 학생 보고서들 */}
-        {evaluatedSubmissions.map((submission) => {
+    const CombinedPDFDocument = () =>
+      React.createElement(
+        Document,
+        null,
+        // 1. 표지 페이지
+        React.createElement(CoverPage, coverPageData),
+        // 2. 목차 페이지
+        React.createElement(TableOfContents, { students: tocStudents }),
+        // 3. 개별 학생 보고서들
+        ...evaluatedSubmissions.map((submission) => {
           const evaluation = submission.evaluations[0];
           const improvementSuggestions = parseJSON(evaluation.improvementSuggestions);
           const strengths = parseJSON(evaluation.strengths);
 
-          return (
-            <StudentReportPDF
-              key={submission.id}
-              evaluation={{
-                id: evaluation.id,
-                domainEvaluations: parseJSON(evaluation.domainEvaluations),
-                overallLevel: evaluation.overallLevel,
-                overallFeedback: evaluation.overallFeedback,
-                improvementSuggestions: Array.isArray(improvementSuggestions)
-                  ? improvementSuggestions
-                  : [improvementSuggestions],
-                strengths: Array.isArray(strengths)
-                  ? strengths
-                  : [strengths],
-                evaluatedAt: new Date(evaluation.evaluatedAt),
-                evaluatedBy: evaluation.evaluatedBy || undefined,
-              }}
-              assignment={{
-                title: assignment.title,
-                schoolName: assignment.schoolName,
-                gradeLevel: assignment.gradeLevel,
-                writingType: assignment.writingType,
-                evaluationDomains,
-                evaluationLevels,
-              }}
-              student={{
-                name: submission.studentName,
-                studentId: submission.studentId,
-              }}
-              submission={{
-                content: submission.content,
-                submittedAt: new Date(submission.submittedAt),
-              }}
-            />
-          );
-        })}
-      </Document>
-    );
+          return React.createElement(StudentReportPDF, {
+            key: submission.id,
+            evaluation: {
+              id: evaluation.id,
+              domainEvaluations: parseJSON(evaluation.domainEvaluations),
+              overallLevel: evaluation.overallLevel,
+              overallFeedback: evaluation.overallFeedback,
+              improvementSuggestions: Array.isArray(improvementSuggestions)
+                ? improvementSuggestions
+                : [improvementSuggestions],
+              strengths: Array.isArray(strengths) ? strengths : [strengths],
+              evaluatedAt: new Date(evaluation.evaluatedAt),
+              evaluatedBy: evaluation.evaluatedBy || undefined,
+            },
+            assignment: {
+              title: assignment.title,
+              schoolName: assignment.schoolName,
+              gradeLevel: assignment.gradeLevel,
+              writingType: assignment.writingType,
+              evaluationDomains,
+              evaluationLevels,
+            },
+            student: {
+              name: submission.studentName,
+              studentId: submission.studentId,
+            },
+            submission: {
+              content: submission.content,
+              submittedAt: new Date(submission.submittedAt),
+            },
+          });
+        })
+      );
 
     // 9. PDF 렌더링
-    const pdfBlob = await pdf(<CombinedPDFDocument />).toBlob();
+    const pdfBlob = await pdf(React.createElement(CombinedPDFDocument)).toBlob();
     const pdfBuffer = await pdfBlob.arrayBuffer();
 
     // 10. 파일명 생성
