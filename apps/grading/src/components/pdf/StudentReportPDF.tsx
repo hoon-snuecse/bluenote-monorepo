@@ -360,7 +360,7 @@ const styles = StyleSheet.create({
 
   // 섹션 - 편집 디자인: 타이포그래피 계층 명확하게
   section: {
-    marginBottom: 18,
+    marginBottom: 14,
   },
   sectionTitle: {
     fontSize: 11,
