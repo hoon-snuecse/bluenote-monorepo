@@ -2,60 +2,34 @@ import { Font } from '@react-pdf/renderer';
 
 /**
  * PDF 생성을 위한 한글 폰트 등록
- * Noto Sans KR 폰트를 로컬 파일에서 로드하여 등록합니다.
+ * Vercel 서버리스 환경에서는 Google Fonts CDN을 사용합니다.
  */
 export function registerKoreanFonts() {
   try {
+    // Vercel 서버리스 환경에서는 CDN 폰트를 직접 사용
     Font.register({
       family: 'NotoSansKR',
       fonts: [
         {
-          src: '/fonts/NotoSansKR-Regular.ttf',
+          src: 'https://fonts.gstatic.com/s/notosanskr/v36/PbykFmXiEBPT4ITbgNA5Cgm20xz64px_1hVWr0wuPNGmlQNMEfD4.ttf',
           fontWeight: 400,
         },
         {
-          src: '/fonts/NotoSansKR-Medium.ttf',
+          src: 'https://fonts.gstatic.com/s/notosanskr/v36/PbykFmXiEBPT4ITbgNA5Cgm20xz64px_1hVWr0wuPNGmlQNMEfD4.ttf',
           fontWeight: 500,
         },
         {
-          src: '/fonts/NotoSansKR-Bold.ttf',
+          src: 'https://fonts.gstatic.com/s/notosanskr/v36/PbykFmXiEBPT4ITbgNA5Cgm20xz64px_1hVWr0xuPNGmlQNMEfD4.ttf',
           fontWeight: 700,
         },
       ],
     });
 
-    console.log('✅ Korean fonts registered successfully (Noto Sans KR)');
+    console.log('✅ Korean fonts registered successfully (Noto Sans KR from CDN)');
     return true;
   } catch (error) {
     console.error('❌ Font registration failed:', error);
-    console.error('Please ensure font files exist in /public/fonts/');
-
-    // Fallback: Google Fonts CDN
-    console.warn('⚠️ Attempting to use fallback CDN fonts...');
-    try {
-      Font.register({
-        family: 'NotoSansKR',
-        fonts: [
-          {
-            src: 'https://fonts.gstatic.com/s/notosanskr/v36/PbykFmXiEBPT4ITbgNA5Cgm20xz64px_1hVWr0wuPNGmlQNMEfD4.ttf',
-            fontWeight: 400,
-          },
-          {
-            src: 'https://fonts.gstatic.com/s/notosanskr/v36/PbykFmXiEBPT4ITbgNA5Cgm20xz64px_1hVWr0wuPNGmlQNMEfD4.ttf',
-            fontWeight: 500,
-          },
-          {
-            src: 'https://fonts.gstatic.com/s/notosanskr/v36/PbykFmXiEBPT4ITbgNA5Cgm20xz64px_1hVWr0xuPNGmlQNMEfD4.ttf',
-            fontWeight: 700,
-          },
-        ],
-      });
-      console.log('✅ Fallback CDN fonts registered');
-      return true;
-    } catch (fallbackError) {
-      console.error('❌ Fallback font registration also failed:', fallbackError);
-      return false;
-    }
+    return false;
   }
 }
 
