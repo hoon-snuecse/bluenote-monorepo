@@ -77,7 +77,7 @@ export function StudentReportPDF({
           <View style={styles.assignmentRow}>
             <Text style={styles.icon}>●</Text>
             <Text style={styles.assignmentText}>
-              학교: {assignment.schoolName} {assignment.gradeLevel}
+              학교: {assignment.schoolName} {assignment.gradeLevel.replace('초등학교 ', '')}
             </Text>
           </View>
         </View>

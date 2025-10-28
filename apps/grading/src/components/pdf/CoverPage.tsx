@@ -68,7 +68,7 @@ export function CoverPage({
           <View>
             <Text style={styles.label}>학교</Text>
             <Text style={styles.value}>
-              {assignment.schoolName} {assignment.gradeLevel}
+              {assignment.schoolName} {assignment.gradeLevel.replace('초등학교 ', '')}
               {assignment.className && ` ${assignment.className}`}
             </Text>
           </View>
