@@ -305,8 +305,12 @@ export default function DashboardPage() {
         csv += `${index + 1},${student.name},${student.studentId},${student.overallLevel}`;
         if (assignment?.evaluationDomains) {
           assignment.evaluationDomains.forEach((domain: string) => {
-            const score = student.scores?.[domain] || '-';
-            csv += `,${score}`;
+            const score = student.scores?.[domain];
+            // score가 객체인 경우 level 속성 추출, 아니면 그대로 사용
+            const level = typeof score === 'object' && score !== null
+              ? (score as any).level
+              : score;
+            csv += `,${level || '-'}`;
           });
         }
         csv += `,${student.evaluatedAt ? new Date(student.evaluatedAt).toLocaleString('ko-KR') : '-'}\n`;
