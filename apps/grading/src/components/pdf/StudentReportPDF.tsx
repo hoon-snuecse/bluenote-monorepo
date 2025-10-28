@@ -67,13 +67,13 @@ export function StudentReportPDF({
         {/* 과제 정보 (간략) */}
         <View style={styles.assignmentInfo}>
           <View style={styles.assignmentRow}>
-            <Text style={styles.icon}>■</Text>
+            <Text style={styles.icon}>●</Text>
             <Text style={styles.assignmentText}>
               과제: {assignment.title}
             </Text>
           </View>
           <View style={styles.assignmentRow}>
-            <Text style={styles.icon}>■</Text>
+            <Text style={styles.icon}>●</Text>
             <Text style={styles.assignmentText}>
               학교: {assignment.schoolName} {assignment.gradeLevel}
             </Text>
@@ -82,7 +82,7 @@ export function StudentReportPDF({
 
         {/* 학생 정보 */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>학생 정보</Text>
+          <Text style={styles.sectionTitle}>▎학생 정보</Text>
           <View style={styles.divider} />
 
           <View style={styles.infoGrid}>
@@ -111,7 +111,7 @@ export function StudentReportPDF({
 
         {/* 학생이 제출한 글 (위치 이동됨 - 학생정보 다음) */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>제출한 글</Text>
+          <Text style={styles.sectionTitle}>▎제출한 글</Text>
           <View style={styles.divider} />
 
           <View style={styles.submissionBox}>
@@ -123,7 +123,7 @@ export function StudentReportPDF({
 
         {/* 종합 평가 */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>종합 평가</Text>
+          <Text style={styles.sectionTitle}>▎종합 평가</Text>
           <View style={styles.divider} />
 
           <View style={styles.overallBox}>
@@ -145,7 +145,7 @@ export function StudentReportPDF({
 
         {/* 영역별 평가 */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>영역별 상세 평가</Text>
+          <Text style={styles.sectionTitle}>▎영역별 상세 평가</Text>
           <View style={styles.divider} />
 
           {assignment.evaluationDomains.map((domain, index) => {
@@ -177,7 +177,7 @@ export function StudentReportPDF({
         {/* 강점 */}
         {evaluation.strengths && evaluation.strengths.length > 0 && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>강점</Text>
+            <Text style={styles.sectionTitle}>▎강점</Text>
             <View style={styles.divider} />
 
             {evaluation.strengths.map((strength, index) => (
@@ -192,7 +192,7 @@ export function StudentReportPDF({
         {/* 개선 방안 */}
         {evaluation.improvementSuggestions && evaluation.improvementSuggestions.length > 0 && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>개선 방안</Text>
+            <Text style={styles.sectionTitle}>▎개선 방안</Text>
             <View style={styles.divider} />
 
             {evaluation.improvementSuggestions.map((suggestion, index) => (
@@ -203,6 +203,14 @@ export function StudentReportPDF({
             ))}
           </View>
         )}
+
+        {/* Disclaimer */}
+        <View style={styles.disclaimer}>
+          <Text style={styles.disclaimerText}>
+            ● 글쓰기 평가 보고서는 학생의 글을 선생님이 정한 규칙에 따라 AI가 채점한 것입니다.{'\n'}
+            ● 보고서에서 제시하는 강점과 개선 방안을 읽고 성장을 위해 노력해야 할 점을 생각해 봅시다.
+          </Text>
+        </View>
 
         {/* 푸터 */}
         <View style={styles.footer}>
@@ -298,22 +306,22 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   logoStaged: {
-    fontSize: 11, // 더 작게
+    fontSize: 14, // 사용자 요청: 더 크게
     fontWeight: 700,
     color: '#91AF52',
-    letterSpacing: -0.2,
+    letterSpacing: -0.3,
   },
   logoPlus: {
-    fontSize: 11,
+    fontSize: 14,
     fontWeight: 700,
     color: '#F58742',
     marginLeft: 0.5,
   },
   mainTitle: {
-    fontSize: 8, // 매우 작게
-    fontWeight: 400,
-    color: '#94a3b8', // 더 연하게
-    letterSpacing: 1.0,
+    fontSize: 10, // 제목도 크게
+    fontWeight: 500,
+    color: '#78716C', // neutral-500
+    letterSpacing: 0.5,
   },
 
   // 과제 정보
@@ -328,9 +336,10 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   icon: {
-    fontSize: 10,
+    fontSize: 8,
     marginRight: 6,
     fontWeight: 400,
+    color: '#91AF52', // primary-600
   },
   assignmentText: {
     fontSize: 9.5, // Between xs and sm
@@ -344,11 +353,11 @@ const styles = StyleSheet.create({
     marginBottom: 18,
   },
   sectionTitle: {
-    fontSize: 9, // 작지만 명확
+    fontSize: 11, // 사용자 요청: 1-2pt 크게
     fontWeight: 700,
-    color: '#64748b', // 검정보다 회색으로 절제
+    color: '#4A4B3D', // neutral-700 - 더 진하게
     marginBottom: 10,
-    letterSpacing: 1.0, // 자간 넓혀 우아함
+    letterSpacing: 0.3,
   },
   subsectionTitle: {
     fontSize: 9,
@@ -496,6 +505,21 @@ const styles = StyleSheet.create({
     fontWeight: 400,
     color: '#64748b',
     flex: 1,
+    letterSpacing: -0.01,
+  },
+
+  // Disclaimer
+  disclaimer: {
+    marginTop: 20,
+    marginBottom: 40,
+    padding: 12,
+    backgroundColor: '#F7FAF3', // primary-50
+  },
+  disclaimerText: {
+    fontSize: 8.5,
+    fontWeight: 400,
+    color: '#607835', // primary-800
+    lineHeight: 1.6,
     letterSpacing: -0.01,
   },
 
