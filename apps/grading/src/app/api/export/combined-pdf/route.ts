@@ -117,10 +117,10 @@ export async function POST(request: NextRequest) {
         evaluatedSubmissions[0].evaluations[0].evaluatedBy || 'Claude Sonnet 4.5',
     };
 
-    // 7. 목차 데이터 (페이지 번호 계산)
+    // 7. 목차 데이터 및 개인별 시작 페이지 계산
     // 목차 페이지 수 계산 (30명당 1페이지)
     const tocPageCount = Math.ceil(evaluatedSubmissions.length / 30);
-    let currentPage = 1 + tocPageCount; // 표지(1페이지) + 목차(tocPageCount 페이지)
+    let currentPage = includeHeaderPages ? (1 + tocPageCount) : 1; // 표지(1페이지) + 목차(tocPageCount 페이지) or 1페이지(개인보고서만)
 
     const tocStudents = evaluatedSubmissions.map((submission, index) => {
       const pageNumber = currentPage;
@@ -149,7 +149,7 @@ export async function POST(request: NextRequest) {
         // 2. 목차 페이지(들) (2명 이상일 때만)
         ...tocPages,
         // 3. 개별 학생 보고서들
-        ...evaluatedSubmissions.map((submission) => {
+        ...evaluatedSubmissions.map((submission, index) => {
           const evaluation = submission.evaluations[0];
           const improvementSuggestions = parseJSON(evaluation.improvementSuggestions);
           const strengths = parseJSON(evaluation.strengths);
@@ -184,6 +184,7 @@ export async function POST(request: NextRequest) {
               content: submission.content,
               submittedAt: new Date(submission.submittedAt),
             },
+            studentPageStart: tocStudents[index].pageNumber, // 개인별 시작 페이지
           });
         })
       );

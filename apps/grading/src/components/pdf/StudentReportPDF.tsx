@@ -32,6 +32,7 @@ interface StudentReportPDFProps {
     content: string;
     submittedAt: Date;
   };
+  studentPageStart?: number; // 개인별 페이지 번호 계산을 위한 시작 페이지
 }
 
 /**
@@ -52,6 +53,7 @@ export function StudentReportPDF({
   assignment,
   student,
   submission,
+  studentPageStart,
 }: StudentReportPDFProps) {
   return (
     <Page size="A4" style={styles.page} wrap>
@@ -217,9 +219,15 @@ export function StudentReportPDF({
           <Text style={styles.footerText}>
             평가일: {formatDateKorean(evaluation.evaluatedAt)}
           </Text>
-          <Text style={styles.footerText} render={({ pageNumber, totalPages }) => (
-            `${pageNumber} / ${totalPages}`
-          )} />
+          <Text style={styles.footerText} render={({ pageNumber, totalPages }) => {
+            // 개인별 페이지 번호 계산
+            if (studentPageStart) {
+              const studentPageNum = pageNumber - studentPageStart + 1;
+              const studentTotalPages = 3; // 개인 보고서는 3페이지
+              return `${studentPageNum} / ${studentTotalPages}`;
+            }
+            return `${pageNumber} / ${totalPages}`;
+          }} />
         </View>
     </Page>
   );

@@ -41,13 +41,13 @@ export function CoverPage({
 
   return (
     <Page size="A4" style={styles.page}>
-      {/* 헤더 */}
+      {/* 헤더 - 개인보고서 스타일 적용 */}
       <View style={styles.header}>
         <View style={styles.logoContainer}>
           <Text style={styles.logoStaged}>STAGED</Text>
           <Text style={styles.logoPlus}>+</Text>
         </View>
-        <Text style={styles.headerSubtitle}>글쓰기 평가 보고서</Text>
+        <Text style={styles.mainTitle}>글쓰기 평가 보고서</Text>
       </View>
 
       {/* 구분선 */}
@@ -73,14 +73,6 @@ export function CoverPage({
             </Text>
           </View>
         </View>
-      </View>
-
-      {/* 보고서 포함 내용 */}
-      <View style={styles.contentSection}>
-        <Text style={styles.contentTitle}>이 보고서에는 다음 내용이 포함되어 있습니다:</Text>
-        <Text style={styles.contentItem}>• 과제 및 평가 정보</Text>
-        <Text style={styles.contentItem}>• 학생 목차</Text>
-        <Text style={styles.contentItem}>• 개별 학생 평가 보고서 ({statistics.evaluatedStudents}명)</Text>
       </View>
 
       {/* 구분선 */}
@@ -154,24 +146,17 @@ export function CoverPage({
               {formatDateKorean(dateInfo.evaluationDate)}
             </Text>
           </View>
-
-          <View style={styles.dateRow}>
-            <Text style={styles.dateLabel}>• 평가 모델:</Text>
-            <Text style={styles.dateValue}>{evaluationModel}</Text>
-          </View>
         </View>
       </View>
 
       {/* 구분선 */}
       <View style={styles.dividerThick} />
 
-      {/* 보고서 포함 내용 안내 */}
-      <View style={styles.contentInfo}>
-        <Text style={styles.contentInfoTitle}>이 보고서에는 다음 내용이 포함되어 있습니다:</Text>
-        <Text style={styles.contentInfoItem}>• 과제 및 평가 정보</Text>
-        <Text style={styles.contentInfoItem}>• 학생 목차</Text>
-        <Text style={styles.contentInfoItem}>
-          • 개별 학생 평가 보고서 ({statistics.evaluatedStudents}명)
+      {/* Disclaimer */}
+      <View style={styles.disclaimer}>
+        <Text style={styles.disclaimerText}>
+          ● 글쓰기 평가 보고서는 학생의 글을 선생님이 정한 규칙에 따라 AI가 채점한 것입니다.{'\n'}
+          ● 보고서에서 제시하는 강점과 개선 방안을 읽고 성장을 위해 노력해야 할 점을 생각해 봅시다.
         </Text>
       </View>
 
@@ -196,34 +181,34 @@ const styles = StyleSheet.create({
     lineHeight: 1.6,
   },
 
-  // 헤더 - 편집 디자인 원칙: 여백과 계층 구조
+  // 헤더 - 개인보고서 스타일 적용
   header: {
     alignItems: 'center',
-    marginBottom: 40,
+    marginBottom: 30,
     marginTop: 20,
   },
   logoContainer: {
     flexDirection: 'row',
-    alignItems: 'baseline', // 베이스라인 정렬로 더 세련됨
-    marginBottom: 12,
+    alignItems: 'baseline',
+    marginBottom: 8,
   },
   logoStaged: {
-    fontSize: 36, // 표지는 임팩트 있게
+    fontSize: 18, // 개인보고서와 동일
     fontWeight: 700,
     color: '#91AF52', // primary-600
-    letterSpacing: 2, // 자간 넓혀서 안정감
+    letterSpacing: 0.5,
   },
   logoPlus: {
-    fontSize: 36,
+    fontSize: 18, // 개인보고서와 동일
     fontWeight: 700,
     color: '#F58742', // secondary-600
-    marginLeft: 8, // 충분한 간격으로 증가
+    marginLeft: 3, // 간격 조정
   },
-  headerSubtitle: {
-    fontSize: 11, // 부제는 절제되게
-    fontWeight: 400,
-    color: '#94a3b8', // 더 연한 색으로 후퇴
-    letterSpacing: 1.5, // 자간 넓혀서 우아함 표현
+  mainTitle: {
+    fontSize: 13, // 개인보고서와 동일
+    fontWeight: 400, // Regular
+    color: '#4A4B3D', // neutral-700
+    letterSpacing: 0.3,
   },
 
   // 구분선 - 미니멀하게
@@ -233,16 +218,16 @@ const styles = StyleSheet.create({
     marginVertical: 24,
   },
 
-  // 섹션 - 편집 디자인: 타이포그래피 계층
+  // 섹션 - 개인보고서 스타일 적용
   section: {
-    marginBottom: 24,
+    marginBottom: 20,
   },
   sectionTitle: {
-    fontSize: 10, // 작지만 명확하게
-    fontWeight: 700,
-    color: '#64748b', // 강조 줄이고
-    marginBottom: 12,
-    letterSpacing: 1.2, // 자간 넓혀서 고급스럽게
+    fontSize: 11, // 개인보고서와 동일
+    fontWeight: 600, // Semibold
+    color: '#4A4B3D', // neutral-700
+    marginBottom: 10,
+    letterSpacing: 0.3,
   },
 
   // 과제 정보
@@ -366,45 +351,19 @@ const styles = StyleSheet.create({
     letterSpacing: -0.01,
   },
 
-  // 보고서 포함 내용
-  contentInfo: {
-    paddingLeft: 8,
-  },
-  contentInfoTitle: {
-    fontSize: 10,
-    color: '#64748b',
-    marginBottom: 8,
-    fontWeight: 400,
-    lineHeight: 1.5,
-  },
-  contentInfoItem: {
-    fontSize: 9, // xs
-    color: '#94a3b8',
-    marginBottom: 4,
-    paddingLeft: 8,
-    fontWeight: 400,
-    lineHeight: 1.5,
-  },
-
-  // 보고서 포함 내용
-  contentSection: {
+  // Disclaimer - 개인보고서 스타일 적용
+  disclaimer: {
     marginTop: 16,
-    marginBottom: 16,
+    marginBottom: 20,
     padding: 12,
     backgroundColor: '#F7FAF3', // primary-50
   },
-  contentTitle: {
-    fontSize: 10,
-    fontWeight: 500,
-    color: '#4A4B3D', // neutral-700
-    marginBottom: 8,
-  },
-  contentItem: {
+  disclaimerText: {
     fontSize: 9,
+    lineHeight: 1.6,
     fontWeight: 400,
     color: '#607835', // primary-800
-    lineHeight: 1.6,
-    marginBottom: 3,
+    letterSpacing: -0.01,
   },
 
   // 하단

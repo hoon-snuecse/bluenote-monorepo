@@ -140,22 +140,22 @@ const styles = StyleSheet.create({
     lineHeight: 1.6,
   },
 
-  // 헤더 - 편집 디자인: 미니멀하고 세련되게
+  // 헤더 - 개인보고서 스타일 통일
   header: {
-    marginBottom: 24,
-    paddingBottom: 16,
+    marginBottom: 20,
+    paddingBottom: 12,
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'baseline', // 베이스라인 정렬
+    alignItems: 'baseline',
   },
   title: {
-    fontSize: 12, // 작게
-    fontWeight: 700,
-    color: '#1e293b',
-    letterSpacing: -0.3,
+    fontSize: 11, // 개인보고서 sectionTitle과 동일
+    fontWeight: 600, // Semibold
+    color: '#4A4B3D', // neutral-700
+    letterSpacing: 0.3,
   },
   pageInfo: {
-    fontSize: 7, // 더 작게
+    fontSize: 8,
     color: '#94a3b8',
     fontWeight: 400,
     lineHeight: 1.3,
