@@ -226,7 +226,6 @@ function getLevelBadgeStyle(level: string) {
       backgroundColor: '#f0f4e8',
       paddingHorizontal: 6,
       paddingVertical: 3,
-      borderRadius: 2,
     };
   }
   if (level.includes('우수')) {
@@ -234,7 +233,6 @@ function getLevelBadgeStyle(level: string) {
       backgroundColor: '#f4f7ee',
       paddingHorizontal: 6,
       paddingVertical: 3,
-      borderRadius: 2,
     };
   }
   if (level.includes('보통')) {
@@ -242,7 +240,6 @@ function getLevelBadgeStyle(level: string) {
       backgroundColor: '#f8fafc',
       paddingHorizontal: 6,
       paddingVertical: 3,
-      borderRadius: 2,
     };
   }
   if (level.includes('미흡')) {
@@ -250,14 +247,12 @@ function getLevelBadgeStyle(level: string) {
       backgroundColor: '#f8fafc',
       paddingHorizontal: 6,
       paddingVertical: 3,
-      borderRadius: 2,
     };
   }
   return {
     backgroundColor: '#f8fafc',
     paddingHorizontal: 6,
     paddingVertical: 3,
-    borderRadius: 2,
   };
 }
 
@@ -328,7 +323,6 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     padding: 12,
     backgroundColor: '#f8fafc',
-    borderRadius: 4,
     borderWidth: 0.5,
     borderColor: '#e2e8f0',
   },
@@ -401,7 +395,6 @@ const styles = StyleSheet.create({
   submissionBox: {
     backgroundColor: '#f8fafc',
     padding: 12,
-    borderRadius: 4,
     borderWidth: 0.5,
     borderColor: '#e2e8f0',
   },
@@ -419,7 +412,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 12,
     backgroundColor: 'transparent', // 배경 제거
-    borderRadius: 0,
     marginBottom: 12,
   },
   overallLabel: {
@@ -437,7 +429,6 @@ const styles = StyleSheet.create({
   feedbackBox: {
     backgroundColor: '#ffffff',
     padding: 10,
-    borderRadius: 4,
     borderWidth: 0.5,
     borderColor: '#e2e8f0',
   },
@@ -479,7 +470,6 @@ const styles = StyleSheet.create({
   domainFeedbackBox: {
     backgroundColor: '#f8fafc',
     padding: 8,
-    borderRadius: 3,
     borderLeftWidth: 1.5,
     borderLeftColor: '#91AF52', // primary-600
   },

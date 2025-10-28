@@ -275,7 +275,6 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     paddingHorizontal: 12,
     backgroundColor: '#fafbfc',
-    borderRadius: 2, // 미니멀한 모서리
     borderWidth: 0,
     borderBottomWidth: 2, // 하단 강조선으로 모던함
     borderBottomColor: '#f1f5f9',
@@ -321,7 +320,6 @@ const styles = StyleSheet.create({
     flex: 1,
     height: 16, // 더 가늘게 미니멀하게
     backgroundColor: '#f8fafc',
-    borderRadius: 1,
     marginHorizontal: 10,
     overflow: 'hidden',
     borderWidth: 0.5,
