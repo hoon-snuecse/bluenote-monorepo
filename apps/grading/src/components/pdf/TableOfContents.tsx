@@ -180,7 +180,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 1.4,
     letterSpacing: 0.8,
-    textTransform: 'uppercase' as const,
   },
   tableRow: {
     flexDirection: 'row',

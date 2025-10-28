@@ -321,7 +321,6 @@ const styles = StyleSheet.create({
     fontWeight: 400,
     color: '#94a3b8', // 더 연하게
     letterSpacing: 1.0,
-    textTransform: 'uppercase' as const,
   },
 
   // 과제 정보
@@ -360,7 +359,6 @@ const styles = StyleSheet.create({
     color: '#64748b', // 검정보다 회색으로 절제
     marginBottom: 10,
     letterSpacing: 1.0, // 자간 넓혀 우아함
-    textTransform: 'uppercase' as const,
   },
   subsectionTitle: {
     fontSize: 9,

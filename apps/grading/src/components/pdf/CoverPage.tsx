@@ -216,7 +216,6 @@ const styles = StyleSheet.create({
     fontWeight: 400,
     color: '#94a3b8', // 더 연한 색으로 후퇴
     letterSpacing: 1.5, // 자간 넓혀서 우아함 표현
-    textTransform: 'uppercase' as const,
   },
 
   // 구분선 - 미니멀하게
@@ -236,7 +235,6 @@ const styles = StyleSheet.create({
     color: '#64748b', // 강조 줄이고
     marginBottom: 12,
     letterSpacing: 1.2, // 자간 넓혀서 고급스럽게
-    textTransform: 'uppercase' as const,
   },
 
   // 과제 정보
@@ -290,7 +288,6 @@ const styles = StyleSheet.create({
     fontWeight: 400,
     lineHeight: 1.4,
     letterSpacing: 0.8,
-    textTransform: 'uppercase' as const,
   },
   statValue: {
     fontSize: 24, // 숫자는 크고 임팩트 있게
