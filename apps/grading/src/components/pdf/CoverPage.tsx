@@ -56,7 +56,7 @@ export function CoverPage({
       {/* 과제 정보 */}
       <View style={styles.section}>
         <View style={styles.infoRow}>
-          <Text style={styles.icon}>■</Text>
+          <Text style={styles.icon}>●</Text>
           <View>
             <Text style={styles.label}>과제</Text>
             <Text style={styles.value}>{assignment.title}</Text>
@@ -64,7 +64,7 @@ export function CoverPage({
         </View>
 
         <View style={styles.infoRow}>
-          <Text style={styles.icon}>■</Text>
+          <Text style={styles.icon}>●</Text>
           <View>
             <Text style={styles.label}>학교</Text>
             <Text style={styles.value}>
@@ -73,6 +73,14 @@ export function CoverPage({
             </Text>
           </View>
         </View>
+      </View>
+
+      {/* 보고서 포함 내용 */}
+      <View style={styles.contentSection}>
+        <Text style={styles.contentTitle}>이 보고서에는 다음 내용이 포함되어 있습니다:</Text>
+        <Text style={styles.contentItem}>• 과제 및 평가 정보</Text>
+        <Text style={styles.contentItem}>• 학생 목차</Text>
+        <Text style={styles.contentItem}>• 개별 학생 평가 보고서 ({statistics.evaluatedStudents}명)</Text>
       </View>
 
       {/* 구분선 */}
@@ -244,10 +252,11 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   icon: {
-    fontSize: 14, // Reduced from 18
+    fontSize: 10,
     marginRight: 8,
-    width: 20,
+    width: 15,
     fontWeight: 400,
+    color: '#91AF52', // primary-600
   },
   label: {
     fontSize: 9, // xs
@@ -272,24 +281,24 @@ const styles = StyleSheet.create({
   },
   statBox: {
     flex: 1,
-    paddingVertical: 16,
-    paddingHorizontal: 12,
-    backgroundColor: '#fafbfc',
+    paddingVertical: 14,
+    paddingHorizontal: 10,
+    backgroundColor: '#F7FAF3', // primary-50으로 통일감
     alignItems: 'center',
   },
   statLabel: {
-    fontSize: 8, // 더 작게
-    color: '#94a3b8',
+    fontSize: 8,
+    color: '#78716C', // neutral-500
     marginBottom: 6,
     fontWeight: 400,
     lineHeight: 1.4,
-    letterSpacing: 0.8,
+    letterSpacing: 0.5,
   },
   statValue: {
-    fontSize: 24, // 숫자는 크고 임팩트 있게
-    fontWeight: 300, // Light weight로 현대적으로
+    fontSize: 22, // 약간 줄임
+    fontWeight: 400, // Regular로 깔끔하게
     color: '#1e293b',
-    letterSpacing: -1,
+    letterSpacing: -0.5,
   },
   statValueGreen: {
     color: '#91AF52', // primary-600
@@ -375,6 +384,27 @@ const styles = StyleSheet.create({
     paddingLeft: 8,
     fontWeight: 400,
     lineHeight: 1.5,
+  },
+
+  // 보고서 포함 내용
+  contentSection: {
+    marginTop: 16,
+    marginBottom: 16,
+    padding: 12,
+    backgroundColor: '#F7FAF3', // primary-50
+  },
+  contentTitle: {
+    fontSize: 10,
+    fontWeight: 500,
+    color: '#4A4B3D', // neutral-700
+    marginBottom: 8,
+  },
+  contentItem: {
+    fontSize: 9,
+    fontWeight: 400,
+    color: '#607835', // primary-800
+    lineHeight: 1.6,
+    marginBottom: 3,
   },
 
   // 하단

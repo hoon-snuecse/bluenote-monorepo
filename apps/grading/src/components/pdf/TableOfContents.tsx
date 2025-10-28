@@ -149,67 +149,67 @@ const styles = StyleSheet.create({
     alignItems: 'baseline', // 베이스라인 정렬
   },
   title: {
-    fontSize: 14,
+    fontSize: 12, // 작게
     fontWeight: 700,
     color: '#1e293b',
-    letterSpacing: -0.5,
+    letterSpacing: -0.3,
   },
   pageInfo: {
-    fontSize: 8,
+    fontSize: 7, // 더 작게
     color: '#94a3b8',
     fontWeight: 400,
-    lineHeight: 1.4,
-    letterSpacing: 0.5,
+    lineHeight: 1.3,
+    letterSpacing: 0.3,
   },
 
   // 테이블 - 편집 디자인: 가독성과 우아함
   tableHeader: {
     flexDirection: 'row',
-    backgroundColor: 'transparent', // 배경 제거로 깔끔하게
-    paddingVertical: 8,
-    paddingHorizontal: 4,
+    backgroundColor: 'transparent',
+    paddingVertical: 6,
+    paddingHorizontal: 3,
   },
   tableHeaderCell: {
-    fontSize: 8,
+    fontSize: 7, // 축소
     fontWeight: 500,
     color: '#64748b',
     textAlign: 'center',
-    lineHeight: 1.4,
-    letterSpacing: 0.8,
+    lineHeight: 1.3,
+    letterSpacing: 0.5,
   },
   tableRow: {
     flexDirection: 'row',
-    paddingVertical: 7,
-    paddingHorizontal: 4,
+    paddingVertical: 4, // 줄간격 축소
+    paddingHorizontal: 3,
   },
   tableRowEven: {
-    backgroundColor: 'transparent', // 줄무늬 제거, 더 깔끔
+    backgroundColor: 'transparent',
   },
   tableCell: {
-    fontSize: 9,
+    fontSize: 8, // 9→8 축소
     color: '#475569',
     textAlign: 'center',
     fontWeight: 400,
-    lineHeight: 1.5,
+    lineHeight: 1.4,
   },
 
-  // 컬럼 너비
+  // 컬럼 너비 - 최적화하여 공간 절약
   colNumber: {
-    width: 45,
+    width: 35,
   },
   colName: {
-    width: 145,
+    width: 120,
     textAlign: 'left',
-    paddingLeft: 8,
+    paddingLeft: 6,
   },
   colStudentId: {
-    width: 95,
+    width: 85,
   },
   colLevel: {
-    width: 115,
+    width: 90,
   },
   colPage: {
-    width: 65,
+    width: 50,
   },
 
   // 하단
