@@ -122,7 +122,7 @@ export function StudentReportPDF({
         </View>
 
         {/* 종합 평가 */}
-        <View style={styles.section} break>
+        <View style={styles.section}>
           <Text style={styles.sectionTitle}>종합 평가</Text>
           <View style={styles.divider} />
 
@@ -172,7 +172,7 @@ export function StudentReportPDF({
 
         {/* 강점 */}
         {evaluation.strengths && evaluation.strengths.length > 0 && (
-          <View style={styles.section} break>
+          <View style={styles.section}>
             <Text style={styles.sectionTitle}>강점</Text>
             <View style={styles.divider} />
 
@@ -252,19 +252,19 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   logoStaged: {
-    fontSize: 24,
+    fontSize: 16,
     fontWeight: 700,
     color: '#8B9D3C', // Primary green from design system
-    letterSpacing: 1,
+    letterSpacing: 0.5,
   },
   logoPlus: {
-    fontSize: 24,
+    fontSize: 16,
     fontWeight: 700,
     color: '#FF6B35', // Secondary orange from design system
-    marginLeft: 2,
+    marginLeft: 1,
   },
   mainTitle: {
-    fontSize: 18,
+    fontSize: 13,
     fontWeight: 500,
     color: '#1e293b',
   },
@@ -294,20 +294,20 @@ const styles = StyleSheet.create({
 
   // 섹션
   section: {
-    marginBottom: 20,
+    marginBottom: 15,
   },
   sectionTitle: {
-    fontSize: 16,
+    fontSize: 12,
     fontWeight: 700,
     color: '#1e293b',
-    marginBottom: 10,
+    marginBottom: 8,
   },
   subsectionTitle: {
-    fontSize: 13,
-    fontWeight: 700,
+    fontSize: 11,
+    fontWeight: 500,
     color: '#475569',
-    marginBottom: 8,
-    marginTop: 12,
+    marginBottom: 6,
+    marginTop: 10,
   },
   divider: {
     height: 1,
@@ -321,16 +321,17 @@ const styles = StyleSheet.create({
   },
   infoRow: {
     flexDirection: 'row',
-    marginBottom: 6,
+    marginBottom: 5,
   },
   infoLabel: {
-    fontSize: 11,
-    fontWeight: 700,
+    fontSize: 10,
+    fontWeight: 500,
     color: '#64748b',
-    width: 80,
+    width: 70,
   },
   infoValue: {
-    fontSize: 11,
+    fontSize: 10,
+    fontWeight: 400,
     color: '#1e293b',
     flex: 1,
   },
@@ -353,92 +354,96 @@ const styles = StyleSheet.create({
   overallBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 15,
+    padding: 12,
     backgroundColor: '#f8fafc',
     borderRadius: 6,
-    marginBottom: 15,
+    marginBottom: 12,
   },
   overallLabel: {
-    fontSize: 13,
-    fontWeight: 700,
+    fontSize: 11,
+    fontWeight: 500,
     color: '#475569',
-    marginRight: 10,
+    marginRight: 8,
   },
   overallLevel: {
-    fontSize: 18,
+    fontSize: 14,
     fontWeight: 700,
   },
   feedbackBox: {
     backgroundColor: '#ffffff',
-    padding: 12,
+    padding: 10,
     borderRadius: 6,
     borderWidth: 1,
     borderColor: '#e2e8f0',
   },
   feedbackText: {
-    fontSize: 11,
+    fontSize: 10,
     lineHeight: 1.6,
+    fontWeight: 400,
     color: '#475569',
   },
 
   // 영역별 평가
   domainSection: {
-    marginBottom: 15,
+    marginBottom: 12,
   },
   domainHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 6,
   },
   domainNumber: {
-    fontSize: 14,
-    marginRight: 8,
+    fontSize: 11,
+    fontWeight: 400,
+    marginRight: 6,
   },
   domainTitle: {
-    fontSize: 13,
+    fontSize: 11,
     fontWeight: 700,
     color: '#1e293b',
     flex: 1,
   },
   domainLevel: {
-    fontSize: 12,
+    fontSize: 10,
     fontWeight: 700,
   },
   domainFeedbackBox: {
     backgroundColor: '#f8fafc',
-    padding: 10,
-    borderRadius: 6,
-    borderLeftWidth: 3,
-    borderLeftColor: '#3b82f6',
+    padding: 8,
+    borderRadius: 4,
+    borderLeftWidth: 2,
+    borderLeftColor: '#8B9D3C',
   },
   domainFeedback: {
-    fontSize: 10,
+    fontSize: 9,
     lineHeight: 1.5,
+    fontWeight: 400,
     color: '#475569',
   },
 
   // 리스트 (강점, 개선방안)
   listItem: {
     flexDirection: 'row',
-    marginBottom: 8,
-    paddingLeft: 10,
+    marginBottom: 6,
+    paddingLeft: 8,
   },
   listBullet: {
-    fontSize: 11,
-    color: '#10b981',
-    marginRight: 8,
-    fontWeight: 700,
+    fontSize: 9,
+    color: '#8B9D3C',
+    marginRight: 6,
+    fontWeight: 400,
   },
   listNumber: {
-    fontSize: 11,
-    color: '#3b82f6',
-    marginRight: 8,
-    fontWeight: 700,
-    width: 20,
+    fontSize: 10,
+    color: '#8B9D3C',
+    marginRight: 6,
+    fontWeight: 500,
+    width: 18,
   },
   listText: {
-    fontSize: 11,
+    fontSize: 10,
     lineHeight: 1.5,
+    fontWeight: 400,
     color: '#475569',
     flex: 1,
   },
