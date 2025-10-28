@@ -43,10 +43,11 @@ export function CoverPage({
     <Page size="A4" style={styles.page}>
       {/* 헤더 */}
       <View style={styles.header}>
-        <View style={styles.headerBox}>
-          <Text style={styles.systemName}>BlueNote AI 평가 시스템</Text>
-          <Text style={styles.headerSubtitle}>평가 보고서</Text>
+        <View style={styles.logoContainer}>
+          <Text style={styles.logoStaged}>STAGED</Text>
+          <Text style={styles.logoPlus}>+</Text>
         </View>
+        <Text style={styles.headerSubtitle}>글쓰기 평가 보고서</Text>
       </View>
 
       {/* 구분선 */}
@@ -55,7 +56,7 @@ export function CoverPage({
       {/* 과제 정보 */}
       <View style={styles.section}>
         <View style={styles.infoRow}>
-          <Text style={styles.icon}>📋</Text>
+          <Text style={styles.icon}>■</Text>
           <View>
             <Text style={styles.label}>과제</Text>
             <Text style={styles.value}>{assignment.title}</Text>
@@ -63,7 +64,7 @@ export function CoverPage({
         </View>
 
         <View style={styles.infoRow}>
-          <Text style={styles.icon}>🏫</Text>
+          <Text style={styles.icon}>■</Text>
           <View>
             <Text style={styles.label}>학교</Text>
             <Text style={styles.value}>
@@ -79,7 +80,7 @@ export function CoverPage({
 
       {/* 평가 통계 */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>📊 평가 통계</Text>
+        <Text style={styles.sectionTitle}>평가 통계</Text>
 
         <View style={styles.statsGrid}>
           <View style={styles.statBox}>
@@ -105,7 +106,7 @@ export function CoverPage({
 
       {/* 성취 수준 분포 */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>📈 성취 수준 분포</Text>
+        <Text style={styles.sectionTitle}>성취 수준 분포</Text>
 
         {Object.entries(statistics.levelDistribution).map(([level, count]) => {
           const percentage = statistics.evaluatedStudents > 0
@@ -129,7 +130,7 @@ export function CoverPage({
 
       {/* 시행 정보 */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>📅 시행 정보</Text>
+        <Text style={styles.sectionTitle}>시행 정보</Text>
 
         <View style={styles.dateInfo}>
           <View style={styles.dateRow}>
@@ -159,10 +160,10 @@ export function CoverPage({
       {/* 보고서 포함 내용 안내 */}
       <View style={styles.contentInfo}>
         <Text style={styles.contentInfoTitle}>이 보고서에는 다음 내용이 포함되어 있습니다:</Text>
-        <Text style={styles.contentInfoItem}>✓ 과제 및 평가 정보</Text>
-        <Text style={styles.contentInfoItem}>✓ 학생 목차</Text>
+        <Text style={styles.contentInfoItem}>• 과제 및 평가 정보</Text>
+        <Text style={styles.contentInfoItem}>• 학생 목차</Text>
         <Text style={styles.contentInfoItem}>
-          ✓ 개별 학생 평가 보고서 ({statistics.evaluatedStudents}명)
+          • 개별 학생 평가 보고서 ({statistics.evaluatedStudents}명)
         </Text>
       </View>
 
@@ -187,23 +188,27 @@ const styles = StyleSheet.create({
   // 헤더
   header: {
     alignItems: 'center',
-    marginBottom: 25,
+    marginBottom: 30,
   },
-  headerBox: {
-    borderWidth: 2,
-    borderColor: '#3b82f6',
-    borderRadius: 6,
-    padding: 12,
+  logoContainer: {
+    flexDirection: 'row',
     alignItems: 'center',
+    marginBottom: 10,
   },
-  systemName: {
-    fontSize: 16,
+  logoStaged: {
+    fontSize: 32,
     fontWeight: 700,
-    color: '#3b82f6',
-    marginBottom: 4,
+    color: '#8B9D3C', // Primary green from design system
+    letterSpacing: 1,
+  },
+  logoPlus: {
+    fontSize: 32,
+    fontWeight: 700,
+    color: '#FF6B35', // Secondary orange from design system
+    marginLeft: 2,
   },
   headerSubtitle: {
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: 500,
     color: '#1e293b',
   },

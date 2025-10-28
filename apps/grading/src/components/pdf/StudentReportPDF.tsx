@@ -59,12 +59,11 @@ export function StudentReportPDF({
       <Page size="A4" style={styles.page}>
         {/* 헤더 */}
         <View style={styles.header}>
-          <View style={styles.systemBadge}>
-            <Text style={styles.systemName}>BlueNote AI 평가 시스템</Text>
+          <View style={styles.logoContainer}>
+            <Text style={styles.logoStaged}>STAGED</Text>
+            <Text style={styles.logoPlus}>+</Text>
           </View>
-          <View style={styles.titleDivider} />
-          <Text style={styles.mainTitle}>학생 평가 보고서</Text>
-          <View style={styles.titleDivider} />
+          <Text style={styles.mainTitle}>글쓰기 평가 보고서</Text>
         </View>
 
         {/* 과제 정보 (간략) */}
@@ -203,7 +202,7 @@ export function StudentReportPDF({
 
             {evaluation.strengths.map((strength, index) => (
               <View key={index} style={styles.listItem}>
-                <Text style={styles.listBullet}>√</Text>
+                <Text style={styles.listBullet}>•</Text>
                 <Text style={styles.listText}>{strength}</Text>
               </View>
             ))}
@@ -270,23 +269,26 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 25,
   },
-  systemBadge: {
-    marginBottom: 15,
+  logoContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
   },
-  systemName: {
-    fontSize: 12,
-    color: '#3b82f6',
-    fontWeight: 500,
-  },
-  titleDivider: {
-    width: '40%',
-    height: 2,
-    backgroundColor: '#3b82f6',
-    marginVertical: 10,
-  },
-  mainTitle: {
+  logoStaged: {
     fontSize: 24,
     fontWeight: 700,
+    color: '#8B9D3C', // Primary green from design system
+    letterSpacing: 1,
+  },
+  logoPlus: {
+    fontSize: 24,
+    fontWeight: 700,
+    color: '#FF6B35', // Secondary orange from design system
+    marginLeft: 2,
+  },
+  mainTitle: {
+    fontSize: 18,
+    fontWeight: 500,
     color: '#1e293b',
   },
 
