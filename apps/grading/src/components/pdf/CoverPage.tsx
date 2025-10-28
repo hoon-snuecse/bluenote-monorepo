@@ -184,8 +184,8 @@ const styles = StyleSheet.create({
   // 헤더 - 개인보고서 스타일 적용
   header: {
     alignItems: 'center',
-    marginBottom: 30,
-    marginTop: 20,
+    marginBottom: 20,
+    marginTop: 15,
   },
   logoContainer: {
     flexDirection: 'row',
@@ -215,12 +215,12 @@ const styles = StyleSheet.create({
   dividerThick: {
     height: 0.5,
     backgroundColor: '#cbd5e1', // 더 연하게
-    marginVertical: 24,
+    marginVertical: 16,
   },
 
   // 섹션 - 개인보고서 스타일 적용
   section: {
-    marginBottom: 20,
+    marginBottom: 14,
   },
   sectionTitle: {
     fontSize: 11, // 개인보고서와 동일
@@ -266,8 +266,8 @@ const styles = StyleSheet.create({
   },
   statBox: {
     flex: 1,
-    paddingVertical: 14,
-    paddingHorizontal: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 8,
     backgroundColor: '#F7FAF3', // primary-50으로 통일감
     alignItems: 'center',
   },
@@ -298,7 +298,7 @@ const styles = StyleSheet.create({
   distributionRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 10,
+    marginBottom: 7,
   },
   levelLabel: {
     fontSize: 9,
@@ -353,9 +353,9 @@ const styles = StyleSheet.create({
 
   // Disclaimer - 개인보고서 스타일 적용
   disclaimer: {
-    marginTop: 16,
-    marginBottom: 20,
-    padding: 12,
+    marginTop: 10,
+    marginBottom: 10,
+    padding: 10,
     backgroundColor: '#F7FAF3', // primary-50
   },
   disclaimerText: {
