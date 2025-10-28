@@ -288,7 +288,7 @@ export default function StudentReportPage({ params }: { params: { evaluationId: 
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `${evaluation.studentName}_평가보고서_${new Date().toISOString().split('T')[0]}.md`;
+    a.download = `${submission.studentName}_평가보고서_${new Date().toISOString().split('T')[0]}.md`;
     document.body.appendChild(a);
     a.click();
     window.URL.revokeObjectURL(url);

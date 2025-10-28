@@ -128,10 +128,13 @@ export async function POST(request: NextRequest) {
     };
 
     // 7. 목차 데이터 (페이지 번호 계산)
-    let currentPage = 3; // 표지(1) + 목차(2부터 시작)
+    // 목차 페이지 수 계산 (30명당 1페이지)
+    const tocPages = Math.ceil(evaluatedSubmissions.length / 30);
+    let currentPage = 1 + tocPages; // 표지(1페이지) + 목차(tocPages 페이지)
+
     const tocStudents = evaluatedSubmissions.map((submission, index) => {
       const pageNumber = currentPage;
-      // 개인 보고서는 3페이지로 구성 (평균)
+      // 개인 보고서는 3페이지로 구성
       currentPage += 3;
 
       return {
@@ -141,10 +144,6 @@ export async function POST(request: NextRequest) {
         pageNumber,
       };
     });
-
-    // 목차 페이지 수 계산 (30명당 1페이지)
-    const tocPages = Math.ceil(tocStudents.length / 30);
-    currentPage = 2 + tocPages; // 표지 + 목차 페이지들
 
     // 8. PDF 문서 생성
     const CombinedPDFDocument = () => (
@@ -158,6 +157,8 @@ export async function POST(request: NextRequest) {
         {/* 3. 개별 학생 보고서들 */}
         {evaluatedSubmissions.map((submission) => {
           const evaluation = submission.evaluations[0];
+          const improvementSuggestions = parseJSON(evaluation.improvementSuggestions);
+          const strengths = parseJSON(evaluation.strengths);
 
           return (
             <StudentReportPDF
@@ -167,8 +168,12 @@ export async function POST(request: NextRequest) {
                 domainEvaluations: parseJSON(evaluation.domainEvaluations),
                 overallLevel: evaluation.overallLevel,
                 overallFeedback: evaluation.overallFeedback,
-                improvementSuggestions: parseJSON(evaluation.improvementSuggestions),
-                strengths: parseJSON(evaluation.strengths),
+                improvementSuggestions: Array.isArray(improvementSuggestions)
+                  ? improvementSuggestions
+                  : [improvementSuggestions],
+                strengths: Array.isArray(strengths)
+                  ? strengths
+                  : [strengths],
                 evaluatedAt: new Date(evaluation.evaluatedAt),
                 evaluatedBy: evaluation.evaluatedBy || undefined,
               }}
