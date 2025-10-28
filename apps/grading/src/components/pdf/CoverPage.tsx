@@ -188,52 +188,55 @@ const styles = StyleSheet.create({
     lineHeight: 1.6,
   },
 
-  // 헤더
+  // 헤더 - 편집 디자인 원칙: 여백과 계층 구조
   header: {
     alignItems: 'center',
-    marginBottom: 24,
+    marginBottom: 40,
+    marginTop: 20,
   },
   logoContainer: {
     flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
+    alignItems: 'baseline', // 베이스라인 정렬로 더 세련됨
+    marginBottom: 12,
   },
   logoStaged: {
-    fontSize: 28, // Reduced from 32
+    fontSize: 36, // 표지는 임팩트 있게
     fontWeight: 700,
     color: '#91AF52', // primary-600
-    letterSpacing: 0.8,
+    letterSpacing: -0.5, // 타이트한 자간으로 모던함
   },
   logoPlus: {
-    fontSize: 28,
+    fontSize: 36,
     fontWeight: 700,
     color: '#F58742', // secondary-600
-    marginLeft: 2,
+    marginLeft: 1,
   },
   headerSubtitle: {
-    fontSize: 14, // xl equivalent
-    fontWeight: 400, // Regular, not medium
-    color: '#475569',
-    letterSpacing: -0.02,
+    fontSize: 11, // 부제는 절제되게
+    fontWeight: 400,
+    color: '#94a3b8', // 더 연한 색으로 후퇴
+    letterSpacing: 1.5, // 자간 넓혀서 우아함 표현
+    textTransform: 'uppercase' as const,
   },
 
-  // 구분선
+  // 구분선 - 미니멀하게
   dividerThick: {
-    height: 1, // Thinner
-    backgroundColor: '#e2e8f0',
-    marginVertical: 16,
+    height: 0.5,
+    backgroundColor: '#cbd5e1', // 더 연하게
+    marginVertical: 24,
   },
 
-  // 섹션
+  // 섹션 - 편집 디자인: 타이포그래피 계층
   section: {
-    marginBottom: 20,
+    marginBottom: 24,
   },
   sectionTitle: {
-    fontSize: 12, // lg equivalent
+    fontSize: 10, // 작지만 명확하게
     fontWeight: 700,
-    color: '#1e293b',
-    marginBottom: 10,
-    letterSpacing: -0.02,
+    color: '#64748b', // 강조 줄이고
+    marginBottom: 12,
+    letterSpacing: 1.2, // 자간 넓혀서 고급스럽게
+    textTransform: 'uppercase' as const,
   },
 
   // 과제 정보
@@ -263,73 +266,81 @@ const styles = StyleSheet.create({
     letterSpacing: -0.01,
   },
 
-  // 통계 그리드
+  // 통계 그리드 - 카드 디자인 세련되게
   statsGrid: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    gap: 12,
+    gap: 16,
   },
   statBox: {
     flex: 1,
-    padding: 12,
-    backgroundColor: '#f8fafc',
-    borderRadius: 4,
-    borderWidth: 0.5,
-    borderColor: '#e2e8f0',
+    paddingVertical: 16,
+    paddingHorizontal: 12,
+    backgroundColor: '#fafbfc',
+    borderRadius: 2, // 미니멀한 모서리
+    borderWidth: 0,
+    borderBottomWidth: 2, // 하단 강조선으로 모던함
+    borderBottomColor: '#f1f5f9',
     alignItems: 'center',
   },
   statLabel: {
-    fontSize: 9, // xs
+    fontSize: 8, // 더 작게
     color: '#94a3b8',
-    marginBottom: 5,
+    marginBottom: 6,
     fontWeight: 400,
-    lineHeight: 1.5,
+    lineHeight: 1.4,
+    letterSpacing: 0.8,
+    textTransform: 'uppercase' as const,
   },
   statValue: {
-    fontSize: 18, // Reduced from 20
-    fontWeight: 700,
+    fontSize: 24, // 숫자는 크고 임팩트 있게
+    fontWeight: 300, // Light weight로 현대적으로
     color: '#1e293b',
-    letterSpacing: -0.02,
+    letterSpacing: -1,
   },
   statValueGreen: {
     color: '#91AF52', // primary-600
+    fontWeight: 400, // 조금 더 굵게
   },
   statValueBlue: {
     color: '#F58742', // secondary-600
+    fontWeight: 400,
   },
 
-  // 성취 수준 분포
+  // 성취 수준 분포 - 데이터 시각화 개선
   distributionRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 10,
   },
   levelLabel: {
-    fontSize: 10,
-    width: 75,
+    fontSize: 9,
+    width: 70,
     color: '#64748b',
-    fontWeight: 400, // Regular, not medium
-    lineHeight: 1.5,
+    fontWeight: 400,
+    lineHeight: 1.4,
   },
   barContainer: {
     flex: 1,
-    height: 20, // Slightly reduced
-    backgroundColor: '#f1f5f9',
-    borderRadius: 3,
-    marginHorizontal: 8,
+    height: 16, // 더 가늘게 미니멀하게
+    backgroundColor: '#f8fafc',
+    borderRadius: 1,
+    marginHorizontal: 10,
     overflow: 'hidden',
+    borderWidth: 0.5,
+    borderColor: '#e2e8f0',
   },
   bar: {
     height: '100%',
     backgroundColor: '#91AF52', // primary-600
   },
   distributionValue: {
-    fontSize: 9.5,
-    width: 85,
+    fontSize: 9,
+    width: 80,
     textAlign: 'right',
-    color: '#1e293b',
-    fontWeight: 500, // Medium, not bold
-    lineHeight: 1.5,
+    color: '#475569',
+    fontWeight: 400, // Regular로 절제
+    lineHeight: 1.4,
   },
 
   // 시행 정보

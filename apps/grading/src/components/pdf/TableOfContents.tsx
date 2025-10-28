@@ -92,22 +92,42 @@ export function TableOfContents({ students }: TableOfContentsProps) {
 
 /**
  * 성취 수준에 따른 스타일 반환
- * Design system colors from tailwind.config.ts
+ * 편집 디자인: 배지처럼 작고 절제된 표현
  */
 function getLevelStyle(level: string) {
   if (level.includes('매우 우수') || level.includes('매우우수')) {
-    return { color: '#789542', fontWeight: 500 }; // primary-700, medium weight
+    return {
+      color: '#789542',
+      fontWeight: 400, // Regular로 절제
+      fontSize: 8, // 더 작게
+    };
   }
   if (level.includes('우수')) {
-    return { color: '#91AF52', fontWeight: 500 }; // primary-600
+    return {
+      color: '#91AF52',
+      fontWeight: 400,
+      fontSize: 8,
+    };
   }
   if (level.includes('보통')) {
-    return { color: '#F58742', fontWeight: 400 }; // secondary-600, regular weight
+    return {
+      color: '#94a3b8', // 보통은 회색으로 절제
+      fontWeight: 400,
+      fontSize: 8,
+    };
   }
   if (level.includes('미흡')) {
-    return { color: '#94a3b8', fontWeight: 400 }; // Neutral gray
+    return {
+      color: '#cbd5e1', // 더 연한 회색
+      fontWeight: 400,
+      fontSize: 8,
+    };
   }
-  return { color: '#64748b', fontWeight: 400 };
+  return {
+    color: '#94a3b8',
+    fontWeight: 400,
+    fontSize: 8,
+  };
 }
 
 const styles = StyleSheet.create({
@@ -120,56 +140,60 @@ const styles = StyleSheet.create({
     lineHeight: 1.6,
   },
 
-  // 헤더
+  // 헤더 - 편집 디자인: 미니멀하고 세련되게
   header: {
-    marginBottom: 20,
-    borderBottomWidth: 1, // Thinner
-    borderBottomColor: '#91AF52', // primary-600
-    paddingBottom: 12,
+    marginBottom: 24,
+    borderBottomWidth: 0.5,
+    borderBottomColor: '#cbd5e1', // 더 연하게
+    paddingBottom: 16,
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
+    alignItems: 'baseline', // 베이스라인 정렬
   },
   title: {
-    fontSize: 16, // Reduced from 20
+    fontSize: 14,
     fontWeight: 700,
     color: '#1e293b',
-    letterSpacing: -0.02,
+    letterSpacing: -0.5,
   },
   pageInfo: {
-    fontSize: 10,
+    fontSize: 8,
     color: '#94a3b8',
     fontWeight: 400,
-    lineHeight: 1.5,
+    lineHeight: 1.4,
+    letterSpacing: 0.5,
   },
 
-  // 테이블
+  // 테이블 - 편집 디자인: 가독성과 우아함
   tableHeader: {
     flexDirection: 'row',
-    backgroundColor: '#f8fafc',
-    borderTopWidth: 0.5,
-    borderBottomWidth: 0.5,
-    borderColor: '#e2e8f0',
-    padding: 6,
+    backgroundColor: 'transparent', // 배경 제거로 깔끔하게
+    borderBottomWidth: 1,
+    borderBottomColor: '#e2e8f0',
+    paddingVertical: 8,
+    paddingHorizontal: 4,
   },
   tableHeaderCell: {
-    fontSize: 9, // xs
-    fontWeight: 500, // Medium, not bold
+    fontSize: 8,
+    fontWeight: 500,
     color: '#64748b',
     textAlign: 'center',
-    lineHeight: 1.5,
+    lineHeight: 1.4,
+    letterSpacing: 0.8,
+    textTransform: 'uppercase' as const,
   },
   tableRow: {
     flexDirection: 'row',
-    borderBottomWidth: 0.5,
+    borderBottomWidth: 0.25, // 매우 얇게
     borderBottomColor: '#f1f5f9',
-    padding: 6,
+    paddingVertical: 7,
+    paddingHorizontal: 4,
   },
   tableRowEven: {
-    backgroundColor: '#f9fafb',
+    backgroundColor: 'transparent', // 줄무늬 제거, 더 깔끔
   },
   tableCell: {
-    fontSize: 9, // xs
+    fontSize: 9,
     color: '#475569',
     textAlign: 'center',
     fontWeight: 400,

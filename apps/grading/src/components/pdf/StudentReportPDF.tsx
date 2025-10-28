@@ -215,22 +215,47 @@ export function StudentReportPDF({
 
 /**
  * 성취 수준에 따른 색상 스타일 반환
- * Design system colors from tailwind.config.ts
+ * 편집 디자인: 배지 스타일로 절제되고 세련되게
  */
 function getLevelColor(level: string) {
   if (level.includes('매우 우수') || level.includes('매우우수')) {
-    return { color: '#789542' }; // primary-700 (darker green for emphasis)
+    return {
+      color: '#789542', // primary-700
+      backgroundColor: '#f0f4e8', // 매우 연한 그린 배경
+      padding: 4,
+      borderRadius: 2,
+    };
   }
   if (level.includes('우수')) {
-    return { color: '#91AF52' }; // primary-600 (main brand green)
+    return {
+      color: '#91AF52', // primary-600
+      backgroundColor: '#f4f7ee',
+      padding: 4,
+      borderRadius: 2,
+    };
   }
   if (level.includes('보통')) {
-    return { color: '#F58742' }; // secondary-600 (main brand orange)
+    return {
+      color: '#64748b', // 보통은 중립 회색
+      backgroundColor: '#f8fafc',
+      padding: 4,
+      borderRadius: 2,
+    };
   }
   if (level.includes('미흡')) {
-    return { color: '#94a3b8' }; // Neutral gray
+    return {
+      color: '#94a3b8', // 연한 회색
+      backgroundColor: '#f8fafc',
+      padding: 4,
+      borderRadius: 2,
+    };
   }
-  return { color: '#64748b' };
+  return {
+    color: '#64748b',
+    backgroundColor: '#f8fafc',
+    padding: 4,
+    borderRadius: 2,
+  };
 }
 
 const styles = StyleSheet.create({
@@ -244,33 +269,37 @@ const styles = StyleSheet.create({
     lineHeight: 1.6, // Design system line-height
   },
 
-  // 헤더
+  // 헤더 - 편집 디자인: 작고 절제되게
   header: {
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: 24,
+    paddingBottom: 12,
+    borderBottomWidth: 0.5,
+    borderBottomColor: '#e2e8f0',
   },
   logoContainer: {
     flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 6,
+    alignItems: 'baseline',
+    marginBottom: 4,
   },
   logoStaged: {
-    fontSize: 14, // Reduced from 16
+    fontSize: 11, // 더 작게
     fontWeight: 700,
-    color: '#91AF52', // primary-600 from design system
-    letterSpacing: 0.3,
+    color: '#91AF52',
+    letterSpacing: -0.2,
   },
   logoPlus: {
-    fontSize: 14,
+    fontSize: 11,
     fontWeight: 700,
-    color: '#F58742', // secondary-600 from design system
-    marginLeft: 1,
+    color: '#F58742',
+    marginLeft: 0.5,
   },
   mainTitle: {
-    fontSize: 11, // sm: 0.875rem
-    fontWeight: 400, // Regular, not medium
-    color: '#475569',
-    letterSpacing: -0.01,
+    fontSize: 8, // 매우 작게
+    fontWeight: 400,
+    color: '#94a3b8', // 더 연하게
+    letterSpacing: 1.0,
+    textTransform: 'uppercase' as const,
   },
 
   // 과제 정보
@@ -299,24 +328,25 @@ const styles = StyleSheet.create({
     lineHeight: 1.5,
   },
 
-  // 섹션
+  // 섹션 - 편집 디자인: 타이포그래피 계층 명확하게
   section: {
-    marginBottom: 16,
+    marginBottom: 18,
   },
   sectionTitle: {
-    fontSize: 11, // lg: 1.125rem equivalent
-    fontWeight: 700, // Bold only for section titles
-    color: '#1e293b',
-    marginBottom: 8,
-    letterSpacing: -0.02,
+    fontSize: 9, // 작지만 명확
+    fontWeight: 700,
+    color: '#64748b', // 검정보다 회색으로 절제
+    marginBottom: 10,
+    letterSpacing: 1.0, // 자간 넓혀 우아함
+    textTransform: 'uppercase' as const,
   },
   subsectionTitle: {
-    fontSize: 10,
-    fontWeight: 500, // Medium for subsections
-    color: '#64748b',
+    fontSize: 9,
+    fontWeight: 400, // Regular로 절제
+    color: '#94a3b8', // 더 연하게
     marginBottom: 6,
-    marginTop: 8,
-    letterSpacing: -0.01,
+    marginTop: 10,
+    letterSpacing: 0.5,
   },
   divider: {
     height: 0.5,
@@ -363,26 +393,26 @@ const styles = StyleSheet.create({
     letterSpacing: -0.01,
   },
 
-  // 종합 평가
+  // 종합 평가 - 배지 스타일로 세련되게
   overallBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 10,
-    backgroundColor: '#f8fafc',
-    borderRadius: 4,
-    marginBottom: 10,
+    padding: 12,
+    backgroundColor: 'transparent', // 배경 제거
+    borderRadius: 0,
+    marginBottom: 12,
   },
   overallLabel: {
-    fontSize: 10,
-    fontWeight: 400, // Regular, not medium
-    color: '#64748b',
-    marginRight: 8,
-    letterSpacing: -0.01,
+    fontSize: 9,
+    fontWeight: 400,
+    color: '#94a3b8', // 더 연하게
+    marginRight: 10,
+    letterSpacing: 0.5,
   },
   overallLevel: {
-    fontSize: 12,
-    fontWeight: 700,
-    letterSpacing: -0.01,
+    fontSize: 10, // 크기 줄임
+    fontWeight: 400, // Bold 제거
+    letterSpacing: 0,
   },
   feedbackBox: {
     backgroundColor: '#ffffff',
@@ -399,32 +429,32 @@ const styles = StyleSheet.create({
     letterSpacing: -0.01,
   },
 
-  // 영역별 평가
+  // 영역별 평가 - 편집 디자인: 미니멀하고 가독성 높게
   domainSection: {
-    marginBottom: 10,
+    marginBottom: 12,
   },
   domainHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 5,
+    marginBottom: 6,
   },
   domainNumber: {
-    fontSize: 9.5,
+    fontSize: 8,
     fontWeight: 400,
-    marginRight: 5,
-    color: '#94a3b8',
+    marginRight: 6,
+    color: '#cbd5e1', // 매우 연하게
   },
   domainTitle: {
-    fontSize: 10,
-    fontWeight: 500, // Medium, not bold
-    color: '#1e293b',
+    fontSize: 9,
+    fontWeight: 400, // Regular로 절제
+    color: '#475569',
     flex: 1,
-    letterSpacing: -0.01,
+    letterSpacing: 0,
   },
   domainLevel: {
-    fontSize: 9,
-    fontWeight: 500, // Medium, not bold
-    letterSpacing: -0.01,
+    fontSize: 8, // 작게
+    fontWeight: 400, // Regular
+    letterSpacing: 0,
   },
   domainFeedbackBox: {
     backgroundColor: '#f8fafc',
