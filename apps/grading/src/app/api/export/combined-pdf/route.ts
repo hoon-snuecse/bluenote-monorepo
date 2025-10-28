@@ -117,7 +117,11 @@ export async function POST(request: NextRequest) {
         evaluatedSubmissions[0].evaluations[0].evaluatedBy || 'Claude Sonnet 4.5',
     };
 
-    // 7. 목차 데이터 및 개인별 시작 페이지 계산
+    // 7. PDF 문서 생성 준비
+    // 학생이 1명이면 표지/목차 생략, 2명 이상이면 표지/목차 포함
+    const includeHeaderPages = evaluatedSubmissions.length > 1;
+
+    // 목차 데이터 및 개인별 시작 페이지 계산
     // 목차 페이지 수 계산 (30명당 1페이지)
     const tocPageCount = Math.ceil(evaluatedSubmissions.length / 30);
     let currentPage = includeHeaderPages ? (1 + tocPageCount) : 1; // 표지(1페이지) + 목차(tocPageCount 페이지) or 1페이지(개인보고서만)
@@ -136,8 +140,6 @@ export async function POST(request: NextRequest) {
     });
 
     // 8. PDF 문서 생성
-    // 학생이 1명이면 표지/목차 생략, 2명 이상이면 표지/목차 포함
-    const includeHeaderPages = evaluatedSubmissions.length > 1;
     const tocPages = includeHeaderPages ? createTableOfContentsPages(tocStudents) : [];
 
     const CombinedPDFDocument = () =>
