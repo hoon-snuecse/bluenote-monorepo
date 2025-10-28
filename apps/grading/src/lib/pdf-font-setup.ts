@@ -2,30 +2,30 @@ import { Font } from '@react-pdf/renderer';
 
 /**
  * PDF 생성을 위한 한글 폰트 등록
- * Vercel 서버리스 환경에서는 Google Fonts CDN을 사용합니다.
+ * Vercel 서버리스 환경에서는 jsDelivr CDN을 사용합니다.
  */
 export function registerKoreanFonts() {
   try {
-    // Vercel 서버리스 환경에서는 CDN 폰트를 직접 사용
+    // jsDelivr CDN을 통해 Noto Sans KR 폰트 로드
     Font.register({
       family: 'NotoSansKR',
       fonts: [
         {
-          src: 'https://fonts.gstatic.com/s/notosanskr/v36/PbykFmXiEBPT4ITbgNA5Cgm20xz64px_1hVWr0wuPNGmlQNMEfD4.ttf',
+          src: 'https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2108@1.1/NotoSansKR-Regular.woff',
           fontWeight: 400,
         },
         {
-          src: 'https://fonts.gstatic.com/s/notosanskr/v36/PbykFmXiEBPT4ITbgNA5Cgm20xz64px_1hVWr0wuPNGmlQNMEfD4.ttf',
+          src: 'https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2108@1.1/NotoSansKR-Medium.woff',
           fontWeight: 500,
         },
         {
-          src: 'https://fonts.gstatic.com/s/notosanskr/v36/PbykFmXiEBPT4ITbgNA5Cgm20xz64px_1hVWr0xuPNGmlQNMEfD4.ttf',
+          src: 'https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2108@1.1/NotoSansKR-Bold.woff',
           fontWeight: 700,
         },
       ],
     });
 
-    console.log('✅ Korean fonts registered successfully (Noto Sans KR from CDN)');
+    console.log('✅ Korean fonts registered successfully (Noto Sans KR from jsDelivr CDN)');
     return true;
   } catch (error) {
     console.error('❌ Font registration failed:', error);
