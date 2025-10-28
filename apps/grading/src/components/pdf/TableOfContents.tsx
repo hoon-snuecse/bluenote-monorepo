@@ -92,33 +92,33 @@ export function TableOfContents({ students }: TableOfContentsProps) {
 
 /**
  * 성취 수준에 따른 스타일 반환
- * 편집 디자인: 배지처럼 작고 절제된 표현
+ * 디자인 시스템: 부드럽고 절제된 색상 사용
  */
 function getLevelStyle(level: string) {
   if (level.includes('매우 우수') || level.includes('매우우수')) {
     return {
-      color: '#789542',
-      fontWeight: 400, // Regular로 절제
-      fontSize: 8, // 더 작게
+      color: '#78716C', // neutral-500 - 더 절제된 색상
+      fontWeight: 400, // Regular
+      fontSize: 8,
     };
   }
   if (level.includes('우수')) {
     return {
-      color: '#91AF52',
+      color: '#78716C', // neutral-500 - 통일감
       fontWeight: 400,
       fontSize: 8,
     };
   }
   if (level.includes('보통')) {
     return {
-      color: '#94a3b8', // 보통은 회색으로 절제
+      color: '#94a3b8', // 보통은 회색
       fontWeight: 400,
       fontSize: 8,
     };
   }
   if (level.includes('미흡')) {
     return {
-      color: '#cbd5e1', // 더 연한 회색
+      color: '#cbd5e1', // 연한 회색
       fontWeight: 400,
       fontSize: 8,
     };
@@ -171,9 +171,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 3,
   },
   tableHeaderCell: {
-    fontSize: 7, // 축소
-    fontWeight: 500,
-    color: '#64748b',
+    fontSize: 7,
+    fontWeight: 400, // Regular로 절제
+    color: '#94a3b8', // 더 연한 색상
     textAlign: 'center',
     lineHeight: 1.3,
     letterSpacing: 0.5,
@@ -187,8 +187,8 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
   },
   tableCell: {
-    fontSize: 8, // 9→8 축소
-    color: '#475569',
+    fontSize: 8,
+    color: '#64748b', // 더 부드러운 색상
     textAlign: 'center',
     fontWeight: 400,
     lineHeight: 1.3,
