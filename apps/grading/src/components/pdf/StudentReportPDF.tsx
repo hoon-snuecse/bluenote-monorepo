@@ -112,15 +112,15 @@ export function StudentReportPDF({
         </View>
 
         {/* 학생이 제출한 글 (위치 이동됨 - 학생정보 다음) */}
-        <View style={styles.section}>
+        <View style={styles.section} wrap={false}>
           <Text style={styles.sectionTitle}>▎제출한 글</Text>
           <View style={styles.divider} />
+        </View>
 
-          <View style={styles.submissionBox}>
-            <Text style={styles.submissionText}>
-              {submission.content}
-            </Text>
-          </View>
+        <View style={styles.submissionBox}>
+          <Text style={styles.submissionText}>
+            {submission.content}
+          </Text>
         </View>
 
         {/* 종합 평가 */}
