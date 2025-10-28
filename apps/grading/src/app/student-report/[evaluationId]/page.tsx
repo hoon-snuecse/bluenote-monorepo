@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@bluenote/ui';
 import { GrowthStageIndicator } from '@/components/GrowthStageIndicator';
-import { ArrowLeft, Download, Printer, BookOpen, Target, MessageSquare, TrendingUp } from 'lucide-react';
+import { ArrowLeft, Download, Printer, BookOpen, Target, MessageSquare, TrendingUp, FileText, Code } from 'lucide-react';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 
@@ -48,6 +48,7 @@ interface AssignmentData {
 export default function StudentReportPage({ params }: { params: { evaluationId: string } }) {
   const router = useRouter();
   const [evaluation, setEvaluation] = useState<EvaluationData | null>(null);
+  const [showExportMenu, setShowExportMenu] = useState(false);
   const [submission, setSubmission] = useState<SubmissionData | null>(null);
   const [assignment, setAssignment] = useState<AssignmentData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -55,6 +56,24 @@ export default function StudentReportPage({ params }: { params: { evaluationId: 
   useEffect(() => {
     fetchData();
   }, [params.evaluationId]);
+
+  // 드롭다운 메뉴 외부 클릭 감지
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (showExportMenu && !target.closest('.export-menu-container')) {
+        setShowExportMenu(false);
+      }
+    };
+
+    if (showExportMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showExportMenu]);
 
   const fetchData = async () => {
     try {
@@ -106,64 +125,174 @@ export default function StudentReportPage({ params }: { params: { evaluationId: 
     window.print();
   };
 
-  const handleExportPDF = async () => {
+  // 내보내기 핸들러
+  const handleExport = async (format: 'pdf' | 'json' | 'markdown') => {
+    if (!evaluation || !submission || !assignment) return;
+
     try {
-      // PDF 생성 중 알림
-      const loadingMessage = document.createElement('div');
-      loadingMessage.innerHTML = '<div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.8); color: white; padding: 20px; border-radius: 8px; z-index: 9999;">PDF 생성 중...</div>';
-      document.body.appendChild(loadingMessage);
+      switch (format) {
+        case 'pdf':
+          await handleExportPDF();
+          break;
+        case 'json':
+          await handleExportJSON();
+          break;
+        case 'markdown':
+          await handleExportMarkdown();
+          break;
+      }
+      setShowExportMenu(false);
+    } catch (error) {
+      console.error(`${format} 내보내기 오류:`, error);
+      alert(`${format.toUpperCase()} 생성 중 오류가 발생했습니다.`);
+    }
+  };
 
-      // 인쇄 버튼 숨기기
-      const printElements = document.querySelectorAll('.print\\:hidden');
-      printElements.forEach(el => {
-        (el as HTMLElement).style.display = 'none';
+  // 서버 측 고품질 PDF 생성
+  const handleExportPDF = async () => {
+    if (!evaluation) return;
+
+    const loadingMessage = document.createElement('div');
+    loadingMessage.innerHTML = '<div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.8); color: white; padding: 20px; border-radius: 8px; z-index: 9999;">고품질 PDF 생성 중...</div>';
+    document.body.appendChild(loadingMessage);
+
+    try {
+      const response = await fetch('/api/reports/pdf', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ evaluationId: params.evaluationId }),
       });
 
-      // 페이지 내용을 캔버스로 변환
-      const element = document.querySelector('.container') as HTMLElement;
-      const canvas = await html2canvas(element, {
-        scale: 2,
-        useCORS: true,
-        logging: false,
-        backgroundColor: '#ffffff'
-      });
-
-      // PDF 생성
-      const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-      
-      let heightLeft = pdfHeight;
-      let position = 0;
-
-      // 첫 페이지 추가
-      pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, pdfHeight);
-      heightLeft -= pdf.internal.pageSize.getHeight();
-
-      // 추가 페이지가 필요한 경우
-      while (heightLeft > 0) {
-        position = heightLeft - pdfHeight;
-        pdf.addPage();
-        pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, pdfHeight);
-        heightLeft -= pdf.internal.pageSize.getHeight();
+      if (!response.ok) {
+        throw new Error('PDF 생성 실패');
       }
 
-      // PDF 다운로드
-      const fileName = `${evaluation?.studentName}_${assignment?.title}_평가리포트_${new Date().toISOString().split('T')[0]}.pdf`;
-      pdf.save(fileName);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${evaluation.studentName}_평가보고서_${new Date().toISOString().split('T')[0]}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
 
-      // 인쇄 버튼 다시 표시
-      printElements.forEach(el => {
-        (el as HTMLElement).style.display = '';
-      });
-
-      // 로딩 메시지 제거
       document.body.removeChild(loadingMessage);
     } catch (error) {
-      console.error('PDF 내보내기 오류:', error);
-      alert('PDF 생성 중 오류가 발생했습니다.');
+      document.body.removeChild(loadingMessage);
+      throw error;
     }
+  };
+
+  // JSON 내보내기
+  const handleExportJSON = async () => {
+    if (!evaluation || !submission || !assignment) return;
+
+    const exportData = {
+      exportDate: new Date().toISOString(),
+      exportVersion: '1.0',
+      assignment: {
+        id: assignment.id,
+        title: assignment.title,
+        schoolName: assignment.schoolName,
+        gradeLevel: assignment.gradeLevel,
+        writingType: assignment.writingType,
+        evaluationDomains: assignment.evaluationDomains,
+        evaluationLevels: assignment.evaluationLevels,
+      },
+      student: {
+        name: submission.studentName,
+        studentId: submission.studentId,
+        submittedAt: submission.submittedAt,
+      },
+      submission: {
+        content: submission.content,
+      },
+      evaluation: {
+        id: evaluation.id,
+        evaluatedAt: evaluation.evaluatedAt,
+        overallLevel: evaluation.overallLevel,
+        overallFeedback: evaluation.overallFeedback,
+        domainEvaluations: evaluation.domainEvaluations,
+        improvementSuggestions: evaluation.improvementSuggestions,
+      },
+    };
+
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], {
+      type: 'application/json',
+    });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${evaluation.studentName}_평가보고서_${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+  };
+
+  // Markdown 내보내기
+  const handleExportMarkdown = async () => {
+    if (!evaluation || !submission || !assignment) return;
+
+    let markdown = `# 학생 평가 리포트\n\n`;
+
+    markdown += `## 📋 과제 정보\n\n`;
+    markdown += `- **과제명**: ${assignment.title}\n`;
+    markdown += `- **학교**: ${assignment.schoolName}\n`;
+    markdown += `- **학년**: ${assignment.gradeLevel}\n`;
+    markdown += `- **글 종류**: ${assignment.writingType}\n\n`;
+
+    markdown += `## 👤 학생 정보\n\n`;
+    markdown += `- **이름**: ${submission.studentName}\n`;
+    markdown += `- **학번**: ${submission.studentId}\n`;
+    markdown += `- **제출일**: ${new Date(submission.submittedAt).toLocaleDateString('ko-KR')}\n\n`;
+
+    markdown += `## 🎯 종합 평가\n\n`;
+    markdown += `**성취 수준**: ${evaluation.overallLevel}\n\n`;
+    markdown += `### 종합 피드백\n\n`;
+    markdown += `${evaluation.overallFeedback}\n\n`;
+
+    markdown += `## 📊 영역별 평가\n\n`;
+    assignment.evaluationDomains.forEach((domain) => {
+      const evalData = evaluation.domainEvaluations[domain];
+      if (evalData) {
+        markdown += `### ${domain}\n\n`;
+        markdown += `- **수준**: ${evalData.level}\n`;
+        markdown += `- **피드백**: ${evalData.feedback}\n\n`;
+      }
+    });
+
+    if (evaluation.improvementSuggestions) {
+      markdown += `## 💡 개선 방안\n\n`;
+      const suggestions = typeof evaluation.improvementSuggestions === 'string'
+        ? [evaluation.improvementSuggestions]
+        : evaluation.improvementSuggestions;
+
+      if (Array.isArray(suggestions)) {
+        suggestions.forEach((suggestion, index) => {
+          markdown += `${index + 1}. ${suggestion}\n`;
+        });
+      }
+      markdown += `\n`;
+    }
+
+    markdown += `## 📝 제출한 글\n\n`;
+    markdown += `\`\`\`\n${submission.content}\n\`\`\`\n\n`;
+
+    markdown += `---\n\n`;
+    markdown += `*평가일: ${new Date(evaluation.evaluatedAt).toLocaleDateString('ko-KR')}*  \n`;
+    markdown += `*BlueNote AI 평가 시스템*\n`;
+
+    const blob = new Blob([markdown], { type: 'text/markdown' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${evaluation.studentName}_평가보고서_${new Date().toISOString().split('T')[0]}.md`;
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
   };
 
   if (loading) {
@@ -345,13 +474,50 @@ export default function StudentReportPage({ params }: { params: { evaluationId: 
             <Printer className="w-5 h-5" />
             인쇄하기
           </button>
-          <button
-            onClick={handleExportPDF}
-            className="px-6 py-3 bg-blue-500/20 text-slate-700 rounded-lg hover:bg-blue-500/30 transition-colors flex items-center gap-2 border border-blue-200/30"
-          >
-            <Download className="w-5 h-5" />
-            PDF 내보내기
-          </button>
+
+          <div className="relative export-menu-container">
+            <button
+              onClick={() => setShowExportMenu(!showExportMenu)}
+              className="px-6 py-3 bg-blue-500/20 text-slate-700 rounded-lg hover:bg-blue-500/30 transition-colors flex items-center gap-2 border border-blue-200/30"
+            >
+              <Download className="w-5 h-5" />
+              내보내기
+              <svg
+                className={`w-4 h-4 transition-transform ${showExportMenu ? 'rotate-180' : ''}`}
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+
+            {showExportMenu && (
+              <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-slate-200 overflow-hidden z-10 animate-in fade-in slide-in-from-top-2 duration-200">
+                <button
+                  onClick={() => handleExport('pdf')}
+                  className="w-full px-4 py-3 text-left hover:bg-slate-50 transition-colors flex items-center gap-3 text-slate-700"
+                >
+                  <FileText className="w-5 h-5" />
+                  <span>PDF 저장</span>
+                </button>
+                <button
+                  onClick={() => handleExport('json')}
+                  className="w-full px-4 py-3 text-left hover:bg-slate-50 transition-colors flex items-center gap-3 text-slate-700 border-t border-slate-100"
+                >
+                  <Code className="w-5 h-5" />
+                  <span>JSON 저장</span>
+                </button>
+                <button
+                  onClick={() => handleExport('markdown')}
+                  className="w-full px-4 py-3 text-left hover:bg-slate-50 transition-colors flex items-center gap-3 text-slate-700 border-t border-slate-100"
+                >
+                  <FileText className="w-5 h-5" />
+                  <span>Markdown 저장</span>
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 

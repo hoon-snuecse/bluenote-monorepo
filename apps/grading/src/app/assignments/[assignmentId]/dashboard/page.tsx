@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@bluenote/ui';
-import { ArrowLeft, Download, Filter, BarChart3, TrendingUp, AlertCircle, FileSearch, PlayCircle, Users, CheckCircle, Clock, Trash2, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
+import { ArrowLeft, Download, Filter, BarChart3, TrendingUp, AlertCircle, FileSearch, PlayCircle, Users, CheckCircle, Clock, Trash2, ArrowUpDown, ArrowUp, ArrowDown, Printer, FileText, Code } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
 interface DomainScore {
@@ -44,10 +44,29 @@ export default function DashboardPage() {
   const [filterRound, setFilterRound] = useState<string>('latest'); // latest, all, 1, 2, 3...
   const [availableRounds, setAvailableRounds] = useState<number[]>([]);
   const [activeTab, setActiveTab] = useState<'submission' | 'analysis'>('submission'); // 탭 상태 추가
+  const [showAnalysisExportMenu, setShowAnalysisExportMenu] = useState(false);
 
   useEffect(() => {
     fetchDashboardData();
   }, [params.assignmentId]);
+
+  // 분석 탭 드롭다운 메뉴 외부 클릭 감지
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (showAnalysisExportMenu && !target.closest('.analysis-export-menu-container')) {
+        setShowAnalysisExportMenu(false);
+      }
+    };
+
+    if (showAnalysisExportMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showAnalysisExportMenu]);
 
   const fetchDashboardData = async () => {
     try {
@@ -263,11 +282,111 @@ export default function DashboardPage() {
       // 파일 다운로드
       const fileName = `${assignment?.title || '평가결과'}_${new Date().toISOString().split('T')[0]}.xlsx`;
       XLSX.writeFile(wb, fileName);
-      
+
     } catch (error) {
       console.error('Excel export error:', error);
       alert('Excel 파일 생성 중 오류가 발생했습니다.');
     }
+  };
+
+  const handleExportCSV = () => {
+    try {
+      // CSV 헤더
+      let csv = 'No,학생이름,학번,종합수준';
+      if (assignment?.evaluationDomains) {
+        assignment.evaluationDomains.forEach((domain: string) => {
+          csv += `,${domain}`;
+        });
+      }
+      csv += ',평가일시\n';
+
+      // CSV 데이터
+      students.forEach((student, index) => {
+        csv += `${index + 1},${student.name},${student.studentId},${student.overallLevel}`;
+        if (assignment?.evaluationDomains) {
+          assignment.evaluationDomains.forEach((domain: string) => {
+            const score = student.scores?.[domain] || '-';
+            csv += `,${score}`;
+          });
+        }
+        csv += `,${student.evaluatedAt ? new Date(student.evaluatedAt).toLocaleString('ko-KR') : '-'}\n`;
+      });
+
+      // 파일 다운로드
+      const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${assignment?.title || '평가결과'}_${new Date().toISOString().split('T')[0]}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error) {
+      console.error('CSV export error:', error);
+      alert('CSV 파일 생성 중 오류가 발생했습니다.');
+    }
+  };
+
+  const handleExportJSON = () => {
+    try {
+      const exportData = {
+        exportDate: new Date().toISOString(),
+        assignment: {
+          title: assignment?.title,
+          schoolName: assignment?.schoolName,
+          gradeLevel: assignment?.gradeLevel,
+          writingType: assignment?.writingType,
+          evaluationDomains: assignment?.evaluationDomains,
+          evaluationLevels: assignment?.evaluationLevels,
+        },
+        statistics: {
+          totalStudents: students.length,
+          evaluatedStudents: students.filter(s => s.evaluatedAt).length,
+          averageLevel: students.reduce((acc, s) => acc + (s.overallLevel || ''), 0) / students.length,
+        },
+        students: students.map(student => ({
+          name: student.name,
+          studentId: student.studentId,
+          overallLevel: student.overallLevel,
+          scores: student.scores,
+          evaluatedAt: student.evaluatedAt,
+        })),
+        domainScores: domainScores,
+      };
+
+      const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${assignment?.title || '평가결과'}_${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error) {
+      console.error('JSON export error:', error);
+      alert('JSON 파일 생성 중 오류가 발생했습니다.');
+    }
+  };
+
+  const handlePrintAnalysis = () => {
+    window.print();
+  };
+
+  const handleAnalysisExport = (format: 'csv' | 'excel' | 'json') => {
+    switch (format) {
+      case 'csv':
+        handleExportCSV();
+        break;
+      case 'excel':
+        handleExportExcel();
+        break;
+      case 'json':
+        handleExportJSON();
+        break;
+    }
+    setShowAnalysisExportMenu(false);
   };
 
   // 평가 차수별로 학생 데이터 필터링 및 변환
@@ -378,13 +497,62 @@ export default function DashboardPage() {
             <h1 className="text-4xl font-bold text-slate-900 mb-2">평가 대시보드</h1>
             <p className="text-slate-600">{assignment?.title}</p>
           </div>
-          <button
-            onClick={handleExportExcel}
-            className="btn-primary bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 flex items-center gap-2"
-          >
-            <Download className="w-5 h-5" />
-            Excel 다운로드
-          </button>
+
+          {activeTab === 'analysis' && (
+            <div className="flex gap-3 print:hidden">
+              <button
+                onClick={handlePrintAnalysis}
+                className="px-6 py-3 bg-white/70 text-slate-700 rounded-lg hover:bg-white/80 transition-colors flex items-center gap-2 border border-slate-200/50"
+              >
+                <Printer className="w-5 h-5" />
+                인쇄하기
+              </button>
+
+              <div className="relative analysis-export-menu-container">
+                <button
+                  onClick={() => setShowAnalysisExportMenu(!showAnalysisExportMenu)}
+                  className="px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white rounded-lg transition-all flex items-center gap-2"
+                >
+                  <Download className="w-5 h-5" />
+                  내보내기
+                  <svg
+                    className={`w-4 h-4 transition-transform ${showAnalysisExportMenu ? 'rotate-180' : ''}`}
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+
+                {showAnalysisExportMenu && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-slate-200 overflow-hidden z-10 animate-in fade-in slide-in-from-top-2 duration-200">
+                    <button
+                      onClick={() => handleAnalysisExport('csv')}
+                      className="w-full px-4 py-3 text-left hover:bg-slate-50 transition-colors flex items-center gap-3 text-slate-700"
+                    >
+                      <FileText className="w-5 h-5" />
+                      <span>CSV 저장</span>
+                    </button>
+                    <button
+                      onClick={() => handleAnalysisExport('excel')}
+                      className="w-full px-4 py-3 text-left hover:bg-slate-50 transition-colors flex items-center gap-3 text-slate-700 border-t border-slate-100"
+                    >
+                      <FileText className="w-5 h-5" />
+                      <span>Excel 저장</span>
+                    </button>
+                    <button
+                      onClick={() => handleAnalysisExport('json')}
+                      className="w-full px-4 py-3 text-left hover:bg-slate-50 transition-colors flex items-center gap-3 text-slate-700 border-t border-slate-100"
+                    >
+                      <Code className="w-5 h-5" />
+                      <span>JSON 저장</span>
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Tab Navigation */}
@@ -679,6 +847,7 @@ function SubmissionManagementTab({ assignment, students, params, router }: any) 
   const [filterStatus, setFilterStatus] = useState<'all' | 'evaluated' | 'unevaluated'>('all');
   const [sortField, setSortField] = useState<'name' | 'studentId' | 'submittedAt' | 'status'>('submittedAt');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [isExporting, setIsExporting] = useState(false);
   
   // 전체 제출물 데이터 가져오기
   const [submissions, setSubmissions] = useState<any[]>([]);
@@ -841,6 +1010,108 @@ function SubmissionManagementTab({ assignment, students, params, router }: any) 
     unevaluated: submissions.filter(s => s.status === 'submitted').length
   };
 
+  // 선택된 학생들의 평가 보고서 PDF 내보내기
+  const handleExportSelectedPDF = async () => {
+    if (selectedSubmissions.size === 0) {
+      alert('내보낼 학생을 선택해주세요.');
+      return;
+    }
+
+    // 선택된 제출물 중 평가가 완료된 것만 필터링
+    const selectedEvaluatedSubmissions = Array.from(selectedSubmissions)
+      .map(id => submissions.find(s => s.id === id))
+      .filter(s => s && s.status === 'evaluated');
+
+    if (selectedEvaluatedSubmissions.length === 0) {
+      alert('평가가 완료된 학생을 선택해주세요.');
+      return;
+    }
+
+    setIsExporting(true);
+    try {
+      const response = await fetch('/api/export/combined-pdf', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          assignmentId: params.assignmentId,
+          submissionIds: selectedEvaluatedSubmissions.map(s => s.id),
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('PDF 생성 실패');
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${assignment?.title || '평가보고서'}_선택학생_${selectedEvaluatedSubmissions.length}명_${new Date().toISOString().split('T')[0]}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      alert(`${selectedEvaluatedSubmissions.length}명의 평가 보고서를 내보냈습니다.`);
+    } catch (error) {
+      console.error('PDF 내보내기 오류:', error);
+      alert('PDF 내보내기 중 오류가 발생했습니다.');
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  // 전체 평가 완료 학생들의 보고서 PDF 내보내기
+  const handleExportAllPDF = async () => {
+    const evaluatedSubmissions = submissions.filter(s => s.status === 'evaluated');
+
+    if (evaluatedSubmissions.length === 0) {
+      alert('평가가 완료된 학생이 없습니다.');
+      return;
+    }
+
+    if (!confirm(`전체 평가 완료 학생 ${evaluatedSubmissions.length}명의 보고서를 내보내시겠습니까?\n\n파일 크기가 클 수 있으며, 생성에 시간이 걸릴 수 있습니다.`)) {
+      return;
+    }
+
+    setIsExporting(true);
+    try {
+      const response = await fetch('/api/export/combined-pdf', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          assignmentId: params.assignmentId,
+          submissionIds: evaluatedSubmissions.map(s => s.id),
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('PDF 생성 실패');
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${assignment?.title || '평가보고서'}_전체학생_${evaluatedSubmissions.length}명_${new Date().toISOString().split('T')[0]}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      alert(`${evaluatedSubmissions.length}명의 평가 보고서를 내보냈습니다.`);
+    } catch (error) {
+      console.error('PDF 내보내기 오류:', error);
+      alert('PDF 내보내기 중 오류가 발생했습니다.');
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   if (loadingSubmissions) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -932,6 +1203,14 @@ function SubmissionManagementTab({ assignment, students, params, router }: any) 
                 선택 평가 ({selectedSubmissions.size}명)
               </button>
               <button
+                onClick={handleExportSelectedPDF}
+                disabled={isExporting}
+                className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Download className="w-4 h-4" />
+                {isExporting ? '내보내는 중...' : `선택 내보내기 (${selectedSubmissions.size}명)`}
+              </button>
+              <button
                 onClick={handleDeleteSelected}
                 className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-all flex items-center gap-2"
               >
@@ -953,6 +1232,17 @@ function SubmissionManagementTab({ assignment, students, params, router }: any) 
             >
               <PlayCircle className="w-4 h-4" />
               전체 평가 ({stats.unevaluated}명)
+            </button>
+          )}
+
+          {stats.evaluated > 0 && selectedSubmissions.size === 0 && (
+            <button
+              onClick={handleExportAllPDF}
+              disabled={isExporting}
+              className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Download className="w-4 h-4" />
+              {isExporting ? '내보내는 중...' : `전체 내보내기 (${stats.evaluated}명)`}
             </button>
           )}
         </div>

@@ -1,155 +1,470 @@
-import React from 'react'
-import { Document, Page, Text, View, StyleSheet, Font, Image } from '@react-pdf/renderer'
+import { Page, Text, View, StyleSheet } from '@react-pdf/renderer';
+import { formatDateKorean } from '@/lib/pdf-font-setup';
 
-// 한글 폰트 등록
-Font.register({
-  family: 'NotoSansKR',
-  fonts: [
-    {
-      src: 'https://cdn.jsdelivr.net/npm/noto-sans-kr@0.1.1/fonts/NotoSansKR-Regular.otf',
-      fontWeight: 400,
-    },
-    {
-      src: 'https://cdn.jsdelivr.net/npm/noto-sans-kr@0.1.1/fonts/NotoSansKR-Bold.otf',
-      fontWeight: 700,
-    },
-  ],
-})
+interface StudentReportPDFProps {
+  evaluation: {
+    id: string;
+    domainEvaluations: Record<string, {
+      level: string;
+      score?: number;
+      feedback: string;
+    }>;
+    overallLevel: string;
+    overallFeedback: string;
+    improvementSuggestions: string[];
+    strengths: string[];
+    evaluatedAt: Date;
+    evaluatedBy?: string;
+  };
+  assignment: {
+    title: string;
+    schoolName: string;
+    gradeLevel: string;
+    writingType: string;
+    evaluationDomains: string[];
+    evaluationLevels: string[];
+  };
+  student: {
+    name: string;
+    studentId: string;
+  };
+  submission: {
+    content: string;
+    submittedAt: Date;
+  };
+}
 
-// 스타일 정의
+/**
+ * 개인 학생 평가 보고서 PDF 컴포넌트 (클래식 디자인)
+ *
+ * 구조:
+ * 1. 헤더
+ * 2. 학생 정보
+ * 3. 학생이 제출한 글 ← 위치 변경됨
+ * 4. 종합 평가
+ * 5. 영역별 평가
+ * 6. 강점
+ * 7. 개선 방안
+ * 8. 푸터
+ */
+export function StudentReportPDF({
+  evaluation,
+  assignment,
+  student,
+  submission,
+}: StudentReportPDFProps) {
+  return (
+    <>
+      {/* 첫 번째 페이지 */}
+      <Page size="A4" style={styles.page}>
+        {/* 헤더 */}
+        <View style={styles.header}>
+          <View style={styles.systemBadge}>
+            <Text style={styles.systemName}>BlueNote AI 평가 시스템</Text>
+          </View>
+          <View style={styles.titleDivider} />
+          <Text style={styles.mainTitle}>학생 평가 보고서</Text>
+          <View style={styles.titleDivider} />
+        </View>
+
+        {/* 과제 정보 (간략) */}
+        <View style={styles.assignmentInfo}>
+          <View style={styles.assignmentRow}>
+            <Text style={styles.icon}>📋</Text>
+            <Text style={styles.assignmentText}>
+              {assignment.title}
+            </Text>
+          </View>
+          <View style={styles.assignmentRow}>
+            <Text style={styles.icon}>🏫</Text>
+            <Text style={styles.assignmentText}>
+              {assignment.schoolName} {assignment.gradeLevel}
+            </Text>
+          </View>
+        </View>
+
+        {/* 학생 정보 */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>👤 학생 정보</Text>
+          <View style={styles.divider} />
+
+          <View style={styles.infoGrid}>
+            <View style={styles.infoRow}>
+              <Text style={styles.infoLabel}>• 이름:</Text>
+              <Text style={styles.infoValue}>{student.name}</Text>
+            </View>
+            <View style={styles.infoRow}>
+              <Text style={styles.infoLabel}>• 학번:</Text>
+              <Text style={styles.infoValue}>{student.studentId}</Text>
+            </View>
+            <View style={styles.infoRow}>
+              <Text style={styles.infoLabel}>• 제출일:</Text>
+              <Text style={styles.infoValue}>
+                {formatDateKorean(submission.submittedAt)}
+              </Text>
+            </View>
+            <View style={styles.infoRow}>
+              <Text style={styles.infoLabel}>• 평가일:</Text>
+              <Text style={styles.infoValue}>
+                {formatDateKorean(evaluation.evaluatedAt)}
+              </Text>
+            </View>
+          </View>
+        </View>
+
+        {/* 학생이 제출한 글 (위치 이동됨 - 학생정보 다음) */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>📝 제출한 글</Text>
+          <View style={styles.divider} />
+
+          <View style={styles.submissionBox}>
+            <Text style={styles.submissionText}>
+              {submission.content}
+            </Text>
+          </View>
+        </View>
+
+        {/* 푸터 (첫 페이지) */}
+        <View style={styles.footer}>
+          <Text style={styles.footerText}>
+            평가일: {formatDateKorean(evaluation.evaluatedAt)}
+          </Text>
+          <Text style={styles.footerText}>
+            평가 모델: {evaluation.evaluatedBy || 'AI 평가'}
+          </Text>
+          <Text style={styles.footerText}>BlueNote AI 평가 시스템</Text>
+        </View>
+      </Page>
+
+      {/* 두 번째 페이지 */}
+      <Page size="A4" style={styles.page}>
+        {/* 종합 평가 */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>🎯 종합 평가</Text>
+          <View style={styles.divider} />
+
+          <View style={styles.overallBox}>
+            <Text style={styles.overallLabel}>성취 수준:</Text>
+            <Text style={[styles.overallLevel, getLevelColor(evaluation.overallLevel)]}>
+              {evaluation.overallLevel}
+            </Text>
+          </View>
+
+          <Text style={styles.subsectionTitle}>종합 피드백:</Text>
+          <View style={styles.feedbackBox}>
+            <Text style={styles.feedbackText}>
+              {evaluation.overallFeedback}
+            </Text>
+          </View>
+        </View>
+
+        {/* 영역별 평가 */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>📊 영역별 상세 평가</Text>
+          <View style={styles.divider} />
+
+          {assignment.evaluationDomains.map((domain, index) => {
+            const domainEval = evaluation.domainEvaluations[domain];
+            if (!domainEval) return null;
+
+            return (
+              <View key={domain} style={styles.domainSection}>
+                <View style={styles.domainHeader}>
+                  <Text style={styles.domainNumber}>{index + 1}️⃣</Text>
+                  <Text style={styles.domainTitle}>{domain}</Text>
+                  <Text style={[styles.domainLevel, getLevelColor(domainEval.level)]}>
+                    {domainEval.level}
+                    {domainEval.score && ` (${domainEval.score}점)`}
+                  </Text>
+                </View>
+                <View style={styles.domainFeedbackBox}>
+                  <Text style={styles.domainFeedback}>
+                    {domainEval.feedback}
+                  </Text>
+                </View>
+              </View>
+            );
+          })}
+        </View>
+
+        {/* 푸터 (두 번째 페이지) */}
+        <View style={styles.footer}>
+          <Text style={styles.footerText}>BlueNote AI 평가 시스템</Text>
+        </View>
+      </Page>
+
+      {/* 세 번째 페이지 */}
+      <Page size="A4" style={styles.page}>
+        {/* 강점 */}
+        {evaluation.strengths && evaluation.strengths.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>✨ 강점</Text>
+            <View style={styles.divider} />
+
+            {evaluation.strengths.map((strength, index) => (
+              <View key={index} style={styles.listItem}>
+                <Text style={styles.listBullet}>✓</Text>
+                <Text style={styles.listText}>{strength}</Text>
+              </View>
+            ))}
+          </View>
+        )}
+
+        {/* 개선 방안 */}
+        {evaluation.improvementSuggestions && evaluation.improvementSuggestions.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>💡 개선 방안</Text>
+            <View style={styles.divider} />
+
+            {evaluation.improvementSuggestions.map((suggestion, index) => (
+              <View key={index} style={styles.listItem}>
+                <Text style={styles.listNumber}>{index + 1}.</Text>
+                <Text style={styles.listText}>{suggestion}</Text>
+              </View>
+            ))}
+          </View>
+        )}
+
+        {/* 푸터 (세 번째 페이지) */}
+        <View style={styles.footer}>
+          <Text style={styles.footerText}>
+            생성일: {formatDateKorean(new Date())}
+          </Text>
+          <Text style={styles.footerText}>BlueNote AI 평가 시스템</Text>
+        </View>
+      </Page>
+    </>
+  );
+}
+
+/**
+ * 성취 수준에 따른 색상 스타일 반환
+ */
+function getLevelColor(level: string) {
+  if (level.includes('매우 우수') || level.includes('매우우수')) {
+    return { color: '#10b981' };
+  }
+  if (level.includes('우수')) {
+    return { color: '#3b82f6' };
+  }
+  if (level.includes('보통')) {
+    return { color: '#f59e0b' };
+  }
+  if (level.includes('미흡')) {
+    return { color: '#ef4444' };
+  }
+  return { color: '#64748b' };
+}
+
 const styles = StyleSheet.create({
   page: {
-    flexDirection: 'column',
-    backgroundColor: '#FFFFFF',
     fontFamily: 'NotoSansKR',
     padding: 40,
-  },
-  header: {
-    marginBottom: 30,
-    borderBottom: 2,
-    borderBottomColor: '#3b82f6',
-    paddingBottom: 20,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 700,
-    marginBottom: 10,
+    backgroundColor: '#FFFFFF',
+    fontSize: 11,
     color: '#1e293b',
   },
-  subtitle: {
-    fontSize: 14,
-    color: '#64748b',
-  },
-  section: {
+
+  // 헤더
+  header: {
+    alignItems: 'center',
     marginBottom: 25,
+  },
+  systemBadge: {
+    marginBottom: 15,
+  },
+  systemName: {
+    fontSize: 12,
+    color: '#3b82f6',
+    fontWeight: 500,
+  },
+  titleDivider: {
+    width: '40%',
+    height: 2,
+    backgroundColor: '#3b82f6',
+    marginVertical: 10,
+  },
+  mainTitle: {
+    fontSize: 24,
+    fontWeight: 700,
+    color: '#1e293b',
+  },
+
+  // 과제 정보
+  assignmentInfo: {
+    marginBottom: 25,
+    padding: 15,
+    backgroundColor: '#f8fafc',
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+  },
+  assignmentRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 5,
+  },
+  icon: {
+    fontSize: 14,
+    marginRight: 8,
+  },
+  assignmentText: {
+    fontSize: 12,
+    color: '#475569',
+  },
+
+  // 섹션
+  section: {
+    marginBottom: 20,
   },
   sectionTitle: {
     fontSize: 16,
     fontWeight: 700,
-    marginBottom: 15,
     color: '#1e293b',
+    marginBottom: 10,
+  },
+  subsectionTitle: {
+    fontSize: 13,
+    fontWeight: 700,
+    color: '#475569',
+    marginBottom: 8,
+    marginTop: 12,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: '#e2e8f0',
+    marginBottom: 12,
+  },
+
+  // 학생 정보
+  infoGrid: {
+    paddingLeft: 10,
   },
   infoRow: {
     flexDirection: 'row',
-    marginBottom: 8,
+    marginBottom: 6,
   },
   infoLabel: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: 700,
-    color: '#475569',
-    width: 100,
+    color: '#64748b',
+    width: 80,
   },
   infoValue: {
-    fontSize: 12,
+    fontSize: 11,
     color: '#1e293b',
     flex: 1,
   },
-  scoreCard: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 20,
-  },
-  scoreItem: {
-    flex: 1,
-    marginRight: 10,
-    padding: 15,
+
+  // 제출한 글
+  submissionBox: {
     backgroundColor: '#f8fafc',
-    borderRadius: 8,
+    padding: 15,
+    borderRadius: 6,
     borderWidth: 1,
     borderColor: '#e2e8f0',
   },
-  scoreLabel: {
+  submissionText: {
     fontSize: 10,
-    color: '#64748b',
-    marginBottom: 5,
+    lineHeight: 1.6,
+    color: '#475569',
   },
-  scoreValue: {
-    fontSize: 20,
-    fontWeight: 700,
-    color: '#3b82f6',
-  },
-  domainGrid: {
+
+  // 종합 평가
+  overallBox: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    marginBottom: 20,
-  },
-  domainCard: {
-    width: '48%',
-    marginRight: '2%',
-    marginBottom: 15,
+    alignItems: 'center',
     padding: 15,
     backgroundColor: '#f8fafc',
-    borderRadius: 8,
+    borderRadius: 6,
+    marginBottom: 15,
+  },
+  overallLabel: {
+    fontSize: 13,
+    fontWeight: 700,
+    color: '#475569',
+    marginRight: 10,
+  },
+  overallLevel: {
+    fontSize: 18,
+    fontWeight: 700,
+  },
+  feedbackBox: {
+    backgroundColor: '#ffffff',
+    padding: 12,
+    borderRadius: 6,
     borderWidth: 1,
     borderColor: '#e2e8f0',
+  },
+  feedbackText: {
+    fontSize: 11,
+    lineHeight: 1.6,
+    color: '#475569',
+  },
+
+  // 영역별 평가
+  domainSection: {
+    marginBottom: 15,
+  },
+  domainHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  domainNumber: {
+    fontSize: 14,
+    marginRight: 8,
   },
   domainTitle: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: 700,
-    marginBottom: 8,
     color: '#1e293b',
+    flex: 1,
   },
-  domainScore: {
-    fontSize: 16,
+  domainLevel: {
+    fontSize: 12,
     fontWeight: 700,
-    color: '#3b82f6',
-    marginBottom: 5,
   },
-  achievementLevel: {
+  domainFeedbackBox: {
+    backgroundColor: '#f8fafc',
+    padding: 10,
+    borderRadius: 6,
+    borderLeftWidth: 3,
+    borderLeftColor: '#3b82f6',
+  },
+  domainFeedback: {
+    fontSize: 10,
+    lineHeight: 1.5,
+    color: '#475569',
+  },
+
+  // 리스트 (강점, 개선방안)
+  listItem: {
+    flexDirection: 'row',
+    marginBottom: 8,
+    paddingLeft: 10,
+  },
+  listBullet: {
     fontSize: 11,
     color: '#10b981',
-    marginBottom: 10,
-  },
-  feedback: {
-    fontSize: 11,
-    color: '#475569',
-    lineHeight: 1.6,
-  },
-  rubricTable: {
-    marginTop: 15,
-  },
-  tableHeader: {
-    flexDirection: 'row',
-    backgroundColor: '#e2e8f0',
-    padding: 8,
-  },
-  tableHeaderText: {
-    fontSize: 10,
+    marginRight: 8,
     fontWeight: 700,
+  },
+  listNumber: {
+    fontSize: 11,
+    color: '#3b82f6',
+    marginRight: 8,
+    fontWeight: 700,
+    width: 20,
+  },
+  listText: {
+    fontSize: 11,
+    lineHeight: 1.5,
     color: '#475569',
     flex: 1,
   },
-  tableRow: {
-    flexDirection: 'row',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e2e8f0',
-    padding: 8,
-  },
-  tableCell: {
-    fontSize: 10,
-    color: '#1e293b',
-    flex: 1,
-  },
+
+  // 푸터
   footer: {
     position: 'absolute',
     bottom: 30,
@@ -159,162 +474,10 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     borderTopWidth: 1,
     borderTopColor: '#e2e8f0',
-    paddingTop: 15,
+    paddingTop: 10,
   },
   footerText: {
-    fontSize: 10,
+    fontSize: 9,
     color: '#94a3b8',
   },
-})
-
-interface StudentReportPDFProps {
-  evaluation: any
-  assignment: any
-  student: any
-}
-
-export function StudentReportPDF({ evaluation, assignment, student }: StudentReportPDFProps) {
-  const domains = [
-    { key: 'clarity', label: '주장의 명확성' },
-    { key: 'validity', label: '근거의 타당성' },
-    { key: 'structure', label: '논리적 구조' },
-    { key: 'expression', label: '설득력 있는 표현' },
-  ]
-
-  const getAchievementLevel = (score: number) => {
-    if (score >= 90) return '매우 우수'
-    if (score >= 80) return '우수'
-    if (score >= 70) return '보통'
-    if (score >= 60) return '미흡'
-    return '매우 미흡'
-  }
-
-  const getAchievementColor = (score: number) => {
-    if (score >= 90) return '#22c55e'
-    if (score >= 80) return '#3b82f6'
-    if (score >= 70) return '#eab308'
-    if (score >= 60) return '#f97316'
-    return '#ef4444'
-  }
-
-  return (
-    <Document>
-      <Page size="A4" style={styles.page}>
-        {/* 헤더 */}
-        <View style={styles.header}>
-          <Text style={styles.title}>학생 평가 보고서</Text>
-          <Text style={styles.subtitle}>
-            {assignment.title} - {student.name} 학생
-          </Text>
-        </View>
-
-        {/* 기본 정보 */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>기본 정보</Text>
-          <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>학생 이름</Text>
-            <Text style={styles.infoValue}>{student.name}</Text>
-          </View>
-          <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>학생 번호</Text>
-            <Text style={styles.infoValue}>{student.studentId}</Text>
-          </View>
-          <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>과제명</Text>
-            <Text style={styles.infoValue}>{assignment.title}</Text>
-          </View>
-          <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>평가일</Text>
-            <Text style={styles.infoValue}>
-              {new Date(evaluation.evaluatedAt).toLocaleDateString('ko-KR')}
-            </Text>
-          </View>
-          <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>평가 차수</Text>
-            <Text style={styles.infoValue}>{evaluation.round}차</Text>
-          </View>
-        </View>
-
-        {/* 총점 및 평균 */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>평가 결과 요약</Text>
-          <View style={styles.scoreCard}>
-            <View style={styles.scoreItem}>
-              <Text style={styles.scoreLabel}>평균 점수</Text>
-              <Text style={styles.scoreValue}>{evaluation.averageScore}점</Text>
-            </View>
-            <View style={styles.scoreItem}>
-              <Text style={styles.scoreLabel}>종합 성취도</Text>
-              <Text style={[styles.scoreValue, { color: getAchievementColor(evaluation.averageScore) }]}>
-                {getAchievementLevel(evaluation.averageScore)}
-              </Text>
-            </View>
-          </View>
-        </View>
-
-        {/* 영역별 상세 평가 */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>영역별 상세 평가</Text>
-          <View style={styles.domainGrid}>
-            {domains.map((domain) => {
-              const score = evaluation.scores?.[domain.key] || 0
-              const domainEval = evaluation.domainEvaluations?.[domain.key] || {}
-              
-              return (
-                <View key={domain.key} style={styles.domainCard}>
-                  <Text style={styles.domainTitle}>{domain.label}</Text>
-                  <Text style={styles.domainScore}>{score}점</Text>
-                  <Text style={[styles.achievementLevel, { color: getAchievementColor(score) }]}>
-                    {getAchievementLevel(score)}
-                  </Text>
-                  <Text style={styles.feedback}>
-                    {domainEval.feedback || '평가 피드백이 없습니다.'}
-                  </Text>
-                </View>
-              )
-            })}
-          </View>
-        </View>
-
-        {/* 루브릭 기준 */}
-        {assignment.rubric && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>평가 기준 (루브릭)</Text>
-            <View style={styles.rubricTable}>
-              <View style={styles.tableHeader}>
-                <Text style={[styles.tableHeaderText, { flex: 2 }]}>평가 영역</Text>
-                <Text style={styles.tableHeaderText}>배점</Text>
-                <Text style={styles.tableHeaderText}>획득 점수</Text>
-              </View>
-              {domains.map((domain) => (
-                <View key={domain.key} style={styles.tableRow}>
-                  <Text style={[styles.tableCell, { flex: 2 }]}>{domain.label}</Text>
-                  <Text style={styles.tableCell}>25점</Text>
-                  <Text style={styles.tableCell}>{evaluation.scores?.[domain.key] || 0}점</Text>
-                </View>
-              ))}
-            </View>
-          </View>
-        )}
-
-        {/* 종합 피드백 */}
-        {evaluation.overallFeedback && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>종합 피드백</Text>
-            <Text style={styles.feedback}>{evaluation.overallFeedback}</Text>
-          </View>
-        )}
-
-        {/* 푸터 */}
-        <View style={styles.footer}>
-          <Text style={styles.footerText}>
-            생성일: {new Date().toLocaleDateString('ko-KR')}
-          </Text>
-          <Text style={styles.footerText}>
-            BlueNote AI 평가 시스템
-          </Text>
-        </View>
-      </Page>
-    </Document>
-  )
-}
+});

@@ -4,6 +4,19 @@ import { prisma } from '@/lib/prisma'
 import { pdf } from '@react-pdf/renderer'
 import React from 'react'
 import { StudentReportPDF } from '@/components/pdf/StudentReportPDF'
+import { registerKoreanFonts } from '@/lib/pdf-font-setup'
+
+// JSON 필드 안전하게 파싱
+function parseJSON(value: any): any {
+  if (typeof value === 'string') {
+    try {
+      return JSON.parse(value);
+    } catch (e) {
+      return value;
+    }
+  }
+  return value;
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -18,16 +31,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: '평가 ID가 필요합니다.' }, { status: 400 })
     }
 
+    // 한글 폰트 등록
+    registerKoreanFonts();
+
     // 평가 데이터 조회
     const evaluation = await prisma.evaluation.findUnique({
       where: { id: evaluationId },
       include: {
-        student: true,
-        assignment: {
-          include: {
-            rubric: true,
-          },
-        },
+        submission: true,
       },
     })
 
@@ -35,107 +46,55 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: '평가를 찾을 수 없습니다.' }, { status: 404 })
     }
 
+    // 과제 데이터 조회
+    const assignment = await prisma.assignment.findUnique({
+      where: { id: evaluation.submission.assignmentId },
+    })
+
+    if (!assignment) {
+      return NextResponse.json({ error: '과제를 찾을 수 없습니다.' }, { status: 404 })
+    }
+
+    // JSON 필드 파싱
+    const domainEvaluations = parseJSON(evaluation.domainEvaluations);
+    const improvementSuggestions = parseJSON(evaluation.improvementSuggestions);
+    const strengths = parseJSON(evaluation.strengths);
+
     // PDF 생성
     const doc = React.createElement(StudentReportPDF, {
       evaluation: {
         ...evaluation,
-        scores: evaluation.domainScores as any,
-        domainEvaluations: evaluation.domainEvaluations as any,
+        domainEvaluations,
+        improvementSuggestions: Array.isArray(improvementSuggestions)
+          ? improvementSuggestions
+          : [improvementSuggestions],
+        strengths: Array.isArray(strengths)
+          ? strengths
+          : [strengths],
       },
-      assignment: evaluation.assignment,
-      student: evaluation.student,
+      assignment: {
+        ...assignment,
+        evaluationDomains: parseJSON(assignment.evaluationDomains),
+        evaluationLevels: parseJSON(assignment.evaluationLevels),
+      },
+      student: {
+        name: evaluation.submission.studentName,
+        studentId: evaluation.submission.studentId,
+      },
+      submission: evaluation.submission,
     })
 
-    const pdfStream = await pdf(doc).toBuffer()
+    const pdfBuffer = await pdf(doc).toBlob()
 
     // PDF 반환
-    return new NextResponse(pdfStream, {
+    const fileName = `${evaluation.submission.studentName}_${assignment.title}_평가보고서.pdf`;
+
+    return new NextResponse(pdfBuffer, {
       status: 200,
       headers: {
         'Content-Type': 'application/pdf',
-        'Content-Disposition': `attachment; filename="evaluation_${evaluation.student.name}_${evaluation.assignment.title}.pdf"`,
+        'Content-Disposition': `attachment; filename*=UTF-8''${encodeURIComponent(fileName)}`,
       },
-    })
-  } catch (error) {
-    console.error('PDF 생성 오류:', error)
-    return NextResponse.json(
-      { error: 'PDF 생성 중 오류가 발생했습니다.' },
-      { status: 500 }
-    )
-  }
-}
-
-// 여러 평가의 PDF를 한 번에 생성
-export async function PUT(request: NextRequest) {
-  try {
-    const session = await getServerSession(authOptions)
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    const { assignmentId, studentIds } = await request.json()
-
-    if (!assignmentId) {
-      return NextResponse.json({ error: '과제 ID가 필요합니다.' }, { status: 400 })
-    }
-
-    // 평가 데이터 조회
-    const whereClause: any = {
-      assignmentId,
-    }
-    
-    if (studentIds && studentIds.length > 0) {
-      whereClause.studentId = { in: studentIds }
-    }
-
-    const evaluations = await prisma.evaluation.findMany({
-      where: whereClause,
-      include: {
-        student: true,
-        assignment: {
-          include: {
-            rubric: true,
-          },
-        },
-      },
-      orderBy: {
-        student: {
-          name: 'asc',
-        },
-      },
-    })
-
-    if (evaluations.length === 0) {
-      return NextResponse.json({ error: '평가를 찾을 수 없습니다.' }, { status: 404 })
-    }
-
-    // 각 평가에 대해 PDF 생성
-    const pdfPromises = evaluations.map(async (evaluation) => {
-      const doc = React.createElement(StudentReportPDF, {
-        evaluation: {
-          ...evaluation,
-          scores: evaluation.domainScores as any,
-          domainEvaluations: evaluation.domainEvaluations as any,
-        },
-        assignment: evaluation.assignment,
-        student: evaluation.student,
-      })
-
-      const pdfBuffer = await pdf(doc).toBuffer()
-      
-      return {
-        studentName: evaluation.student.name,
-        studentId: evaluation.student.studentId,
-        pdfBuffer: pdfBuffer.toString('base64'),
-      }
-    })
-
-    const pdfs = await Promise.all(pdfPromises)
-
-    return NextResponse.json({
-      success: true,
-      pdfs,
-      count: pdfs.length,
     })
   } catch (error) {
     console.error('PDF 생성 오류:', error)
