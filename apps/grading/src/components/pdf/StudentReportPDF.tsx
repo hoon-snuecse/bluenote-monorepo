@@ -128,9 +128,11 @@ export function StudentReportPDF({
 
           <View style={styles.overallBox}>
             <Text style={styles.overallLabel}>성취 수준:</Text>
-            <Text style={[styles.overallLevel, getLevelColor(evaluation.overallLevel)]}>
-              {evaluation.overallLevel}
-            </Text>
+            <View style={getLevelBadgeStyle(evaluation.overallLevel)}>
+              <Text style={[styles.overallLevel, { color: getLevelColor(evaluation.overallLevel) }]}>
+                {evaluation.overallLevel}
+              </Text>
+            </View>
           </View>
 
           <Text style={styles.subsectionTitle}>종합 피드백:</Text>
@@ -155,10 +157,12 @@ export function StudentReportPDF({
                 <View style={styles.domainHeader}>
                   <Text style={styles.domainNumber}>{index + 1}.</Text>
                   <Text style={styles.domainTitle}>{domain}</Text>
-                  <Text style={[styles.domainLevel, getLevelColor(domainEval.level)]}>
-                    {domainEval.level}
-                    {domainEval.score && ` (${domainEval.score}점)`}
-                  </Text>
+                  <View style={getLevelBadgeStyle(domainEval.level)}>
+                    <Text style={[styles.domainLevel, { color: getLevelColor(domainEval.level) }]}>
+                      {domainEval.level}
+                      {domainEval.score && ` (${domainEval.score}점)`}
+                    </Text>
+                  </View>
                 </View>
                 <View style={styles.domainFeedbackBox}>
                   <Text style={styles.domainFeedback}>
@@ -214,48 +218,66 @@ export function StudentReportPDF({
 }
 
 /**
- * 성취 수준에 따른 색상 스타일 반환
- * 편집 디자인: 배지 스타일로 절제되고 세련되게
+ * 성취 수준에 따른 배지 배경 스타일 (View용)
  */
-function getLevelColor(level: string) {
+function getLevelBadgeStyle(level: string) {
   if (level.includes('매우 우수') || level.includes('매우우수')) {
     return {
-      color: '#789542', // primary-700
-      backgroundColor: '#f0f4e8', // 매우 연한 그린 배경
-      padding: 4,
+      backgroundColor: '#f0f4e8',
+      paddingHorizontal: 6,
+      paddingVertical: 3,
       borderRadius: 2,
     };
   }
   if (level.includes('우수')) {
     return {
-      color: '#91AF52', // primary-600
       backgroundColor: '#f4f7ee',
-      padding: 4,
+      paddingHorizontal: 6,
+      paddingVertical: 3,
       borderRadius: 2,
     };
   }
   if (level.includes('보통')) {
     return {
-      color: '#64748b', // 보통은 중립 회색
       backgroundColor: '#f8fafc',
-      padding: 4,
+      paddingHorizontal: 6,
+      paddingVertical: 3,
       borderRadius: 2,
     };
   }
   if (level.includes('미흡')) {
     return {
-      color: '#94a3b8', // 연한 회색
       backgroundColor: '#f8fafc',
-      padding: 4,
+      paddingHorizontal: 6,
+      paddingVertical: 3,
       borderRadius: 2,
     };
   }
   return {
-    color: '#64748b',
     backgroundColor: '#f8fafc',
-    padding: 4,
+    paddingHorizontal: 6,
+    paddingVertical: 3,
     borderRadius: 2,
   };
+}
+
+/**
+ * 성취 수준에 따른 텍스트 색상 (Text용)
+ */
+function getLevelColor(level: string) {
+  if (level.includes('매우 우수') || level.includes('매우우수')) {
+    return '#789542'; // primary-700
+  }
+  if (level.includes('우수')) {
+    return '#91AF52'; // primary-600
+  }
+  if (level.includes('보통')) {
+    return '#64748b'; // 보통은 중립 회색
+  }
+  if (level.includes('미흡')) {
+    return '#94a3b8'; // 연한 회색
+  }
+  return '#64748b';
 }
 
 const styles = StyleSheet.create({
