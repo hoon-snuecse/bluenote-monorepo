@@ -215,19 +215,20 @@ export function StudentReportPDF({
 
 /**
  * 성취 수준에 따른 색상 스타일 반환
+ * Design system colors from tailwind.config.ts
  */
 function getLevelColor(level: string) {
   if (level.includes('매우 우수') || level.includes('매우우수')) {
-    return { color: '#8B9D3C' }; // STAGED green
+    return { color: '#789542' }; // primary-700 (darker green for emphasis)
   }
   if (level.includes('우수')) {
-    return { color: '#8B9D3C' }; // STAGED green
+    return { color: '#91AF52' }; // primary-600 (main brand green)
   }
   if (level.includes('보통')) {
-    return { color: '#FF6B35' }; // STAGED orange
+    return { color: '#F58742' }; // secondary-600 (main brand orange)
   }
   if (level.includes('미흡')) {
-    return { color: '#94a3b8' }; // Gray
+    return { color: '#94a3b8' }; // Neutral gray
   }
   return { color: '#64748b' };
 }
@@ -237,215 +238,235 @@ const styles = StyleSheet.create({
     fontFamily: 'NotoSansKR',
     padding: 40,
     backgroundColor: '#FFFFFF',
-    fontSize: 11,
+    fontSize: 10, // base: 1rem equivalent in pt
+    fontWeight: 400, // Regular weight for body
     color: '#1e293b',
+    lineHeight: 1.6, // Design system line-height
   },
 
   // 헤더
   header: {
     alignItems: 'center',
-    marginBottom: 25,
+    marginBottom: 20,
   },
   logoContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 6,
   },
   logoStaged: {
-    fontSize: 16,
+    fontSize: 14, // Reduced from 16
     fontWeight: 700,
-    color: '#8B9D3C', // Primary green from design system
-    letterSpacing: 0.5,
+    color: '#91AF52', // primary-600 from design system
+    letterSpacing: 0.3,
   },
   logoPlus: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: 700,
-    color: '#FF6B35', // Secondary orange from design system
+    color: '#F58742', // secondary-600 from design system
     marginLeft: 1,
   },
   mainTitle: {
-    fontSize: 13,
-    fontWeight: 500,
-    color: '#1e293b',
+    fontSize: 11, // sm: 0.875rem
+    fontWeight: 400, // Regular, not medium
+    color: '#475569',
+    letterSpacing: -0.01,
   },
 
   // 과제 정보
   assignmentInfo: {
-    marginBottom: 25,
-    padding: 15,
+    marginBottom: 20,
+    padding: 12,
     backgroundColor: '#f8fafc',
-    borderRadius: 6,
-    borderWidth: 1,
+    borderRadius: 4,
+    borderWidth: 0.5,
     borderColor: '#e2e8f0',
   },
   assignmentRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 5,
+    marginBottom: 4,
   },
   icon: {
-    fontSize: 14,
-    marginRight: 8,
+    fontSize: 10,
+    marginRight: 6,
+    fontWeight: 400,
   },
   assignmentText: {
-    fontSize: 12,
-    color: '#475569',
+    fontSize: 9.5, // Between xs and sm
+    fontWeight: 400,
+    color: '#64748b',
+    lineHeight: 1.5,
   },
 
   // 섹션
   section: {
-    marginBottom: 15,
+    marginBottom: 16,
   },
   sectionTitle: {
-    fontSize: 12,
-    fontWeight: 700,
+    fontSize: 11, // lg: 1.125rem equivalent
+    fontWeight: 700, // Bold only for section titles
     color: '#1e293b',
     marginBottom: 8,
+    letterSpacing: -0.02,
   },
   subsectionTitle: {
-    fontSize: 11,
-    fontWeight: 500,
-    color: '#475569',
+    fontSize: 10,
+    fontWeight: 500, // Medium for subsections
+    color: '#64748b',
     marginBottom: 6,
-    marginTop: 10,
+    marginTop: 8,
+    letterSpacing: -0.01,
   },
   divider: {
-    height: 1,
+    height: 0.5,
     backgroundColor: '#e2e8f0',
-    marginBottom: 12,
+    marginBottom: 10,
   },
 
   // 학생 정보
   infoGrid: {
-    paddingLeft: 10,
+    paddingLeft: 8,
   },
   infoRow: {
     flexDirection: 'row',
-    marginBottom: 5,
+    marginBottom: 4,
   },
   infoLabel: {
-    fontSize: 10,
-    fontWeight: 500,
-    color: '#64748b',
-    width: 70,
+    fontSize: 9, // xs: 0.75rem
+    fontWeight: 400, // Regular, not medium
+    color: '#94a3b8',
+    width: 65,
+    lineHeight: 1.5,
   },
   infoValue: {
-    fontSize: 10,
+    fontSize: 9,
     fontWeight: 400,
-    color: '#1e293b',
+    color: '#475569',
     flex: 1,
+    lineHeight: 1.5,
   },
 
   // 제출한 글
   submissionBox: {
     backgroundColor: '#f8fafc',
-    padding: 15,
-    borderRadius: 6,
-    borderWidth: 1,
+    padding: 12,
+    borderRadius: 4,
+    borderWidth: 0.5,
     borderColor: '#e2e8f0',
   },
   submissionText: {
-    fontSize: 10,
+    fontSize: 9,
     lineHeight: 1.6,
-    color: '#475569',
+    fontWeight: 400,
+    color: '#64748b',
+    letterSpacing: -0.01,
   },
 
   // 종합 평가
   overallBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 12,
+    padding: 10,
     backgroundColor: '#f8fafc',
-    borderRadius: 6,
-    marginBottom: 12,
+    borderRadius: 4,
+    marginBottom: 10,
   },
   overallLabel: {
-    fontSize: 11,
-    fontWeight: 500,
-    color: '#475569',
+    fontSize: 10,
+    fontWeight: 400, // Regular, not medium
+    color: '#64748b',
     marginRight: 8,
+    letterSpacing: -0.01,
   },
   overallLevel: {
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: 700,
+    letterSpacing: -0.01,
   },
   feedbackBox: {
     backgroundColor: '#ffffff',
     padding: 10,
-    borderRadius: 6,
-    borderWidth: 1,
+    borderRadius: 4,
+    borderWidth: 0.5,
     borderColor: '#e2e8f0',
   },
   feedbackText: {
-    fontSize: 10,
+    fontSize: 9,
     lineHeight: 1.6,
     fontWeight: 400,
-    color: '#475569',
+    color: '#64748b',
+    letterSpacing: -0.01,
   },
 
   // 영역별 평가
   domainSection: {
-    marginBottom: 12,
+    marginBottom: 10,
   },
   domainHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 6,
+    marginBottom: 5,
   },
   domainNumber: {
-    fontSize: 11,
+    fontSize: 9.5,
     fontWeight: 400,
-    marginRight: 6,
+    marginRight: 5,
+    color: '#94a3b8',
   },
   domainTitle: {
-    fontSize: 11,
-    fontWeight: 700,
+    fontSize: 10,
+    fontWeight: 500, // Medium, not bold
     color: '#1e293b',
     flex: 1,
+    letterSpacing: -0.01,
   },
   domainLevel: {
-    fontSize: 10,
-    fontWeight: 700,
+    fontSize: 9,
+    fontWeight: 500, // Medium, not bold
+    letterSpacing: -0.01,
   },
   domainFeedbackBox: {
     backgroundColor: '#f8fafc',
     padding: 8,
-    borderRadius: 4,
-    borderLeftWidth: 2,
-    borderLeftColor: '#8B9D3C',
+    borderRadius: 3,
+    borderLeftWidth: 1.5,
+    borderLeftColor: '#91AF52', // primary-600
   },
   domainFeedback: {
-    fontSize: 9,
+    fontSize: 8.5,
     lineHeight: 1.5,
     fontWeight: 400,
-    color: '#475569',
+    color: '#64748b',
+    letterSpacing: -0.01,
   },
 
   // 리스트 (강점, 개선방안)
   listItem: {
     flexDirection: 'row',
-    marginBottom: 6,
-    paddingLeft: 8,
+    marginBottom: 5,
+    paddingLeft: 6,
   },
   listBullet: {
-    fontSize: 9,
-    color: '#8B9D3C',
-    marginRight: 6,
+    fontSize: 8,
+    color: '#91AF52', // primary-600
+    marginRight: 5,
     fontWeight: 400,
   },
   listNumber: {
-    fontSize: 10,
-    color: '#8B9D3C',
-    marginRight: 6,
-    fontWeight: 500,
-    width: 18,
+    fontSize: 9,
+    color: '#91AF52', // primary-600
+    marginRight: 5,
+    fontWeight: 400, // Regular, not medium
+    width: 16,
   },
   listText: {
-    fontSize: 10,
+    fontSize: 9,
     lineHeight: 1.5,
     fontWeight: 400,
-    color: '#475569',
+    color: '#64748b',
     flex: 1,
+    letterSpacing: -0.01,
   },
 
   // 푸터
@@ -456,12 +477,14 @@ const styles = StyleSheet.create({
     right: 40,
     flexDirection: 'row',
     justifyContent: 'space-between',
-    borderTopWidth: 1,
+    borderTopWidth: 0.5,
     borderTopColor: '#e2e8f0',
-    paddingTop: 10,
+    paddingTop: 8,
   },
   footerText: {
-    fontSize: 9,
+    fontSize: 8,
+    fontWeight: 400,
     color: '#94a3b8',
+    lineHeight: 1.5,
   },
 });

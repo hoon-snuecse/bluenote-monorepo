@@ -92,19 +92,20 @@ export function TableOfContents({ students }: TableOfContentsProps) {
 
 /**
  * 성취 수준에 따른 스타일 반환
+ * Design system colors from tailwind.config.ts
  */
 function getLevelStyle(level: string) {
   if (level.includes('매우 우수') || level.includes('매우우수')) {
-    return { color: '#10b981', fontWeight: 700 };
+    return { color: '#789542', fontWeight: 500 }; // primary-700, medium weight
   }
   if (level.includes('우수')) {
-    return { color: '#3b82f6', fontWeight: 700 };
+    return { color: '#91AF52', fontWeight: 500 }; // primary-600
   }
   if (level.includes('보통')) {
-    return { color: '#f59e0b', fontWeight: 500 };
+    return { color: '#F58742', fontWeight: 400 }; // secondary-600, regular weight
   }
   if (level.includes('미흡')) {
-    return { color: '#ef4444', fontWeight: 500 };
+    return { color: '#94a3b8', fontWeight: 400 }; // Neutral gray
   }
   return { color: '#64748b', fontWeight: 400 };
 }
@@ -115,75 +116,83 @@ const styles = StyleSheet.create({
     padding: 50,
     backgroundColor: '#FFFFFF',
     fontSize: 10,
+    fontWeight: 400,
+    lineHeight: 1.6,
   },
 
   // 헤더
   header: {
-    marginBottom: 25,
-    borderBottomWidth: 2,
-    borderBottomColor: '#3b82f6',
-    paddingBottom: 15,
+    marginBottom: 20,
+    borderBottomWidth: 1, // Thinner
+    borderBottomColor: '#91AF52', // primary-600
+    paddingBottom: 12,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
   title: {
-    fontSize: 20,
+    fontSize: 16, // Reduced from 20
     fontWeight: 700,
     color: '#1e293b',
+    letterSpacing: -0.02,
   },
   pageInfo: {
-    fontSize: 11,
-    color: '#64748b',
+    fontSize: 10,
+    color: '#94a3b8',
+    fontWeight: 400,
+    lineHeight: 1.5,
   },
 
   // 테이블
   tableHeader: {
     flexDirection: 'row',
-    backgroundColor: '#f1f5f9',
-    borderTopWidth: 1,
-    borderBottomWidth: 1,
-    borderColor: '#cbd5e1',
-    padding: 8,
+    backgroundColor: '#f8fafc',
+    borderTopWidth: 0.5,
+    borderBottomWidth: 0.5,
+    borderColor: '#e2e8f0',
+    padding: 6,
   },
   tableHeaderCell: {
-    fontSize: 10,
-    fontWeight: 700,
-    color: '#475569',
+    fontSize: 9, // xs
+    fontWeight: 500, // Medium, not bold
+    color: '#64748b',
     textAlign: 'center',
+    lineHeight: 1.5,
   },
   tableRow: {
     flexDirection: 'row',
-    borderBottomWidth: 1,
+    borderBottomWidth: 0.5,
     borderBottomColor: '#f1f5f9',
-    padding: 8,
+    padding: 6,
   },
   tableRowEven: {
     backgroundColor: '#f9fafb',
   },
   tableCell: {
-    fontSize: 10,
-    color: '#1e293b',
+    fontSize: 9, // xs
+    color: '#475569',
     textAlign: 'center',
+    fontWeight: 400,
+    lineHeight: 1.5,
   },
 
   // 컬럼 너비
   colNumber: {
-    width: 50,
+    width: 45,
   },
   colName: {
-    width: 150,
+    width: 145,
     textAlign: 'left',
-    paddingLeft: 10,
+    paddingLeft: 8,
   },
   colStudentId: {
-    width: 100,
+    width: 95,
   },
   colLevel: {
-    width: 120,
+    width: 115,
   },
   colPage: {
-    width: 70,
+    width: 65,
   },
 
   // 하단
@@ -193,12 +202,14 @@ const styles = StyleSheet.create({
     left: 50,
     right: 50,
     alignItems: 'center',
-    borderTopWidth: 1,
+    borderTopWidth: 0.5,
     borderTopColor: '#e2e8f0',
-    paddingTop: 15,
+    paddingTop: 12,
   },
   footerText: {
-    fontSize: 10,
+    fontSize: 9, // xs
     color: '#94a3b8',
+    fontWeight: 400,
+    lineHeight: 1.5,
   },
 });

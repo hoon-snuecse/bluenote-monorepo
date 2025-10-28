@@ -182,174 +182,198 @@ const styles = StyleSheet.create({
     fontFamily: 'NotoSansKR',
     padding: 50,
     backgroundColor: '#FFFFFF',
-    fontSize: 11,
+    fontSize: 10, // base
+    fontWeight: 400,
+    color: '#1e293b',
+    lineHeight: 1.6,
   },
 
   // 헤더
   header: {
     alignItems: 'center',
-    marginBottom: 30,
+    marginBottom: 24,
   },
   logoContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 10,
+    marginBottom: 8,
   },
   logoStaged: {
-    fontSize: 32,
+    fontSize: 28, // Reduced from 32
     fontWeight: 700,
-    color: '#8B9D3C', // Primary green from design system
-    letterSpacing: 1,
+    color: '#91AF52', // primary-600
+    letterSpacing: 0.8,
   },
   logoPlus: {
-    fontSize: 32,
+    fontSize: 28,
     fontWeight: 700,
-    color: '#FF6B35', // Secondary orange from design system
+    color: '#F58742', // secondary-600
     marginLeft: 2,
   },
   headerSubtitle: {
-    fontSize: 16,
-    fontWeight: 500,
-    color: '#1e293b',
+    fontSize: 14, // xl equivalent
+    fontWeight: 400, // Regular, not medium
+    color: '#475569',
+    letterSpacing: -0.02,
   },
 
   // 구분선
   dividerThick: {
-    height: 2,
+    height: 1, // Thinner
     backgroundColor: '#e2e8f0',
-    marginVertical: 20,
+    marginVertical: 16,
   },
 
   // 섹션
   section: {
-    marginBottom: 25,
+    marginBottom: 20,
   },
   sectionTitle: {
-    fontSize: 13,
+    fontSize: 12, // lg equivalent
     fontWeight: 700,
     color: '#1e293b',
-    marginBottom: 12,
+    marginBottom: 10,
+    letterSpacing: -0.02,
   },
 
   // 과제 정보
   infoRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    marginBottom: 12,
+    marginBottom: 10,
   },
   icon: {
-    fontSize: 18,
-    marginRight: 10,
-    width: 25,
+    fontSize: 14, // Reduced from 18
+    marginRight: 8,
+    width: 20,
+    fontWeight: 400,
   },
   label: {
-    fontSize: 10,
-    color: '#64748b',
+    fontSize: 9, // xs
+    color: '#94a3b8',
     marginBottom: 3,
+    fontWeight: 400,
+    lineHeight: 1.5,
   },
   value: {
-    fontSize: 12,
+    fontSize: 11, // sm
     color: '#1e293b',
-    fontWeight: 500,
+    fontWeight: 400, // Regular, not medium
+    lineHeight: 1.5,
+    letterSpacing: -0.01,
   },
 
   // 통계 그리드
   statsGrid: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    gap: 15,
+    gap: 12,
   },
   statBox: {
     flex: 1,
-    padding: 15,
+    padding: 12,
     backgroundColor: '#f8fafc',
-    borderRadius: 6,
-    borderWidth: 1,
+    borderRadius: 4,
+    borderWidth: 0.5,
     borderColor: '#e2e8f0',
     alignItems: 'center',
   },
   statLabel: {
-    fontSize: 10,
-    color: '#64748b',
-    marginBottom: 6,
+    fontSize: 9, // xs
+    color: '#94a3b8',
+    marginBottom: 5,
+    fontWeight: 400,
+    lineHeight: 1.5,
   },
   statValue: {
-    fontSize: 20,
+    fontSize: 18, // Reduced from 20
     fontWeight: 700,
     color: '#1e293b',
+    letterSpacing: -0.02,
   },
   statValueGreen: {
-    color: '#8B9D3C', // STAGED green
+    color: '#91AF52', // primary-600
   },
   statValueBlue: {
-    color: '#FF6B35', // STAGED orange
+    color: '#F58742', // secondary-600
   },
 
   // 성취 수준 분포
   distributionRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 10,
+    marginBottom: 8,
   },
   levelLabel: {
-    fontSize: 11,
-    width: 80,
-    color: '#475569',
-    fontWeight: 500,
+    fontSize: 10,
+    width: 75,
+    color: '#64748b',
+    fontWeight: 400, // Regular, not medium
+    lineHeight: 1.5,
   },
   barContainer: {
     flex: 1,
-    height: 22,
+    height: 20, // Slightly reduced
     backgroundColor: '#f1f5f9',
-    borderRadius: 4,
-    marginHorizontal: 10,
+    borderRadius: 3,
+    marginHorizontal: 8,
     overflow: 'hidden',
   },
   bar: {
     height: '100%',
-    backgroundColor: '#8B9D3C', // STAGED green
+    backgroundColor: '#91AF52', // primary-600
   },
   distributionValue: {
-    fontSize: 10,
-    width: 90,
+    fontSize: 9.5,
+    width: 85,
     textAlign: 'right',
     color: '#1e293b',
-    fontWeight: 700,
+    fontWeight: 500, // Medium, not bold
+    lineHeight: 1.5,
   },
 
   // 시행 정보
   dateInfo: {
-    paddingLeft: 10,
+    paddingLeft: 8,
   },
   dateRow: {
     flexDirection: 'row',
-    marginBottom: 8,
+    marginBottom: 6,
   },
   dateLabel: {
-    fontSize: 10,
-    width: 90,
-    color: '#64748b',
+    fontSize: 9, // xs
+    width: 85,
+    color: '#94a3b8',
+    fontWeight: 400,
+    lineHeight: 1.5,
   },
   dateValue: {
-    fontSize: 10,
-    color: '#1e293b',
+    fontSize: 9,
+    color: '#475569',
     flex: 1,
+    fontWeight: 400,
+    lineHeight: 1.5,
+    letterSpacing: -0.01,
   },
 
   // 보고서 포함 내용
   contentInfo: {
-    paddingLeft: 10,
+    paddingLeft: 8,
   },
   contentInfoTitle: {
-    fontSize: 11,
-    color: '#475569',
-    marginBottom: 10,
-  },
-  contentInfoItem: {
     fontSize: 10,
     color: '#64748b',
-    marginBottom: 5,
-    paddingLeft: 10,
+    marginBottom: 8,
+    fontWeight: 400,
+    lineHeight: 1.5,
+  },
+  contentInfoItem: {
+    fontSize: 9, // xs
+    color: '#94a3b8',
+    marginBottom: 4,
+    paddingLeft: 8,
+    fontWeight: 400,
+    lineHeight: 1.5,
   },
 
   // 하단
@@ -361,7 +385,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   footerText: {
-    fontSize: 10,
+    fontSize: 9, // xs
     color: '#94a3b8',
+    fontWeight: 400,
+    lineHeight: 1.5,
   },
 });
