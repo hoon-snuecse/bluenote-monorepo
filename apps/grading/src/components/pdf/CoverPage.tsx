@@ -279,10 +279,10 @@ const styles = StyleSheet.create({
     color: '#1e293b',
   },
   statValueGreen: {
-    color: '#10b981',
+    color: '#8B9D3C', // STAGED green
   },
   statValueBlue: {
-    color: '#3b82f6',
+    color: '#FF6B35', // STAGED orange
   },
 
   // 성취 수준 분포
@@ -307,7 +307,7 @@ const styles = StyleSheet.create({
   },
   bar: {
     height: '100%',
-    backgroundColor: '#3b82f6',
+    backgroundColor: '#8B9D3C', // STAGED green
   },
   distributionValue: {
     fontSize: 10,

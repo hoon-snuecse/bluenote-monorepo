@@ -54,9 +54,7 @@ export function StudentReportPDF({
   submission,
 }: StudentReportPDFProps) {
   return (
-    <>
-      {/* 첫 번째 페이지 */}
-      <Page size="A4" style={styles.page}>
+    <Page size="A4" style={styles.page} wrap>
         {/* 헤더 */}
         <View style={styles.header}>
           <View style={styles.logoContainer}>
@@ -123,22 +121,8 @@ export function StudentReportPDF({
           </View>
         </View>
 
-        {/* 푸터 (첫 페이지) */}
-        <View style={styles.footer}>
-          <Text style={styles.footerText}>
-            평가일: {formatDateKorean(evaluation.evaluatedAt)}
-          </Text>
-          <Text style={styles.footerText}>
-            평가 모델: {evaluation.evaluatedBy || 'AI 평가'}
-          </Text>
-          <Text style={styles.footerText}>BlueNote AI 평가 시스템</Text>
-        </View>
-      </Page>
-
-      {/* 두 번째 페이지 */}
-      <Page size="A4" style={styles.page}>
         {/* 종합 평가 */}
-        <View style={styles.section}>
+        <View style={styles.section} break>
           <Text style={styles.sectionTitle}>종합 평가</Text>
           <View style={styles.divider} />
 
@@ -186,17 +170,9 @@ export function StudentReportPDF({
           })}
         </View>
 
-        {/* 푸터 (두 번째 페이지) */}
-        <View style={styles.footer}>
-          <Text style={styles.footerText}>BlueNote AI 평가 시스템</Text>
-        </View>
-      </Page>
-
-      {/* 세 번째 페이지 */}
-      <Page size="A4" style={styles.page}>
         {/* 강점 */}
         {evaluation.strengths && evaluation.strengths.length > 0 && (
-          <View style={styles.section}>
+          <View style={styles.section} break>
             <Text style={styles.sectionTitle}>강점</Text>
             <View style={styles.divider} />
 
@@ -224,15 +200,16 @@ export function StudentReportPDF({
           </View>
         )}
 
-        {/* 푸터 (세 번째 페이지) */}
+        {/* 푸터 */}
         <View style={styles.footer}>
           <Text style={styles.footerText}>
-            생성일: {formatDateKorean(new Date())}
+            평가일: {formatDateKorean(evaluation.evaluatedAt)}
           </Text>
-          <Text style={styles.footerText}>BlueNote AI 평가 시스템</Text>
+          <Text style={styles.footerText}>
+            {evaluation.evaluatedBy || 'AI 평가'}
+          </Text>
         </View>
-      </Page>
-    </>
+    </Page>
   );
 }
 
@@ -241,16 +218,16 @@ export function StudentReportPDF({
  */
 function getLevelColor(level: string) {
   if (level.includes('매우 우수') || level.includes('매우우수')) {
-    return { color: '#10b981' };
+    return { color: '#8B9D3C' }; // STAGED green
   }
   if (level.includes('우수')) {
-    return { color: '#3b82f6' };
+    return { color: '#8B9D3C' }; // STAGED green
   }
   if (level.includes('보통')) {
-    return { color: '#f59e0b' };
+    return { color: '#FF6B35' }; // STAGED orange
   }
   if (level.includes('미흡')) {
-    return { color: '#ef4444' };
+    return { color: '#94a3b8' }; // Gray
   }
   return { color: '#64748b' };
 }

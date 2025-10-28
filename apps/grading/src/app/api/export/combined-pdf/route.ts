@@ -136,16 +136,17 @@ export async function POST(request: NextRequest) {
     });
 
     // 8. PDF 문서 생성
-    // 목차 페이지들을 미리 생성
-    const tocPages = createTableOfContentsPages(tocStudents);
+    // 학생이 1명이면 표지/목차 생략, 2명 이상이면 표지/목차 포함
+    const includeHeaderPages = evaluatedSubmissions.length > 1;
+    const tocPages = includeHeaderPages ? createTableOfContentsPages(tocStudents) : [];
 
     const CombinedPDFDocument = () =>
       React.createElement(
         Document,
         null,
-        // 1. 표지 페이지
-        React.createElement(CoverPage, coverPageData),
-        // 2. 목차 페이지(들)
+        // 1. 표지 페이지 (2명 이상일 때만)
+        ...(includeHeaderPages ? [React.createElement(CoverPage, coverPageData)] : []),
+        // 2. 목차 페이지(들) (2명 이상일 때만)
         ...tocPages,
         // 3. 개별 학생 보고서들
         ...evaluatedSubmissions.map((submission) => {
