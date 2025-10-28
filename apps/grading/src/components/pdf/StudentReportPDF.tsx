@@ -70,22 +70,22 @@ export function StudentReportPDF({
         {/* 과제 정보 (간략) */}
         <View style={styles.assignmentInfo}>
           <View style={styles.assignmentRow}>
-            <Text style={styles.icon}>📋</Text>
+            <Text style={styles.icon}>■</Text>
             <Text style={styles.assignmentText}>
-              {assignment.title}
+              과제: {assignment.title}
             </Text>
           </View>
           <View style={styles.assignmentRow}>
-            <Text style={styles.icon}>🏫</Text>
+            <Text style={styles.icon}>■</Text>
             <Text style={styles.assignmentText}>
-              {assignment.schoolName} {assignment.gradeLevel}
+              학교: {assignment.schoolName} {assignment.gradeLevel}
             </Text>
           </View>
         </View>
 
         {/* 학생 정보 */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>👤 학생 정보</Text>
+          <Text style={styles.sectionTitle}>학생 정보</Text>
           <View style={styles.divider} />
 
           <View style={styles.infoGrid}>
@@ -114,7 +114,7 @@ export function StudentReportPDF({
 
         {/* 학생이 제출한 글 (위치 이동됨 - 학생정보 다음) */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>📝 제출한 글</Text>
+          <Text style={styles.sectionTitle}>제출한 글</Text>
           <View style={styles.divider} />
 
           <View style={styles.submissionBox}>
@@ -140,7 +140,7 @@ export function StudentReportPDF({
       <Page size="A4" style={styles.page}>
         {/* 종합 평가 */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>🎯 종합 평가</Text>
+          <Text style={styles.sectionTitle}>종합 평가</Text>
           <View style={styles.divider} />
 
           <View style={styles.overallBox}>
@@ -160,7 +160,7 @@ export function StudentReportPDF({
 
         {/* 영역별 평가 */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>📊 영역별 상세 평가</Text>
+          <Text style={styles.sectionTitle}>영역별 상세 평가</Text>
           <View style={styles.divider} />
 
           {assignment.evaluationDomains.map((domain, index) => {
@@ -170,7 +170,7 @@ export function StudentReportPDF({
             return (
               <View key={domain} style={styles.domainSection}>
                 <View style={styles.domainHeader}>
-                  <Text style={styles.domainNumber}>{index + 1}️⃣</Text>
+                  <Text style={styles.domainNumber}>{index + 1}.</Text>
                   <Text style={styles.domainTitle}>{domain}</Text>
                   <Text style={[styles.domainLevel, getLevelColor(domainEval.level)]}>
                     {domainEval.level}
@@ -198,12 +198,12 @@ export function StudentReportPDF({
         {/* 강점 */}
         {evaluation.strengths && evaluation.strengths.length > 0 && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>✨ 강점</Text>
+            <Text style={styles.sectionTitle}>강점</Text>
             <View style={styles.divider} />
 
             {evaluation.strengths.map((strength, index) => (
               <View key={index} style={styles.listItem}>
-                <Text style={styles.listBullet}>✓</Text>
+                <Text style={styles.listBullet}>√</Text>
                 <Text style={styles.listText}>{strength}</Text>
               </View>
             ))}
@@ -213,7 +213,7 @@ export function StudentReportPDF({
         {/* 개선 방안 */}
         {evaluation.improvementSuggestions && evaluation.improvementSuggestions.length > 0 && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>💡 개선 방안</Text>
+            <Text style={styles.sectionTitle}>개선 방안</Text>
             <View style={styles.divider} />
 
             {evaluation.improvementSuggestions.map((suggestion, index) => (
