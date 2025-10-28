@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import React from 'react';
 import prisma from '@/lib/prisma';
-import { Document, pdf } from '@react-pdf/renderer';
+import { Document, Page, Text, View, StyleSheet, pdf } from '@react-pdf/renderer';
 import { CoverPage } from '@/components/pdf/CoverPage';
-import { TableOfContents } from '@/components/pdf/TableOfContents';
 import { StudentReportPDF } from '@/components/pdf/StudentReportPDF';
 import { registerKoreanFonts } from '@/lib/pdf-font-setup';
 import { getSessionWithPermissions } from '@/lib/auth-helpers';
@@ -137,8 +136,8 @@ export async function POST(request: NextRequest) {
     });
 
     // 8. PDF 문서 생성
-    // TableOfContents는 JSX fragment를 반환하므로, 먼저 렌더링해서 페이지들을 얻어야 함
-    const tocElement = React.createElement(TableOfContents, { students: tocStudents });
+    // 목차 페이지들을 미리 생성
+    const tocPages = createTableOfContentsPages(tocStudents);
 
     const CombinedPDFDocument = () =>
       React.createElement(
@@ -147,7 +146,7 @@ export async function POST(request: NextRequest) {
         // 1. 표지 페이지
         React.createElement(CoverPage, coverPageData),
         // 2. 목차 페이지(들)
-        tocElement,
+        ...tocPages,
         // 3. 개별 학생 보고서들
         ...evaluatedSubmissions.map((submission) => {
           const evaluation = submission.evaluations[0];
@@ -235,4 +234,170 @@ function parseJSON(value: any): any {
     }
   }
   return value;
+}
+
+/**
+ * 목차 페이지 생성 헬퍼
+ * TableOfContents 컴포넌트가 Fragment를 반환하는 문제를 해결하기 위해
+ * 직접 Page 배열을 생성
+ */
+function createTableOfContentsPages(students: Array<{
+  name: string;
+  studentId: string;
+  overallLevel: string;
+  pageNumber: number;
+}>) {
+  const studentsPerPage = 30;
+  const totalPages = Math.ceil(students.length / studentsPerPage);
+
+  const tocStyles = StyleSheet.create({
+    page: {
+      fontFamily: 'NotoSansKR',
+      padding: 50,
+      backgroundColor: '#FFFFFF',
+      fontSize: 10,
+    },
+    header: {
+      marginBottom: 25,
+      borderBottomWidth: 2,
+      borderBottomColor: '#3b82f6',
+      paddingBottom: 15,
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+    },
+    title: {
+      fontSize: 20,
+      fontWeight: 700,
+      color: '#1e293b',
+    },
+    pageInfo: {
+      fontSize: 11,
+      color: '#64748b',
+    },
+    tableHeader: {
+      flexDirection: 'row',
+      backgroundColor: '#f1f5f9',
+      borderTopWidth: 1,
+      borderBottomWidth: 1,
+      borderColor: '#cbd5e1',
+      padding: 8,
+    },
+    tableHeaderCell: {
+      fontSize: 10,
+      fontWeight: 700,
+      color: '#475569',
+      textAlign: 'center',
+    },
+    tableRow: {
+      flexDirection: 'row',
+      borderBottomWidth: 1,
+      borderBottomColor: '#f1f5f9',
+      padding: 8,
+    },
+    tableRowEven: {
+      backgroundColor: '#f9fafb',
+    },
+    tableCell: {
+      fontSize: 10,
+      color: '#1e293b',
+      textAlign: 'center',
+    },
+    colNumber: { width: 50 },
+    colName: { width: 150, textAlign: 'left', paddingLeft: 10 },
+    colStudentId: { width: 100 },
+    colLevel: { width: 120 },
+    colPage: { width: 70 },
+    footer: {
+      position: 'absolute',
+      bottom: 40,
+      left: 50,
+      right: 50,
+      alignItems: 'center',
+      borderTopWidth: 1,
+      borderTopColor: '#e2e8f0',
+      paddingTop: 15,
+    },
+    footerText: {
+      fontSize: 10,
+      color: '#94a3b8',
+    },
+  });
+
+  const getLevelColor = (level: string): string => {
+    if (level.includes('매우 우수') || level.includes('매우우수')) return '#10b981';
+    if (level.includes('우수')) return '#3b82f6';
+    if (level.includes('보통')) return '#f59e0b';
+    if (level.includes('미흡')) return '#ef4444';
+    return '#64748b';
+  };
+
+  return Array.from({ length: totalPages }, (_, pageIndex) => {
+    const startIndex = pageIndex * studentsPerPage;
+    const endIndex = Math.min(startIndex + studentsPerPage, students.length);
+    const pageStudents = students.slice(startIndex, endIndex);
+
+    return React.createElement(
+      Page,
+      { key: `toc-${pageIndex}`, size: 'A4', style: tocStyles.page },
+      // Header
+      React.createElement(
+        View,
+        { style: tocStyles.header },
+        React.createElement(Text, { style: tocStyles.title }, '목차'),
+        totalPages > 1 && React.createElement(
+          Text,
+          { style: tocStyles.pageInfo },
+          `${pageIndex + 1} / ${totalPages}`
+        )
+      ),
+      // Table Header
+      React.createElement(
+        View,
+        { style: tocStyles.tableHeader },
+        React.createElement(Text, { style: [tocStyles.tableHeaderCell, tocStyles.colNumber] }, '번호'),
+        React.createElement(Text, { style: [tocStyles.tableHeaderCell, tocStyles.colName] }, '학생 이름'),
+        React.createElement(Text, { style: [tocStyles.tableHeaderCell, tocStyles.colStudentId] }, '학번'),
+        React.createElement(Text, { style: [tocStyles.tableHeaderCell, tocStyles.colLevel] }, '종합 평가'),
+        React.createElement(Text, { style: [tocStyles.tableHeaderCell, tocStyles.colPage] }, '페이지')
+      ),
+      // Table Rows
+      ...pageStudents.map((student, index) => {
+        const globalIndex = startIndex + index + 1;
+        const isEven = globalIndex % 2 === 0;
+        const levelColor = getLevelColor(student.overallLevel);
+
+        return React.createElement(
+          View,
+          {
+            key: student.studentId,
+            style: isEven ? [tocStyles.tableRow, tocStyles.tableRowEven] : tocStyles.tableRow,
+          },
+          React.createElement(Text, { style: [tocStyles.tableCell, tocStyles.colNumber] }, String(globalIndex)),
+          React.createElement(Text, { style: [tocStyles.tableCell, tocStyles.colName] }, student.name),
+          React.createElement(Text, { style: [tocStyles.tableCell, tocStyles.colStudentId] }, student.studentId),
+          React.createElement(
+            Text,
+            { style: [tocStyles.tableCell, tocStyles.colLevel] },
+            React.createElement(
+              Text,
+              { style: { color: levelColor, fontWeight: levelColor === '#64748b' ? 400 : 700 } },
+              student.overallLevel
+            )
+          ),
+          React.createElement(Text, { style: [tocStyles.tableCell, tocStyles.colPage] }, String(student.pageNumber))
+        );
+      }),
+      // Footer
+      React.createElement(
+        View,
+        { style: tocStyles.footer },
+        React.createElement(
+          Text,
+          { style: tocStyles.footerText },
+          `총 ${students.length}명의 학생 평가 보고서`
+        )
+      )
+    );
+  });
 }
