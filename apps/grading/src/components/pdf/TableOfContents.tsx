@@ -120,27 +120,22 @@ const styles = StyleSheet.create({
 
   // 컬럼 너비 - View에 적용 (flexDirection: row에서 셀 역할)
   colNumber: {
-    width: 35,
+    width: 45,
     justifyContent: 'center',
     alignItems: 'center',
   },
   colName: {
-    width: 120,
+    width: 140,
     justifyContent: 'center',
     paddingLeft: 6,
   },
   colStudentId: {
-    width: 85,
+    width: 100,
     justifyContent: 'center',
     alignItems: 'center',
   },
   colLevel: {
-    width: 90,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  colPage: {
-    width: 50,
+    width: 95,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -202,9 +197,6 @@ export function createTableOfContentsPages(students: TableOfContentsProps['stude
           <View style={styles.colLevel}>
             <Text style={styles.tableHeaderCell}>종합 평가</Text>
           </View>
-          <View style={styles.colPage}>
-            <Text style={styles.tableHeaderCell}>페이지</Text>
-          </View>
         </View>
 
         {/* 학생 행들 */}
@@ -230,9 +222,6 @@ export function createTableOfContentsPages(students: TableOfContentsProps['stude
                 <Text style={[styles.tableCell, getLevelStyle(student.overallLevel)]}>
                   {student.overallLevel}
                 </Text>
-              </View>
-              <View style={styles.colPage}>
-                <Text style={styles.tableCell}>{student.pageNumber}</Text>
               </View>
             </View>
           );
