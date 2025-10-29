@@ -141,54 +141,73 @@ export async function POST(request: NextRequest) {
     });
 
     // 8. PDF 문서 생성
-    const CombinedPDFDocument = () =>
-      React.createElement(
+    const CombinedPDFDocument = () => {
+      // 빈 페이지 컴포넌트 (양면 인쇄를 위한 페이지 정렬용)
+      const BlankPage = () =>
+        React.createElement(
+          Page,
+          { size: 'A4', style: { backgroundColor: '#FFFFFF' } },
+          React.createElement(View, { style: { padding: 40 } })
+        );
+
+      // 각 학생 보고서 + 빈 페이지를 배열로 생성
+      const studentReportsWithBlankPages = evaluatedSubmissions.flatMap((submission, index) => {
+        const evaluation = submission.evaluations[0];
+        const improvementSuggestions = parseJSON(evaluation.improvementSuggestions);
+        const strengths = parseJSON(evaluation.strengths);
+
+        const report = React.createElement(StudentReportPDF, {
+          key: submission.id,
+          evaluation: {
+            id: evaluation.id,
+            domainEvaluations: parseJSON(evaluation.domainEvaluations),
+            overallLevel: evaluation.overallLevel,
+            overallFeedback: evaluation.overallFeedback,
+            improvementSuggestions: Array.isArray(improvementSuggestions)
+              ? improvementSuggestions
+              : [improvementSuggestions],
+            strengths: Array.isArray(strengths) ? strengths : [strengths],
+            evaluatedAt: new Date(evaluation.evaluatedAt),
+            evaluatedBy: evaluation.evaluatedBy || undefined,
+          },
+          assignment: {
+            title: assignment.title,
+            schoolName: assignment.schoolName,
+            gradeLevel: assignment.gradeLevel,
+            writingType: assignment.writingType,
+            evaluationDomains,
+            evaluationLevels,
+          },
+          student: {
+            name: submission.studentName,
+            studentId: submission.studentId,
+          },
+          submission: {
+            content: submission.content,
+            submittedAt: new Date(submission.submittedAt),
+          },
+          studentPageStart: tocStudents[index].pageNumber, // 개인별 시작 페이지
+        });
+
+        // 각 학생 보고서(3페이지) 뒤에 빈 페이지 1개 추가
+        // 마지막 학생은 빈 페이지 불필요
+        const isLastStudent = index === evaluatedSubmissions.length - 1;
+        return isLastStudent
+          ? [report]
+          : [report, React.createElement(BlankPage, { key: `blank-${submission.id}` })];
+      });
+
+      return React.createElement(
         Document,
         null,
         // 1. 표지 페이지 (2명 이상일 때만)
         ...(includeHeaderPages ? [React.createElement(CoverPage, coverPageData)] : []),
-        // 2. 목차 페이지(들) (2명 이상일 때만) - Fragment 없이 직접 배열 전개
+        // 2. 목차 페이지(들) (2명 이상일 때만)
         ...(includeHeaderPages ? createTableOfContentsPages(tocStudents) : []),
-        // 3. 개별 학생 보고서들
-        ...evaluatedSubmissions.map((submission, index) => {
-          const evaluation = submission.evaluations[0];
-          const improvementSuggestions = parseJSON(evaluation.improvementSuggestions);
-          const strengths = parseJSON(evaluation.strengths);
-
-          return React.createElement(StudentReportPDF, {
-            key: submission.id,
-            evaluation: {
-              id: evaluation.id,
-              domainEvaluations: parseJSON(evaluation.domainEvaluations),
-              overallLevel: evaluation.overallLevel,
-              overallFeedback: evaluation.overallFeedback,
-              improvementSuggestions: Array.isArray(improvementSuggestions)
-                ? improvementSuggestions
-                : [improvementSuggestions],
-              strengths: Array.isArray(strengths) ? strengths : [strengths],
-              evaluatedAt: new Date(evaluation.evaluatedAt),
-              evaluatedBy: evaluation.evaluatedBy || undefined,
-            },
-            assignment: {
-              title: assignment.title,
-              schoolName: assignment.schoolName,
-              gradeLevel: assignment.gradeLevel,
-              writingType: assignment.writingType,
-              evaluationDomains,
-              evaluationLevels,
-            },
-            student: {
-              name: submission.studentName,
-              studentId: submission.studentId,
-            },
-            submission: {
-              content: submission.content,
-              submittedAt: new Date(submission.submittedAt),
-            },
-            studentPageStart: tocStudents[index].pageNumber, // 개인별 시작 페이지
-          });
-        })
+        // 3. 개별 학생 보고서들 + 빈 페이지들
+        ...studentReportsWithBlankPages
       );
+    };
 
     // 9. PDF 렌더링
     const pdfBlob = await pdf(React.createElement(CombinedPDFDocument)).toBlob();
