@@ -86,31 +86,32 @@ const styles = StyleSheet.create({
   // 테이블 - 편집 디자인: 가독성과 우아함
   tableHeader: {
     flexDirection: 'row',
-    backgroundColor: 'transparent',
-    paddingVertical: 4,
+    backgroundColor: '#f8f9fa',
+    paddingVertical: 6,
     paddingHorizontal: 3,
+    marginBottom: 4,
   },
   tableHeaderCell: {
-    fontSize: 7,
-    fontWeight: 400, // Regular로 절제
-    color: '#94a3b8', // 더 연한 색상
+    fontSize: 8,
+    fontWeight: 600, // Semibold로 헤더 강조
+    color: '#4A4B3D',
     textAlign: 'center',
     lineHeight: 1.3,
-    letterSpacing: 0.5,
+    letterSpacing: 0.3,
   },
   tableRow: {
     flexDirection: 'row',
-    paddingVertical: 3, // 줄간격 더 축소
+    paddingVertical: 5,
     paddingHorizontal: 3,
   },
   tableRowEven: {
-    backgroundColor: 'transparent',
+    backgroundColor: '#fafbfc',
   },
   tableCell: {
-    fontSize: 8,
-    color: '#64748b', // 더 부드러운 색상
+    fontSize: 9,
+    color: '#1e293b',
     fontWeight: 400,
-    lineHeight: 1.3,
+    lineHeight: 1.4,
   },
   tableCellName: {
     textAlign: 'left',
