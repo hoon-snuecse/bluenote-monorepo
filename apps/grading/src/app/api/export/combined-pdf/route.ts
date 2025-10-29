@@ -189,9 +189,11 @@ export async function POST(request: NextRequest) {
           studentPageStart: tocStudents[index].pageNumber, // 개인별 시작 페이지
         });
 
-        // 각 학생 보고서 뒤에 빈 페이지 2개 추가 (짝수 페이지 보장)
+        // 각 학생 보고서 뒤에 빈 페이지 3개 추가 (다음 학생이 홀수 페이지에서 시작하도록 보장)
         // 학생 보고서는 wrap 속성으로 자동 분할되어 3-4페이지 가변적
-        // 빈 페이지 2개를 추가하면 다음 학생이 항상 홀수 페이지에서 시작
+        // 표지(1)+목차(1+) 후 첫 학생은 홀수에서 시작
+        // 3페이지 학생 → 홀수로 끝남 → 빈 3개 → 다음은 짝수+2 = 홀수 시작 ✓
+        // 4페이지 학생 → 짝수로 끝남 → 빈 3개 → 다음은 홀수+2 = 홀수 시작 ✓
         // 마지막 학생은 빈 페이지 불필요
         const isLastStudent = index === evaluatedSubmissions.length - 1;
         return isLastStudent
@@ -200,6 +202,7 @@ export async function POST(request: NextRequest) {
               report,
               React.createElement(BlankPage, { key: `blank1-${submission.id}` }),
               React.createElement(BlankPage, { key: `blank2-${submission.id}` }),
+              React.createElement(BlankPage, { key: `blank3-${submission.id}` }),
             ];
       });
 
