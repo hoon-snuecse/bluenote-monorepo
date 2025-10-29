@@ -219,20 +219,6 @@ export function StudentReportPDF({
           <Text style={styles.footerText}>
             평가일: {formatDateKorean(evaluation.evaluatedAt)}
           </Text>
-          <Text
-            style={styles.footerText}
-            render={({ pageNumber, totalPages }) => {
-              if (studentPageStart && studentPageStart > 0) {
-                // 통합 PDF: 개인별 페이지 번호 (1/3, 2/3, 3/3)
-                const studentPageNum = pageNumber - studentPageStart + 1;
-                const studentTotalPages = 3; // 개인 보고서는 보통 3페이지
-                return `${studentPageNum} / ${studentTotalPages}`;
-              } else {
-                // 개별 PDF: 전체 페이지 번호
-                return `${pageNumber} / ${totalPages}`;
-              }
-            }}
-          />
         </View>
     </Page>
   );
@@ -543,8 +529,7 @@ const styles = StyleSheet.create({
     bottom: 40, // 하단 여백 충분히 확보
     left: 40,
     right: 40,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    alignItems: 'center',
     paddingTop: 8,
   },
   footerText: {
