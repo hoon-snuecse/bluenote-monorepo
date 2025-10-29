@@ -251,7 +251,7 @@ export function createTableOfContentsPages(students: TableOfContentsProps['stude
     return React.createElement(
       Page,
       { key: `toc-${pageIndex}`, size: 'A4', style: styles.page },
-      ...children
+      children
     );
   });
 }
