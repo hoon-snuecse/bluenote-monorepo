@@ -165,19 +165,61 @@ export function createTableOfContentsPages(students: TableOfContentsProps['stude
     const endIndex = Math.min(startIndex + studentsPerPage, students.length);
     const pageStudents = students.slice(startIndex, endIndex);
 
-    return React.createElement(
-      Page,
-      { key: `toc-${pageIndex}`, size: 'A4', style: styles.page },
+    // 학생 행들을 미리 생성
+    const studentRows = pageStudents.map((student, index) => {
+      const globalIndex = startIndex + index + 1;
+      const isEven = globalIndex % 2 === 0;
+
+      return React.createElement(
+        View,
+        {
+          key: student.studentId,
+          style: [styles.tableRow, isEven && styles.tableRowEven]
+        },
+        React.createElement(
+          Text,
+          { style: [styles.tableCell, styles.colNumber] },
+          globalIndex.toString()
+        ),
+        React.createElement(
+          Text,
+          { style: [styles.tableCell, styles.colName] },
+          student.name
+        ),
+        React.createElement(
+          Text,
+          { style: [styles.tableCell, styles.colStudentId] },
+          student.studentId
+        ),
+        React.createElement(
+          Text,
+          { style: [styles.tableCell, styles.colLevel] },
+          React.createElement(
+            Text,
+            { style: getLevelStyle(student.overallLevel) },
+            student.overallLevel
+          )
+        ),
+        React.createElement(
+          Text,
+          { style: [styles.tableCell, styles.colPage] },
+          student.pageNumber.toString()
+        )
+      );
+    });
+
+    // children 배열을 명시적으로 구성
+    const children = [
       // 헤더
       React.createElement(
         View,
         { style: styles.header },
         React.createElement(Text, { style: styles.title }, '목차'),
-        totalPages > 1 && React.createElement(
+        totalPages > 1 ? React.createElement(
           Text,
           { style: styles.pageInfo },
           `${pageIndex + 1} / ${totalPages}`
-        )
+        ) : null
       ),
       // 테이블 헤더
       React.createElement(
@@ -189,48 +231,8 @@ export function createTableOfContentsPages(students: TableOfContentsProps['stude
         React.createElement(Text, { style: [styles.tableHeaderCell, styles.colLevel] }, '종합 평가'),
         React.createElement(Text, { style: [styles.tableHeaderCell, styles.colPage] }, '페이지')
       ),
-      // 테이블 내용
-      ...pageStudents.map((student, index) => {
-        const globalIndex = startIndex + index + 1;
-        const isEven = globalIndex % 2 === 0;
-
-        return React.createElement(
-          View,
-          {
-            key: student.studentId,
-            style: [styles.tableRow, isEven && styles.tableRowEven]
-          },
-          React.createElement(
-            Text,
-            { style: [styles.tableCell, styles.colNumber] },
-            globalIndex.toString()
-          ),
-          React.createElement(
-            Text,
-            { style: [styles.tableCell, styles.colName] },
-            student.name
-          ),
-          React.createElement(
-            Text,
-            { style: [styles.tableCell, styles.colStudentId] },
-            student.studentId
-          ),
-          React.createElement(
-            Text,
-            { style: [styles.tableCell, styles.colLevel] },
-            React.createElement(
-              Text,
-              { style: getLevelStyle(student.overallLevel) },
-              student.overallLevel
-            )
-          ),
-          React.createElement(
-            Text,
-            { style: [styles.tableCell, styles.colPage] },
-            student.pageNumber.toString()
-          )
-        );
-      }),
+      // 학생 행들
+      ...studentRows,
       // 하단
       React.createElement(
         View,
@@ -241,6 +243,12 @@ export function createTableOfContentsPages(students: TableOfContentsProps['stude
           `총 ${students.length}명의 학생 평가 보고서`
         )
       )
+    ];
+
+    return React.createElement(
+      Page,
+      { key: `toc-${pageIndex}`, size: 'A4', style: styles.page },
+      ...children
     );
   });
 }
