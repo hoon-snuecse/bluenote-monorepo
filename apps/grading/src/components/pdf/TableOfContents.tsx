@@ -63,11 +63,12 @@ const styles = StyleSheet.create({
 
   // 헤더 - 개인보고서 스타일 통일
   header: {
-    marginBottom: 12,
-    paddingBottom: 8,
+    display: 'flex', // React-PDF에서 flexDirection이 작동하려면 필수
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'baseline',
+    marginBottom: 12,
+    paddingBottom: 8,
   },
   title: {
     fontSize: 11, // 개인보고서 sectionTitle과 동일
@@ -85,6 +86,7 @@ const styles = StyleSheet.create({
 
   // 테이블 - 편집 디자인: 가독성과 우아함
   tableHeader: {
+    display: 'flex', // React-PDF에서 flexDirection이 작동하려면 필수
     flexDirection: 'row',
     backgroundColor: 'transparent',
     paddingVertical: 4,
@@ -99,6 +101,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   tableRow: {
+    display: 'flex', // React-PDF에서 flexDirection이 작동하려면 필수
     flexDirection: 'row',
     paddingVertical: 3, // 줄간격 더 축소
     paddingHorizontal: 3,
