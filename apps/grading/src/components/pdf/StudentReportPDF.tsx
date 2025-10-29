@@ -546,7 +546,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     paddingTop: 8,
-    borderTop: '1pt solid #e5e7eb', // 경계선 추가
   },
   footerText: {
     fontSize: 8,
