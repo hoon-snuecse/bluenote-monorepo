@@ -219,17 +219,20 @@ export function StudentReportPDF({
           <Text style={styles.footerText}>
             평가일: {formatDateKorean(evaluation.evaluatedAt)}
           </Text>
-          {studentPageStart ? (
-            <Text style={styles.footerText} render={({ pageNumber }) => {
-              const studentPageNum = pageNumber - studentPageStart + 1;
-              const studentTotalPages = 3;
-              return `${studentPageNum} / ${studentTotalPages}`;
-            }} />
-          ) : (
-            <Text style={styles.footerText} render={({ pageNumber, totalPages }) => (
-              `${pageNumber} / ${totalPages}`
-            )} />
-          )}
+          <Text
+            style={styles.footerText}
+            render={({ pageNumber, totalPages }) => {
+              if (studentPageStart && studentPageStart > 0) {
+                // 통합 PDF: 개인별 페이지 번호 (1/3, 2/3, 3/3)
+                const studentPageNum = pageNumber - studentPageStart + 1;
+                const studentTotalPages = 3; // 개인 보고서는 보통 3페이지
+                return `${studentPageNum} / ${studentTotalPages}`;
+              } else {
+                // 개별 PDF: 전체 페이지 번호
+                return `${pageNumber} / ${totalPages}`;
+              }
+            }}
+          />
         </View>
     </Page>
   );
@@ -297,6 +300,7 @@ const styles = StyleSheet.create({
   page: {
     fontFamily: 'NotoSansKR',
     padding: 40,
+    paddingBottom: 60, // 푸터 공간 확보 (footer bottom 40 + 여유 20)
     backgroundColor: '#FFFFFF',
     fontSize: 10, // base: 1rem equivalent in pt
     fontWeight: 400, // Regular weight for body
@@ -536,12 +540,13 @@ const styles = StyleSheet.create({
   // 푸터
   footer: {
     position: 'absolute',
-    bottom: 30,
+    bottom: 40, // 하단 여백 충분히 확보
     left: 40,
     right: 40,
     flexDirection: 'row',
     justifyContent: 'space-between',
     paddingTop: 8,
+    borderTop: '1pt solid #e5e7eb', // 경계선 추가
   },
   footerText: {
     fontSize: 8,

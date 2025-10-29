@@ -3,7 +3,7 @@ import React from 'react';
 import prisma from '@/lib/prisma';
 import { Document, Page, Text, View, StyleSheet, pdf } from '@react-pdf/renderer';
 import { CoverPage } from '@/components/pdf/CoverPage';
-import { TableOfContents } from '@/components/pdf/TableOfContents';
+import { createTableOfContentsPages } from '@/components/pdf/TableOfContents';
 import { StudentReportPDF } from '@/components/pdf/StudentReportPDF';
 import { registerKoreanFonts } from '@/lib/pdf-font-setup';
 import { getSessionWithPermissions } from '@/lib/auth-helpers';
@@ -147,8 +147,8 @@ export async function POST(request: NextRequest) {
         null,
         // 1. 표지 페이지 (2명 이상일 때만)
         ...(includeHeaderPages ? [React.createElement(CoverPage, coverPageData)] : []),
-        // 2. 목차 페이지(들) (2명 이상일 때만)
-        ...(includeHeaderPages ? [React.createElement(TableOfContents, { students: tocStudents })] : []),
+        // 2. 목차 페이지(들) (2명 이상일 때만) - Fragment 없이 직접 배열 전개
+        ...(includeHeaderPages ? createTableOfContentsPages(tocStudents) : []),
         // 3. 개별 학생 보고서들
         ...evaluatedSubmissions.map((submission, index) => {
           const evaluation = submission.evaluations[0];

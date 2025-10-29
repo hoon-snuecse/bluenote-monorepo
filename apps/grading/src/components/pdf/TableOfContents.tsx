@@ -1,3 +1,4 @@
+import React from 'react';
 import { Page, Text, View, StyleSheet } from '@react-pdf/renderer';
 
 interface TableOfContentsProps {
@@ -8,87 +9,6 @@ interface TableOfContentsProps {
     pageNumber: number;
   }>;
 }
-
-/**
- * 목차 페이지 컴포넌트
- * - 학생 목록 및 페이지 번호
- * - 25명 이상일 경우 자동으로 다중 페이지 생성
- */
-export function TableOfContents({ students }: TableOfContentsProps) {
-  // 한 페이지당 최대 학생 수
-  const studentsPerPage = 30;
-  const totalPages = Math.ceil(students.length / studentsPerPage);
-
-  const pages = Array.from({ length: totalPages }, (_, pageIndex) => {
-    const startIndex = pageIndex * studentsPerPage;
-    const endIndex = Math.min(startIndex + studentsPerPage, students.length);
-    const pageStudents = students.slice(startIndex, endIndex);
-
-    return (
-      <Page key={pageIndex} size="A4" style={styles.page}>
-        {/* 헤더 */}
-        <View style={styles.header}>
-          <Text style={styles.title}>목차</Text>
-          {totalPages > 1 && (
-            <Text style={styles.pageInfo}>
-              {pageIndex + 1} / {totalPages}
-            </Text>
-          )}
-        </View>
-
-        {/* 테이블 헤더 */}
-        <View style={styles.tableHeader}>
-          <Text style={[styles.tableHeaderCell, styles.colNumber]}>번호</Text>
-          <Text style={[styles.tableHeaderCell, styles.colName]}>학생 이름</Text>
-          <Text style={[styles.tableHeaderCell, styles.colStudentId]}>학번</Text>
-          <Text style={[styles.tableHeaderCell, styles.colLevel]}>종합 평가</Text>
-          <Text style={[styles.tableHeaderCell, styles.colPage]}>페이지</Text>
-        </View>
-
-        {/* 테이블 내용 */}
-        {pageStudents.map((student, index) => {
-          const globalIndex = startIndex + index + 1;
-          const isEven = globalIndex % 2 === 0;
-
-          return (
-            <View
-              key={student.studentId}
-              style={[styles.tableRow, isEven && styles.tableRowEven]}
-            >
-              <Text style={[styles.tableCell, styles.colNumber]}>
-                {globalIndex}
-              </Text>
-              <Text style={[styles.tableCell, styles.colName]}>
-                {student.name}
-              </Text>
-              <Text style={[styles.tableCell, styles.colStudentId]}>
-                {student.studentId}
-              </Text>
-              <Text style={[styles.tableCell, styles.colLevel]}>
-                <Text style={getLevelStyle(student.overallLevel)}>
-                  {student.overallLevel}
-                </Text>
-              </Text>
-              <Text style={[styles.tableCell, styles.colPage]}>
-                {student.pageNumber}
-              </Text>
-            </View>
-          );
-        })}
-
-        {/* 하단 */}
-        <View style={styles.footer}>
-          <Text style={styles.footerText}>
-            총 {students.length}명의 학생 평가 보고서
-          </Text>
-        </View>
-      </Page>
-    );
-  });
-
-  return <>{pages}</>;
-}
-
 
 /**
  * 성취 수준에 따른 스타일 반환
@@ -229,3 +149,106 @@ const styles = StyleSheet.create({
     lineHeight: 1.5,
   },
 });
+
+/**
+ * 목차 페이지 생성 헬퍼 함수
+ * - React-PDF Document에서 직접 사용할 수 있도록 페이지 배열 반환
+ * - React.createElement 패턴으로 서버사이드 렌더링 보장
+ */
+export function createTableOfContentsPages(students: TableOfContentsProps['students']) {
+  // 한 페이지당 최대 학생 수
+  const studentsPerPage = 30;
+  const totalPages = Math.ceil(students.length / studentsPerPage);
+
+  return Array.from({ length: totalPages }, (_, pageIndex) => {
+    const startIndex = pageIndex * studentsPerPage;
+    const endIndex = Math.min(startIndex + studentsPerPage, students.length);
+    const pageStudents = students.slice(startIndex, endIndex);
+
+    return React.createElement(
+      Page,
+      { key: `toc-${pageIndex}`, size: 'A4', style: styles.page },
+      // 헤더
+      React.createElement(
+        View,
+        { style: styles.header },
+        React.createElement(Text, { style: styles.title }, '목차'),
+        totalPages > 1 && React.createElement(
+          Text,
+          { style: styles.pageInfo },
+          `${pageIndex + 1} / ${totalPages}`
+        )
+      ),
+      // 테이블 헤더
+      React.createElement(
+        View,
+        { style: styles.tableHeader },
+        React.createElement(Text, { style: [styles.tableHeaderCell, styles.colNumber] }, '번호'),
+        React.createElement(Text, { style: [styles.tableHeaderCell, styles.colName] }, '학생 이름'),
+        React.createElement(Text, { style: [styles.tableHeaderCell, styles.colStudentId] }, '학번'),
+        React.createElement(Text, { style: [styles.tableHeaderCell, styles.colLevel] }, '종합 평가'),
+        React.createElement(Text, { style: [styles.tableHeaderCell, styles.colPage] }, '페이지')
+      ),
+      // 테이블 내용
+      ...pageStudents.map((student, index) => {
+        const globalIndex = startIndex + index + 1;
+        const isEven = globalIndex % 2 === 0;
+
+        return React.createElement(
+          View,
+          {
+            key: student.studentId,
+            style: [styles.tableRow, isEven && styles.tableRowEven]
+          },
+          React.createElement(
+            Text,
+            { style: [styles.tableCell, styles.colNumber] },
+            globalIndex.toString()
+          ),
+          React.createElement(
+            Text,
+            { style: [styles.tableCell, styles.colName] },
+            student.name
+          ),
+          React.createElement(
+            Text,
+            { style: [styles.tableCell, styles.colStudentId] },
+            student.studentId
+          ),
+          React.createElement(
+            Text,
+            { style: [styles.tableCell, styles.colLevel] },
+            React.createElement(
+              Text,
+              { style: getLevelStyle(student.overallLevel) },
+              student.overallLevel
+            )
+          ),
+          React.createElement(
+            Text,
+            { style: [styles.tableCell, styles.colPage] },
+            student.pageNumber.toString()
+          )
+        );
+      }),
+      // 하단
+      React.createElement(
+        View,
+        { style: styles.footer },
+        React.createElement(
+          Text,
+          { style: styles.footerText },
+          `총 ${students.length}명의 학생 평가 보고서`
+        )
+      )
+    );
+  });
+}
+
+/**
+ * 목차 페이지 컴포넌트 (하위 호환성 유지)
+ * @deprecated createTableOfContentsPages를 사용하세요
+ */
+export function TableOfContents({ students }: TableOfContentsProps) {
+  return <>{createTableOfContentsPages(students)}</>;
+}

@@ -146,6 +146,13 @@ export function CoverPage({
               {formatDateKorean(dateInfo.evaluationDate)}
             </Text>
           </View>
+
+          <View style={styles.dateRow}>
+            <Text style={styles.dateLabel}>• 보고서 생성일:</Text>
+            <Text style={styles.dateValue}>
+              {formatDateKorean(dateInfo.reportGeneratedDate)}
+            </Text>
+          </View>
         </View>
       </View>
 
@@ -157,13 +164,6 @@ export function CoverPage({
         <Text style={styles.disclaimerText}>
           ● 글쓰기 평가 보고서는 학생의 글을 선생님이 정한 규칙에 따라 AI가 채점한 것입니다.{'\n'}
           ● 보고서에서 제시하는 강점과 개선 방안을 읽고 성장을 위해 노력해야 할 점을 생각해 봅시다.
-        </Text>
-      </View>
-
-      {/* 하단 */}
-      <View style={styles.footer}>
-        <Text style={styles.footerText}>
-          보고서 생성일: {formatDateKorean(dateInfo.reportGeneratedDate)}
         </Text>
       </View>
     </Page>
