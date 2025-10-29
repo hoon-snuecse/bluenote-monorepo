@@ -109,28 +109,38 @@ const styles = StyleSheet.create({
   tableCell: {
     fontSize: 8,
     color: '#64748b', // 더 부드러운 색상
-    textAlign: 'center',
     fontWeight: 400,
     lineHeight: 1.3,
   },
+  tableCellName: {
+    textAlign: 'left',
+  },
 
-  // 컬럼 너비 - 최적화하여 공간 절약
+  // 컬럼 너비 - View에 적용 (flexDirection: row에서 셀 역할)
   colNumber: {
     width: 35,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   colName: {
     width: 120,
-    textAlign: 'left',
+    justifyContent: 'center',
     paddingLeft: 6,
   },
   colStudentId: {
     width: 85,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   colLevel: {
     width: 90,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   colPage: {
     width: 50,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 
   // 하단
@@ -178,11 +188,21 @@ export function createTableOfContentsPages(students: TableOfContentsProps['stude
 
         {/* 테이블 헤더 */}
         <View style={styles.tableHeader}>
-          <Text style={[styles.tableHeaderCell, styles.colNumber]}>번호</Text>
-          <Text style={[styles.tableHeaderCell, styles.colName]}>학생 이름</Text>
-          <Text style={[styles.tableHeaderCell, styles.colStudentId]}>학번</Text>
-          <Text style={[styles.tableHeaderCell, styles.colLevel]}>종합 평가</Text>
-          <Text style={[styles.tableHeaderCell, styles.colPage]}>페이지</Text>
+          <View style={styles.colNumber}>
+            <Text style={styles.tableHeaderCell}>번호</Text>
+          </View>
+          <View style={styles.colName}>
+            <Text style={[styles.tableHeaderCell, styles.tableCellName]}>학생 이름</Text>
+          </View>
+          <View style={styles.colStudentId}>
+            <Text style={styles.tableHeaderCell}>학번</Text>
+          </View>
+          <View style={styles.colLevel}>
+            <Text style={styles.tableHeaderCell}>종합 평가</Text>
+          </View>
+          <View style={styles.colPage}>
+            <Text style={styles.tableHeaderCell}>페이지</Text>
+          </View>
         </View>
 
         {/* 학생 행들 */}
@@ -195,15 +215,23 @@ export function createTableOfContentsPages(students: TableOfContentsProps['stude
               key={student.studentId}
               style={[styles.tableRow, isEven && styles.tableRowEven]}
             >
-              <Text style={[styles.tableCell, styles.colNumber]}>{globalIndex}</Text>
-              <Text style={[styles.tableCell, styles.colName]}>{student.name}</Text>
-              <Text style={[styles.tableCell, styles.colStudentId]}>{student.studentId}</Text>
-              <Text style={[styles.tableCell, styles.colLevel]}>
-                <Text style={getLevelStyle(student.overallLevel)}>
+              <View style={styles.colNumber}>
+                <Text style={styles.tableCell}>{globalIndex}</Text>
+              </View>
+              <View style={styles.colName}>
+                <Text style={[styles.tableCell, styles.tableCellName]}>{student.name}</Text>
+              </View>
+              <View style={styles.colStudentId}>
+                <Text style={styles.tableCell}>{student.studentId}</Text>
+              </View>
+              <View style={styles.colLevel}>
+                <Text style={[styles.tableCell, getLevelStyle(student.overallLevel)]}>
                   {student.overallLevel}
                 </Text>
-              </Text>
-              <Text style={[styles.tableCell, styles.colPage]}>{student.pageNumber}</Text>
+              </View>
+              <View style={styles.colPage}>
+                <Text style={styles.tableCell}>{student.pageNumber}</Text>
+              </View>
             </View>
           );
         })}
