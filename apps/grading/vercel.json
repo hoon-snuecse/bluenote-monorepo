@@ -4,6 +4,12 @@
   "installCommand": "pnpm install",
   "framework": "nextjs",
   "regions": ["icn1"],
+  "crons": [
+    {
+      "path": "/api/health",
+      "schedule": "0 9 * * *"
+    }
+  ],
   "env": {
     "NEXT_TELEMETRY_DISABLED": "1",
     "PRISMA_GENERATE_SKIP_AUTOINSTALL": "true"

@@ -164,8 +164,8 @@ import { createRouteHandlerClient } from '@bluenote/supabase-auth/route-handler-
 Supabase 무료 플랜은 7일간 활동이 없으면 프로젝트가 자동 일시 중지됩니다. 이를 방지하기 위해 Vercel Cron을 사용한 자동 ping 시스템이 구현되어 있습니다.
 
 **구성 파일**:
-- `apps/web/app/api/cron/keep-alive/route.js` - Health check API 엔드포인트
-- `apps/web/vercel.json` - Cron 스케줄 설정
+- `apps/grading/src/app/api/health/route.ts` - Health check API 엔드포인트
+- `apps/grading/vercel.json` - Cron 스케줄 설정
 
 **동작 방식**:
 - 스케줄: `0 9 * * *` (매일 오전 9시 UTC)
